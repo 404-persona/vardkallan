@@ -87,7 +87,7 @@ export function synligHtml(html) {
 
 // Om en sträng ur koden är en text som visas. Identifierare, sökvägar, väljare, klassnamn, loggnycklar, HTTP-rubriker,
 // CSP och SQL är det inte.
-const SQL = /\b(SELECT|INSERT|UPDATE|DELETE FROM|CREATE|PRAGMA|ALTER|DROP)\b|\bIS (NOT )?NULL\b| AND | OR |^(AND|OR) |\bIN \(|\w+ = '\w+'|\w+ = \?|<> \?|\b(NEW|OLD)\.|NOT NULL|\bINTEGER\b/;
+const SQL = /\b(SELECT|INSERT|UPDATE|DELETE FROM|CREATE|PRAGMA|ALTER|DROP|SAVEPOINT|ROLLBACK TO|RELEASE)\b|\bIS (NOT )?NULL\b| AND | OR |^(AND|OR) |\bIN \(|\w+ = '\w+'|\w+ = \?|<> \?|\b(NEW|OLD)\.|NOT NULL|\bINTEGER\b/;
 // Ett ord i koden: snake_case, kebab-case med gemener, camelCase, nyckel:värde, var(--x), &entitet;, en sökväg, ett id med
 // versaler och bindestreck (VK-ADM-) eller en del av en nyckel med lodstreck.
 const KODTOKEN = /^[a-z0-9]+(?:[_|][\w|]*)+$|^(?!e-)[a-z0-9]+(?:-[a-z0-9]+)+,?$|^[a-z]+[A-Z][A-Za-z]*,?$|^[\wåäö.-]*:[^\s/]|--|^&\w+;$|^[\w.]+\(|^[/#.[]|=|^'(self|none|unsafe-inline)'|\||^[A-Z0-9]+(-[A-Z0-9]*)+$/;

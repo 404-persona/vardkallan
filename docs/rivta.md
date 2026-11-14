@@ -31,6 +31,7 @@ Koden ligger i `app/src/rivta/` och används av alla kontrakt.
 | GetAllBlocksForPatient, GetBlocksForPatient | 2.0 | riv.ehr.blocking | konsument | i processen och genom den lokala tjänsteplattformen |
 | RegisterTemporaryExtendedRevoke, CancelTemporaryExtendedRevoke | 2.0 | riv.ehr.blocking | konsument | i processen |
 | CheckConsent, RegisterExtendedConsent, CancelExtendedConsent | 1.0 | riv.ehr.patientconsent | konsument | i processen och genom den lokala tjänsteplattformen |
+| GetExtendedConsentsForPatient | 1.0 | riv.ehr.patientconsent | konsument | i processen |
 | GetEmployeeIncludingProtectedPerson | 4.0 | riv.infrastructure.directory.employee | konsument | i processen och genom den lokala tjänsteplattformen |
 | LookupResidentForFullProfile | 1.2 | riv.population.residentmaster | konsument | i processen och genom den lokala tjänsteplattformen |
 | Update | 1.0 | riv.itintegration.engagementindex | konsument | i processen |
@@ -149,3 +150,37 @@ Domänen finns bara i RIVTA Basic Profile 2.0, och meddelandena är openEHR-komp
 
 `test/rivta-plattform-r14r3.test.js` anropar varje kontrakt i del r3 en gång genom r2:s lokala tjänsteplattform (`rivta/plattform.js`) med ömsesidig TLS och testcertifikat: intyg (utkast, lista och statusuppdatering till vårdenheten), e-remiss åt båda hållen, formulär, 1177, NKRR, dosdispensering, Infektionsverktyget i profil 2.0 med wsa:To och vaccinationerna med den aggregerande tjänsten som konsument. Producenterna ser den ursprungliga konsumenten bakom plattformen, och ett anrop som inte står i den lokala TAK-tabellen stoppas med VP007.
 
+## Samtycket i samtyckestjänsten och engagemangsindex av sig självt (runda 15, r2)
+
+### Samtycket (riv.ehr.patientconsent 1.0)
+
+Samtycket till sammanhållen journalföring registreras och prövas både i Vårdkällan och i samtyckestjänsten (`app/src/samtycke-nationellt.js`). Personalen bekräftar en gång att patienten samtycker eller återkallar, och systemet gör resten:
+
+- Samtycket gäller som förval så länge vårdrelationen pågår, eller till ett visst datum eller tills vidare enligt patientens svar. Ett visst datum skickas som EndDate, de andra två utan slutdatum, och när vårdrelationen upphör återkallas samtycket i tjänsten med sina egna intyg.
+- Ett samtycke som registreras i Vårdkällan läggs i en kö och skickas med RegisterExtendedConsent. Svarar tjänsten inte försöker systemet igen med allt längre mellan försöken (1, 2, 4, 8, 16 och sedan 30 minuter), och raderna för en patient skickas i ordning, så att en återkallelse aldrig går före registreringen.
+- Prövningen läser patientens samtycken hos vårdgivaren med GetExtendedConsentsForPatient, också de återkallade. Ett samtycke gäller när det finns i Vårdkällan för vårdenheten, eller när tjänsten har ett giltigt samtycke (Consent, inte utgånget, återkallat eller makulerat) för vårdenheten och för all personal där eller för den inloggade. Ett samtycke som patienten har gett i ett annat system hos vårdgivaren gäller alltså också här.
+- Har tjänsten återkallat samtycket som registrerades här återkallas det här också, och saknas det i tjänsten registreras det igen.
+- Svarar tjänsten inte gäller samtycket som registrerades i Vårdkällan, och ett samtycke från ett annat system kan då inte användas. Systemet säger det på vanlig svenska.
+- En återkallelse återkallar alla giltiga samtycken för vårdenheten i tjänsten som registrerades före återkallelsen, med CancelExtendedConsent. Tills tjänsten har tagit emot återkallelsen räknas inget sådant samtycke.
+- Ett intyg om nödsituation (Emergency) från ett annat system ger inget samtycke i Vårdkällan, eftersom nödåtkomst alltid prövas i den egna inloggningen. När personalen gör nödåtkomst här registreras ett personligt intyg om nödsituation i tjänsten till dagens slut, ett per person, patient och dag.
+- För en patient med skyddade personuppgifter registreras inget samtycke och inget slås upp i de nationella tjänsterna, efter Ineras villkor för NPÖ (version 1.4, avsnitt 6.2.2). Uppgifter från andra vårdgivare hämtas för en sådan patient bara vid nödåtkomst. För en patient utan person- eller samordningsnummer gäller bara samtycket i Vårdkällan.
+
+### Engagemangsindex (riv.itintegration.engagementindex 1.0)
+
+Engagemangsindex uppdateras av sig självt (`app/src/engagemangsindex.js`) efter Ineras tjänstekontraktsbeskrivning för engagemangsindex (version 1.0.9) och reglerna för engagemangsindex i tjänstedomänerna healthcond:description, logistics:logistics och activityprescription:actoutcome:
+
+- Triggrar i databasen märker patienten när en vårdkontakt, ett vårdtillfälle, en anteckning, en diagnos, uppmärksamhetsinformation, en överkänslighet, en vaccination, en spärr, en remiss, ett undantag från nationella tjänster eller patientens identitet ändras. Ingen person behöver göra något, och ett nytt flöde som skriver i tabellerna följer med av sig självt.
+- Posterna räknas fram med den aggregerande tjänstens systemkonto genom FHIR-API:t, som producenterna läser, inom en savepoint som rullas tillbaka. En post finns bara när kontot skulle få minst en uppgift av kategorin, alltså aldrig för skyddade personuppgifter, spärrade uppgifter eller det som är undantaget från nationella tjänster.
+- En post per patient, tjänstedomän och kategori: voo, dia och upp (riv:clinicalprocess:healthcond:description), vko (riv:clinicalprocess:logistics:logistics) och caa-gvh (riv:clinicalprocess:activityprescription:actoutcome). Den logiska adressen är källsystemet (systemadressering), businessObjectInstanceIdentifier och clinicalProcessInterestId är NA och dataController är vårdgivarens HSA-id. E-remissens domän (riv:clinicalprocess:activity:request) använder inte engagemangsindex, så en remiss blir ingen egen post.
+- owner, creationTime och updateTime skickas aldrig, eftersom indexet sätter dem. En post tas bort med deleteFlag när den sista uppgiften av sitt slag försvinner, till exempel när en planerad vårdkontakt tas bort vid en avbokning.
+- mostRecentContent räknas bara på det kontot får se och minskar aldrig, så att en spärr eller en borttagen uppgift inte syns som en ändring bakåt i tiden.
+- Person- och samordningsnummer anmäls. Ett reservnummer anmäls inte, men när journalen får ett nationellt nummer skapas posterna för det (kR4).
+- När en patient får skyddad identitet eller en spärr skickas borttagningen ur indexet direkt, i samma handling, och ligger först i kön om indexet inte svarar. Andra ändringar går före avstämningen, och timern går igenom sandlådorna i ett rättvist schema som börjar där förra varvet slutade, utan att räkna i användarnas anrop.
+- Ändringarna skickas i omgångar, som standard en minut efter ändringen (Ineras riktmärke är högst 60 minuter), med högst 1000 poster per anrop (den nationella instansens tak, inställbart nedåt). Svarar indexet inte ligger ändringarna kvar och skickas om med allt längre mellan försöken. Hela indexet stäms av mot journalen en gång om dygnet.
+- Det simulerade indexet följer reglerna för producenten av Update: högst 1000 poster, unika poster i begäran, inga fält som indexet sätter och ingen mostRecentContent när en post tas bort.
+
+### Systemförvaltaren
+
+Sidan Nationella tjänster (`#/nationella-tjanster`) visar köerna till samtyckestjänsten och engagemangsindex: hur mycket som väntar, det som inte har kommit fram med tider och fel, och de senaste omgångarna, utan patientuppgifter. Systemförvaltaren kan skicka det som väntar direkt, stämma av hela engagemangsindex och i demon simulera att de nationella tjänsterna inte svarar. Det som inte har kommit fram efter tre försök eller 15 minuter står också i API:ts inkorg för systemförvaltaren.
+
+Status: byggt och validerat mot tjänstekontrakten och testat lokalt mot simulerade tjänster, inte anslutet till den nationella tjänsteplattformen.

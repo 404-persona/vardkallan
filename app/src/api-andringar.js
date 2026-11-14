@@ -14,8 +14,11 @@ export const ANDRINGAR = [
   // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.5.0', datum: '2026-11-14',
-    text: 'Inga nya resurstyper eller skrivningar i FHIR.',
-    resurser: [], skrivning: [], annat: [
+    text: 'Ny resurstyp i FHIR: Consent.',
+    resurser: [
+      // Runda 15, r2: samtycket till sammanhållen journalföring.
+      'Consent',
+    ], skrivning: [], annat: [
       // Runda 15, r3: mellanarkivet i FHIR, i läkemedelslistan och reservservern (docs/api-avvikelser.md).
       'Composition, Observation, MedicationRequest och MedicationAdministration tar med handlingar ur mellanarkivet, med id ma-<nummer>, koden mellanarkiv i meta.tag (kodsystemet lagring) och paketet i meta.source',
       'Läkemedelslistan i det interna API:t har fältet mellanarkiv med avslutade ordinationer ur mellanarkivet, och en handling ur mellanarkivet kan vara en ordination eller en administrering (docs/api-avvikelser.md)',
@@ -35,6 +38,10 @@ export const ANDRINGAR = [
       'Nya rutter i det interna API:t: mallen med underlag, varianter och förslag för en patient (GET /api/patient/:id/anteckningsmall), utkastet som sparas av sig självt (PUT och DELETE /api/patient/:id/anteckningsutkast), egna fraser och egen ordning på sökorden (/api/egna-fraser) och den senaste bedömningen i listan över anteckningar (docs/api-avvikelser.md)',
       // Runda 15, r1: SITHS och tillitsnivå 3 som flerfaktor, och lägsta tillitsnivå per inloggningstjänst.
       'Inloggningens tillitsnivå i sessionen, lägsta tillitsnivå per inloggningstjänst med fyra ögon och demons inloggning med tillitsnivå 2 för personalen och invånaren i det interna API:t, och inloggningsbegäran till en inloggningstjänst ber om tjänstens lägsta nivå. Känsliga handlingar svarar 403 med en egen felkod när inloggningen inte är flerfaktor (docs/api-avvikelser.md)',
+      // Runda 15, r2: samtycket i samtyckestjänsten och engagemangsindex (docs/rivta.md och docs/api-avvikelser.md).
+      'Samtycket till sammanhållen journalföring prövas både i Vårdkällan och i samtyckestjänsten (GetExtendedConsentsForPatient 1.0), och registreringar och återkallelser skickas genom en kö. Läget för sammanhållen journalföring har samtyckeGaller, samtyckeKalla, samtyckeText och samtyckestjanst',
+      'Engagemangsindex uppdateras av sig självt när journalen ändras, efter Ineras regler för Update 1.0, och nya rutter för systemförvaltarens sida Nationella tjänster (docs/api-avvikelser.md)',
+      'Samtyckets giltighet (giltighet och giltigTill), hämtning för skyddade personuppgifter bara vid nödåtkomst, och makulering av en vårdkontakt på fel patient i det interna API:t (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

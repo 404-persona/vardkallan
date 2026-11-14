@@ -28,7 +28,7 @@ describe(T, () => {
     expect(d.sparrText).toBe(sj.SPARR_TEXT);
     // Varje kontrakt anropades som konsument, och svaren validerades.
     const ut = anropslogg(db, { max: 100 }).filter(r => r.riktning === 'ut' && r.resultat === 'ok').map(r => r.kontrakt);
-    for (const k2 of ['GetCareDocumentation', 'GetDiagnosis', 'GetCareContacts', 'GetMedicationHistory', 'CheckBlocks', 'GetAllBlocksForPatient', 'CheckConsent', 'RegisterExtendedConsent']) expect(ut).toContain(k2);
+    for (const k2 of ['GetCareDocumentation', 'GetDiagnosis', 'GetCareContacts', 'GetMedicationHistory', 'CheckBlocks', 'GetAllBlocksForPatient', 'GetExtendedConsentsForPatient', 'RegisterExtendedConsent']) expect(ut).toContain(k2);
     expect(JSON.stringify(anropslogg(db, { max: 100 }))).not.toContain('194502024732');
   });
 
@@ -38,8 +38,9 @@ describe(T, () => {
     await hamta(k, 'p01', { samtycke: true });
     const fraga = () => nationella.anropa(db, 'CheckConsent', { AccessingActor: { EmployeeId: db.query("SELECT hsa_id FROM personal WHERE id = 'lak-kard'").get().hsa_id, CareProviderId: 'SE2321000164-VK0000', CareUnitId: 'SE2321000164-VK0120' }, PatientId: '194502024732' }).CheckResultType.HasConsent;
     expect(fraga()).toBe(true);
-    // Tjänsten tappar samtycket: nästa gång läget visas registreras det igen ur Vårdkällans register.
-    db.query("UPDATE rivta_sim_samtycken SET aterkallat = 'x'").run();
+    // Tjänsten tappar samtycket: nästa gång läget visas registreras det igen ur Vårdkällans register. Runda 15, r2: ett
+    // samtycke som har återkallats i tjänsten återkallas i stället här (samtycke-nationellt-r15.test.js).
+    db.query('DELETE FROM rivta_sim_samtycken').run();
     expect(fraga()).toBe(false);
     await k.get('/api/patient/p01/sammanhallen');
     expect(fraga()).toBe(true);

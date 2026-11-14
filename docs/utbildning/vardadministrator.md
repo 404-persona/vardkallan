@@ -210,6 +210,14 @@ Rätt svar: Vårdadministratören bekräftar sammanslagningen, med behörighet t
 
 Systemet hittar troliga dubbletter, och bara en vårdadministratör bekräftar sammanslagningen.
 
+### Övning 8
+
+Ett besök har registrerats på fel patient, och läkaren har redan skrivit en anteckning på det. Vad gör du?
+
+Rätt svar: Väljer Registrerad på fel patient på vårdkontakten, skriver varför och anger numret för rätt patient. Systemet flyttar besöket med anteckningen dit och lämnar bara makuleringen kvar på fel patient.
+
+Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten. Har rätt patient ingen vårdrelation till vårdenheten väntar flytten på att verksamhetschefen eller en annan vårdadministratör godkänner den.
+
 ## Uppdrag i testinbjudan
 
 Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Sussas användbarhetstestfall och ligger i den ordning en arbetsdag har dem. Systemet bockar av ett uppdrag själv när det har hänt, och ett uppdrag som går ut på att hitta något har en fråga som systemet rättar.
@@ -271,4 +279,4 @@ Du arbetar som Karin Berg, vårdadministratör på kardiologiska kliniken, som m
 - Boka om en tid och skicka en gruppkallelse.
 - Bekräfta en sammanslagning av två journaler.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 7 övningar och få intyget.
+- Svara rätt på alla 8 övningar och få intyget.

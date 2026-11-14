@@ -126,6 +126,8 @@ export const FHIR = {
   Media: 'Dokument',
   ImagingStudy: 'Observation',
 };
+// Runda 15, r2: samtycket till sammanhållen journalföring är patientens beslut, som spärren.
+FHIR.Consent = 'Beslut';
 
 // Klassar alla tabeller i en databas. En tabell med patientuppgifter som inte är klassad får den allmänna klassen.
 // Tabeller utan patientuppgifter och utan klassning är systemets egna (loggar, inställningar, kopplingar) och tas inte med.

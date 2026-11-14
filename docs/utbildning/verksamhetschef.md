@@ -66,6 +66,16 @@ Intyget gäller i ett år. Systemet räknar själv vilka som har giltigt intyg.
 
 Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/utbildning).
 
+### Övning 5
+
+En vårdadministratör föreslår att ett besök på fel patient flyttas till en patient som inte har vårdrelation till vårdenheten. Vad gör du?
+
+Rätt svar: Öppnar Flyttar till rätt patient, kontrollerar numret mot underlaget och godkänner eller avslår med en kommentar. Först när du godkänner flyttas besöket, och rätt patient får den vårdrelation som besöket ger.
+
+Förslaget ger ingen åtkomst till rätt patient och visar bara numret som skrevs. Den som föreslog flytten kan aldrig godkänna den själv.
+
+Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/flyttar).
+
 ## Det här ska du kunna efter utbildningen
 
 - Utse en medicinskt ansvarig läkare.
@@ -73,4 +83,4 @@ Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](h
 - Utfärda ett utbildarintyg.
 - Veta vilket ansvar som inte kan lämnas över.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 4 övningar och få intyget.
+- Svara rätt på alla 5 övningar och få intyget.

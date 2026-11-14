@@ -633,6 +633,13 @@ for (const h of ['patientgrupp', 'forskning_bestall', 'forskning_godkann', 'sign
 HANDLINGAR.godkanna_gallring = 'godkänna att gallring eller radering av journalhandlingar verkställs';
 ROLLER.verksamhetschef.push('godkanna_gallring');
 UTAN_PATIENT.add('godkanna_gallring');
+// Runda 15, r2, tredje omgången (beslut 2026-11-14): fyra ögon när en vårdkontakt eller ett vårdtillfälle som har
+// registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten. Vårdenhetens verksamhetschef
+// eller en annan vårdadministratör på vårdenheten godkänner i sin egen inloggning (vardkontakt-makulering.js).
+HANDLINGAR.godkanna_flytt = 'godkänna att uppgifter som har registrerats på fel patient flyttas till rätt patient';
+ROLLER.verksamhetschef.push('godkanna_flytt');
+ROLLER.vardadministrator.push('godkanna_flytt');
+UTAN_PATIENT.add('godkanna_flytt');
 
 // Runda 10, r2: basfakta (overkanslighet.js, Sussa 3.1.6.2). Läkare och sjuksköterskor registrerar, ändrar och avslutar
 // överkänslighet på sin egen vårdenhet med vårdrelation till patienten.

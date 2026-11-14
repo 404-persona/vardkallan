@@ -230,6 +230,10 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Uppgraderingar') + 1, 0, 'Servicenivåer och incidenter');
 // Runda 14, r1: systemförvaltaren har Inloggningstjänster direkt efter Kodverk och masterdata.
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterdata') + 1, 0, 'Inloggningstjänster');
+// Runda 15, r2: systemförvaltaren har Nationella tjänster direkt efter Servicenivåer och incidenter.
+MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Servicenivåer och incidenter') + 1, 0, 'Nationella tjänster');
+// Runda 15, r2, tredje omgången: verksamhetschefen och vårdadministratören har Flyttar till rätt patient före Utbildning.
+for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k].indexOf('Utbildning'), 0, 'Flyttar till rätt patient');
 
 (async () => {
   // Runda 11, r1: klockan ställs innan testet räknar ut några datum.
@@ -2213,6 +2217,24 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '.notis', 'Incidenten är avslutad');
       await page.waitForLoadState('networkidle');
     });
+    // Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex. Systemet skickar själv, och systemförvaltaren
+    // ser läget, kan simulera ett avbrott i demon och skicka det som väntar när tjänsterna svarar igen.
+    await s('Tomas Lindh ser köerna till de nationella tjänsterna, simulerar ett avbrott och skickar det som väntar', async () => {
+      await gaTill(page, '#/nationella-tjanster');
+      await forvanta(page, '#nt-samtycke', 'Samtyckestjänsten');
+      await forvanta(page, '#nt-ei', 'Skyddade personuppgifter, spärrade uppgifter och reservnummer anmäls aldrig');
+      await page.check('#nt-avbrott');
+      await forvanta(page, '.notis', 'Avbrottet simuleras');
+      await page.click('[data-nt-avstam]');
+      await forvanta(page, '.notis', 'stäms av mot journalen');
+      await bild(page, '103h-nationella-tjanster');
+      await page.uncheck('#nt-avbrott');
+      await forvanta(page, '.notis', 'Tjänsterna svarar igen');
+      await page.click('[data-nt-skicka]');
+      await forvanta(page, '.notis', 'Allt som väntade är skickat');
+      await forvanta(page, '#nt-ei [data-status]', 'Engagemangsindex har allt som ska finnas där');
+      await page.waitForLoadState('networkidle');
+    });
     await allaVyer(page, 'Tomas Lindh', MENY.systemforvaltare);
     // Fyra ögon på riktigt: Nora Ekholm loggar in i samma sandlåda och godkänner sammanslagningen som Tomas Lindh förberedde.
     await s('Nora Ekholm godkänner sammanslagningen som Tomas Lindh förberedde, men inte sina egna förslag', async () => {
@@ -2736,6 +2758,33 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '.ov-kostnader', 'Avgifter och högkostnadsskydd');
       const t = await page.locator('.ov-kostnader').textContent();
       for (const x of ['DRG', 'Furosemid', 'Läkemedel', 'Vårddygn']) if (t.includes(x)) throw new Error(`kostnadsrutan för vårdadministratören visar ${x}`);
+    });
+    // Runda 15, r2, tredje omgången: ett vårdtillfälle på fel patient flyttas till en patient utan vårdrelation till vårdenheten
+    // bara med fyra ögon. Ulrika Sandell ser förslaget i sin egen inloggning, utan något om patienten som numret leder
+    // till, och avslår det. Inget flyttas.
+    await s('Karin Berg föreslår att ett vårdtillfälle på fel patient flyttas till en patient utan vårdrelation, och flytten väntar på godkännande', async () => {
+      await gaTill(page, '#/patient/p01');
+      await page.locator('.ov-vardkontakter .vardtillfalle [data-vk="makulera-vt"]').first().click();
+      await page.locator('dialog[open] #mk-ratt').fill('199812212398');
+      await forvanta(page, 'dialog[open]', 'godkänner i sin egen inloggning');
+      await page.fill('dialog[open] #mk-orsak', 'Besöket registrerades på fel patient i receptionen.');
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'godkänner den i sin egen inloggning');
+      await forvanta(page, '.vk-flyttar', 'Väntar på godkännande');
+      await page.waitForLoadState('networkidle');
+    });
+    await s('Ulrika Sandell ser flytten i sin egen inloggning, utan något om rätt patient, och avslår den med en kommentar', async () => {
+      await loggaIn(page, 'vch-kard');
+      await gaTill(page, '#/flyttar');
+      await forvanta(page, '#fl [data-flytt]', 'Vårdtillfälle på fel patient');
+      const t = await page.locator('#fl [data-flytt]').first().textContent();
+      for (const x of ['Oskar', 'Ekström']) if (t.includes(x)) throw new Error(`förslaget röjer rätt patient: ${x}`);
+      await page.locator('#fl [data-fl-avsla]').first().click();
+      await page.fill('dialog[open] #fl-kommentar', 'Kontrollera numret mot remissen.');
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'Flytten är avslagen');
+      await forvanta(page, '#fl', 'Inga flyttar väntar på ditt godkännande');
+      await loggaIn(page, 'adm-kard');
     });
 
     // Runda 11, r4: cytostatika för Annika Holmgren (p17) från godkännandet via beredningsenheten till infusionen,

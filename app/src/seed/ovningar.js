@@ -126,6 +126,28 @@ export const OVNINGAR_V1 = [
     ['b', 'När en annan systemförvaltare har godkänt den, från det giltighetsdatum som står i förslaget.'],
     ['c', 'När du själv har godkänt den.'],
   ], 'b', 'Fyra ögon: ingen godkänner sina egna ändringar. Systemet visar effekten i förväg, kontrollerar att värdet är rimligt och sparar historiken, som inte går att ändra.', '#/regler'),
+  // Runda 15, r2: samtycket i samtyckestjänsten och köerna till de nationella tjänsterna.
+  o('samtycke-annat-system', ['lakare', 'sjukskoterska'], 'Patienten berättar att samtycket till sammanhållen journalföring redan är givet i ett annat system hos vårdgivaren. Vad gör du?', [
+    ['a', 'Registrerar samtycket en gång till i Vårdkällan.'],
+    ['b', 'Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.'],
+    ['c', 'Ber patienten återkalla samtycket i det andra systemet först.'],
+  ], 'b', 'Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.', null),
+  o('vardkontakt-fel-patient', ['vardadministrator'], 'Ett besök har registrerats på fel patient, och läkaren har redan skrivit en anteckning på det. Vad gör du?', [
+    ['a', 'Ber läkaren skriva om anteckningen på rätt patient och låter besöket stå kvar.'],
+    ['b', 'Väljer Registrerad på fel patient på vårdkontakten, skriver varför och anger numret för rätt patient. Systemet flyttar besöket med anteckningen dit och lämnar bara makuleringen kvar på fel patient.'],
+    ['c', 'Raderar besöket.'],
+  ], 'b', 'Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten. Har rätt patient ingen vårdrelation till vårdenheten väntar flytten på att verksamhetschefen eller en annan vårdadministratör godkänner den.', null),
+  // Runda 15, r2, tredje omgången: fyra ögon när rätt patient saknar vårdrelation.
+  o('flytt-fyra-ogon', ['verksamhetschef'], 'En vårdadministratör föreslår att ett besök på fel patient flyttas till en patient som inte har vårdrelation till vårdenheten. Vad gör du?', [
+    ['a', 'Godkänner direkt, eftersom förslaget kommer från en kollega.'],
+    ['b', 'Öppnar Flyttar till rätt patient, kontrollerar numret mot underlaget och godkänner eller avslår med en kommentar. Först när du godkänner flyttas besöket, och rätt patient får den vårdrelation som besöket ger.'],
+    ['c', 'Öppnar journalen för rätt patient för att se om det stämmer.'],
+  ], 'b', 'Förslaget ger ingen åtkomst till rätt patient och visar bara numret som skrevs. Den som föreslog flytten kan aldrig godkänna den själv.', '#/flyttar'),
+  o('nationella-koer', ['systemforvaltare'], 'Samtyckestjänsten har inte svarat på en timme. Vad händer med samtyckena som registreras under tiden?', [
+    ['a', 'De går förlorade och måste registreras igen.'],
+    ['b', 'De gäller i Vårdkällan och ligger i kön. Systemet skickar dem när tjänsten svarar, och sidan Nationella tjänster visar det som inte har kommit fram, utan patientuppgifter.'],
+    ['c', 'Ingen kan registrera samtycke förrän tjänsten svarar.'],
+  ], 'b', 'Köerna till samtyckestjänsten och engagemangsindex försöker igen av sig själva, med allt längre mellan försöken. Du kan skicka det som väntar direkt.', '#/nationella-tjanster'),
 ];
 // Runda 15, r4: anteckningsvyn med underlaget, utkastet som sparas av sig självt och de egna fraserna.
 OVNINGAR_V1.push(

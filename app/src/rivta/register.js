@@ -5,11 +5,9 @@
 // kontrakten.
 //   GetEmployeeIncludingProtectedPerson 4.0   personalens uppgifter i HSA, jämförda med personalkatalogen
 //   LookupResidentForFullProfile 1.2           patientens folkbokföring, jämförd med patientens uppgifter
-//   Update 1.0                                 engagemangsindex: att patienten har uppgifter hos Vårdkällans vårdenheter
-import { randomUUID } from 'node:crypto';
+//   Update 1.0                                 engagemangsindex: att patienten har uppgifter i Vårdkällan (engagemangsindex.js)
 import { kontrakt } from './kontrakt.js';
 import { tjanst, anropa as anropaSim, NATIONELL } from './nationella.js';
-import { vardgivare } from './konsumenter.js';
 import { patientFranPersonId } from './journal.js';
 import { vardenhetFor, kanRoll } from '../atkomst.js';
 import { Fel } from '../db.js';
@@ -136,56 +134,53 @@ export function puPatient(atk) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Engagemangsindex (Update 1.0): en post per patient, vårdenhet och informationsmängd där Vårdkällan har uppgifter, så
-// att den aggregerande tjänsten vet var den ska fråga. Posten säger bara att det finns uppgifter, aldrig vilka. Den
-// simulerade tjänsten sparar posterna i sandlådan. Kategorierna är de som domänens villkor för engagemangsindex anger
-// (voo vårdöversikt och dia diagnos i riv.clinicalprocess.healthcond.description).
-const EI_DOMAN = [
-  ['riv:clinicalprocess:healthcond:description', 'voo', 'anteckningar'], ['riv:clinicalprocess:healthcond:description', 'dia', 'diagnoser'],
-];
-tjanst.registrera(EI, ({ db }, { begaran }) => {
+// Engagemangsindex (Update 1.0). Runda 15, r2: det simulerade indexet följer Ineras regler för producenten av Update
+// (TKB itintegration:engagementindex 1.0.9): högst 1000 poster per anrop, unika poster i begäran, inga fält som indexet
+// själv sätter (owner, creationTime och updateTime), ingen mostRecentContent när posten tas bort, och postens identitet
+// är alla fält utom mostRecentContent. Indexet sätter owner till sitt eget HSA-id och creationTime och updateTime.
+// Posterna räknas fram och skickas av engagemangsindex.js, av sig självt när journalen ändras.
+const EI_IDENTITET = ['registeredResidentIdentification', 'serviceDomain', 'categorization', 'logicalAddress', 'businessObjectInstanceIdentifier', 'clinicalProcessInterestId', 'sourceSystem', 'dataController'];
+function sakraSimEi(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS rivta_sim_engagemang (nyckel TEXT PRIMARY KEY, patient_id TEXT NOT NULL, doman TEXT NOT NULL, kategori TEXT NOT NULL,
     vardenhet_hsa TEXT NOT NULL, kallsystem TEXT NOT NULL, senast TEXT, uppdaterad TEXT NOT NULL)`);
-  for (const t of begaran.engagementTransaction ?? []) {
+  const kol = db.query('PRAGMA table_info(rivta_sim_engagemang)').all().map(k => k.name);
+  if (!kol.includes('skapad')) db.exec('ALTER TABLE rivta_sim_engagemang ADD COLUMN skapad TEXT');
+  if (!kol.includes('agare')) db.exec('ALTER TABLE rivta_sim_engagemang ADD COLUMN agare TEXT');
+  if (!kol.includes('personid')) db.exec('ALTER TABLE rivta_sim_engagemang ADD COLUMN personid TEXT');
+}
+export const sakraSimuleratIndex = sakraSimEi;
+tjanst.registrera(EI, ({ db }, { begaran }) => {
+  sakraSimEi(db);
+  const lista = begaran.engagementTransaction ?? [];
+  if (lista.length > 1000) return { ResultCode: 'ERROR', comment: 'Begäran får ha högst 1000 engagementTransaction.' };
+  const sedda = new Map();
+  for (const [i, t] of lista.entries()) {
     const e = t.engagement;
-    const pid = patientFranPersonId(db, e.registeredResidentIdentification);
-    if (!pid) continue;
-    const nyckel = [e.registeredResidentIdentification, e.serviceDomain, e.categorization, e.logicalAddress, e.businessObjectInstanceIdentifier, e.sourceSystem, e.dataController].join('|');
-    if (t.deleteFlag) db.query('DELETE FROM rivta_sim_engagemang WHERE nyckel = ?').run(nyckel);
-    else db.query('INSERT INTO rivta_sim_engagemang (nyckel, patient_id, doman, kategori, vardenhet_hsa, kallsystem, senast, uppdaterad) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (nyckel) DO UPDATE SET senast = excluded.senast, uppdaterad = excluded.uppdaterad')
-      .run(nyckel, pid, e.serviceDomain, e.categorization, e.logicalAddress, e.sourceSystem, e.mostRecentContent ?? null, new Date().toISOString());
+    for (const f of ['creationTime', 'updateTime', 'owner']) if (e[f] != null) return { ResultCode: 'ERROR', comment: `Fältet ${f} sätts av indexet och får inte skickas.` };
+    if (t.deleteFlag && e.mostRecentContent != null) return { ResultCode: 'ERROR', comment: 'Fältet mostRecentContent får inte skickas när posten tas bort.' };
+    const nyckel = EI_IDENTITET.map(f => e[f]).join('|');
+    if (sedda.has(nyckel)) return { ResultCode: 'ERROR', comment: `Posterna ${sedda.get(nyckel)} och ${i} i begäran har samma identitet. Dubbletter är inte tillåtna.` };
+    sedda.set(nyckel, i);
+  }
+  const nu = new Date().toISOString();
+  for (const t of lista) {
+    const e = t.engagement;
+    const nyckel = EI_IDENTITET.map(f => e[f]).join('|');
+    if (t.deleteFlag) { db.query('DELETE FROM rivta_sim_engagemang WHERE nyckel = ?').run(nyckel); continue; }
+    const pid = patientFranPersonId(db, e.registeredResidentIdentification) ?? '';
+    const fore = db.query('SELECT senast FROM rivta_sim_engagemang WHERE nyckel = ?').get(nyckel);
+    if (fore && fore.senast === (e.mostRecentContent ?? null)) continue;
+    db.query(`INSERT INTO rivta_sim_engagemang (nyckel, patient_id, personid, doman, kategori, vardenhet_hsa, kallsystem, senast, uppdaterad, skapad, agare) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (nyckel) DO UPDATE SET senast = excluded.senast, uppdaterad = excluded.uppdaterad`)
+      .run(nyckel, pid, e.registeredResidentIdentification, e.serviceDomain, e.categorization, e.logicalAddress, e.sourceSystem, e.mostRecentContent ?? null, nu, nu, NATIONELL);
   }
   return { ResultCode: 'OK' };
 });
 
-// Skickar patientens engagemang till engagemangsindex. Ger antalet poster.
+// Runda 15, r2: systemförvaltarens knapp för en patient räknar om patientens poster och skickar skillnaden direkt.
+// Ger antalet poster som skickades.
 export function uppdateraEngagemang(db, patientId) {
-  const p = db.query("SELECT personnummer FROM patienter WHERE id = ? AND skyddad = 0 AND id_typ = 'personnummer'").get(patientId);
-  // En patient med skyddade personuppgifter eller utan personnummer anmäls inte till engagemangsindex.
-  if (!p) return 0;
-  const vg = vardgivare(db);
-  const tidkolumn = { anteckningar: 'skapad', diagnoser: 'datum' };
-  const sparrade = new Set(db.query('SELECT enhet_id FROM sparrar WHERE patient_id = ? AND aktiv = 1').all(patientId).map(r => vardenhetFor(db, r.enhet_id)));
-  const poster = [];
-  for (const [doman, kategori, mangd] of EI_DOMAN) {
-    const enheter = new Map();
-    for (const r of db.query(`SELECT enhet_id, max(coalesce(${tidkolumn[mangd]}, '')) AS senast FROM ${mangd} WHERE patient_id = ? GROUP BY enhet_id`).all(patientId)) {
-      const ve = vardenhetFor(db, r.enhet_id);
-      // Spärrade uppgifter anmäls inte, så att indexet inte röjer att de finns.
-      if (sparrade.has(ve)) continue;
-      const hsa = db.query('SELECT hsa_id FROM enheter WHERE id = ?').get(ve)?.hsa_id;
-      if (hsa && (!enheter.has(hsa) || enheter.get(hsa) < r.senast)) enheter.set(hsa, r.senast);
-    }
-    for (const [hsa, senast] of enheter) {
-      const t = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.exec(senast ?? '')?.[0];
-      poster.push({ engagement: {
-        registeredResidentIdentification: p.personnummer, serviceDomain: doman, categorization: kategori, logicalAddress: hsa, businessObjectInstanceIdentifier: 'NA',
-        clinicalProcessInterestId: randomUUID(), mostRecentContent: t ? t.replace(/[-:T]/g, '').padEnd(14, '0') : null, sourceSystem: vg, creationTime: null, updateTime: null,
-        dataController: vg, owner: vg,
-      }, deleteFlag: false });
-    }
-  }
-  if (!poster.length) return 0;
-  anropa(db, 'Update', { engagementTransaction: poster });
-  return poster.length;
+  const ei = require('../engagemangsindex.js');
+  ei.markeraPatienter(db, [patientId]);
+  return ei.skicka(db, { tvinga: true, patientId }).poster;
 }

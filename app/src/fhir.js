@@ -674,6 +674,25 @@ function vaccinationKalla(db, id) {
 
 const MAPPA = { Immunization: immunization, CarePlan: carePlan, Encounter: encounter, EpisodeOfCare: episodeOfCare, Condition: condition, Observation: observation, MedicationRequest: medicationRequest, AllergyIntolerance: allergyIntolerance, Flag: flag, ServiceRequest: serviceRequest, Composition: composition, MedicationAdministration: medicationAdministration, List: list };
 
+// Runda 15, r2: patientens samtycke till sammanhållen journalföring på en vårdenhet som Consent, med samma behörighet,
+// filtrering per vårdenhet och loggning som journalen (las_journal). Ett återkallat samtycke är inactive och har slutet
+// på giltigheten. Ett samtycke som bara finns i samtyckestjänsten är inte Vårdkällans och lämnas inte ut här.
+TYPER.push('Consent');
+HANDLING.Consent = 'las_journal';
+TABELL.Consent = 'sammanhallen_samtycken';
+export function consent(db, s) {
+  return {
+    resourceType: 'Consent', id: String(s.id), meta: kallaMeta('vardkallan'), status: s.aterkallat ? 'inactive' : 'active',
+    scope: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/consentscope', code: 'patient-privacy' }] },
+    category: [{ coding: [{ system: 'http://loinc.org', code: '59284-0' }], text: 'Samtycke till sammanhållen journalföring' }],
+    patient: ref('Patient', s.patient_id), dateTime: s.registrerat,
+    organization: [ref('Organization', s.enhet_id, enhetsnamn(db, s.enhet_id))],
+    policyRule: { text: 'Lag (2022:913) om sammanhållen vård- och omsorgsdokumentation, 3 kap.' },
+    provision: { type: 'permit', period: { start: s.registrerat, ...(s.aterkallat ? { end: s.aterkallat } : {}) } },
+  };
+}
+MAPPA.Consent = consent;
+
 function handlingFor(typ, rad, personal) {
   if (typ === 'Composition') return lasHandling(rad?.kategori ?? 'lakare');
   if (typ === 'ServiceRequest' && !kanRoll(personal, 'las_remiss')) return 'las_remiss_status';

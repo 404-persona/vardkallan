@@ -78,6 +78,17 @@
           "text": "Parametern Flerfaktor krävs vid inloggning är ersatt av en regel som systemet avgör: inloggningen är alltid flerfaktor, och den sista faktorn får tas bort bara efter en inloggning med tillitsnivå 3. Under Regler och parametrar står parametern kvar i historiken, märkt Ersatt av en regel, tillsammans med regeln och varför."
         },
         {
+          "id": "flytt-fyra-ogon-1-5-0",
+          "roller": [
+            "vardadministrator",
+            "verksamhetschef"
+          ],
+          "omfattning": "liten",
+          "var": "#/flyttar",
+          "rubrik": "Flytt till rätt patient med fyra ögon",
+          "text": "Har rätt patient ingen vårdrelation till vårdenheten flyttas inget direkt. Flytten väntar på att verksamhetschefen eller en annan vårdadministratör godkänner den i sin egen inloggning på sidan Flyttar till rätt patient. Förslaget visar numret som skrevs, men ingenting om patienten som numret leder till."
+        },
+        {
           "id": "formular-1-5-0",
           "roller": [
             "sjukskoterska",
@@ -129,6 +140,16 @@
           "text": "Uppgifter som är äldre än fem år och som vården har flyttat till sitt arkiv visas i Min journal som förut, märkta Äldre uppgift från arkivet. Samma regler gäller som för resten av din journal i Min journal, också när du hämtar din journal med en app genom FHIR."
         },
         {
+          "id": "nationella-koer-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/nationella-tjanster",
+          "rubrik": "Köerna till samtyckestjänsten och engagemangsindex",
+          "text": "Engagemangsindex uppdateras av sig självt när journalen ändras, och registreringar av samtycken skickas till samtyckestjänsten genom en kö. På sidan Nationella tjänster ser du läget och det som inte har kommit fram, och kan skicka det som väntar direkt. Tjänsterna är simulerade i demon."
+        },
+        {
           "id": "observation-1-5-0",
           "roller": [
             "underskoterska"
@@ -170,6 +191,17 @@
           "text": "Vid ett längre avbrott kan driften starta en reservserver på en annan plats. Den visar journalen ur den senaste säkerhetskopian och säger överst på varje sida hur gamla uppgifterna är. Den kan bara läsas, så det som behöver registreras antecknas på papper och förs in när kärnsystemet är i drift igen. Varje läsning loggas som vanligt."
         },
         {
+          "id": "samtycke-nationellt-1-5-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Samtycket gäller här och i samtyckestjänsten",
+          "text": "Ett samtycke till sammanhållen journalföring som patienten har gett i ett annat system gäller också i Vårdkällan, och ett samtycke som registreras eller återkallas här registreras eller återkallas i samtyckestjänsten. Du bekräftar bara samtycket en gång. Svarar samtyckestjänsten inte gäller samtycket som registrerades här, och systemet skickar registreringen när tjänsten svarar igen. Patienten väljer hur länge samtycket gäller: som förval så länge vårdrelationen pågår, till ett visst datum eller tills vidare. För patienter med skyddade personuppgifter hämtas uppgifter från andra vårdgivare bara vid nödåtkomst. Samtyckestjänsten är simulerad i demon."
+        },
+        {
           "id": "sista-faktorn-1-5-0",
           "roller": [
             "alla"
@@ -208,6 +240,16 @@
           "var": "#/inloggningstjanster",
           "rubrik": "Lägsta tillitsnivå per inloggningstjänst",
           "text": "För varje inloggningstjänst anger du lägsta tillitsnivå, med fyra ögon som andra ändringar. Systemet förklarar vad varje nivå betyder. Nivå 3 är förvald och rekommenderas. Med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen innan de får behörighet. Säkerhetsloggen visar metod och tillitsnivå för varje inloggning."
+        },
+        {
+          "id": "vardkontakt-makulering-1-5-0",
+          "roller": [
+            "vardadministrator"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vårdkontakt på fel patient",
+          "text": "En genomförd vårdkontakt som har registrerats på fel patient makuleras med en motivering. Ange numret för rätt patient, så flyttar systemet kontakten och allt som hör till den dit, som när två journaler slås samman. På fel patient står bara att kontakten är makulerad, och ingenting om den andra patienten. Ett vårdtillfälle på fel patient flyttas på samma sätt."
         },
         {
           "id": "yrkesmallar-1-5-0",

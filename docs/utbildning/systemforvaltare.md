@@ -91,6 +91,16 @@ Fyra ögon: ingen godkänner sina egna ändringar. Systemet visar effekten i fö
 
 Pröva i demon: logga in som Tomas Lindh och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/regler).
 
+### Övning 4
+
+Samtyckestjänsten har inte svarat på en timme. Vad händer med samtyckena som registreras under tiden?
+
+Rätt svar: De gäller i Vårdkällan och ligger i kön. Systemet skickar dem när tjänsten svarar, och sidan Nationella tjänster visar det som inte har kommit fram, utan patientuppgifter.
+
+Köerna till samtyckestjänsten och engagemangsindex försöker igen av sig själva, med allt längre mellan försöken. Du kan skicka det som väntar direkt.
+
+Pröva i demon: logga in som Tomas Lindh och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/nationella-tjanster).
+
 ## Uppdrag i testinbjudan
 
 Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Sussas användbarhetstestfall och ligger i den ordning en arbetsdag har dem. Systemet bockar av ett uppdrag själv när det har hänt, och ett uppdrag som går ut på att hitta något har en fråga som systemet rättar.
@@ -124,4 +134,4 @@ Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag 
 - Ändra listan över tillfälliga diagnoser och läsa förhandsvisningen.
 - Ange lägsta tillitsnivå för en inloggningstjänst och förklara vad en lägre nivå betyder för personalen.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 3 övningar och få intyget.
+- Svara rätt på alla 4 övningar och få intyget.

@@ -103,10 +103,13 @@ const POSTERNA = [
       `${A}aktivt val för andra enheter via API`,
       `${A}spärrmarkering och samtycke via API`,
       `${GK}Nödåtkomst inom budget`,
+      // Runda 15, r2: samtycket prövas också mot samtyckestjänsten (2.2.1.4).
+      'Samtycke här och i samtyckestjänsten > samtycke givet i ett annat system gäller här, utan att personalen registrerar något',
+      'Samtycke här och i samtyckestjänsten > samtyckestjänsten nere: samtycket här gäller, registreringen köas och skickas när tjänsten svarar, och systemförvaltaren får en rad',
     ],
     losning: 'Inre sekretess med aktivt val, spärr med spärrmarkering och samtycke i stunden, och nödåtkomst, i ett flöde där uppgifterna visas stegvis.',
     expert: 'Systemet visar först det användaren har rätt till och frågar efter aktivt val eller samtycke bara när det behövs, med förslag på grund och en förklaring på vanlig svenska.',
-    anmarkning: 'Spärr och samtycke finns i Vårdkällans egen behörighetsmotor och inte via de nationella tjänsterna i kapitel 2.',
+    anmarkning: 'Spärr och samtycke finns i Vårdkällans egen behörighetsmotor. Samtycket till sammanhållen journalföring prövas också mot samtyckestjänsten, och spärrar hos andra vårdgivare mot spärrtjänsten, men de nationella tjänsterna är simulerade i demon och inte anslutna (2.2.1.3 och 2.2.1.4, delvis).',
   },
   {
     id: '5.2.1.8', kategori: 'system', egna: ['L2'], avsedd: 'delvis',

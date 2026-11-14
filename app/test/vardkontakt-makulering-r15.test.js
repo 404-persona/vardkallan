@@ -1,0 +1,224 @@
+import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { testserver, klient, sandlada, somPerson } from './hjalp.js';
+import { harVardrelation, prova } from '../src/atkomst.js';
+import { loggaRad } from '../src/logg.js';
+
+// Runda 15, r2, andra omgången (beslut 2026-11-14): makulering av en genomförd vårdkontakt som har registrerats på fel
+// patient. Uppgifterna flyttas till rätt patient som vid en sammanslagning, eller makuleras med kontakten när ingen
+// dokumentation hör till den. Ingenting om den andra patienten röjs i den felaktiga journalen.
+
+let app;
+beforeAll(() => { app = testserver(); });
+afterAll(() => app.stopp());
+const inloggad = async (id) => { const k = klient(app); await k.logga(id); return k; };
+const RATT = { id: 'p05', pnr: '196503143254', namn: ['Lars', 'Wennberg'] };
+// En genomförd öppenvårdskontakt på kardiologen med minst en anteckning, på någon annan än rätt patient.
+const medDokumentation = (db) => db.query(`SELECT v.* FROM vardkontakter v WHERE v.enhet_id LIKE 'uso-kard%' AND v.kalla = 'vardkallan' AND v.vardtillfalle_id IS NULL
+  AND v.typ <> 'slutenvard' AND coalesce(v.planerad, 0) = 0 AND v.patient_id <> 'p05' AND EXISTS (SELECT 1 FROM anteckningar a WHERE a.vardkontakt_id = v.id) ORDER BY v.id LIMIT 1`).get();
+const T = 'Makulering av vårdkontakt på fel patient';
+// Tredje omgången: ett nummer som inte kan flyttas direkt blir ett förslag, som den som föreslog kan återkalla.
+const aterkalla = async (k) => { for (const f of (await k.get('/api/flyttar')).data.mina) expect((await k.post(`/api/flyttar/${f.id}/avsluta`, {})).status).toBe(200); };
+
+describe(T, () => {
+  test('vårdadministratören flyttar kontakten med dess uppgifter till rätt patient, och fel patient har bara makuleringen kvar', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    expect(v).toBeTruthy();
+    const fran = v.patient_id;
+    const anteckningar = db.query('SELECT id FROM anteckningar WHERE vardkontakt_id = ?').all(v.id).map(r => r.id);
+    const f = (await k.get(`/api/vardkontakt/${v.id}/makulering`)).data;
+    expect(f.foljer.find(x => x.tabell === 'anteckningar').antal).toBe(anteckningar.length);
+    expect(f.kanMakuleras).toBe(false);
+    const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr });
+    expect(r.status).toBe(200);
+    expect(r.data.atgard).toBe('flyttad');
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(RATT.id);
+    for (const a of anteckningar) expect(db.query('SELECT patient_id FROM anteckningar WHERE id = ?').get(a).patient_id).toBe(RATT.id);
+    // Den felaktiga journalen visar att kontakten är makulerad, med motiveringen, men ingenting om rätt patient.
+    const ov = (await k.get(`/api/patient/${fran}/oversikt`)).data;
+    expect(ov.vardkontakter.some(x => x.id === v.id)).toBe(false);
+    expect(ov.makuleradeVardkontakter[0]).toMatchObject({ atgard: 'flyttad', orsak: 'Besöket registrerades på fel patient i receptionen.' });
+    for (const text of [JSON.stringify(ov.makuleradeVardkontakter), JSON.stringify(r.data)]) for (const x of [RATT.id, RATT.pnr, ...RATT.namn]) expect(text).not.toContain(x);
+    // Loggen har flytten på båda patienterna, med samma referens, och engagemangsindex räknas om för båda.
+    const logg = db.query("SELECT patient_id, resurs FROM atkomstlogg WHERE resurs LIKE 'makulering:vardkontakt:%' ORDER BY id").all();
+    expect(logg.map(l => l.patient_id).sort()).toEqual([fran, RATT.id].sort());
+    expect(logg.every(l => !l.resurs.includes(RATT.id) && !l.resurs.includes(fran))).toBe(true);
+    expect(db.query('SELECT count(DISTINCT patient_id) AS n FROM ei_markerade WHERE patient_id IN (?, ?)').get(fran, RATT.id).n).toBe(2);
+    // Makuleringen ändras och raderas aldrig.
+    expect(() => db.query('DELETE FROM vardkontakt_makuleringar').run()).toThrow();
+  });
+
+  test('motivering krävs, och ett okänt nummer eller samma patient ger samma svar', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Fel' })).data.falt).toEqual(['orsak']);
+    const okand = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.', rattPatient: '189001019802' });
+    await aterkalla(k);
+    const samma = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.', rattPatient: db.query('SELECT personnummer FROM patienter WHERE id = ?').get(v.patient_id).personnummer });
+    await aterkalla(k);
+    expect(okand.status).toBe(202);
+    expect(JSON.stringify(samma.data)).toBe(JSON.stringify(okand.data));
+    // Med dokumentation och utan rätt patient förklarar systemet att uppgifterna ska flyttas.
+    const utan = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.' });
+    expect(utan.status).toBe(409);
+    expect(utan.data.falt).toEqual(['rattPatient']);
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+  });
+
+  test('utan dokumentation makuleras kontakten, och en makulerad kontakt ger ingen vårdrelation', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    // En genomförd kontakt utan dokumentation, registrerad av vårdadministratören en timme sedan.
+    const nu = Date.now();
+    const id = Number(db.query("INSERT INTO vardkontakter (patient_id, enhet_id, typ, start, slut, orsak, kalla, kontaktsatt, skapad, skapad_av) VALUES ('p15', 'uso-kard-mott', 'oppenvard', ?, ?, 'Kontroll', 'vardkallan', 'besok', ?, 'adm-kard')")
+      .run(new Date(nu - 3600_000).toISOString(), new Date(nu - 1800_000).toISOString(), new Date(nu - 3600_000).toISOString()).lastInsertRowid);
+    // Den nya kontakten är det enda som ger kardiologen vårdrelation till patienten i sandlådan.
+    db.query("UPDATE vardkontakter SET ger_vardrelation = 0 WHERE patient_id = 'p15' AND id <> ?").run(id);
+    db.query("DELETE FROM listningar WHERE patient_id = 'p15'").run();
+    db.query("UPDATE remisser SET status = 'svar_kvitterat', svar_kvitterat_tid = '2000-01-01T00:00:00.000Z' WHERE patient_id = 'p15'").run();
+    expect(harVardrelation(db, 'p15', 'uso-kard')).toBe(true);
+    const r = await k.post(`/api/vardkontakt/${id}/makulera`, { orsak: 'Kontakten registrerades av misstag två gånger.' });
+    expect(r.status).toBe(200);
+    expect(r.data.atgard).toBe('makulerad');
+    expect(db.query('SELECT 1 FROM vardkontakter WHERE id = ?').get(id)).toBeNull();
+    expect(harVardrelation(db, 'p15', 'uso-kard')).toBe(false);
+    expect(db.query('SELECT atgard, orsak FROM vardkontakt_makuleringar WHERE vardkontakt_id = ?').get(id)).toEqual({ atgard: 'makulerad', orsak: 'Kontakten registrerades av misstag två gånger.' });
+  });
+
+  test('spärr: uppgifterna som flyttas till en patient som har spärrat vårdenheten syns inte för andra vårdenheter', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    db.query("INSERT INTO sparrar (patient_id, enhet_id, aktiv, registrerad) VALUES ('p05', 'uso-kard', 1, ?)").run(new Date().toISOString());
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+    const vc = db.query("SELECT * FROM personal WHERE id = 'lak-vc'").get();
+    // Också med nödåtkomst, som aldrig häver en spärr, är de flyttade uppgifterna dolda för en annan vårdenhet, medan
+    // patientens ospärrade uppgifter syns.
+    const val = { nodatkomst: true };
+    expect(prova(db, { personal: vc, patient: 'p05', handling: 'las_journal', resurs: { enhet_id: 'vc-tybble' }, val }).tillaten).toBe(true);
+    const svar = prova(db, { personal: vc, patient: 'p05', handling: 'las_journal', resurs: { enhet_id: v.enhet_id }, val });
+    expect(svar.tillaten).toBe(false);
+  });
+
+  test('skyddade personuppgifter hos rätt patient röjs inte, och fel roll, fel vårdenhet och fel slags kontakt nekas', async () => {
+    const k = await inloggad('adm-kard');
+    const s = sandlada(app, k);
+    const db = s.db;
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p05'").run();
+    const v = medDokumentation(db);
+    // Skyddad identitet flyttas direkt bara efter det aktiva valet att visa identiteten. Utan valet blir det ett förslag
+    // med samma svar som för alla andra nummer, och svaret röjer ändå ingenting.
+    const utanVal = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr });
+    expect(utanVal.status).toBe(202);
+    await aterkalla(k);
+    expect((await k.post('/api/patient/p05/val', { typ: 'visa_identitet', syfte: 'Identitetskontroll vid flytt av en vårdkontakt' })).status).toBe(200);
+    const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr });
+    expect(r.status).toBe(200);
+    for (const x of [RATT.id, RATT.pnr, ...RATT.namn]) expect(JSON.stringify(r.data)).not.toContain(x);
+    // En kontakt på en annan vårdenhet, och en roll som inte rättar vårdkontakter.
+    const annan = db.query("SELECT * FROM vardkontakter WHERE enhet_id NOT LIKE 'uso-kard%' AND kalla = 'vardkallan' AND vardtillfalle_id IS NULL AND typ <> 'slutenvard' AND coalesce(planerad, 0) = 0 ORDER BY id LIMIT 1").get();
+    expect((await k.post(`/api/vardkontakt/${annan.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.' })).status).toBe(403);
+    const slutenvard = db.query("SELECT * FROM vardkontakter WHERE enhet_id LIKE 'uso-kard%' AND (typ = 'slutenvard' OR vardtillfalle_id IS NOT NULL) ORDER BY id LIMIT 1").get();
+    if (slutenvard) expect((await k.post(`/api/vardkontakt/${slutenvard.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.' })).status).toBe(409);
+    somPerson(s, 'usk-kard');
+    const v2 = medDokumentation(db);
+    expect((await k.post(`/api/vardkontakt/${v2.id}/makulera`, { orsak: 'Besöket registrerades på fel patient.' })).status).toBe(403);
+  });
+
+  // Säkerhetsgranskningen av andra omgången.
+  test('målpatienten prövas i behörighetsmotorn, och varje nummer som inte kan flyttas direkt ger exakt samma svar utan att något ändras', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const orsak = 'Besöket registrerades på fel patient i receptionen.';
+    // p12 har ingen vårdrelation till kardiologen, p14 är sammanslagen, p15 avled före besöket och p05 har skyddad identitet.
+    // En sammanslagen journal leder till den gällande, här en journal utan vårdrelation till kardiologen.
+    db.query("UPDATE patienter SET sammanslagen_till = 'p12' WHERE id = 'p14'").run();
+    require('../src/avliden.js');
+    db.exec("CREATE TABLE IF NOT EXISTS avlidna (patient_id TEXT PRIMARY KEY, datum TEXT NOT NULL, dodsfall_id INTEGER, registrerad TEXT NOT NULL, registrerad_av TEXT NOT NULL, folkbokforing TEXT, avbokade INTEGER NOT NULL DEFAULT 0)");
+    db.query("INSERT INTO avlidna (patient_id, datum, registrerad, registrerad_av) VALUES ('p15', '2000-01-01', ?, 'adm-kard')").run(new Date().toISOString());
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p05'").run();
+    const nummer = (id) => db.query('SELECT personnummer FROM patienter WHERE id = ?').get(id).personnummer;
+    const svar = [];
+    for (const n of ['189001019802', nummer('p12'), nummer('p14'), nummer('p15'), RATT.pnr, nummer(v.patient_id)]) {
+      const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak, rattPatient: n });
+      svar.push(JSON.stringify([r.status, r.data]));
+      await aterkalla(k);
+    }
+    expect([...new Set(svar)]).toEqual([svar[0]]);
+    expect(JSON.parse(svar[0])[0]).toBe(202);
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+    expect(db.query('SELECT count(*) AS n FROM vardkontakt_makuleringar').get().n).toBe(0);
+    // Bara vårdadministratören flyttar, och läkaren nekas innan något nummer slås upp.
+    const s = sandlada(app, k);
+    somPerson(s, 'lak-kard');
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak, rattPatient: RATT.pnr })).status).toBe(403);
+  });
+
+  test('flytten skapar ingen vårdrelation hos rätt patient', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+    expect(db.query('SELECT ger_vardrelation FROM vardkontakter WHERE id = ?').get(v.id).ger_vardrelation).toBe(0);
+  });
+
+  test('försöken med nummer som inte kan flyttas direkt har ett tak per person', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const orsak = 'Besöket registrerades på fel patient i receptionen.';
+    for (let i = 0; i < 10; i++) {
+      expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak, rattPatient: '189001019802' })).status).toBe(202);
+      await aterkalla(k);
+    }
+    const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak, rattPatient: RATT.pnr });
+    expect(r.status).toBe(429);
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+  });
+
+  // Andra säkerhetsgranskningen.
+  test('en annan persons misslyckade försök och försök äldre än ett dygn stoppar inte flytten', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const gammal = new Date(Date.now() - 25 * 3600_000).toISOString();
+    for (let i = 0; i < 12; i++) {
+      loggaRad(db, { personal_id: 'lak-kard', enhet_id: 'uso-kard', patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: 'makulering:vardkontakt:nekad', grund: 'nekad', resultat: 'nekad' });
+      loggaRad(db, { tid: gammal, personal_id: 'adm-kard', enhet_id: 'uso-kard', patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: 'makulering:vardkontakt:nekad', grund: 'nekad', resultat: 'nekad' });
+    }
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+  });
+
+  test('det som flyttas ger aldrig rätt patient en ny vårdrelation: en remiss eller en operationsanmälan till en annan vårdenhet stoppar flytten', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const kopiera = (tabell, andra) => {
+      const r = { ...db.query(`SELECT * FROM ${tabell} ORDER BY id LIMIT 1`).get(), ...andra };
+      delete r.id;
+      const k2 = Object.keys(r);
+      return Number(db.query(`INSERT INTO ${tabell} (${k2.join(', ')}) VALUES (${k2.map(() => '?').join(', ')})`).run(...k2.map(x => r[x])).lastInsertRowid);
+    };
+    const fall = [
+      ['remisser', { patient_id: v.patient_id, vardkontakt_id: v.id, fran_enhet_id: 'uso-kard', till_enhet_id: 'vc-tybble', status: 'skickad', beslut: null, svar_kvitterat_tid: null, kalla: 'vardkallan' }, 'vc-tybble'],
+      ['op_anmalningar', { patient_id: v.patient_id, vardkontakt_id: v.id, enhet_id: 'uso-ort', status: 'vantar', mal_datum: new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10) }, 'uso-ane'],
+    ];
+    for (const [tabell, andra, enhet] of fall) {
+      const id = kopiera(tabell, andra);
+      expect(harVardrelation(db, RATT.id, enhet)).toBe(false);
+      const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr });
+      expect(r.status).toBe(409);
+      expect(harVardrelation(db, RATT.id, enhet)).toBe(false);
+      expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+      expect(db.query(`SELECT patient_id FROM ${tabell} WHERE id = ?`).get(id).patient_id).toBe(v.patient_id);
+      db.query(`UPDATE ${tabell} SET vardkontakt_id = NULL WHERE id = ?`).run(id);
+    }
+    // Listningen följer aldrig med en vårdkontakt, och utan de raderna går flytten igenom utan nya vårdrelationer.
+    const fore = db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(e => e.id).filter(e => harVardrelation(db, RATT.id, e));
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+    expect(db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(e => e.id).filter(e => harVardrelation(db, RATT.id, e))).toEqual(fore);
+  });
+});

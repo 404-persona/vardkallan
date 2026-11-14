@@ -78,6 +78,10 @@ export const PROVA = {
   '#/ekonomi': 'faktureringsunderlag', '#/regler': 'konfigurera',
   // Runda 15, r4: journalen för demopatienten, där anteckningsvyn med underlaget och de egna fraserna finns.
   '#/patient/p01/journal': 'patient',
+  // Runda 15, r2: köerna till de nationella tjänsterna.
+  '#/nationella-tjanster': 'forvalta_api',
+  // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
+  '#/flyttar': 'godkanna_flytt',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

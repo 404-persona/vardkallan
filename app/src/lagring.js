@@ -73,7 +73,9 @@ const SYSTEM = new Set(['omorganisationer', 'omorganisation_flyttar', 'lagringsm
   // Runda 14, r5: incidentregistret hör till driften och har inga patientuppgifter (servicenivaer.js).
   'incidenter',
   // Runda 14, r1: de betrodda inloggningstjänsterna hör till förvaltningen av inloggningen (inloggningstjanster.js).
-  'inloggningstjanst_andringar']);
+  'inloggningstjanst_andringar',
+  // Runda 15, r2: omgångarna till engagemangsindex och deras läge, utan patientuppgifter (engagemangsindex.js).
+  'ei_omgangar', 'ei_status']);
 // Tabeller vars koppling inte går att se på kolumnnamnen.
 const UTTRYCKLIGA = {
   dubblettforslag: { typ: 'patient', kolumner: ['fran_patient_id', 'till_patient_id'] },

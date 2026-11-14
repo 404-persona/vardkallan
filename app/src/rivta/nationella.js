@@ -40,6 +40,8 @@ export const K = {
   CheckConsent: kontrakt('riv.ehr.patientconsent', 'CheckConsent', '1.0'),
   RegisterExtendedConsent: kontrakt('riv.ehr.patientconsent', 'RegisterExtendedConsent', '1.0'),
   CancelExtendedConsent: kontrakt('riv.ehr.patientconsent', 'CancelExtendedConsent', '1.0'),
+  // Runda 15, r2: patientens samtycken hos vårdgivaren med utökad information, också återkallade (samtycke-nationellt.js).
+  GetExtendedConsentsForPatient: kontrakt('riv.ehr.patientconsent', 'GetExtendedConsentsForPatient', '1.0'),
 };
 
 // Bara Vårdkällans vårdgivare anropar de simulerade tjänsterna.
@@ -52,7 +54,12 @@ export const tjanst = skapaTjanst({ namn: NAMN, adresser: () => [NATIONELL], pro
 // en tjänst som inte svarar) med satt(...).
 let ersattning = null;
 export const satt = (t) => { ersattning = t; };
-export const transport = (db) => ersattning ?? iProcessenSynk(tjanst, { ctx: { db }, avsandare: { hsaId: vardgivare(db), via: 'direkt' } });
+// Runda 15, r2: systemförvaltaren kan i demon simulera att de nationella tjänsterna inte svarar (installningen
+// nationella.simulerat_avbrott), för att se hur köerna till samtyckestjänsten och engagemangsindex fungerar.
+export const AVBROTT = 'nationella.simulerat_avbrott';
+const avbrott = (db) => db.query('SELECT varde FROM installningar WHERE nyckel = ?').get(AVBROTT)?.varde === '1';
+const nere = () => { throw new Error('De simulerade nationella tjänsterna svarar inte (simulerat avbrott i demon).'); };
+export const transport = (db) => ersattning ?? (avbrott(db) ? nere : iProcessenSynk(tjanst, { ctx: { db }, avsandare: { hsaId: vardgivare(db), via: 'direkt' } }));
 // Ett anrop som konsument till en simulerad nationell tjänst, med begäran och svar validerade mot schemat.
 export const anropa = (db, namn, begaran) => anropaSynk(K[namn], { logiskAdress: NATIONELL, begaran, transport: transport(db), db });
 
@@ -66,6 +73,11 @@ function sakra(db) {
     CREATE TABLE IF NOT EXISTS rivta_sim_samtycken (intyg_id TEXT PRIMARY KEY, patient_id TEXT NOT NULL, typ TEXT NOT NULL, vardgivare_hsa TEXT NOT NULL,
       vardenhet_hsa TEXT NOT NULL, personal_hsa TEXT, start TEXT, slut TEXT, registrerat TEXT NOT NULL, aterkallat TEXT);
     CREATE TABLE IF NOT EXISTS rivta_sim_status (nyckel TEXT PRIMARY KEY, varde TEXT);`);
+  // Runda 15, r2: vem som registrerade och återkallade ett samtycke, och tiden för begäran, för GetExtendedConsentsForPatient.
+  {
+    const kol = db.query('PRAGMA table_info(rivta_sim_samtycken)').all().map(k => k.name);
+    for (const k of ['registrerat_av', 'aterkallat_av', 'begart']) if (!kol.includes(k)) db.exec(`ALTER TABLE rivta_sim_samtycken ADD COLUMN ${k} TEXT`);
+  }
   if (db.query("SELECT 1 FROM rivta_sim_status WHERE nyckel = 'sparrar'").get()) return;
   // Spärrarna hos den andra vårdgivaren: en spärr per spärrad uppgift, för just den dagen och vårdenheten.
   const sj = require('../sammanhallen.js');
@@ -243,14 +255,31 @@ tjanst.registrera(K.RegisterExtendedConsent, ({ db }, { begaran }) => {
   const pid = patientAv(db, begaran.PatientId);
   if (!pid) return { ResultType: resultat('NOTFOUND', 'Patienten finns inte i den simulerade tjänsten.') };
   if (db.query('SELECT 1 FROM rivta_sim_samtycken WHERE intyg_id = ?').get(begaran.AssertionId)) return { ResultType: resultat('ALREADYEXISTS', 'Samtycket finns redan.') };
-  db.query('INSERT INTO rivta_sim_samtycken (intyg_id, patient_id, typ, vardgivare_hsa, vardenhet_hsa, personal_hsa, start, slut, registrerat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(begaran.AssertionId, pid, begaran.AssertionType, begaran.CareProviderId, begaran.CareUnitId, begaran.EmployeeId ?? null, begaran.StartDate ?? null, begaran.EndDate ?? null, new Date().toISOString());
+  db.query('INSERT INTO rivta_sim_samtycken (intyg_id, patient_id, typ, vardgivare_hsa, vardenhet_hsa, personal_hsa, start, slut, registrerat, registrerat_av, begart) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(begaran.AssertionId, pid, begaran.AssertionType, begaran.CareProviderId, begaran.CareUnitId, begaran.EmployeeId ?? null, begaran.StartDate ?? null, begaran.EndDate ?? null, new Date().toISOString(),
+      begaran.RegistrationAction?.RegisteredBy?.EmployeeId ?? null, begaran.RegistrationAction?.RequestDate ?? null);
   return { ResultType: resultat() };
 });
 tjanst.registrera(K.CancelExtendedConsent, ({ db }, { begaran }) => {
   sakra(db);
-  const n = db.query('UPDATE rivta_sim_samtycken SET aterkallat = ? WHERE intyg_id = ? AND aterkallat IS NULL').run(new Date().toISOString(), begaran.AssertionId).changes;
+  const n = db.query('UPDATE rivta_sim_samtycken SET aterkallat = ?, aterkallat_av = ? WHERE intyg_id = ? AND aterkallat IS NULL')
+    .run(new Date().toISOString(), begaran.CancellationAction?.RegisteredBy?.EmployeeId ?? null, begaran.AssertionId).changes;
   return { ResultType: n ? resultat() : resultat('NOTFOUND', 'Samtycket finns inte.') };
+});
+// Runda 15, r2: patientens samtycken hos vårdgivaren, med vem och när de registrerades och återkallades. Utgångna
+// samtycken lämnas aldrig ut, och återkallade bara med GetCancelledFlag, som i tjänstekontraktet.
+tjanst.registrera(K.GetExtendedConsentsForPatient, ({ db }, { begaran }) => {
+  sakra(db);
+  const pid = patientAv(db, begaran.PatientId);
+  const nu = tid(new Date().toISOString());
+  const rader = pid ? db.query('SELECT * FROM rivta_sim_samtycken WHERE patient_id = ? AND vardgivare_hsa = ? ORDER BY registrerat').all(pid, begaran.CareProviderId) : [];
+  const aktion = (t, av, begart = null) => ({ RequestDate: tid(begart ?? t), RequestedBy: { EmployeeId: av ?? 'okand' }, RegistrationDate: tid(t), RegisteredBy: { EmployeeId: av ?? 'okand' } });
+  return { GetExtendedConsentsResultType: { Result: resultat(), PdlAssertions: rader.filter(x => (!x.slut || x.slut >= nu) && (begaran.GetCancelledFlag || !x.aterkallat)).map(x => ({
+    PDLAssertion: { AssertionId: x.intyg_id, AssertionType: x.typ, Scope: 'NationalLevel', PatientId: pnrAv(db, x.patient_id), CareProviderId: x.vardgivare_hsa, CareUnitId: x.vardenhet_hsa,
+      EmployeeId: x.personal_hsa, StartDate: x.start ?? tid(x.registrerat), EndDate: x.slut },
+    RegistrationInfo: aktion(x.registrerat, x.registrerat_av, x.begart),
+    CancellationInfo: x.aterkallat ? aktion(x.aterkallat, x.aterkallat_av) : null,
+  })) } };
 });
 // ---------------------------------------------------------------------------------------------------------------
 // Hjälpare för konsumenterna i Vårdkällan.

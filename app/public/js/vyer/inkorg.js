@@ -55,6 +55,10 @@ export async function visa(main) {
   const nll = d.nllAvvikelser.map(n => rad(pat(n.patientId, 'lakemedel'),
     `${esc(n.lakemedel)}, ${esc(pnamn(n.patient))}${sym(n.patient)}`, `${esc(NLL[n.nll_status] ?? n.nll_status)}. Ordinerat ${esc(tidpunkt(n.skapad))}. Stäm av mot NLL.`, 'ik-nll'));
 
+  // Runda 15, r2, tredje omgången: flyttar till rätt patient som väntar på godkännande, utan något om patienten som
+  // numret leder till.
+  const flytt = (d.flyttarAttGodkanna ?? []).map(f => rad('#/flyttar', `${esc(f.rubrik)}, ${esc(f.felPatient?.namn ?? '')}`,
+    `Föreslagen ${esc(tidpunkt(f.foreslagen))} av ${esc(f.foreslagenAv?.namn ?? '')}. Kontrollera numret och godkänn eller avslå flytten.`, 'ik-flytt'));
   const dubb = (d.dubbletter ?? []).map(x => rad(pat(x.patientId, 'identitet'),
     `Trolig dubblett, ${esc(pnamn(x.patient))}${sym(x.patient)}`, `<span class="pnr">${esc(x.patient.personnummer)}</span>. Systemet har hittat ${x.antal === 1 ? 'en annan journal' : `${x.antal} andra journaler`} som troligen gäller samma person. Bekräfta sammanslagningen.`, 'ik-dubblett'));
 
@@ -155,6 +159,7 @@ export async function visa(main) {
     ${avbokade.length ? sektion('vhavbokad', 'Vårdhändelser som avbokades', avbokade, '', 'Remissen avvisades, och tiden för en vårdhändelse som en läkemedelsdos väntar på avbokades. Besluta om ordinationen.') : ''}
     ${S.session.behorigheter.includes('ordinera') ? sektion('atersatt', 'Läkemedel att sätta in igen', atersatt, 'Inget läkemedel ska sättas in igen efter ett uppehåll i dag eller i morgon.', 'Antikoagulantia som gör uppehåll inför ett ingrepp. Systemet påminner dagen före återinsättningen och fyller i ordinationen ur den tidigare.') : ''}
     ${S.session.behorigheter.includes('delegera') && (S.session.personal.yrke === 'sjukskoterska' || deleg.length) ? sektion('deleg', 'Delegeringar som går ut', deleg, 'Inga delegeringar går ut de närmaste 30 dagarna.', 'Undersköterskornas delegeringar att ge läkemedel. Följ upp dem och registrera nya innan de går ut.') : ''}
+    ${flytt.length ? sektion('flytt', 'Flyttar till rätt patient att godkänna', flytt, '', 'Uppgifter som har registrerats på fel patient, där rätt patient saknar vårdrelation till vårdenheten. Inget flyttas förrän du eller en annan behörig person har godkänt flytten.') : ''}
     ${S.session.behorigheter.includes('sla_samman') ? sektion('dubb', 'Troliga dubbletter', dubb, 'Inga troliga dubbletter.', 'Journaler som systemet tror gäller samma person, till exempel ett reservnummer och ett personnummer med samma namn och födelsedatum.') : ''}
     ${sparrFr.length ? sektion('sparrfragor', 'Spärrar att fråga patienten om', sparrFr, '', 'En vårdenhet där patienten har en spärr har gått upp i din vårdenhet. Spärren gäller som förut mot den gamla enhetens uppgifter. Patienten kan själv besluta att den också ska gälla här.') : ''}
     ${inkorgSektioner(d, sektion, rad)}

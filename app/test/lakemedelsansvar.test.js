@@ -63,6 +63,8 @@ describe('Ansvarsuppdrag för läkemedel', () => {
       'forskning_godkann', 'signeringslista',
       // Runda 13, r3 (E3-35): godkännande av gallring och radering för vårdenheten.
       'godkanna_gallring',
+      // Runda 15, r2, tredje omgången: godkännande av en flytt till rätt patient med fyra ögon.
+      'godkanna_flytt',
       // Runda 10, r2: vårdenhetens förval för vyerna.
       'vyforval']);
     const f = (await k.get('/api/lakemedelsansvar')).data.uppdrag.find(u => u.typ === 'medicinskt_ansvarig').forslag[0];
