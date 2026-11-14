@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-13T07:49:05.214Z",
-  "bas": "http://127.0.0.1:18140",
+  "tid": "2026-11-14T11:28:07.520Z",
+  "bas": "http://127.0.0.1:18153",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "fbfad8053070c0f5cab8084ef337295aba97a2513e543ddbdea4b4aac780435d",
+  "gransnittHash": "6bd87fe476c133b09304ab6d174ccf5cf113208923f178a63becb018cb4223df",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte tecken för tecken. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2217,6 +2217,23 @@
       ]
     },
     {
+      "id": "las-mellanarkiv-ordination",
+      "namn": "Läsa en utsatt ordination ur mellanarkivet",
+      "roll": "lak-kard",
+      "start": "Patientens översikt",
+      "budget": 2,
+      "motivering": "Sussa 5.4.2.2. Ett klick på fliken Läkemedel och ett på Öppna vid ordinationen, som står bland de utsatta och avslutade märkt Ur mellanarkivet. Ordinationen öppnas med dosering, period, historik och doser, och systemet säger att innehållet är oförändrat.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: fliken Läkemedel",
+        "klick: Öppna vid ordinationen Ur mellanarkivet"
+      ]
+    },
+    {
       "id": "registrera-incident",
       "namn": "Registrera en incident",
       "roll": "sysf",
@@ -2740,6 +2757,10 @@
     },
     {
       "namn": "Gränssnitt > Klickbudget > Göra en dator till vårdenhetens reservdator för läkemedel inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Läsa en utsatt ordination ur mellanarkivet inom budget",
       "status": "grön"
     },
     {
