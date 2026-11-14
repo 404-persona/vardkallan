@@ -506,7 +506,9 @@ export function forslagDetalj(db, personal, forslagId, { valFor = () => ({}) } =
     felPatient: p ? { id: p.id, namn: visningsnamn(p, visa), personnummer: visningsPnr(p, visa) } : null,
     rattNummer: t?.ok ? t.visning : f.nummer,
     foljer: foljer ? (sammanfattning(foljer) || 'inga andra uppgifter') : null,
-    orsak: f.orsak, kommentar: f.kommentar,
+    // Kommentaren till ett beslut visas bara som forslagUt avgör (den som föreslog och den som beslutade). Inget fält här
+    // skriver över ett fält från forslagUt.
+    orsak: f.orsak,
   };
 }
 

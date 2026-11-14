@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { testserver, klient, sandlada, somPerson } from './hjalp.js';
 import { harVardrelation, prova } from '../src/atkomst.js';
+import * as makulering from '../src/vardkontakt-makulering.js';
 
 // Runda 15, r2, tredje omgången (beslut 2026-11-14): en vårdkontakt eller ett vårdtillfälle som har registrerats på fel
 // patient flyttas till en patient utan vårdrelation till vårdenheten bara med fyra ögon. Förslaget ger ingen åtkomst och
@@ -174,6 +175,15 @@ describe(T, () => {
     const r = await vch.post(`/api/flyttar/${f.id}/avsluta`, { kommentar: 'Kontrollera numret mot remissen.' });
     expect(r.status).toBe(200);
     expect(r.data.forslag).toMatchObject({ status: 'avslagen', kommentar: 'Kontrollera numret mot remissen.' });
+    // Säkerhetsgranskningen efter sammanslagningen: en annan godkännare på vårdenheten ser inte kommentaren, varken i listan
+    // eller när förslaget öppnas, och det öppnade förslaget har inget fält som skriver över listans.
+    const adm = db.query('SELECT * FROM personal WHERE id = ?').get('adm-kard');
+    const annan = { ...adm, id: 'adm-kard-annan' };
+    const oppnad = makulering.forslagDetalj(db, annan, f.id);
+    expect(oppnad.kommentar).toBeUndefined();
+    const lista = makulering.forslagUt(db, db.query('SELECT * FROM makulering_forslag WHERE id = ?').get(f.id), annan);
+    for (const [nyckel, varde] of Object.entries(lista)) expect([nyckel, oppnad[nyckel]]).toEqual([nyckel, varde]);
+    expect(makulering.forslagDetalj(db, db.query("SELECT * FROM personal WHERE id = 'vch-kard'").get(), f.id).kommentar).toBe('Kontrollera numret mot remissen.');
     expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
     expect(harVardrelation(db, UTAN.id, 'uso-kard')).toBe(false);
     expect((await vch.post(`/api/flyttar/${f.id}/godkann`, {})).status).toBe(409);
