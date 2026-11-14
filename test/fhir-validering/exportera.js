@@ -46,7 +46,12 @@ const TYPER = ['Patient', 'Encounter', 'EpisodeOfCare', 'Condition', 'Observatio
   // Runda 10, r3: svaren i formulären.
   'QuestionnaireResponse',
   // Runda 11, r5: bilder och media och studierna i arkivet.
-  'Media', 'ImagingStudy'];
+  'Media', 'ImagingStudy',
+  // Runda 15, r2: samtycket till sammanhållen journalföring.
+  'Consent'];
+// Runda 15, r2: ett gällande och ett återkallat samtycke på kardiologen, så att Consent finns med i båda formerna.
+db.query("INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av) VALUES ('p01', 'uso-kard', '2026-11-01T09:00:00.000Z', 'lak-kard')").run();
+db.query("INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av, aterkallat, aterkallat_av) VALUES ('p04', 'uso-kard', '2026-10-01T09:00:00.000Z', 'lak-kard', '2026-10-15T09:00:00.000Z', 'lak-kard')").run();
 for (const roll of ['lak-kard', 'ssk-kard', 'adm-kard', 'lak-vc', 'lak-psyk', 'lak-akut']) {
   for (const { id } of db.query('SELECT id FROM patienter').all()) {
     const val = { [id]: { andra_enheter: true, nodatkomst: true, samtycke_sparr: true } };

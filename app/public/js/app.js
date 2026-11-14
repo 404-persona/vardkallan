@@ -17,6 +17,8 @@ import * as moduler from './vyer/moduler.js';
 import * as uppgraderingar from './vyer/uppgraderingar.js';
 // Runda 14, r5: servicenivåer och incidenter för systemförvaltaren.
 import * as servicenivaer from './vyer/servicenivaer.js';
+// Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex för systemförvaltaren.
+import * as nationellaTjanster from './vyer/nationella-tjanster.js';
 import * as oppetApi from './vyer/oppet-api.js';
 import * as drift from './vyer/drift.js';
 import * as anvandartest from './anvandartest.js';
@@ -175,6 +177,8 @@ const MENY = [
   ['#/uppgraderingar', 'Uppgraderingar', 'pil', () => far('lagring')],
   // Runda 14, r5: servicenivåer och incidenter.
   ['#/servicenivaer', 'Servicenivåer och incidenter', 'larm', () => far('servicenivaer')],
+  // Runda 15, r2: samtyckestjänsten och engagemangsindex.
+  ['#/nationella-tjanster', 'Nationella tjänster', 'pil', () => far('forvalta_api')],
   // Runda 9, r4.
   ['#/kodverk', 'Kodverk och masterdata', 'lista', () => far('konfigurera')],
   // Runda 14, r1.
@@ -275,6 +279,8 @@ const RUTTER = [
   [/^#\/uppgraderingar$/, uppgraderingar, () => far('lagring')],
   // Runda 14, r5.
   [/^#\/servicenivaer$/, servicenivaer, () => far('servicenivaer')],
+  // Runda 15, r2.
+  [/^#\/nationella-tjanster$/, nationellaTjanster, () => far('forvalta_api')],
   // Runda 9, r4.
   [/^#\/kodverk$/, kodverk, () => far('konfigurera')],
   // Runda 12, r1.

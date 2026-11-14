@@ -167,6 +167,8 @@ export function efterTid(db, nu = new Date()) {
 //   kalla: 'vardkallan' (registrerat här), 'annat_system' (bara i samtyckestjänsten) eller null.
 //   tjanst: 'ok', 'svarar_inte' eller 'ej_aktuell' (skyddade personuppgifter eller inget nationellt nummer).
 const datumText = (t) => (t ? new Date(/Z$/.test(t) ? t : `${t}Z`).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long', year: 'numeric' }) : '');
+// Ett slutdatum visas som det står i intyget, utan att räknas om, eftersom det oftast är slutet på en dag.
+const slutText = (t) => (t ? new Date(`${String(t).slice(0, 10)}T12:00:00Z`).toLocaleDateString('sv-SE', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' }) : '');
 export function prova(atk, { nu = new Date() } = {}) {
   const db = atk.db;
   sakra(db);
@@ -222,7 +224,7 @@ export function prova(atk, { nu = new Date() } = {}) {
   let text = null;
   if (lok && vantar) text = 'Patienten har samtyckt. Samtyckestjänsten har inte tagit emot registreringen än, och systemet skickar den när tjänsten svarar. Samtycket gäller här under tiden.';
   else if (lok) text = 'Patienten har samtyckt. Samtycket är registrerat här och i samtyckestjänsten.';
-  else if (giltig) text = `Patienten har gett samtycke i ett annat system${nationellt.registrerat ? ` den ${datumText(nationellt.registrerat)}` : ''}${nationellt.gallerTill ? `, och det gäller till och med den ${datumText(nationellt.gallerTill)}` : ''}. Samtycket gäller här också.`;
+  else if (giltig) text = `Patienten har gett samtycke i ett annat system${nationellt.registrerat ? ` den ${datumText(nationellt.registrerat)}` : ''}${nationellt.gallerTill ? `, och det gäller till och med den ${slutText(nationellt.gallerTill)}` : ''}. Samtycket gäller här också.`;
   else if (aterkallatAnnat) text = 'Patienten har återkallat samtycket i ett annat system, och det är återkallat här också. Fråga patienten om samtycke igen för att hämta uppgifterna.';
   return { galler: Boolean(kalla), kalla, lokalt: lok, nationellt, tjanst: 'ok', vantar, text };
 }

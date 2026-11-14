@@ -306,6 +306,16 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   n.api.push('/api/rivta/hsa/:id', '/api/rivta/engagemangsindex/:id', '/api/patient/:id/folkbokforing', '/api/patient/:id/sparr/sparrtjansten', '/api/patient/:id/sammanhallen/hav-sparr');
   n.simulerat = 'Alla nationella tjänster är simulerade i demon. Tjänstekontrakten i RIVTA är byggda och testade lokalt men inte anslutna till den nationella tjänsteplattformen.';
 }
+// Runda 15, r2: samtycket i samtyckestjänsten med kö och engagemangsindex som uppdateras av sig självt hör till de
+// nationella tjänsterna, med systemförvaltarens vy över köerna.
+{
+  const n = MODULER.find(x => x.id === 'nationella');
+  n.beskrivning += ' Samtycket registreras och prövas både i Vårdkällan och i samtyckestjänsten, med en kö när tjänsten inte svarar, och engagemangsindex uppdateras av sig självt när journalen ändras, efter Ineras regler och utan att röja spärrar eller skyddade personuppgifter.';
+  n.rutter.push('#/nationella-tjanster');
+  n.vyer.push('nationella-tjanster.js');
+  n.kod.push('src/engagemangsindex.js', 'src/samtycke-nationellt.js', 'src/r15r2-rutter.js');
+  n.api.push('/api/nationella-tjanster');
+}
 // Runda 12, r1: journalens mallar, sökord och mätvärdestyper hör till systemförvaltningen (journalstruktur.js).
 {
   const s = MODULER.find(x => x.id === 'systemforvaltning');

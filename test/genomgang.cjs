@@ -227,6 +227,8 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Uppgraderingar') + 1, 0, 'Servicenivåer och incidenter');
 // Runda 14, r1: systemförvaltaren har Inloggningstjänster direkt efter Kodverk och masterdata.
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterdata') + 1, 0, 'Inloggningstjänster');
+// Runda 15, r2: systemförvaltaren har Nationella tjänster direkt efter Servicenivåer och incidenter.
+MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Servicenivåer och incidenter') + 1, 0, 'Nationella tjänster');
 
 (async () => {
   // Runda 11, r1: klockan ställs innan testet räknar ut några datum.
@@ -2129,6 +2131,24 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await page.locator('#sn-lista li', { hasText: 'Utskrifterna fastnar på avdelningen' }).locator('[data-avsluta]').click();
       await page.click('dialog[open] [data-varde="ok"]');
       await forvanta(page, '.notis', 'Incidenten är avslutad');
+      await page.waitForLoadState('networkidle');
+    });
+    // Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex. Systemet skickar själv, och systemförvaltaren
+    // ser läget, kan simulera ett avbrott i demon och skicka det som väntar när tjänsterna svarar igen.
+    await s('Tomas Lindh ser köerna till de nationella tjänsterna, simulerar ett avbrott och skickar det som väntar', async () => {
+      await gaTill(page, '#/nationella-tjanster');
+      await forvanta(page, '#nt-samtycke', 'Samtyckestjänsten');
+      await forvanta(page, '#nt-ei', 'Skyddade personuppgifter, spärrade uppgifter och reservnummer anmäls aldrig');
+      await page.check('#nt-avbrott');
+      await forvanta(page, '.notis', 'Avbrottet simuleras');
+      await page.click('[data-nt-avstam]');
+      await forvanta(page, '.notis', 'stäms av mot journalen');
+      await bild(page, '103h-nationella-tjanster');
+      await page.uncheck('#nt-avbrott');
+      await forvanta(page, '.notis', 'Tjänsterna svarar igen');
+      await page.click('[data-nt-skicka]');
+      await forvanta(page, '.notis', 'Allt som väntade är skickat');
+      await forvanta(page, '#nt-ei [data-status]', 'Engagemangsindex har allt som ska finnas där');
       await page.waitForLoadState('networkidle');
     });
     await allaVyer(page, 'Tomas Lindh', MENY.systemforvaltare);

@@ -146,7 +146,8 @@ export async function visa(el, ctx) {
 }
 
 // Andra vårdgivare: systemet vet om samtycket finns och frågar bara när det saknas. Uppgifterna hämtas efter ett
-// aktivt val med syfte och läggs i tidslinjen med källan utskriven.
+// aktivt val med syfte och läggs i tidslinjen med källan utskriven. Runda 15, r2: samtycket prövas också mot
+// samtyckestjänsten, och raden samtyckeText säger varifrån samtycket kommer och vad som gäller när tjänsten inte svarar.
 async function sammanhallenRuta(plats, ctx) {
   if (!plats) return;
   let d;
@@ -156,9 +157,10 @@ async function sammanhallenRuta(plats, ctx) {
   plats.innerHTML = `<section class="ruta sj-ruta" aria-labelledby="ov-sj"><h2 id="ov-sj">Andra vårdgivare</h2>
     <p class="liten">${esc(d.text)}</p>
     ${d.sparrText ? `<p class="liten sj-sparr">${esc(d.sparrText)}</p>` : ''}
-    ${d.hamtad ? `<p class="liten">Hämtat från ${esc(vg)}${d.grund === 'nodatkomst' ? ' med nödåtkomst' : ' med patientens samtycke'}. Uppgifterna finns i tidslinjen.</p>${d.samtycke ? '<button type="button" class="knapp liten sekundar" data-sj-aterkalla>Patienten återkallar samtycket</button>' : ''}`
+    ${d.samtyckeText ? `<p class="liten sj-samtycke" data-sj-samtycketext>${esc(d.samtyckeText)}</p>` : ''}
+    ${d.hamtad ? `<p class="liten">Hämtat från ${esc(vg)}${d.grund === 'nodatkomst' ? ' med nödåtkomst' : ' med patientens samtycke'}. Uppgifterna finns i tidslinjen.</p>${(d.samtyckeGaller ?? d.samtycke) ? '<button type="button" class="knapp liten sekundar" data-sj-aterkalla>Patienten återkallar samtycket</button>' : ''}`
       : `<form class="sj-form"><div class="falt"><label for="sj-syfte">Syfte</label><input id="sj-syfte" name="syfte" maxlength="300" value="Bedömning inför vården i dag" required></div>
-        ${d.samtycke ? '' : '<label class="kryss"><input type="checkbox" name="samtycke" data-sj-samtycke> Patienten samtycker till att uppgifterna hämtas</label>'}
+        ${(d.samtyckeGaller ?? d.samtycke) ? '' : '<label class="kryss"><input type="checkbox" name="samtycke" data-sj-samtycke> Patienten samtycker till att uppgifterna hämtas</label>'}
         <button type="submit" class="knapp liten">Hämta uppgifter från ${esc(vg)}</button></form>`}
     <p class="demoregel">${esc(d.simulerad)}</p></section>`;
   plats.querySelector('.sj-form')?.addEventListener('submit', async (e) => {
