@@ -67,24 +67,29 @@ describe(T, () => {
     expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
   });
 
-  test('utan dokumentation makuleras kontakten, och en makulerad kontakt ger ingen vårdrelation', async () => {
+  // Säkerhetsgranskningen efter sammanslagningen: makulering utan rätt patient gäller bara en planerad vårdkontakt som inte
+  // är genomförd, efter kontaktens egen status, och beror aldrig på om det finns dokumentation.
+  test('en planerad kontakt makuleras utan rätt patient och ger ingen vårdrelation, och en genomförd flyttas alltid till rätt patient', async () => {
     const k = await inloggad('adm-kard');
     const db = sandlada(app, k).db;
-    // En genomförd kontakt utan dokumentation, registrerad av vårdadministratören en timme sedan.
     const nu = Date.now();
-    const id = Number(db.query("INSERT INTO vardkontakter (patient_id, enhet_id, typ, start, slut, orsak, kalla, kontaktsatt, skapad, skapad_av) VALUES ('p15', 'uso-kard-mott', 'oppenvard', ?, ?, 'Kontroll', 'vardkallan', 'besok', ?, 'adm-kard')")
-      .run(new Date(nu - 3600_000).toISOString(), new Date(nu - 1800_000).toISOString(), new Date(nu - 3600_000).toISOString()).lastInsertRowid);
-    // Den nya kontakten är det enda som ger kardiologen vårdrelation till patienten i sandlådan.
-    db.query("UPDATE vardkontakter SET ger_vardrelation = 0 WHERE patient_id = 'p15' AND id <> ?").run(id);
-    db.query("DELETE FROM listningar WHERE patient_id = 'p15'").run();
-    db.query("UPDATE remisser SET status = 'svar_kvitterat', svar_kvitterat_tid = '2000-01-01T00:00:00.000Z' WHERE patient_id = 'p15'").run();
-    expect(harVardrelation(db, 'p15', 'uso-kard')).toBe(true);
-    const r = await k.post(`/api/vardkontakt/${id}/makulera`, { orsak: 'Kontakten registrerades av misstag två gånger.' });
+    const kontakt = (start, slut) => Number(db.query("INSERT INTO vardkontakter (patient_id, enhet_id, typ, start, slut, orsak, kalla, kontaktsatt, skapad, skapad_av) VALUES ('p15', 'uso-kard-mott', 'oppenvard', ?, ?, 'Kontroll', 'vardkallan', 'besok', ?, 'adm-kard')")
+      .run(new Date(start).toISOString(), slut ? new Date(slut).toISOString() : null, new Date(nu - 3600_000).toISOString()).lastInsertRowid);
+    const genomford = kontakt(nu - 3600_000, nu - 1800_000);
+    const f = (await k.get(`/api/vardkontakt/${genomford}/makulering`)).data;
+    expect(f.kanMakuleras).toBe(false);
+    const g = await k.post(`/api/vardkontakt/${genomford}/makulera`, { orsak: 'Kontakten registrerades av misstag två gånger.' });
+    expect(g.status).toBe(409);
+    expect(g.data.falt).toEqual(['rattPatient']);
+    expect(g.data.fel).toBe(f.utanPatientText);
+    const planerad = kontakt(nu + 86_400_000, null);
+    expect((await k.get(`/api/vardkontakt/${planerad}/makulering`)).data.kanMakuleras).toBe(true);
+    const r = await k.post(`/api/vardkontakt/${planerad}/makulera`, { orsak: 'Kontakten registrerades av misstag två gånger.' });
     expect(r.status).toBe(200);
     expect(r.data.atgard).toBe('makulerad');
-    expect(db.query('SELECT 1 FROM vardkontakter WHERE id = ?').get(id)).toBeNull();
-    expect(harVardrelation(db, 'p15', 'uso-kard')).toBe(false);
-    expect(db.query('SELECT atgard, orsak FROM vardkontakt_makuleringar WHERE vardkontakt_id = ?').get(id)).toEqual({ atgard: 'makulerad', orsak: 'Kontakten registrerades av misstag två gånger.' });
+    expect(db.query('SELECT 1 FROM vardkontakter WHERE id = ?').get(planerad)).toBeNull();
+    expect(db.query('SELECT atgard, orsak FROM vardkontakt_makuleringar WHERE vardkontakt_id = ?').get(planerad)).toEqual({ atgard: 'makulerad', orsak: 'Kontakten registrerades av misstag två gånger.' });
+    expect(db.query("SELECT count(*) AS n FROM vardkontakter WHERE id = ? AND coalesce(ger_vardrelation, 1) = 1").get(planerad).n).toBe(0);
   });
 
   test('spärr: uppgifterna som flyttas till en patient som har spärrat vårdenheten syns inte för andra vårdenheter', async () => {

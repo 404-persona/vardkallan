@@ -459,11 +459,16 @@ describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns',
     expect(forhandsvisning(med, v)).toBe(forhandsvisning(utan, v));
   });
 
-  test('vägran är densamma med och utan en dold rad, utan antal, och systemförvaltningen får samma meddelande', () => {
+  test('vägran för en planerad kontakt med uppgifter är densamma med och utan en dold rad, utan antal, och systemförvaltningen får samma meddelande', () => {
     const utan = nyDb(); const med = nyDb(); const barn = nyDb();
-    const v = kontakt(utan); sparr(utan, v);
+    const v = kontakt(utan);
+    // Kontakten görs planerad (i morgon, inte genomförd), med en synlig anteckning knuten till sig.
+    const imorgon = new Date(Date.now() + 86_400_000).toISOString();
+    for (const d of [utan, med, barn]) d.query('UPDATE vardkontakter SET start = ?, slut = NULL, ankomst = NULL WHERE id = ?').run(imorgon, v.id);
+    sparr(utan, v);
     sparr(med, v); doljAnteckning(med, v);
     sparr(barn, v); doljRemissMedBilaga(barn, v);
+    for (const d of [utan, med, barn]) expect(forhandsvisning(d, v)).toBe(forhandsvisning(utan, v));
     const a = vagran(utan, v);
     expect(a).not.toBe('lyckades');
     expect(vagran(med, v)).toBe(a);

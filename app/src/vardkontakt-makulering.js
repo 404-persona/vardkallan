@@ -185,7 +185,13 @@ export function synligt(atk, foljer) {
 }
 // Säkerhetsgranskningen efter sammanslagningen: när något hindrar en makulering eller flytt får användaren samma svar
 // oavsett om det är något som användaren ser eller något dolt, utan antal, och systemförvaltningen får samma meddelande.
-export const HINDRAD = 'Vårdkontakten har dokumentation, som aldrig förstörs, så den kan inte makuleras utan rätt patient. Ange rätt patient, så flyttas den dit. Systemförvaltningen har fått ett meddelande om något annat behöver rättas.';
+export const HINDRAD = 'Det går inte att göra här, och inget har ändrats. Systemförvaltningen har fått ett meddelande och ser till att uppgifterna rättas.';
+// Regeln för makulering utan rätt patient, samma i förhandsvisningen och i makuleringen: bara en planerad vårdkontakt som
+// inte är genomförd, efter kontaktens egen status, som alltid syns för den som får se kontakten. Den beror aldrig på om
+// det finns dokumentation. En genomförd eller pågående kontakt har gjorts av någon och flyttas alltid till rätt patient.
+export const kanMakuleraUtanPatient = (o, nu = Date.now()) => o.slag === 'vardkontakt' && require('./vardkontakt.js').status(o.rad, nu) === 'planerad';
+export const GENOMFORD_TEXT = 'Vårdkontakten är genomförd eller pågår, så besöket har gjorts av någon. Ange rätt patient, så flyttas den dit med allt som hör till den.';
+const PLANERAD_TEXT = 'Utan rätt patient makuleras den planerade vårdkontakten. Den finns kvar som makulerad med din motivering.';
 function meddelaForvaltningen(atk, o) {
   require('./sakerhetslogg.js').logga(atk.db, { typ: 'flytt_hindrad', personal_id: atk.personal.id, enhet_id: atk.personal.enhet_id, metod: 'POST', vag: `/api/${o.slag}/:id/makulera`, status: 409,
     beskrivning: `En makulering eller flytt av ${o.slag === 'vardtillfalle' ? 'vårdtillfälle' : 'vårdkontakt'} ${o.id} stoppades och kan behöva rättas av systemförvaltningen.` });
@@ -222,11 +228,11 @@ export function forhandsvisa(atk, o) {
   return {
     slag: o.slag, id: o.id, start: o.start, orsak: o.orsak,
     foljer: [...foljer].map(([t, ids]) => ({ tabell: t, text: BENAMNING[t] ?? t.replace(/_/g, ' '), antal: ids.length })),
-    kanMakuleras: o.slag === 'vardkontakt' && !harDokumentation(foljer),
+    kanMakuleras: kanMakuleraUtanPatient(o),
     vantar: Boolean(pagaende(atk.db, o)),
     text: foljer.size || kontakter ? `Det här följer med till rätt patient: ${kontakter}${sammanfattning(foljer) || 'inga andra uppgifter'}.` : `Inga uppgifter hör till ${ord.namn}.`,
     utanPatientText: o.slag === 'vardtillfalle' ? VT_UTAN
-      : harDokumentation(foljer) ? 'Vårdkontakten har dokumentation, som aldrig förstörs. Ange rätt patient, så flyttas den dit.' : 'Utan rätt patient makuleras vårdkontakten. Den finns kvar som makulerad med din motivering.',
+      : kanMakuleraUtanPatient(o) ? PLANERAD_TEXT : GENOMFORD_TEXT,
     fyraOgonText: FYRA_OGON_TEXT,
   };
 }
@@ -314,7 +320,7 @@ function provaNummer(atk, nummer, o, valFor) {
 export const NY_RELATION = 'Uppgifterna har något, till exempel en remiss eller en operationsanmälan, som skulle ge rätt patient en vårdrelation till en vårdenhet som patienten inte har i dag. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
 // Säkerhetsgranskningen efter sammanslagningen: texten nämner ingen vårdenhet, eftersom användaren kanske inte får se
 // den, och pekar på systemförvaltningen, som kan rätta uppgifterna.
-export const ANNAN_ENHET = 'Flytten kan inte göras från din vårdenhet, eftersom inte allt som hör till uppgifterna får registreras på rätt patient härifrån. Inget har flyttats. Kontakta systemförvaltningen, som kan rätta uppgifterna.';
+export const ANNAN_ENHET = 'Det går inte att göra här, och inget har ändrats. Systemförvaltningen har fått ett meddelande och ser till att uppgifterna rättas.';
 // Vårdenheterna som patienten har vårdrelation till, enligt behörighetsmotorns regel.
 function relationer(db, patientId, nu) {
   const { harVardrelation } = require('./atkomst.js');
@@ -410,9 +416,11 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   const till = n?.till ?? null;
   const foljer = tillhor(db, o);
   if (!till && o.slag === 'vardtillfalle') throw new Fel(409, VT_UTAN, 'ogiltig', { falt: ['rattPatient'] });
+  if (!till && !kanMakuleraUtanPatient(o)) throw new Fel(409, GENOMFORD_TEXT, 'ogiltig', { falt: ['rattPatient'] });
+  // En planerad kontakt med uppgifter knutna till sig, synliga eller dolda: samma neutrala svar som för andra hinder.
   if (!till && harDokumentation(foljer)) {
     meddelaForvaltningen(atk, o);
-    throw new Fel(409, HINDRAD, 'ogiltig', { falt: ['rattPatient'] });
+    throw new Fel(409, HINDRAD, 'ogiltig');
   }
   if (!till && db.query("SELECT 1 FROM sqlite_master WHERE name = 'betalningar'").get() && (foljer.get('bokningar') ?? []).some(b => db.query('SELECT 1 FROM betalningar WHERE bokning_id = ?').get(b))) {
     throw new Fel(409, 'Besöket är betalt. Återbetala avgiften i kassan först, sedan kan vårdkontakten makuleras.', 'ogiltig');

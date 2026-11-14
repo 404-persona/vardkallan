@@ -42,6 +42,8 @@ export const ANDRINGAR = [
       'Samtycket till sammanhållen journalföring prövas både i Vårdkällan och i samtyckestjänsten (GetExtendedConsentsForPatient 1.0), och registreringar och återkallelser skickas genom en kö. Läget för sammanhållen journalföring har samtyckeGaller, samtyckeKalla, samtyckeText och samtyckestjanst',
       'Engagemangsindex uppdateras av sig självt när journalen ändras, efter Ineras regler för Update 1.0, och nya rutter för systemförvaltarens sida Nationella tjänster (docs/api-avvikelser.md)',
       'Samtyckets giltighet (giltighet och giltigTill), hämtning för skyddade personuppgifter bara vid nödåtkomst, och makulering av en vårdkontakt på fel patient i det interna API:t (docs/api-avvikelser.md)',
+      // Säkerhetsgranskningen efter sammanslagningen.
+      'Förslag om flytt till rätt patient: listan utan patientuppgifter och GET /api/flyttar/:id för det öppnade förslaget, makulering utan rätt patient bara för en planerad kontakt, och FHIR svarar 404 på en resurs som är dold av spärr (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

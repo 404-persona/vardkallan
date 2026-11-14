@@ -386,7 +386,7 @@ async function makulera(v, kor) {
   const svar = await dialog(`<form>
     <h2 id="dlg-rubrik">Vårdkontakten är registrerad på fel patient</h2>
     <div class="dialog-text"><p>${esc(v.orsak)}, ${esc(v.vardenhet?.namn ?? '')}, ${esc(tidpunkt(v.start))}.</p><p>${esc(f.text)}</p></div>
-    ${far('sla_samman') ? nummerFalt(f, f.utanPatientText) : `<p class="hjalp">${esc(f.kanMakuleras ? f.utanPatientText : 'Vårdkontakten har dokumentation. Vårdadministratören flyttar den till rätt patient.')}</p>`}
+    ${far('sla_samman') ? nummerFalt(f, f.utanPatientText) : `<p class="hjalp">${esc(f.kanMakuleras ? f.utanPatientText : 'Vårdkontakten är genomförd eller pågår. Vårdadministratören flyttar den till rätt patient.')}</p>`}
     <div class="falt"><label for="mk-orsak">Varför makuleras kontakten? <span class="obl">(obligatoriskt)</span></label><textarea id="mk-orsak" name="orsak" rows="2" maxlength="500" required aria-required="true"></textarea></div>
     <p class="dialog-fel form-fel" role="alert" hidden></p>
     <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Makulera</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div>
