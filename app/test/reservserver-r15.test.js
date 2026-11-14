@@ -163,3 +163,63 @@ describe('Reservserver', () => {
     }
   });
 });
+
+// Beslut 2026-11-14: systemförvaltarens vy över loggen från reservservern på sidan Lagring.
+describe('Loggen från reservservern', () => {
+  test('sidan Lagring visar en logg som inte är inläst med antal rader, period och kopia, och den läses in med ett klick, en gång', async () => {
+    const x = tmp(); const y = tmp(); const l = tmp();
+    try {
+      // Kärnsystemet med en sandlåda, en kopia av den och en reservserver som läser kopian och loggar till l.
+      const karna = testserver({ kopieKatalog: x, kopieAndra: y, kopieMinuter: 0, reservloggKatalog: l });
+      const sf2 = await inloggad(karna, 'sysf');
+      const s = sandlada(karna, sf2);
+      const kopia = karna.kopior.ta(s.kopieId, s.db, { orsak: 'manuell' });
+      expect((await sf2.get('/api/reservlogg')).data).toMatchObject({ vantar: 0, filer: [] });
+      const r = testserver({ reservserver: { katalog: x, andraKatalog: y, loggKatalog: l } });
+      const k = await inloggad(r, 'lak-kard');
+      await k.get('/api/patient/p01/oversikt');
+      await k.get('/api/patient/p02/oversikt');
+      r.stopp();
+      // Kärnsystemet är i drift igen och ser loggen i katalogen.
+      const o = (await sf2.get('/api/reservlogg')).data;
+      expect(o.vantar).toBe(1);
+      expect(o.text).toMatch(/^En logg från reservservern är inte inläst/);
+      const f = o.filer[0];
+      expect(f).toMatchObject({ kvar: f.rader, inlast: false, kedjaHel: true, simulerad: false, kopia: { tid: kopia.tid } });
+      expect(f.rader).toBeGreaterThanOrEqual(2);
+      expect(Date.parse(f.fran)).toBeGreaterThan(Date.parse(kopia.tid));
+      expect(o.kommando).toContain('--las-in-logg');
+      // Andra roller når inte vyn.
+      const lak = await inloggad(karna, 'lak-kard');
+      expect((await lak.get('/api/reservlogg')).status).toBe(403);
+      // Ett klick läser in loggen, och nästa gång finns inget att läsa in.
+      const in1 = await sf2.post('/api/reservlogg/las-in', { fil: f.fil });
+      expect(in1.status).toBe(200);
+      expect(in1.data).toMatchObject({ inlasta: f.rader, vantar: 0 });
+      expect(s.db.query("SELECT count(*) AS n FROM atkomstlogg WHERE syfte LIKE 'Reservservern:%' AND personal_id = 'lak-kard'").get().n).toBe(f.rader);
+      expect((await sf2.post('/api/reservlogg/las-in', { fil: f.fil })).data.inlasta).toBe(0);
+      expect(s.db.query("SELECT 1 FROM sakerhetslogg WHERE beskrivning LIKE 'Läste in % från reservserverns logg %'").get()).toBeTruthy();
+      // Ett okänt filnamn, också ett som pekar utanför katalogen, är som en logg som inte finns.
+      expect((await sf2.post('/api/reservlogg/las-in', { fil: '../../etc/passwd' })).status).toBe(404);
+      karna.stopp();
+    } finally { for (const d of [x, y, l]) rmSync(d, { recursive: true, force: true }); }
+  }, 60_000);
+
+  test('en logg vars kedja inte håller läses inte in, och en annan sandlådas logg syns inte', async () => {
+    const app = testserver({ kopieMinuter: 0 });
+    try {
+      const sf = await inloggad(app, 'sysf');
+      expect((await sf.post('/api/reservlogg/demo', {})).status).toBe(201);
+      const o = (await sf.get('/api/reservlogg')).data;
+      expect(o.filer[0]).toMatchObject({ simulerad: true, rader: 3, kvar: 3, kedjaHel: true });
+      // En annan sandlåda ser inte loggen.
+      const annan = await inloggad(app, 'sysf');
+      expect((await annan.get('/api/reservlogg')).data.filer).toEqual([]);
+      expect((await annan.post('/api/reservlogg/las-in', { fil: o.filer[0].fil })).status).toBe(404);
+      // En ändrad rad bryter kedjan.
+      const rader = [{ id: 5, prev_hash: 'a'.repeat(64), hash: 'b'.repeat(64), tid: '2026-01-01T00:00:00.000Z', handling: 'las_oversikt', grund: 'vardrelation', resultat: 'tillaten', reservserver: { nyckel: 'x', kopiaTid: '2025-01-01' } }];
+      expect(reservserver.kontrolleraLogg(rader).hel).toBe(false);
+      expect((await sf.post('/api/reservlogg/las-in', { fil: o.filer[0].fil })).data.inlasta).toBe(3);
+    } finally { app.stopp(); }
+  });
+});

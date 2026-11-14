@@ -200,8 +200,10 @@ function versionskedja(db, id) {
 // Signerade anteckningar i sin senaste version, efter visningsreglerna. Det som inte visas räknas, men innehållet
 // lämnas inte ut.
 function anteckningsurval(db, pid, nu) {
-  const rader = db.query("SELECT * FROM anteckningar WHERE patient_id = ? AND status = 'signerad' ORDER BY signerad_tid DESC, id DESC").all(pid)
-    .filter(a => ersattAv(db, a.id) == null);
+  const rader = [...db.query("SELECT * FROM anteckningar WHERE patient_id = ? AND status = 'signerad' ORDER BY signerad_tid DESC, id DESC").all(pid)
+    .filter(a => ersattAv(db, a.id) == null),
+    // Beslut 2026-11-14: anteckningarna i mellanarkivet, efter samma visningsregler.
+    ...arkivRader(db, pid, 'anteckning').map(arkivAnteckning)].sort((a, b) => String(b.signerad_tid).localeCompare(String(a.signerad_tid)));
   const visade = [];
   const senare = [];
   const ejVisade = new Map();
@@ -273,7 +275,9 @@ const sparrarFor = (db, pid) => db.query('SELECT * FROM sparrar WHERE patient_id
 function enheterMedUppgifter(db, pid) {
   const rader = db.query(`SELECT enhet_id FROM anteckningar WHERE patient_id = ?1 UNION SELECT enhet_id FROM diagnoser WHERE patient_id = ?1
     UNION SELECT enhet_id FROM matvarden WHERE patient_id = ?1 UNION SELECT enhet_id FROM vardkontakter WHERE patient_id = ?1
-    UNION SELECT enhet_id FROM ordinationer WHERE patient_id = ?1 UNION SELECT enhet_id FROM overkanslighet WHERE patient_id = ?1`).all(pid);
+    UNION SELECT enhet_id FROM ordinationer WHERE patient_id = ?1 UNION SELECT enhet_id FROM overkanslighet WHERE patient_id = ?1`).all(pid)
+    // Beslut 2026-11-14: en vårdenhet med uppgifter bara i mellanarkivet kan också spärras.
+    .concat(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get() ? db.query('SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ?').all(pid) : []);
   return [...new Set(rader.map(r => vardenhetFor(db, r.enhet_id)))].map(id => ({ id, namn: enhetsnamn(db, id) }))
     .sort((a, b) => String(a.namn).localeCompare(String(b.namn), 'sv'));
 }
@@ -298,7 +302,7 @@ export function huvud(atk) {
 
 export function anteckningar(atk, nu = new Date()) {
   const u = anteckningsurval(atk.db, atk.patientId, nu);
-  return { anteckningar: u.visade.map(a => anteckningKort(atk.db, a)), senare: u.senare, ejVisade: u.ejVisade };
+  return { anteckningar: u.visade.map(a => (a.arkiv ? arkivAnteckningKort(atk.db, a) : anteckningKort(atk.db, a))), senare: u.senare, ejVisade: u.ejVisade };
 }
 
 // En version av en anteckning visas bara om hela versionskedjan är signerad och den senaste versionen visas. Då visas
@@ -313,6 +317,14 @@ export function synligKedja(db, a, nu = new Date()) {
 
 export function anteckning(atk, id, nu = new Date()) {
   const db = atk.db;
+  // Beslut 2026-11-14: en anteckning i mellanarkivet, med samma visningsregel som i listan.
+  if (/^ma-\d{1,9}$/.test(String(id))) {
+    const r = arkivRader(db, atk.patientId, 'anteckning').find(x => x.id === Number(String(id).slice(3)));
+    const a = r && arkivAnteckning(r);
+    if (!a || !anteckningVisning(db, a, nu).visas) throw new Fel(404, 'Anteckningen finns inte i din journal.', 'saknas');
+    const full = arkivAnteckningFull(db, a);
+    return { ...full, versioner: [full] };
+  }
   const a = db.query('SELECT * FROM anteckningar WHERE id = ? AND patient_id = ?').get(Number(id), atk.patientId);
   if (!a) throw new Fel(404, 'Anteckningen finns inte i din journal.', 'saknas');
   const { synlig, kedja, senaste } = synligKedja(db, a, nu);
@@ -321,14 +333,17 @@ export function anteckning(atk, id, nu = new Date()) {
 }
 
 export const diagnoser = (atk) => ({
-  diagnoser: atk.db.query('SELECT * FROM diagnoser WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId).map(d => diagnosUt(atk.db, d)),
+  diagnoser: [...atk.db.query('SELECT * FROM diagnoser WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId).map(d => diagnosUt(atk.db, d)),
+    // Beslut 2026-11-14.
+    ...arkivDiagnoser(atk.db, atk.patientId)].sort(efterDatum('datum')),
 });
 
 export function lakemedel(atk) {
   const db = atk.db;
   const ord = db.query('SELECT * FROM ordinationer WHERE patient_id = ? ORDER BY start DESC, id DESC').all(atk.patientId).map(o => ordinationInvanare(db, o));
   return {
-    aktuella: ord.filter(o => o.aktuell), tidigare: ord.filter(o => !o.aktuell),
+    // Beslut 2026-11-14: avslutade ordinationer i mellanarkivet bland de tidigare.
+    aktuella: ord.filter(o => o.aktuell), tidigare: [...ord.filter(o => !o.aktuell), ...arkivOrdinationer(db, atk.patientId)],
     overkanslighet: db.query("SELECT * FROM overkanslighet WHERE patient_id = ? AND status = 'aktiv' ORDER BY datum DESC, id DESC").all(atk.patientId).map(o => overkanslighetUt(db, o)),
   };
 }
@@ -339,20 +354,25 @@ export function provsvar(atk, nu = new Date()) {
   // godkänt dem (mt-klass.js).
   const rader = db.query('SELECT * FROM matvarden WHERE patient_id = ? ORDER BY tid DESC, id DESC').all(atk.patientId).filter(m => m.kalla !== 'patient' && kvalitetssakrad(m));
   const visade = rader.filter(m => provsvarVisas(m, nu));
+  // Beslut 2026-11-14: mätvärdena i mellanarkivet, alla äldre än fristen för provsvar.
+  const ur = arkivMatvarden(db, atk.patientId);
   return {
-    provsvar: visade.filter(m => arProvsvar(m.typ)).map(m => matvardeUt(db, m)),
-    matvarden: visade.filter(m => !arProvsvar(m.typ)).map(m => matvardeUt(db, m)),
+    provsvar: [...visade.filter(m => arProvsvar(m.typ)).map(m => matvardeUt(db, m)), ...ur.filter(m => m.provsvar)],
+    matvarden: [...visade.filter(m => !arProvsvar(m.typ)).map(m => matvardeUt(db, m)), ...ur.filter(m => !m.provsvar)],
     vantar: rader.filter(m => !provsvarVisas(m, nu)).map(m => ({ namn: MATTYPER[m.typ]?.namn ?? m.typ, provtagen: m.tid, visasSenast: visasSenast(m) })),
     senastDagar: PROVSVAR_SENAST_DAGAR,
   };
 }
 
+// Beslut 2026-11-14: remisserna och vårdkontakterna i mellanarkivet, märkta.
 export const remisser = (atk) => ({
-  remisser: atk.db.query('SELECT * FROM remisser WHERE patient_id = ? ORDER BY skickad_tid DESC, id DESC').all(atk.patientId).map(r => remissUt(atk.db, r)),
+  remisser: [...atk.db.query('SELECT * FROM remisser WHERE patient_id = ? ORDER BY skickad_tid DESC, id DESC').all(atk.patientId).map(r => remissUt(atk.db, r)),
+    ...arkivRemisser(atk.db, atk.patientId)],
 });
 
 export const vardkontakter = (atk) => ({
-  vardkontakter: atk.db.query('SELECT * FROM vardkontakter WHERE patient_id = ? ORDER BY start DESC, id DESC').all(atk.patientId).map(v => vardkontaktUt(atk.db, v)),
+  vardkontakter: [...atk.db.query('SELECT * FROM vardkontakter WHERE patient_id = ? ORDER BY start DESC, id DESC').all(atk.patientId).map(v => vardkontaktUt(atk.db, v)),
+    ...arkivVardkontakter(atk.db, atk.patientId)].sort(efterDatum('start')),
 });
 
 export function oversikt(atk, nu = new Date()) {
@@ -361,7 +381,7 @@ export function oversikt(atk, nu = new Date()) {
   const ps = provsvar(atk, nu);
   const sett = new Set();
   return {
-    anteckningar: u.visade.slice(0, 3).map(a => anteckningKort(atk.db, a)), antalAnteckningar: u.visade.length,
+    anteckningar: u.visade.slice(0, 3).map(a => (a.arkiv ? arkivAnteckningKort(atk.db, a) : anteckningKort(atk.db, a))), antalAnteckningar: u.visade.length,
     lakemedel: lm.aktuella, overkanslighet: lm.overkanslighet,
     // Uppmärksamhetsinformation (Sussa 3.1.5): bekräftade uppgifter och överkänsligheter, utan förslag och personal.
     uppmarksamhet: uppmarksamhetForInvanare(atk.db, atk.patientId),
@@ -372,6 +392,88 @@ export function oversikt(atk, nu = new Date()) {
     vantar: { anteckningar: u.senare.length, provsvar: ps.vantar.length },
   };
 }
+
+
+// ---- Beslut 2026-11-14 (runda 15, r3): det som har förts till mellanarkivet i Min journal ------------------------------
+//
+// Min journal visar handlingarna i mellanarkivet med exakt samma regler som resten av journalen: anteckningar efter
+// visningsreglerna per vårdenhet och anteckningstyp, provsvar och mätvärden utan patientens egna mätningar och värden
+// från utrustning som vården inte har godkänt, och diagnoser, läkemedel, remisser och vårdkontakter direkt. Doserna
+// visas inte, som i dag. Ett ombud når aldrig journalen, och vårdnadshavaren ser det som vårdnadshavaren ser i dag,
+// eftersom prövningen görs i InvanareAtkomst före. Varje uppgift är märkt som en äldre uppgift ur arkivet, och id:t
+// börjar med ma-, så att det aldrig krockar med en uppgift i den aktiva journalen.
+export const ARKIV_ETIKETT = 'Äldre uppgift från arkivet';
+const arkivRader = (db, pid, slag) => (db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get()
+  ? db.query(`SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? AND slag = ? ORDER BY datum DESC, id DESC`).all(pid, slag) : []);
+const resursAv = (r) => JSON.parse(r.resurs);
+const taggAv = (res, system) => (res.meta?.tag ?? []).find(t => t.system === system)?.code ?? null;
+const KALLA_SYSTEM = 'https://vardkallan.404haven.se/fhir/CodeSystem/kalla';
+const avHtml = (div) => String(div ?? '').replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+function arkivForfattare(db, ref) {
+  const id = /^Practitioner\/([\w-]+)$/.exec(ref?.reference ?? '')?.[1];
+  const p = id ? db.query('SELECT namn, titel FROM personal WHERE id = ?').get(id) : null;
+  if (p) return { namn: p.namn, titel: p.titel };
+  if (!ref?.display) return null;
+  const [namn, ...titel] = String(ref.display).split(', ');
+  return { namn, titel: titel.join(', ') };
+}
+// En anteckning ur arkivet i den form som visningsreglerna läser.
+const arkivAnteckning = (r) => ({ id: `ma-${r.id}`, typ: r.rubrik, enhet_id: r.enhet_id, status: 'signerad', signerad_tid: r.datum, ersatter_id: null, arkiv: r });
+function arkivAnteckningKort(db, a) {
+  const res = resursAv(a.arkiv);
+  const sokord = (res.section ?? []).map(s => `${s.title}: ${avHtml(s.text?.div)}`).join(' ');
+  return { id: a.id, typ: a.typ, datum: a.signerad_tid, ...enhetUt(db, a.enhet_id), forfattare: arkivForfattare(db, res.author?.[0]), rattad: false,
+    sammanfattning: sokord.replace(/\s+/g, ' ').slice(0, 200), kallaEtikett: ARKIV_ETIKETT, arkiv: true };
+}
+function arkivAnteckningFull(db, a) {
+  const res = resursAv(a.arkiv);
+  return { id: a.id, typ: a.typ, datum: a.signerad_tid, ...enhetUt(db, a.enhet_id), forfattare: arkivForfattare(db, res.author?.[0]), signeradAv: null, version: 1,
+    rattelseOrsak: null, ersatt: null, sokord: (res.section ?? []).map(s => ({ sokord: String(s.title ?? ''), text: avHtml(s.text?.div) })), kallaEtikett: ARKIV_ETIKETT, arkiv: true };
+}
+function arkivMatvarden(db, pid) {
+  return arkivRader(db, pid, 'matvarde').map(r => ({ r, res: resursAv(r) }))
+    // Patientens egna mätningar och värden från utrustning som vården inte har godkänt visas inte, som i dag.
+    .filter(({ res }) => taggAv(res, KALLA_SYSTEM) !== 'patient' && res.status !== 'preliminary')
+    .map(({ r, res }) => {
+      const varde = res.component?.length ? res.component.map(c => c.valueQuantity?.value).join('/') : res.valueQuantity?.value ?? res.valueCodeableConcept?.text ?? null;
+      const enhet = res.component?.[0]?.valueQuantity?.unit ?? res.valueQuantity?.unit ?? null;
+      return { id: `ma-${r.id}`, typ: r.typ, namn: MATTYPER[r.typ]?.namn ?? r.rubrik, varde, enhet, tid: r.datum, ...enhetUt(db, r.enhet_id), provsvar: arProvsvar(r.typ),
+        vidimerad: arProvsvar(r.typ) ? true : null, kallaEtikett: ARKIV_ETIKETT, arkiv: true };
+    });
+}
+function arkivDiagnoser(db, pid) {
+  return arkivRader(db, pid, 'diagnos').map(r => { const res = resursAv(r); return { id: `ma-${r.id}`, kod: r.typ, text: res.code?.text ?? '', typ: /^Huvud/.test(res.category?.[0]?.text ?? '') ? 'huvud' : 'bi',
+    datum: r.datum, ...enhetUt(db, r.enhet_id), kallaEtikett: ARKIV_ETIKETT, arkiv: true }; });
+}
+function arkivOrdinationer(db, pid) {
+  return arkivRader(db, pid, 'ordination').map(r => {
+    const res = resursAv(r);
+    const lm = db.query('SELECT * FROM katalog WHERE atc = ? AND ? LIKE namn || \' %\' LIMIT 1').get(r.typ, r.rubrik);
+    const period = res.dispenseRequest?.validityPeriod ?? {};
+    const utsatt = (res.extension ?? []).find(e => e.url?.endsWith('/utsattningsorsak'))?.valueString;
+    const utsattTid = (res.note ?? []).filter(n => /^Händelse: Utsatt/.test(n.text ?? '')).map(n => n.time).at(-1) ?? null;
+    return { id: `ma-${r.id}`, lakemedel: lm ? { namn: lm.namn, substans: lm.substans, styrka: lm.styrka, form: lm.form, atc: lm.atc } : { namn: r.rubrik, substans: null, styrka: null, form: null, atc: r.typ },
+      dosering: res.dosageInstruction?.map(d => d.text).filter(Boolean).join('. ') ?? '', typ: null, vidBehov: Boolean(res.dosageInstruction?.[0]?.asNeededBoolean),
+      ordinationsorsak: res.reasonCode?.[0]?.text ?? null, start: period.start ?? null, slut: period.end ?? null, uppfoljningsdatum: null, aktuell: false,
+      utsatt: utsatt ? { tid: utsattTid, orsak: utsatt } : null, ordineradAv: arkivForfattare(db, res.requester)?.namn ?? null, ...enhetUt(db, r.enhet_id), kallaEtikett: ARKIV_ETIKETT, arkiv: true };
+  });
+}
+function arkivRemisser(db, pid) {
+  return arkivRader(db, pid, 'remiss').map(r => {
+    const res = resursAv(r);
+    const not = (p) => (res.note ?? []).find(n => String(n.text ?? '').startsWith(p))?.text?.slice(p.length) ?? null;
+    return { id: `ma-${r.id}`, fran: enhetsnamn(db, r.enhet_id), till: enhetsnamn(db, r.mottagare_enhet_id), prioritet: { stat: 'akut', urgent: 'skyndsam' }[res.priority] ?? 'normal', svarSenast: null,
+      status: res.status === 'revoked' ? 'bedomd' : 'svar_kvitterat', beslut: res.status === 'revoked' ? 'avvisad' : null,
+      tider: { skickad: r.datum, mottagen: null, bedomd: null, besvarad: null, svarKvitterat: res.status === 'completed' ? r.sista : null },
+      fragestallning: res.reasonCode?.[0]?.text ?? null, motivering: not('Motivering: '), svar: not('Svar: '), kallaEtikett: ARKIV_ETIKETT, egen: false, arkiv: true };
+  });
+}
+function arkivVardkontakter(db, pid) {
+  return arkivRader(db, pid, 'vardkontakt').map(r => { const res = resursAv(r); return { id: `ma-${r.id}`, typ: { IMP: 'slutenvard', EMER: 'akut' }[res.class?.code] ?? 'oppenvard',
+    start: res.period?.start ?? r.datum, slut: res.period?.end ?? null, pagaende: false, plats: res.location?.[0]?.location?.display ?? null, orsak: res.reasonCode?.[0]?.text ?? null,
+    ...enhetUt(db, r.enhet_id), kallaEtikett: ARKIV_ETIKETT, arkiv: true }; });
+}
+const efterDatum = (falt) => (a, b) => String(b[falt] ?? '').localeCompare(String(a[falt] ?? ''));
 
 // Vem har läst journalen: vårdenhet, yrkesroll, tid och typ av åtkomst, inte personalens namn (HSLF-FS 2016:40 4 kap.
 // 10 § kräver vårdenhet och tidpunkt). Invånarnas egna läsningar är med och märkta, och kan döljas i gränssnittet.

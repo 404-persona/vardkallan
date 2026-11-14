@@ -31,6 +31,8 @@ export const STARTPUNKT = {
   // Runda 7, r4: systemförvaltarens sidor.
   'Omorganisationen efter återställning': { hash: '#/omorganisation', klar: '.sf-org', forbered: 'aterstall' },
   'Reglerna efter återställning': { hash: '#/regler', klar: '#sf-att-godkanna', forbered: 'aterstall' },
+  // Beslut 2026-11-14 (runda 15, r3): sidan Lagring med en logg från reservservern som väntar.
+  'Lagring med en logg från reservservern': { hash: '#/lagring', klar: '[data-las-in-reservlogg]', forbered: 'reservlogg' },
   // Runda 14, r5: servicenivåerna och incidenterna efter återställning.
   'Servicenivåsidan efter återställning': { hash: '#/servicenivaer', klar: '#sn-rapport', forbered: 'aterstall' },
   // Runda 6, r6.
@@ -717,6 +719,12 @@ export const UPPGIFTER = [
     id: 'las-mellanarkiv-ordination', namn: 'Läsa en utsatt ordination ur mellanarkivet', roll: 'lak-kard', start: 'Patientens översikt',
     text: 'Gunnar Åkesson fick Alvedon mot feber när han låg inne för influensa 2012. Ta reda på hur många doser han fick och varför en dos inte gavs.',
     kontroll: { sel: '[data-mellanarkiv-kontroll]', text: 'Kontrollsumman visar' },
+  },
+  // Beslut 2026-11-14: loggen från reservservern.
+  {
+    id: 'las-in-reservlogg', namn: 'Läsa in loggen från reservservern', roll: 'sysf', start: 'Lagring med en logg från reservservern',
+    text: 'Reservservern har använts under ett avbrott, och kärnsystemet är i drift igen. Se till att åtkomsterna på reservservern finns i åtkomstloggen.',
+    kontroll: { notis: 'rader från reservservern är inlästa' },
   },
   // Runda 14, r5: systemförvaltaren registrerar en incident.
   {

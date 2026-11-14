@@ -2087,6 +2087,19 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '.notis', 'Förslaget om återställning är borttaget');
       await page.waitForLoadState('networkidle');
     });
+    // Beslut 2026-11-14 (runda 15, r3): loggen från reservservern läses in med ett klick. Demon skapar en simulerad logg.
+    await s('Tomas Lindh ser att det finns en logg från reservservern som inte är inläst, med period och kopia, och läser in den med ett klick', async () => {
+      await gaTill(page, '#/lagring');
+      await page.click('[data-demo-reservlogg]');
+      await forvanta(page, '[data-reservlogg-sektion]', 'En logg från reservservern är inte inläst');
+      await forvanta(page, '[data-reservlogg-sektion]', 'rader väntar');
+      await forvanta(page, '[data-reservlogg-sektion]', 'ur kopian från');
+      await bild(page, '103h-reservlogg');
+      await page.click('[data-las-in-reservlogg]');
+      await forvanta(page, '.notis', 'rader från reservservern är inlästa');
+      await forvanta(page, '[data-reservlogg-sektion]', 'Ingen logg från reservservern väntar');
+      await page.waitForLoadState('networkidle');
+    });
     // Runda 12, r2 (D7 och M8): återgång till förra versionen och godkännande av uppgraderingen. Nora Ekholm godkänner
     // som andra systemförvaltare längre fram.
     await s('Tomas Lindh går tillbaka till förra versionen, ser vad uppgraderingen ändrar och godkänner den som första systemförvaltare', async () => {
@@ -2749,8 +2762,8 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
         'skriv-intyg', 'skicka-eremiss',
         // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.
         'las-mellanarkiv', 'overfor-mellanarkiv', 'oppna-reservdator',
-        // Runda 15, r3: en utsatt ordination ur mellanarkivet.
-        'las-mellanarkiv-ordination',
+        // Runda 15, r3: en utsatt ordination ur mellanarkivet och loggen från reservservern.
+        'las-mellanarkiv-ordination', 'las-in-reservlogg',
         // Runda 14, r5: incidenten på sidan Servicenivåer och incidenter.
         'registrera-incident',
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.

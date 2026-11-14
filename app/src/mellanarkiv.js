@@ -181,7 +181,7 @@ const radId = (r) => Number(r.id);
 function pekarPa(db, kolumn, id, flyttas) {
   for (const t of tabellerMedKolumn(db, kolumn)) {
     const s = flyttas.get(t);
-    const rader = db.query(`SELECT ${t === 'vardkontakter' && kolumn === 'foregaende_id' ? 'id' : s ? 'id' : '1 AS id'} FROM ${t} WHERE ${kolumn} = ?`).all(id);
+    const rader = db.query(`SELECT * FROM ${t} WHERE ${kolumn} = ?`).all(id);
     if (rader.some(r => !s || !s.has(Number(r.id)))) return true;
   }
   return false;
@@ -400,7 +400,8 @@ function bundleFor(db, pid, { anteckningar, matvarden, ordinationer = [], admini
   const p = db.query('SELECT * FROM patienter WHERE id = ?').get(pid);
   const res = [fhir.patient(db, p, true)];
   for (const a of anteckningar) res.push(medTagg(fhir.composition(db, a), TAGG_KATEGORI, a.kategori));
-  for (const m of matvarden) res.push(medTagg(fhir.observation(db, m), TAGG_MATTYP, m.typ));
+  // Beslut 2026-11-14: vårdenheten som tagg också, eftersom patientens egen mätning har patienten som utförare.
+  for (const m of matvarden) res.push(medTagg(medTagg(fhir.observation(db, m), TAGG_MATTYP, m.typ), TAGG_ENHET, m.enhet_id));
   // Runda 15, r3: ordinationerna med sina administreringar, och administreringarna utan ordination.
   for (const o of ordinationer) {
     res.push(ordinationsresurs(db, o));
@@ -469,7 +470,7 @@ function handlingUr(r) {
       text: delar.map(d => `${d.sokord}: ${d.text}`).join('\n') };
   }
   if (r.resourceType === 'Observation') {
-    return { slag: 'matvarde', kategori: null, typ: tagg(r, TAGG_MATTYP) ?? String(r.code?.text ?? ''), enhet: idUr(r.performer?.[0]?.reference, 'Organization'),
+    return { slag: 'matvarde', kategori: null, typ: tagg(r, TAGG_MATTYP) ?? String(r.code?.text ?? ''), enhet: tagg(r, TAGG_ENHET) ?? idUr(r.performer?.[0]?.reference, 'Organization'),
       patient: idUr(r.subject?.reference, 'Patient'), datum: r.effectiveDateTime, rubrik: String(r.code?.text ?? 'Mätvärde'), forfattare: null, text: vardeText(r) };
   }
   // Beslut 2026-11-14: en vårdkontakt, en remiss och en diagnos.

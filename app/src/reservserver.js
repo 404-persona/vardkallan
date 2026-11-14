@@ -20,6 +20,7 @@ import { Database } from 'bun:sqlite';
 import { existsSync, readFileSync, readdirSync, appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fel, iso } from './db.js';
+import * as sakerhetslogg from './sakerhetslogg.js';
 import { verifieraKopia } from './sakerhetskopior.js';
 import { loggaRad, hashFor } from './logg.js';
 
@@ -118,7 +119,7 @@ export function sparaLogg(reserv) {
   if (!reserv.loggFil) return 0;
   const rader = reserv.db.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(reserv.sistaLoggId);
   if (!rader.length) return 0;
-  appendFileSync(reserv.loggFil, rader.map(r => `${JSON.stringify({ ...r, reservserver: { kopia: reserv.kopia.id, kopiaTid: reserv.kopia.tid } })}\n`).join(''), { mode: 0o600 });
+  appendFileSync(reserv.loggFil, rader.map(r => `${JSON.stringify({ ...r, reservserver: { kopia: reserv.kopia.id, kopiaTid: reserv.kopia.tid, nyckel: reserv.nyckel } })}\n`).join(''), { mode: 0o600 });
   reserv.sistaLoggId = rader.at(-1).id;
   return rader.length;
 }
@@ -144,6 +145,74 @@ export function lasInLogg(db, rader) {
     }
   })();
   return n;
+}
+
+// ---- Beslut 2026-11-14: systemförvaltarens vy över loggen från reservservern (reservlogg-rutter.js) ----------------
+//
+// Loggfilerna ligger i katalogen som driften gör tillgänglig för kärnsystemet (RESERV_LOGG), en fil per gång
+// reservservern startades. Vyn visar filerna för den egna sandlådan (nyckeln för dess säkerhetskopior): antal rader,
+// period, vilken kopia reservservern läste, hur många rader som redan är inlästa och om kedjan i filen håller.
+// En fil vars kedja inte håller läses inte in, eftersom den kan ha ändrats.
+const FILNAMN = /^reservserver-logg-[0-9TZ-]{10,40}\.ndjson$/;
+function lasLoggfiler(katalog) {
+  if (!katalog || !existsSync(katalog)) return [];
+  return readdirSync(katalog).filter(f => FILNAMN.test(f)).map(f => {
+    let rader = [];
+    try { rader = readFileSync(join(katalog, f), 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x)); } catch { rader = null; }
+    return { fil: f, rader, simulerad: false };
+  });
+}
+const inlastNyckel = (r) => JSON.stringify([r.tid, r.personal_id ?? null, r.patient_id ?? null, r.handling, r.resurs ?? null]);
+function filerFor({ katalog, minne, nyckel }) {
+  const ur = [...lasLoggfiler(katalog), ...[...(minne.get(nyckel) ?? new Map())].map(([fil, rader]) => ({ fil, rader, simulerad: true }))];
+  return ur.map(f => ({ ...f, rader: (f.rader ?? []).filter(r => r?.reservserver?.nyckel === nyckel), trasig: f.rader === null })).filter(f => f.rader.length || f.trasig);
+}
+export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } = {}) {
+  const inlasta = new Set(db.query("SELECT tid, personal_id, patient_id, handling, resurs FROM atkomstlogg WHERE syfte LIKE 'Reservservern:%'").all().map(inlastNyckel));
+  const filer = filerFor({ katalog, minne, nyckel }).map(f => {
+    const tider = f.rader.map(r => r.tid).sort();
+    const kvar = f.rader.filter(r => !inlasta.has(inlastNyckel(r))).length;
+    const k = kontrolleraLogg(f.rader);
+    return { fil: f.fil, simulerad: f.simulerad, rader: f.rader.length, kvar, inlast: kvar === 0, fran: tider[0] ?? null, till: tider.at(-1) ?? null,
+      kopia: f.rader[0]?.reservserver ? { id: f.rader[0].reservserver.kopia, tid: f.rader[0].reservserver.kopiaTid } : null, kedjaHel: !f.trasig && k.hel };
+  }).sort((a, b) => String(b.till).localeCompare(String(a.till)));
+  const vantar = filer.filter(f => !f.inlast);
+  return {
+    filer, vantar: vantar.length,
+    text: vantar.length ? `${vantar.length === 1 ? 'En logg från reservservern är inte inläst' : `${vantar.length} loggar från reservservern är inte inlästa`}. Läs in dem, så att åtkomsterna på reservservern finns i åtkomstloggen.`
+      : 'Ingen logg från reservservern väntar på att läsas in.',
+    kommando: 'Loggen kan också läsas in med kommandot bun src/reservserver.js --las-in-logg <fil> --databas <fil>.',
+  };
+}
+export function lasInFil(db, personal, { katalog = null, minne = new Map(), nyckel, fil } = {}) {
+  const f = typeof fil === 'string' ? filerFor({ katalog, minne, nyckel }).find(x => x.fil === fil) : null;
+  if (!f) throw new Fel(404, 'Loggen finns inte.', 'saknas');
+  if (f.trasig || !kontrolleraLogg(f.rader).hel) throw new Fel(409, 'Loggen från reservservern hänger inte ihop: en rad saknas eller har ändrats. Den läses inte in. Kontakta driften, som har originalet på reservserverns disk.', 'ogiltig');
+  const n = lasInLogg(db, f.rader);
+  sakerhetslogg.logga(db, { typ: 'andrad_installning', personal_id: personal.id, enhet_id: personal.enhet_id,
+    beskrivning: `Läste in ${n} ${n === 1 ? 'rad' : 'rader'} från reservserverns logg ${f.fil} i åtkomstloggen.` });
+  return { inlasta: n, ...loggOversikt(db, { katalog, minne, nyckel }) };
+}
+// Demon: tre läsningar på en reservserver för den här sandlådan, en kvart efter en kopia av läget nu. Raderna skrivs i en
+// kopia av databasen, så att kedjan fortsätter från kopian som i en riktig reservserver, och märks som simulerade.
+export function simuleraLogg(db, { minne, nyckel, nu = new Date() }) {
+  const kopia = Database.deserialize(db.serialize());
+  try {
+    const sista = kopia.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m;
+    const kopiaTid = new Date(nu.getTime() - 30 * 60_000).toISOString();
+    const p = kopia.query("SELECT id, enhet_id FROM personal WHERE id = 'ssk-kard'").get() ?? kopia.query("SELECT id, enhet_id FROM personal WHERE yrke = 'sjukskoterska' LIMIT 1").get();
+    const pat = kopia.query("SELECT id FROM patienter WHERE id IN ('p01', 'p02', 'p03') ORDER BY id").all().map(x => x.id);
+    pat.forEach((pid, i) => loggaRad(kopia, { tid: new Date(nu.getTime() - (20 - i * 5) * 60_000).toISOString(), personal_id: p.id, enhet_id: p.enhet_id, patient_id: pid,
+      handling: 'las_oversikt', resurs: 'oversikt', grund: 'vardrelation', syfte: 'Läsning på reservservern (simulerad i demon)' }));
+    const id = `demo-${iso(nu).replace(/[:.]/g, '-')}`;
+    const rader = kopia.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(sista).map(r => ({ ...r, reservserver: { kopia: id, kopiaTid, nyckel, simulerad: true } }));
+    if (!minne.has(nyckel)) minne.set(nyckel, new Map());
+    const fil = `reservserver-logg-${iso(nu).replace(/[:.]/g, '-')}.ndjson`;
+    minne.get(nyckel).set(fil, rader);
+    // Högst tre simulerade loggar per sandlåda.
+    while (minne.get(nyckel).size > 3) minne.get(nyckel).delete(minne.get(nyckel).keys().next().value);
+    return { fil, rader: rader.length };
+  } finally { kopia.close(); }
 }
 
 // Kontrollerar att en loggfil från reservservern hänger ihop: raderna följer på varandra, och varje rads hash stämmer

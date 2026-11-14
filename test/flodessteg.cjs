@@ -1363,6 +1363,18 @@ function skapa(BAS) {
     await m.klicka(kort.locator('[data-overfor]'), 'För över till mellanarkivet');
     await synlig(page, '.notis', 'överförda till mellanarkivet');
   };
+  // Beslut 2026-11-14: loggen från reservservern läses in med ett klick på sidan Lagring. Demon skapar loggen först.
+  startI['Lagring med en logg från reservservern'] = async (page) => {
+    await gaTill(page, '#/lagring');
+    await page.evaluate(() => fetch('/api/reservlogg/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
+    await gaTill(page, '#/moduler');
+    await gaTill(page, '#/lagring');
+    await page.waitForSelector('[data-las-in-reservlogg]');
+  };
+  GOR['las-in-reservlogg'] = async (m, page) => {
+    await m.klicka(page.locator('[data-las-in-reservlogg]').first(), 'Läs in');
+    await synlig(page, '.notis', 'rader från reservservern är inlästa');
+  };
   // Runda 15, r3: en utsatt ordination ur mellanarkivet öppnas från läkemedelslistan.
   GOR['las-mellanarkiv-ordination'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Läkemedel' }).first(), 'fliken Läkemedel');

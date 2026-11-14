@@ -121,6 +121,8 @@ const FORBERED = {
   },
   // Runda 6, r2: bara återställning, så att patienten är som i seeden.
   aterstall: async () => { await aterstallDemo(); },
+  // Beslut 2026-11-14 (runda 15, r3): en simulerad logg från reservservern väntar på att läsas in, som i test/flodessteg.cjs.
+  reservlogg: async () => { await api('/api/reservlogg/demo', { metod: 'POST', data: {} }); },
   // Runda 7, r2: demoläget flyttar inloggningens tid så att varningen före utloggningen visas direkt.
   'inloggning-gar-ut': async () => { await aterstallDemo(); await api('/api/demo/inloggning-gar-ut', { metod: 'POST', data: { sekunder: 240 } }); },
   // Runda 9, r2: en simulerad monitor kopplas till Gunnar Åkesson, så att värden väntar på godkännande.

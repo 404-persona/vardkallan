@@ -174,6 +174,7 @@ import * as vila from './sandlada-vila.js';
 import * as testprotokoll from './testprotokoll.js';
 // Runda 15, r3: den fristående reservservern (reservserver.js), som startas med RESERVSERVER=1 eller reservserver.js.
 import * as reservserverMod from './reservserver.js';
+import { registreraRutter as reservloggRutter } from './reservlogg-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -352,7 +353,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 15, r3: reservserver ger en reservserver som läser den senaste verifierade kopian på kopiornas platser
   // ({ katalog, andraKatalog, nyckel, loggKatalog }, där det som saknas tas ur kopieKatalog, kopieAndra,
   // RESERV_SANDLADA och RESERV_LOGG). Inställningen RESERVSERVER=1 gör samma sak.
-  reservserver = process.env.RESERVSERVER === '1' ? {} : null } = {}) {
+  reservserver = process.env.RESERVSERVER === '1' ? {} : null,
+  // Beslut 2026-11-14: katalogen där driften gör reservserverns loggfiler tillgängliga för kärnsystemet.
+  reservloggKatalog = process.env.RESERV_LOGG || null } = {}) {
   if (maxSessioner) maxSandlador = maxSessioner;
   // Runda 15, r3: reservservern har en databas för alla som loggar in, ur kopian, och tar inga egna kopior, sparar inga
   // sandlådor och flyttar inget till disk. Den läser platserna men skriver aldrig där.
@@ -2386,7 +2389,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (!Object.hasOwn(MIN_DELAR, del)) throw new Fel(404, 'Okänd adress.', 'saknas');
     return medMinJournal(c, id, `min:${del}`, (atk) => MIN_DELAR[del](atk));
   });
-  rutt('GET', '/api/min/journal/:id/anteckning/:aid', (c, id, aid) => medMinJournal(c, id, `min:anteckning:${Number(aid) || 0}`, (atk) => minJournal.anteckning(atk, aid)));
+  // Beslut 2026-11-14: en anteckning ur mellanarkivet har id:t ma-<nummer>, som också står i loggen.
+  rutt('GET', '/api/min/journal/:id/anteckning/:aid', (c, id, aid) => medMinJournal(c, id, `min:anteckning:${/^ma-\d{1,9}$/.test(aid) ? aid : Number(aid) || 0}`, (atk) => minJournal.anteckning(atk, aid)));
   rutt('POST', '/api/min/journal/:id/begaran', (c, id) => [201, medMinJournal(c, id, 'min:begaran', (atk) => minJournal.skapaBegaran(atk, c.body))]);
   // Patientens egna tider i Min journal: incheckning, ombokning, avbokning, bekräftelse, betalning och egen bokning.
   rutt('GET', '/api/min/journal/:id/bokning/:bid/forslag', (c, id, bid) => medMinJournal(c, id, `min:bokning:${Number(bid) || 0}:forslag`, (atk) => tidbok.minForslag(atk, bid)));
@@ -2541,6 +2545,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     s.vantande = null; s.flerfaktorMetod = null; s.flerfaktorUtmaning = null; s.kopior = new Map();
   };
   r12r2Rutter({ rutt, kravInloggad, testresultat, kopior, migrera, loggaUtAlla });
+  // Beslut 2026-11-14: loggen från reservservern på sidan Lagring (reservlogg-rutter.js). Inte på reservservern själv.
+  if (!reserv) reservloggRutter({ rutt, kravInloggad, kopior, reservloggKatalog });
   // Runda 14, r5 (servicenivaer-rutter.js): svarstiderna med målet och säkerhetskopiornas lager till månadsrapporten.
   r14r5Rutter({ rutt, kravInloggad, kopior, matning: () => medMal(serverMatning.sammanstall()), malP95: MAL_P95 });
   // Runda 14, r1 (inloggningstjanster-rutter.js).
