@@ -19,7 +19,7 @@
 // läsning loggas i åtkomstloggen.
 import { createHash, randomUUID } from 'node:crypto';
 import { Fel, iso, addDagar, idag } from './db.js';
-import { kanRoll, vardenhetFor, visningsnamn, visningsPnr, Atkomst } from './atkomst.js';
+import { kanRoll, vardenhetFor, visningsnamn, visningsPnr, Atkomst, aktivaSparrar } from './atkomst.js';
 // Runda 15, r3: undantagen från FHIR och från publicering till nationella tjänster.
 import * as undantag from './undantag.js';
 import { loggaRad } from './logg.js';
@@ -234,10 +234,13 @@ function administreringsresurs(db, a, ordinationEnhet) {
   const ut = medTagg(r, TAGG_ENHET, a.enhet_id);
   return ordinationEnhet ? medTagg(ut, TAGG_ORDINATIONSENHET, ordinationEnhet) : ut;
 }
-// En post i e-arkivets index för en administrering, som för de andra journalhandlingarna (earkiv.index).
-function admIndexPost(db, mall, a) {
+// En post i e-arkivets index för en administrering, som för de andra journalhandlingarna (earkiv.index). Spärren gäller
+// när vårdenheten som gav dosen eller vårdenheten som ordinerade läkemedlet är spärrad, som i läkemedelslistan och FHIR.
+export const sparradFor = (db, pid, ...enheter) => { const s = aktivaSparrar(db, pid); return enheter.filter(Boolean).some(e => s.includes(vardenhetFor(db, e))); };
+function admIndexPost(db, mall, a, ordinationEnhet = null) {
   const ve = vardenhetFor(db, a.enhet_id);
   return { ...mall, Dokumenttyp: 'Läkemedelsadministrering', Dokumentdatum: String(a.tid).slice(0, 19), Vårdenhet: db.query('SELECT hsa_id FROM enheter WHERE id = ?').get(ve)?.hsa_id ?? ve,
+    Spärr: sparradFor(db, a.patient_id, a.enhet_id, ordinationEnhet) ? 'ja' : 'nej',
     UpprättadAv: db.query('SELECT hsa_id FROM personal WHERE id = ?').get(a.utford_av)?.hsa_id ?? null, Version: '1', Referens: `urn:vardkallan:MedicationAdministration/${a.id}` };
 }
 // Tar bort ordinationerna och administreringarna ur den aktiva journalen, med raderna som hör till dem.
@@ -326,10 +329,10 @@ export function paketFor(db, pid, valda, { version = null, kalla = 'Överföring
     ...(valda.ordinationer ?? []).map(o => `urn:vardkallan:MedicationRequest/${o.id}`)]);
   const index = earkiv.index(db, pid).filter(x => refs.has(x.Referens));
   // Runda 15, r3: administreringarna har ingen egen post i e-arkivets index för hela journalen, så de får en här.
-  const adm = [...(valda.administreringar ?? []), ...(valda.ordinationer ?? []).flatMap(o => o.administreringar)];
+  const adm = [...(valda.administreringar ?? []).map(a => [a, null]), ...(valda.ordinationer ?? []).flatMap(o => o.administreringar.map(a => [a, o.enhet_id]))];
   if (adm.length) {
     const mall = earkiv.index(db, pid)[0] ?? null;
-    if (mall) for (const a of adm) { index.push(admIndexPost(db, mall, a)); refs.add(`urn:vardkallan:MedicationAdministration/${a.id}`); }
+    if (mall) for (const [a, oe] of adm) { index.push(admIndexPost(db, mall, a, oe)); refs.add(`urn:vardkallan:MedicationAdministration/${a.id}`); }
   }
   const objid = `IP_${randomUUID()}`;
   return byggFgsPaket(db, { objid, version, scheman, ...(tid ? { tid } : {}), filer: [
@@ -628,11 +631,13 @@ export const FHIR_SLAG = { Composition: 'anteckning', Observation: 'matvarde', M
 const PAKETTAGGAR = new Set([TAGG_KATEGORI, TAGG_MATTYP, TAGG_ENHET, TAGG_ORDINATIONSENHET]);
 const undantagenFhir = (db, typ, nationell) => { const p = undantag.fhirProvare(db, typ, { nationell }); return (r) => Boolean(p({ enhet_id: r.enhet_id, typ: r.typ, id: null })); };
 
-export function fhirResurs(db, r) {
+// paketTaggar: true i exporten till e-arkivet, så att mottagaren har vårdenheterna och kategorin som spärrar, inre
+// sekretess och undantag prövas på, som i mellanarkivets eget paket.
+export function fhirResurs(db, r, { paketTaggar = false } = {}) {
   const res = JSON.parse(r.resurs);
   res.id = `ma-${r.id}`;
   res.meta = { ...(res.meta ?? {}), source: `urn:vardkallan:mellanarkiv:${r.paket_id}`,
-    tag: [...(res.meta?.tag ?? []).filter(t => !PAKETTAGGAR.has(t.system)), { system: fhir.SYSTEM.lagring, code: 'mellanarkiv', display: ETIKETT }] };
+    tag: [...(res.meta?.tag ?? []).filter(t => paketTaggar || !PAKETTAGGAR.has(t.system)), { system: fhir.SYSTEM.lagring, code: 'mellanarkiv', display: ETIKETT }] };
   if (res.subject?.reference?.startsWith('Patient/')) res.subject = { ...res.subject, reference: `Patient/${r.patient_id}` };
   if (res.resourceType === 'MedicationAdministration' && res.request?.reference) {
     const o = db.query("SELECT id FROM mellanarkiv_handlingar WHERE paket_id = ? AND slag = 'ordination' AND referens = ?").get(r.paket_id, `urn:vardkallan:${res.request.reference}`);
@@ -648,7 +653,7 @@ export function fhirResurs(db, r) {
 export const RESURSTYP = Object.fromEntries(Object.entries(FHIR_SLAG).map(([t, s]) => [s, t]));
 export function exportResurser(db, pid) {
   if (!finnsTabell(db)) return [];
-  return db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY id').all(pid).map(r => fhirResurs(db, r));
+  return db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY id').all(pid).map(r => fhirResurs(db, r, { paketTaggar: true }));
 }
 export const exportRader = (db, pid) => (finnsTabell(db) ? db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY id').all(pid) : []);
 

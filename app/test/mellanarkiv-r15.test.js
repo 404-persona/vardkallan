@@ -249,6 +249,36 @@ describe('Mellanarkiv för läkemedel', () => {
     expect(index).toContain('<Dokumenttyp>Läkemedelsadministrering</Dokumenttyp>');
   });
 
+  test('en spärr på vårdenheten som ordinerade följer med doserna till e-arkivet och till mellanarkivets index, också när dosen gavs på en annan vårdenhet', async () => {
+    const k = await inloggad('ark');
+    const d = db(k);
+    // Ordinerad på vårdcentralen och given på Kardiologiska kliniken. Vårdcentralen är spärrad redan vid överföringen.
+    const { adm } = gammalOrdination(d, { enhet: 'vc-tybble', admEnhet: 'uso-kard' });
+    d.query("INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES ('p01', 'vc-tybble', ?, 1)").run(new Date().toISOString());
+    await foverfor(k);
+    const post = (xml, ref) => [...xml.matchAll(/<handling>([\s\S]*?)<\/handling>/g)].map(m => m[1]).find(x => x.includes(`<Referens>${ref}</Referens>`));
+    // Mellanarkivets eget index.
+    const rad = d.query("SELECT * FROM mellanarkiv_handlingar WHERE referens = ?").get(`urn:vardkallan:MedicationAdministration/${adm[0]}`);
+    const paket = d.query('SELECT data FROM mellanarkiv_paket WHERE id = ?').get(rad.paket_id).data;
+    const maIndex = [...packaUpp(Buffer.from(paket))].find(([n]) => n.endsWith('earkiv-index.xml'))[1].data.toString('utf8');
+    expect(post(maIndex, `urn:vardkallan:MedicationAdministration/${adm[0]}`)).toContain('<Spärr>ja</Spärr>');
+    // Exporten till e-arkivet.
+    const b = (await k.post('/api/arkiv/beslut', { diarienummer: 'DEMO-2026-0101', beslutsdatum: idag(), typ: 'leverans', patientId: 'p01' })).data;
+    const res = await fetch(`${app.url}/api/arkiv/beslut/${b.id}/paket`, { method: 'POST', headers: { Cookie: k.kaka(), 'Content-Type': 'application/json' }, body: '{}' });
+    const filer = packaUpp(Buffer.from(await res.arrayBuffer()));
+    const rot = [...filer.keys()][0];
+    const index = filer.get(`${rot}metadata/descriptive/earkiv-index.xml`).data.toString('utf8');
+    expect(post(index, `urn:vardkallan:MedicationAdministration/ma-${rad.id}`)).toContain('<Spärr>ja</Spärr>');
+    // Resursen bär vårdenheterna, så att mottagaren kan tillämpa spärren.
+    const journal = JSON.parse(filer.get(`${rot}representations/rep_1/data/journal/p01.json`).data.toString('utf8'));
+    const r = journal.entry.map(e => e.resource).find(x => x.id === `ma-${rad.id}`);
+    expect(r.meta.tag).toContainEqual({ system: mellanarkiv.TAGG_ORDINATIONSENHET, code: 'vc-tybble' });
+    expect(r.meta.tag).toContainEqual({ system: mellanarkiv.TAGG_ENHET, code: 'uso-kard' });
+    const ord = journal.entry.map(e => e.resource).find(x => x.resourceType === 'MedicationRequest' && x.id === r.request.reference.split('/')[1]);
+    expect(ord.meta.tag).toContainEqual({ system: mellanarkiv.TAGG_ENHET, code: 'vc-tybble' });
+    expect(post(index, `urn:vardkallan:MedicationRequest/${ord.id}`)).toContain('<Spärr>ja</Spärr>');
+  }, 30_000);
+
   test('gallringsregeln räknar med det som finns i mellanarkivet, och för en ordination med när den sattes ut', async () => {
     const k = await inloggad('ark');
     const d = db(k);

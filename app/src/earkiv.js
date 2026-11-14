@@ -85,7 +85,8 @@ export function index(db, pid) {
       Arkivbildare: vg ? `${vg} (demo)` : null, Informationstyp: INFORMATIONSTYP, Patientidentitet: p.personnummer, Patientnamn: `${p.fornamn} ${p.efternamn}`,
       SkyddadePersonuppgifter: p.skyddad ? 'ja' : 'nej', Dokumenttyp: TYP[r.slag](r), Dokumentdatum: String(r.datum ?? '').slice(0, 19) || null,
       Vårdenhet: hsa(db, 'enheter', ve), UpprättadAv: null, Version: '1',
-      Spärr: sparrar.includes(ve) ? 'ja' : 'nej', Sekretess: 'Offentlighets- och sekretesslagen (2009:400) 25 kap. 1 §',
+      // En administrering är spärrad också när vårdenheten som ordinerade läkemedlet är spärrad, som i läkemedelslistan.
+      Spärr: sparrar.includes(ve) || (r.ordination_enhet_id && sparrar.includes(vardenhetFor(db, r.ordination_enhet_id))) ? 'ja' : 'nej', Sekretess: 'Offentlighets- och sekretesslagen (2009:400) 25 kap. 1 §',
       Fil: `representations/rep_1/data/journal/${pid}.json`, Referens: `urn:vardkallan:${ma.RESURSTYP[r.slag]}/ma-${r.id}`, vardenhetNamn: enhetNamn(db, ve),
     });
   }

@@ -292,6 +292,7 @@ Paketet är skapat i en demo med påhittade patienter och testpersonnummer från
 Paketet följer FGS Paketstruktur 2.0 (E-ARK CSIP 2.1.0 och E-ARK SIP 2.1.0 i Riksarkivets tillämpning, version 1.0, 2023-03-30). METS.xml beskriver alla filer med storlek och SHA-256.
 
 - representations/rep_1/data/journal/: journalhandlingarna, en fil per patient i HL7 FHIR R4 (4.0.1) som JSON, Bundle av typen collection.
+- Handlingar som har förts till mellanarkivet står i samma fil med id ma-<nummer>, koden mellanarkiv i meta.tag och paketet i meta.source. Taggen urn:vardkallan:vardenhet anger vårdenheten som ordinerade eller gav ett läkemedel och taggen urn:vardkallan:ordinationsenhet vårdenheten som ordinerade läkemedlet i en administrering, så att en spärr på någon av dem gäller också hos mottagaren.
 - representations/rep_1/data/journal/<patient>-utlamnanden.json: utlämnade journalhandlingar (patientdatalagen 3 kap. 11 §) och utskrifter.
 - representations/rep_1/data/journal/<patient>-sparr-och-skydd.json: spärrar och skyddade personuppgifter, som gäller för den som tar emot paketet.
 - representations/rep_1/data/ovrigt/<patient>-atkomstlogg.ndjson: åtkomstloggen för patienten, en rad per åtkomst med hashkedjans värden. Loggen är inte en journalhandling och ligger därför för sig.
