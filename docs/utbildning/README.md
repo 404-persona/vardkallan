@@ -68,6 +68,6 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 | [Farmaceut](farmaceut.md) | 1 | 0 | 6 | 0 |
 | [Verksamhetschef](verksamhetschef.md) | 1 | 0 | 4 | 0 |
 | [Ekonom](ekonom.md) | 1 | 0 | 3 | 0 |
-| [Systemförvaltare](systemforvaltare.md) | 4 | 1 | 3 | 7 |
+| [Systemförvaltare](systemforvaltare.md) | 5 | 1 | 3 | 7 |
 | [Fysioterapeut](fysioterapeut.md) | 0 | 0 | 5 | 7 |
 | [Invånare i Min journal](invanare.md) | 5 | 1 | 0 | 7 |

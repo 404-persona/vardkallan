@@ -19,6 +19,9 @@ export const ANDRINGAR = [
       // Runda 15, r3: mellanarkivet i FHIR, i läkemedelslistan och reservservern (docs/api-avvikelser.md).
       'Composition, Observation, MedicationRequest och MedicationAdministration tar med handlingar ur mellanarkivet, med id ma-<nummer>, koden mellanarkiv i meta.tag (kodsystemet lagring) och paketet i meta.source',
       'Läkemedelslistan i det interna API:t har fältet mellanarkiv med avslutade ordinationer ur mellanarkivet, och en handling ur mellanarkivet kan vara en ordination eller en administrering (docs/api-avvikelser.md)',
+      // Beslut 2026-11-14.
+      'Encounter, Condition och ServiceRequest tar med avslutade vårdkontakter, tillfälliga diagnoser och avslutade remisser ur mellanarkivet, och referenserna till dem pekar på id:t ma-<nummer>',
+      'Min journal visar handlingarna i mellanarkivet med id ma-<nummer> och fältet arkiv, och sidan Lagring har loggen från reservservern (docs/api-avvikelser.md)',
       'Reservservern svarar 423 med koden reservserver på varje anrop som skulle ändra något, och hälsokontrollen och sessionen har fältet reservserver med kopians tid och ålder',
     ],
   },

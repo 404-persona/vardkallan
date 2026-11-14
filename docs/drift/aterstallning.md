@@ -65,7 +65,7 @@ Medan kärnsystemet återställs kan vården läsa journalen på en reservserver
 3. Reservservern väljer själv den senaste kopian som är verifierad, kontrollerar den på samma sätt som vid en återställning och läser den från den andra platsen om den första är skadad. Finns ingen kopia som håller startar den inte, och säger varför.
 4. Kontrollera att `GET /api/health` har fältet reservserver med kopians tid och ålder, och logga in som en vanlig användare. Raden överst på sidan säger att det är en reservserver och hur gamla uppgifterna är.
 5. Meddela verksamheten adressen till reservservern och att den bara kan läsas.
-6. När kärnsystemet är i drift igen: stäng reservservern och läs in dess logg i kärnsystemets åtkomstlogg med `bun src/reservserver.js --las-in-logg <fil> --databas <fil>`. Varje rad läses in en gång, med sin tid och person, märkt Reservservern.
+6. När kärnsystemet är i drift igen: stäng reservservern och gör katalogen med dess logg tillgänglig för kärnsystemet med `RESERV_LOGG`. Sidan Lagring visar då att det finns en logg som inte är inläst, med antal rader, period och kopia, och systemförvaltaren läser in den med ett klick. Kommandot `bun src/reservserver.js --las-in-logg <fil> --databas <fil>` gör samma sak och finns som reserv. Varje rad läses in en gång, med sin tid och person, märkt Reservservern, och en logg vars kedja inte håller läses inte in.
 
 Reservservern ändrar aldrig något på platserna för kopiorna, och den tar inga egna kopior. Det som registrerades efter kopian finns inte där.
 

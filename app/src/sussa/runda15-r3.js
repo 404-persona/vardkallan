@@ -5,6 +5,9 @@ const MF = 'FHIR ur mellanarkivet > ';
 const ML = 'Läskopian och mellanarkivet > ';
 const RS = 'Reservserver > ';
 const GK = 'Gränssnitt > Klickbudget > ';
+const MS = 'Mellanarkiv för vårdkontakter, remisser och diagnoser > ';
+const MJ = 'Min journal och mellanarkivet > ';
+const RL = 'Loggen från reservservern > ';
 
 export const T15R3 = {
   overfor: `${MA}en avslutad ordination förs över med sina administreringar och sin historik, och finns inte kvar i den aktiva journalen`,
@@ -33,12 +36,27 @@ export const T15R3 = {
   rsSkadad: `${RS}en skadad kopia på den första platsen läses från den andra, och utan någon kopia som håller startar reservservern inte`,
   rsDrift: `${RS}driften tar reservservern i drift med inställningen RESERVSERVER=1 och väljer sandlåda med nyckeln från sidan Säkerhetskopior`,
   kbOrdination: `${GK}Läsa en utsatt ordination ur mellanarkivet inom budget`,
+  // Beslut 2026-11-14: vårdkontakter, remisser och diagnoser, Min journal och loggen från reservservern.
+  stOverfor: `${MS}en avslutad vårdkontakt förs över med det som dokumenterades under den, en tillfällig diagnos och en avslutad remiss`,
+  stStannar: `${MS}det som gäller eller som något pekar på stannar: kroniska diagnoser, bokningar, väntelistan, hjälpmedel, uppmärksamhetsinformation och vårdtillfällen`,
+  stRelation: `${MS}vårdrelationen, spärren och det aktiva valet är exakt som före överföringen för all personal och alla patienter`,
+  stSparr: `${MS}en spärrad vårdenhets kontakter, diagnoser och remisser syns inte, svaret är detsamma utan dem, och med samtycke syns de`,
+  stRemiss: `${MS}en remiss från eller till den egna vårdenheten syns utan aktivt val, och den som bara får läsa statusen ser inget av innehållet`,
+  stFhir: `${MS}FHIR lämnar ut vårdkontakter, remisser och diagnoser ur mellanarkivet, och referenserna pekar på dem i mellanarkivet`,
+  mjVisar: `${MJ}Min journal visar anteckningar, mätvärden, diagnoser, läkemedel, remisser och vårdkontakter ur mellanarkivet, märkta som äldre uppgifter`,
+  mjRegler: `${MJ}samma visningsregler som i övrigt: en anteckningstyp som inte visas i Min journal visas inte heller ur mellanarkivet, och den räknas`,
+  mjEgna: `${MJ}patientens egna mätningar och värden som vården inte har godkänt visas inte heller ur mellanarkivet`,
+  mjOmbud: `${MJ}ett ombud ser inget ur mellanarkivet, och vårdnadshavaren ser barnets äldre uppgifter som barnets övriga`,
+  rlVy: `${RL}sidan Lagring visar en logg som inte är inläst med antal rader, period och kopia, och den läses in med ett klick, en gång`,
+  rlKedja: `${RL}en logg vars kedja inte håller läses inte in, och en annan sandlådas logg syns inte`,
+  kbReservlogg: `${GK}Läsa in loggen från reservservern inom budget`,
 };
 const T = T15R3;
-export const TESTER_MELLANARKIV = [T.overfor, T.aldrig, T.galler, T.senaste, T.lista, T.sparr, T.las, T.avvisa, T.uppgradera, T.earkiv, T.gallring, T.reservdator, T.kbOrdination];
+export const TESTER_MELLANARKIV = [T.overfor, T.aldrig, T.galler, T.senaste, T.lista, T.sparr, T.las, T.avvisa, T.uppgradera, T.earkiv, T.gallring, T.reservdator, T.kbOrdination,
+  T.stOverfor, T.stStannar, T.stRelation, T.stSparr, T.stRemiss, T.stFhir, T.mjVisar, T.mjRegler, T.mjEgna, T.mjOmbud];
 export const TESTER_FHIR = [T.fhirSok, T.fhirSparr, T.fhirSkyddad, T.fhirRoll, T.fhirAllt];
 export const TESTER_LASKOPIA = [T.kopiaInnehall, T.kopiaStorlek];
-export const TESTER_RESERVSERVER = [T.rsLaser, T.rsLasEndast, T.rsLogg, T.rsPlatser, T.rsSkadad, T.rsDrift];
+export const TESTER_RESERVSERVER = [T.rsLaser, T.rsLasEndast, T.rsLogg, T.rsPlatser, T.rsSkadad, T.rsDrift, T.rlVy, T.rlKedja, T.kbReservlogg];
 
 const RESERVSERVER = 'Runda 15: en fristående reservserver på en annan plats. Den är samma program som kärnsystemet, startat med inställningen RESERVSERVER=1 eller kommandot bun src/reservserver.js, och läser den senaste verifierade säkerhetskopian från platserna där kärnsystemet lägger sina kopior. Den kontrollerar kopian som vid en återställning och läser den från den andra platsen om den första är skadad, ändrar aldrig något där, kan bara läsas (varje registrering nekas med en förklaring och journalens tabeller har triggrar som stoppar en ändring), säger överst på varje sida och i varje svar att den är en reservserver och hur gamla uppgifterna är, och loggar varje läsning i åtkomstloggen som vanligt och till en fil på sin egen disk, som läses in i kärnsystemets logg när det är i drift igen. Hur driften tar den i drift står i docs/drift/kontinuitetsplan.md och docs/drift/aterstallning.md.';
 const RESERVSERVER_EXPERT = 'Driften startar reservservern med en inställning. Systemet väljer själv den senaste kopian som håller, kontrollerar den och säger på vanlig svenska hur gamla uppgifterna är och vad man gör i stället för att registrera. Ingen behöver veta vilken kopia som är rätt eller komma ihåg att föra över loggen för hand.';
@@ -48,9 +66,9 @@ const RESERVSERVER_ANM = 'I demon prövas reservservern lokalt mot kopior som te
 export const POSTER = {
   '5.4.2.2': {
     tester: [...TESTER_MELLANARKIV, ...TESTER_FHIR, ...TESTER_LASKOPIA],
-    losning: '+Runda 15: också avslutade ordinationer och administreringar förs över. En ordination förs över hela när den sattes ut eller slutade före gränsen, med sin historik, sina meddelanden till Nationella läkemedelslistan och alla sina doser, med kontrollen av patientens identitet, skanningen och kollegakontrollen som noter, så att en administrering aldrig finns utan sin ordination. Det som pågår eller gäller stannar alltid i den aktiva journalen: aktuella ordinationer, ordinationer som uppmärksamhetsinformationen, den senaste vidimeringen, en plan för återinsättning eller ett obesvarat meddelande till NLL pekar på, doser som är iordningsställda men inte registrerade, och det senaste mätvärdet av varje typ, hur gammalt det än är. Ordinationerna står i läkemedelslistan bland de utsatta och avslutade, i tidslinjen och i sökningen, märkta Ur mellanarkivet, med samma prövning som läkemedelslistan, och öppnas med dosering, period, historik och doser. FHIR-API:t lämnar ut handlingarna i mellanarkivet med samma behörighet och loggning som den aktiva journalen, med id ma-<nummer>, koden mellanarkiv i meta.tag (Vårdkällans kodsystem lagring) och paketet i meta.source. Exporten till e-arkivet tar med dem, och gallringsregeln räknar den sista uppgiften också ur mellanarkivet. Läskopian vid avbrott tar inte med det som har förts över.',
+    losning: '+Runda 15: också avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser förs över, när allt som pekar på dem förs över samtidigt; en bokning, kallelse, väntelista, avgift, ett intyg, ett vårdtillfälle eller uppmärksamhetsinformation håller dem kvar, och vårdrelationen, spärrarna och det aktiva valet är exakt som före. Min journal visar handlingarna med samma regler som resten av journalen där, märkta som äldre uppgifter. Också avslutade ordinationer och administreringar förs över. En ordination förs över hela när den sattes ut eller slutade före gränsen, med sin historik, sina meddelanden till Nationella läkemedelslistan och alla sina doser, med kontrollen av patientens identitet, skanningen och kollegakontrollen som noter, så att en administrering aldrig finns utan sin ordination. Det som pågår eller gäller stannar alltid i den aktiva journalen: aktuella ordinationer, ordinationer som uppmärksamhetsinformationen, den senaste vidimeringen, en plan för återinsättning eller ett obesvarat meddelande till NLL pekar på, doser som är iordningsställda men inte registrerade, och det senaste mätvärdet av varje typ, hur gammalt det än är. Ordinationerna står i läkemedelslistan bland de utsatta och avslutade, i tidslinjen och i sökningen, märkta Ur mellanarkivet, med samma prövning som läkemedelslistan, och öppnas med dosering, period, historik och doser. FHIR-API:t lämnar ut handlingarna i mellanarkivet med samma behörighet och loggning som den aktiva journalen, med id ma-<nummer>, koden mellanarkiv i meta.tag (Vårdkällans kodsystem lagring) och paketet i meta.source. Exporten till e-arkivet tar med dem, och gallringsregeln räknar den sista uppgiften också ur mellanarkivet. Läskopian vid avbrott tar inte med det som har förts över.',
     expert: 'Den som arbetar i journalen och läkemedelslistan behöver inte veta att mellanarkivet finns: systemet visar handlingarna där de andra finns, märkta, och FHIR och e-arkivet tar med dem. Arkivarien registrerar bara beslutet, och systemet avgör självt vad som är avslutat och låter allt som pekar på något som gäller stanna i journalen.',
-    anmarkning: 'Mellanarkivet är lokalt i demon och simulerat, och ingen koppling till ett verkligt mellanarkiv är gjord. Regeln är en regel i koden (fem år). Diagnoser, vårdkontakter och remisser stannar i den aktiva journalen, eftersom basfakta, vårdstrukturen och ekonomin använder dem. En ordination med uppgifter i tabeller som inte följer med (till exempel en trappning, en spädning eller en infusion i intensivvården) stannar i den aktiva journalen. Min journal visar inte handlingarna i mellanarkivet. I demon fördes Gunnar Åkessons äldre uppgifter ur VAS dit vid migreringen, också en kur med Alvedon från 2012 med doserna.',
+    anmarkning: 'Mellanarkivet är lokalt i demon och simulerat, och ingen koppling till ett verkligt mellanarkiv är gjord. Regeln är en regel i koden (fem år). Vilka diagnoser som räknas som tillfälliga (symtom, skador, akuta infektioner och undersökningar) är en lista i koden som inte är granskad av en läkare, och kroniska tillstånd stannar alltid. En vårdkontakt som hör till ett vårdtillfälle eller ett hälsoärende, och en ordination med uppgifter i tabeller som inte följer med (till exempel en trappning, en spädning eller en infusion i intensivvården), stannar i den aktiva journalen. Statistik och rapporter som räknar på vårdkontakter och diagnoser äldre än fem år räknar inte med det som har förts över. FHIR-API:t för invånaren tar inte med handlingarna i mellanarkivet. I demon fördes Gunnar Åkessons äldre uppgifter ur VAS dit vid migreringen, också en kur med Alvedon från 2012 med doserna.',
   },
   '11.2.1.8': {
     tester: [...TESTER_LASKOPIA, ...TESTER_RESERVSERVER],

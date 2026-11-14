@@ -51,7 +51,7 @@ export const ROLLER = {
   ),
   arkivarie: R(
     // Runda 15, r3: mellanarkivet med avslutade ordinationer och administreringar.
-    'Som arkivarie registrerar du beslut om gallring och bevarande, tar fram exportpaket till e-arkivet och för över äldre journalhandlingar till mellanarkivet. Systemet räknar själv fram vad som förs över: avslutade ordinationer med alla doser, äldre anteckningar och mätvärden, men aldrig något som pågår eller gäller, som aktuella läkemedel, det som uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.',
+    'Som arkivarie registrerar du beslut om gallring och bevarande, tar fram exportpaket till e-arkivet och för över äldre journalhandlingar till mellanarkivet. Systemet räknar själv fram vad som förs över: avslutade ordinationer med alla doser, äldre anteckningar och mätvärden, avslutade vårdkontakter och remisser och tillfälliga diagnoser, men aldrig något som pågår eller gäller, som aktuella läkemedel, kroniska diagnoser, det som en bokning eller uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.',
     ['registrera ett beslut om gallring', 'ta fram ett exportpaket till e-arkivet', 'veta vad som aldrig gallras', 'föra över äldre journalhandlingar till mellanarkivet och veta vad som stannar i journalen'],
   ),
   uppfoljning: R(
@@ -76,8 +76,8 @@ export const ROLLER = {
   ),
   systemforvaltare: R(
     // Runda 15, r3: reservservern.
-    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen ser du till att reservserverns logg läses in. Du läser inte journalerna.',
-    ['föreslå en ändrad regel och godkänna en annan systemförvaltares förslag', 'förbereda ett namnbyte för en enhet', 'registrera en extern tillämpning på sidan Öppet API', 'kontrollera att säkerhetskopian går att läsa tillbaka', 'veta när reservservern används, vad den visar och hur dess logg förs in i kärnsystemet'],
+    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen läser du in reservserverns logg med ett klick på sidan Lagring. Du läser inte journalerna.',
+    ['föreslå en ändrad regel och godkänna en annan systemförvaltares förslag', 'förbereda ett namnbyte för en enhet', 'registrera en extern tillämpning på sidan Öppet API', 'kontrollera att säkerhetskopian går att läsa tillbaka', 'veta när reservservern används och vad den visar, och läsa in dess logg på sidan Lagring'],
   ),
   fysioterapeut: R(
     'Som fysioterapeut tar du emot och bedömer remisser, skriver anteckningar efter besök, registrerar mätvärden och bockar av planerade uppgifter som träning. Fysioterapeuten spelar också Sussas paramedicinare, alltså arbetsterapeut, dietist och kurator.',

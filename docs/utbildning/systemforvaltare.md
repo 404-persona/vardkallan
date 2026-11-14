@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen ser du till att reservserverns logg läses in. Du läser inte journalerna.
+Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen läser du in reservserverns logg med ett klick på sidan Lagring. Du läser inte journalerna.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -38,6 +38,12 @@ Sussa 12.1.1.3, 12.1.1.5 och 12.1.1.6. Ett klick på Ändra vid regeln, där det
 Börjar i: Systemförvaltarens formulär. Klickbudget: högst 5 steg. I demon gör Tomas Lindh flödet.
 
 Sussa 5.1.1.3. Ett klick på Nytt formulär, där fokus står i namnet, ett fältbyte till första frågan, ett klick på Lägg till fråga, där fokus flyttas till den nya frågan, ett klick på Föreslå och ett för att skicka med motiveringen. Systemet sätter nycklarna, förhandsvisar formuläret och säger vad som behöver ändras.
+
+### Läsa in loggen från reservservern
+
+Börjar i: Lagring med en logg från reservservern. Klickbudget: högst 1 steg. I demon gör Tomas Lindh flödet.
+
+Sussa 11.2.1.8 och KD1.1.3.6. Ett klick på Läs in vid loggen. Systemet har själv hittat loggen, säger hur många rader den har, för vilken period och ur vilken kopia, kontrollerar kedjan och läser in varje rad en gång.
 
 ### Registrera en incident
 
@@ -114,6 +120,6 @@ Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag 
 - Förbereda ett namnbyte för en enhet.
 - Registrera en extern tillämpning på sidan Öppet API.
 - Kontrollera att säkerhetskopian går att läsa tillbaka.
-- Veta när reservservern används, vad den visar och hur dess logg förs in i kärnsystemet.
+- Veta när reservservern används och vad den visar, och läsa in dess logg på sidan Lagring.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
 - Svara rätt på alla 3 övningar och få intyget.
