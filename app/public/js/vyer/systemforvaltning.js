@@ -38,7 +38,7 @@ function andringRad(a, { knappar = true } = {}) {
 function historikTabell(rader) {
   if (!rader.length) return '<p class="tom liten">Inga beslutade ändringar ännu.</p>';
   return `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Ändring</th><th scope="col">Från och till</th><th scope="col">Gäller från</th><th scope="col">Föreslagen av</th><th scope="col">Beslut</th></tr></thead><tbody>
-    ${rader.map(a => `<tr><th scope="row">${esc(a.rubrik)}</th><td>${esc(a.forraText ?? '')} till ${esc(a.vardeText ?? '')}<br><span class="dampad liten">${esc(a.motivering)}</span></td>
+    ${rader.map(a => `<tr><th scope="row">${esc(a.rubrik)}${a.ersatt ? ' <span class="tagg">Ersatt av en regel</span>' : ''}</th><td>${esc(a.forraText ?? '')} till ${esc(a.vardeText ?? '')}<br><span class="dampad liten">${esc(a.motivering)}</span></td>
       <td>${a.gallerFran ? esc(datum(a.gallerFran)) : ''}</td><td>${esc(a.foreslagenAv)}</td><td>${esc(a.statusText)} av ${esc(a.beslutadAv ?? '')}, ${esc(tidpunkt(a.beslutad))}${a.kommentar ? `<br><span class="dampad liten">${esc(a.kommentar)}</span>` : ''}</td></tr>`).join('')}
   </tbody></table></div>`;
 }
@@ -94,6 +94,10 @@ export const regler = {
         </tbody></table></div></section>`).join('')}
       <section class="lm-sektion" aria-labelledby="sf-lasta"><h2 id="sf-lasta">Det här går inte att ändra här</h2>
         <ul class="sf-lasta">${o.lasta.map(l => `<li><strong>${esc(l.rubrik)}.</strong> ${esc(l.varfor)}</li>`).join('')}</ul></section>
+      ${/* Runda 15, r1: parametrar som har ersatts av en regel som systemet avgör. Historiken finns kvar. */ ''}
+      ${o.ersatta?.length ? `<section class="lm-sektion" aria-labelledby="sf-ersatta"><h2 id="sf-ersatta">Parametrar som har ersatts av en regel</h2>
+        <ul class="sf-lasta sf-ersatta">${o.ersatta.map(e => `<li data-ersatt="${esc(e.nyckel)}"><strong>${esc(e.rubrik)}</strong> (ersatt i version ${esc(e.sedan)}). <span>Regeln: ${esc(e.regel)}</span> <span>Varför: ${esc(e.varfor)}</span>
+          <span class="dampad">${e.versioner ? `${e.versioner} beslutade versioner finns kvar i historiken.` : 'Inga beslutade versioner i den här sandlådan.'}</span></li>`).join('')}</ul></section>` : ''}
       <section class="lm-sektion" aria-labelledby="sf-historik"><h2 id="sf-historik">Historik</h2>${historikTabell(o.historik)}</section>
       <p class="demoregel">${esc(o.anmarkning)}</p>
       <div id="sf-vyforval"></div>`;

@@ -75,7 +75,7 @@ export const MATRIS = [
     [`${MJ}inloggning med simulerad e-legitimation ger en egen session utan personalens behörigheter`, `${MJ}personalens session når inte Min journal`,
       // Runda 15, r1.
       'SITHS och tillitsnivå 3 som flerfaktor > simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor leds personen till att registrera en',
-      'SITHS och tillitsnivå 3 som flerfaktor > biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod, med kravet på och av']),
+      'SITHS och tillitsnivå 3 som flerfaktor > biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod']),
   avgr('HSLF-FS 2016:40', '4 kap. 2, 2 a och 3 §§', 'Behörigheter ska tilldelas efter en behovs- och riskanalys, och analysen ska dokumenteras (2 a §).',
     'Analysen görs av vårdgivaren. Systemet ger varje roll minsta åtkomst och visar vad varje roll får, så att analysen kan göras mot det som systemet faktiskt tillåter.',
     'Rollerna och deras handlingar är testade.', [`${B}yrkesroll: logggranskare får läsa loggen men inte journalen`]),

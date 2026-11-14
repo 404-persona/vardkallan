@@ -26,6 +26,26 @@
           "text": "För varje inloggningstjänst anger du lägsta tillitsnivå, med fyra ögon som andra ändringar. Systemet förklarar vad varje nivå betyder. Nivå 3 är förvald och rekommenderas. Med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen innan de får behörighet. Säkerhetsloggen visar metod och tillitsnivå för varje inloggning."
         },
         {
+          "id": "flerfaktor-regel-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/regler",
+          "rubrik": "Flerfaktor är en regel, inte längre en parameter",
+          "text": "Parametern Flerfaktor krävs vid inloggning är ersatt av en regel som systemet avgör: inloggningen är alltid flerfaktor, och den sista faktorn får tas bort bara efter en inloggning med tillitsnivå 3. Under Regler och parametrar står parametern kvar i historiken, märkt Ersatt av en regel, tillsammans med regeln och varför."
+        },
+        {
+          "id": "sista-faktorn-1-5-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/flerfaktor",
+          "rubrik": "Den sista faktorn tas bort efter en stark inloggning",
+          "text": "Din sista passkey eller app för engångskoder går att ta bort när du har loggat in med tillitsnivå 3, till exempel SITHS-kortet eller en e-legitimation som BankID. Efter en inloggning med lägre nivå behålls den, eftersom det är den som gör inloggningen stark, och sidan Flerfaktor säger varför."
+        },
+        {
           "id": "e-legitimation-flerfaktor-1-5-0",
           "roller": [
             "invanare"

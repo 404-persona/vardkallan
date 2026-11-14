@@ -75,7 +75,7 @@ export const ROLLER = {
   ),
   systemforvaltare: R(
     // Runda 15, r1: inloggningstjänsterna och deras lägsta tillitsnivå.
-    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. Du kopplar också in vårdgivarens inloggningstjänster och anger lägsta tillitsnivå för var och en. Tillitsnivå 3, som SITHS-kortet med PIN-kod, räknas som flerfaktor, och med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.',
+    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. Du kopplar också in vårdgivarens inloggningstjänster och anger lägsta tillitsnivå för var och en. Tillitsnivå 3, som SITHS-kortet med PIN-kod, räknas som flerfaktor, och med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen. Om flerfaktor krävs är inget val längre: systemet avgör det, och parametern Flerfaktor krävs vid inloggning står kvar i historiken som ersatt av en regel. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.',
     ['föreslå en ändrad regel och godkänna en annan systemförvaltares förslag', 'förbereda ett namnbyte för en enhet', 'registrera en extern tillämpning på sidan Öppet API', 'kontrollera att säkerhetskopian går att läsa tillbaka',
       'ange lägsta tillitsnivå för en inloggningstjänst och förklara vad en lägre nivå betyder för personalen'],
   ),

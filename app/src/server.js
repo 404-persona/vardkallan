@@ -1508,10 +1508,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       metod: 'POST', vag: c.url.pathname, status: 403, beskrivning: 'Inloggningen stoppades: en aktiv faktor kan inte prövas, eftersom nyckeln för engångskoder inte går att dekryptera.' });
     throw new Fel(403, 'Din app för engångskoder kan inte prövas i den här sandlådan, så inloggningen stoppas för att skydda kontot. Återställ demon för att börja om utan faktor.', 'nekad');
   }
-  // Runda 13, r3 (vårt L5): om vårdgivaren kräver flerfaktor vid inloggning (konfiguration.js). Läses vid varje
-  // inloggning, så att den som redan är inloggad inte loggas ut när värdet ändras. Kan värdet inte läsas krävs flerfaktor
-  // inte, eftersom en sandlåda utan konfiguration har standardvärdet nej.
-  const flerfaktorKravs = (db) => { try { return konfiguration.varde(db, 'sakerhet.flerfaktor_kravs') === true; } catch { return false; } };
+  // Runda 15, r1: parametern Flerfaktor krävs vid inloggning är ersatt av en regel (konfiguration.ERSATTA). Den
+  // pågående inloggningen är stark när den har tillitsnivå 3 eller högre; bara då får den sista faktorn tas bort.
+  const starkInloggning = (c) => (tillit.forUppdrag(c.personal ? c.s.uppdrag : c.invanare ? c.s.invanareInloggning : null).niva ?? 0) >= tillit.FLERFAKTOR_NIVA;
   function borjaFlerfaktor(c, agare) {
     glomIdentiteter(c.s);
     oppetApi.aterkalla(c.s, 'Åtkomstbiljetten återkallades vid en ny inloggning.');
@@ -1612,7 +1611,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   const loggaFaktor = (c, a, text) => sakerhetslogg.logga(c.db, { typ: 'flerfaktor', personal_id: a.typ === 'personal' ? a.id : null, invanare_id: a.typ === 'invanare' ? a.id : null,
     enhet_id: a.enhet ?? null, metod: 'POST', vag: c.url.pathname.replace(/\/\d+\//, '/:id/'), status: 200, beskrivning: text });
   // Runda 15, r1: för personalen också inloggningens tillitsnivå, så att sidan kan säga om en faktor alls behövs.
-  const oversiktFor = (c, a) => ({ ...flerfaktor.oversikt(c.db, a.typ, a.id, { metod: c.s.flerfaktorMetod ?? null, kravsAvVardgivaren: flerfaktorKravs(c.db) }),
+  const oversiktFor = (c, a) => ({ ...flerfaktor.oversikt(c.db, a.typ, a.id, { metod: c.s.flerfaktorMetod ?? null, starkInloggning: starkInloggning(c) }),
     ...(a.typ === 'personal' && c.personal ? { inloggning: tillit.ut(c.s.uppdrag) } : {}),
     ...(a.typ === 'invanare' && c.invanare && c.s.invanareInloggning ? { inloggning: tillit.ut(c.s.invanareInloggning) } : {}) });
   rutt('GET', '/api/flerfaktor', (c) => oversiktFor(c, agareFor(c, { vantande: true })));
@@ -1663,7 +1662,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('POST', '/api/flerfaktor/:id/ta-bort', (c, id) => {
     const a = agareFor(c);
     kravFarskBekraftelse(c, a, c.body.bekraftelse ?? c.body.kod);
-    const r = flerfaktor.taBort(c.db, a, id, { kravsAvVardgivaren: flerfaktorKravs(c.db) });
+    const r = flerfaktor.taBort(c.db, a, id, { starkInloggning: starkInloggning(c) });
     loggaFaktor(c, a, r.aktiv ? 'En faktor togs bort. Flerfaktor är fortfarande på.' : 'Den sista faktorn togs bort. Flerfaktor är av.');
     return { ...r, metod: c.s.flerfaktorMetod ?? null };
   });

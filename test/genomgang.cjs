@@ -28,6 +28,8 @@ const fel = [];
 const vantade403 = [];
 // Runda 13, r2: steg där svaret att demon är full (503 med X-Vk-Full) är det som prövas.
 const VANTAD_FULL = new Set();
+// Runda 15, r1: steg där servern väntat svarar 400 med en förklaring, till exempel när den sista faktorn inte får tas bort.
+const VANTAD_400 = new Set(['Sara Lindqvist slår på flerfaktor med en app för engångskoder, loggar in med koden och tar bort appen']);
 let steg = 0;
 let aktuelltSteg = '';
 
@@ -38,6 +40,7 @@ function bevaka(page, namn) {
     const t = m.text();
     if (/Failed to load resource: the server responded with a status of 40[34]/.test(t)) { vantade403.push(`${aktuelltSteg}`); return; }
     if (VANTAD_FULL.has(aktuelltSteg) && /status of 503/.test(t)) return;
+    if (VANTAD_400.has(aktuelltSteg) && /status of 400/.test(t)) { vantade403.push(`${aktuelltSteg} (400)`); return; }
     fel.push(`[${namn}] konsolfel i "${aktuelltSteg}": ${t}`);
   });
   page.on('response', r => {
@@ -437,6 +440,17 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await page.click('a[data-flerfaktor="pa"]');
       await vantaVy(page);
       await forvanta(page, 'main', 'bekräftades med en kod från appen');
+      // Runda 15, r1: efter en inloggning med tillitsnivå 2 behålls den sista faktorn, med en förklaring. Efter
+      // SITHS-kortet (tillitsnivå 3) går den att ta bort.
+      await page.click('[data-ta-bort]');
+      await forvanta(page, '.notis', 'Den sista faktorn går inte att ta bort nu');
+      await page.waitForLoadState('networkidle');
+      await page.click('[data-a="loggaut"]');
+      await page.click('[data-roll="lak-kard"]');
+      await page.waitForSelector('[data-a="loggaut"]');
+      await page.click('a[data-flerfaktor="pa"]');
+      await vantaVy(page);
+      await forvanta(page, '[data-ff-inloggning="3"]', 'redan flerfaktor');
       await page.click('[data-ta-bort]');
       await forvanta(page, '[data-ff-status="av"]', 'Flerfaktor är av');
     });

@@ -644,16 +644,17 @@ JANEJ['lakemedel.orsak_frivillig_utan_nll'] = {
   effekt: (db, nytt) => [nytt ? 'Från dagen ändringen gäller får ordinationer som inte förs över till NLL sparas utan ordinationsorsak och uppföljningsdatum.' : 'Från dagen ändringen gäller krävs ordinationsorsak och uppföljningsdatum i alla ordinationer.', 'Ordinationer som redan finns ändras inte.'],
 };
 
-// Runda 13, r3 (vårt L5, beslut från Jonas): vårdgivaren kan kräva flerfaktor vid inloggning. server.js läser värdet vid
-// varje inloggning. Den som redan är inloggad loggas inte ut när värdet ändras, utan får frågan vid nästa inloggning.
-JANEJ['sakerhet.flerfaktor_kravs'] = {
-  omrade: 'sakerhet', rubrik: 'Flerfaktor krävs vid inloggning', typ: 'janej', standard: false, anvands: 'server.js och flerfaktor.js',
-  text: { true: 'Alla behåller minst en faktor', false: 'Var och en får ta bort sin sista faktor' },
-  // Runda 15, r1 (beslut från Jonas): tillitsnivå 3 räknas som flerfaktor för personalen och invånarna, och en lägre nivå kompletteras alltid.
-  beskrivning: 'Om den sista faktorn, en passkey eller en app för engångskoder, får tas bort. Inloggningen är alltid flerfaktor: tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod för personalen och en e-legitimation som BankID för invånarna i Min journal, räknas redan som flerfaktor, och en inloggning med lägre tillitsnivå kompletteras alltid med en passkey eller en kod från appen innan någon behörighet ges (HSLF-FS 2016:40 3 kap. 15 § och 4 kap. 11 §). Med ja behåller var och en minst en faktor, så att en inloggning med lägre nivå alltid kan bekräftas. Den som redan är inloggad loggas inte ut. Demoregel: i den publika demon står den på nej.',
-  effekt: (db, nytt) => [nytt ? 'Från dagen ändringen gäller går den sista faktorn inte att ta bort. Inloggningen med tillitsnivå 3 märks inte, och en lägre nivå kompletteras som förut.' : 'Från dagen ändringen gäller får var och en ta bort sin sista faktor. En inloggning med lägre tillitsnivå än 3 kompletteras ändå alltid med en faktor, och den som saknar en registrerar en.',
-    'Den som redan är inloggad loggas inte ut.'],
+// Runda 13, r3 (vårt L5): parametern sakerhet.flerfaktor_kravs. Runda 15, r1 (beslut från Jonas 2026-11-14): den är
+// ersatt av en regel som systemet avgör, och går inte längre att föreslå. Beslutade versioner finns kvar i historiken
+// (triggrarna raderar aldrig en beslutad ändring), och systemförvaltningen ser att parametern är ersatt och varför.
+export const ERSATTA = {
+  'sakerhet.flerfaktor_kravs': {
+    rubrik: 'Flerfaktor krävs vid inloggning', omrade: 'sakerhet', sedan: '1.5.0', text: { true: 'Ja', false: 'Nej' },
+    regel: 'Inloggningen är alltid flerfaktor. Tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod eller en e-legitimation som BankID, räknas redan som flerfaktor, och en lägre nivå kompletteras med en passkey eller en kod från appen innan någon behörighet ges. Den sista faktorn får tas bort bara när den pågående inloggningen har tillitsnivå 3 eller högre.',
+    varfor: 'Åtkomst till personuppgifter i ett system med direktåtkomst kräver stark autentisering (HSLF-FS 2016:40 3 kap. 15 §), och invånarens elektroniska tillgång kräver flerfaktorsautentisering (4 kap. 11 §). Det är inget val för vårdgivaren, så systemet avgör själv utifrån inloggningens tillitsnivå. Den sista faktorn får tas bort när inloggningen ändå är stark, och behålls annars, så att ingen tar bort den faktor som just gjorde inloggningen stark.',
+  },
 };
+export const ersattDef = (nyckel) => (typeof nyckel === 'string' && Object.hasOwn(ERSATTA, nyckel) ? ERSATTA[nyckel] : null);
 
 // Regler som inte går att ändra som parametrar, och varför.
 export const LASTA = [
@@ -748,6 +749,7 @@ const loggaAtgard = (db, personal, resurs) => loggaRad(db, { personal_id: person
 export function forhandsvisa(db, personal, { nyckel, varde: inmatat, giltigFran } = {}, nu = new Date()) {
   kravRoll(personal);
   const def = paramDef(nyckel);
+  if (!def && ersattDef(nyckel)) throw new Fel(400, `${ersattDef(nyckel).rubrik} är ersatt av en regel sedan version ${ersattDef(nyckel).sedan} och går inte att ändra. ${ersattDef(nyckel).regel}`, 'ogiltig');
   if (!def) throw new Fel(404, 'Parametern finns inte.', 'saknas');
   const forra = varde(db, nyckel, nu);
   const datum = giltigFran ?? addDagar(datumAv(nu), 1);
@@ -766,6 +768,7 @@ export function forhandsvisa(db, personal, { nyckel, varde: inmatat, giltigFran 
 export function foresla(db, personal, { nyckel, varde: inmatat, giltigFran, motivering } = {}, nu = new Date()) {
   kravRoll(personal);
   const def = paramDef(nyckel);
+  if (!def && ersattDef(nyckel)) throw new Fel(400, `${ersattDef(nyckel).rubrik} är ersatt av en regel sedan version ${ersattDef(nyckel).sedan} och går inte att ändra. ${ersattDef(nyckel).regel}`, 'ogiltig');
   if (!def) throw new Fel(404, 'Parametern finns inte.', 'saknas');
   const dag = datumAv(nu);
   const datum = giltigFran ?? addDagar(dag, 1);
@@ -846,11 +849,15 @@ const STATUS = { vantar: 'Väntar på godkännande', godkand: 'Godkänd', avslag
 
 export function andringUt(db, a, personal = null) {
   const def = a.slag === 'parameter' ? paramDef(a.nyckel) : null;
+  // Runda 15, r1: en parameter som har ersatts av en regel visas i historiken med sitt namn och sina värden.
+  const ersatt = a.slag === 'parameter' && !def ? ersattDef(a.nyckel) : null;
   const v = JSON.parse(a.varde);
   const f = a.forra ? JSON.parse(a.forra) : null;
+  const visaErsatt = (x) => (ersatt?.text && Object.hasOwn(ersatt.text, String(x)) ? ersatt.text[String(x)] : String(x));
   return {
-    id: a.id, slag: a.slag, nyckel: a.nyckel, rubrik: def?.rubrik ?? a.nyckel, omrade: def?.omrade ?? null,
-    varde: v, forra: f, vardeText: def ? visa(def, v) : null, forraText: def && f != null ? visa(def, f) : null,
+    id: a.id, slag: a.slag, nyckel: a.nyckel, rubrik: def?.rubrik ?? ersatt?.rubrik ?? a.nyckel, omrade: def?.omrade ?? ersatt?.omrade ?? null,
+    ...(ersatt ? { ersatt: true, ersattAv: ersatt.regel } : {}),
+    varde: v, forra: f, vardeText: def ? visa(def, v) : ersatt ? visaErsatt(v) : null, forraText: def && f != null ? visa(def, f) : ersatt && f != null ? visaErsatt(f) : null,
     giltigFran: a.giltig_fran, gallerFran: a.galler_fran, motivering: a.motivering,
     foreslagenAv: personnamn(db, a.foreslagen_av), foreslagen: a.foreslagen, status: a.status, statusText: STATUS[a.status],
     beslutadAv: personnamn(db, a.beslutad_av), beslutad: a.beslutad, kommentar: a.beslut_kommentar,
@@ -884,6 +891,9 @@ export function oversikt(db, personal, nu = new Date()) {
   const vantande = andringar.filter(a => a.status === 'vantar').map(a => andringUt(db, a, personal));
   return {
     grupper, lasta: LASTA,
+    // Runda 15, r1: parametrar som har ersatts av en regel, med regeln, varför och hur många beslutade versioner som finns.
+    ersatta: Object.entries(ERSATTA).map(([nyckel, e]) => ({ nyckel, rubrik: e.rubrik, sedan: e.sedan, regel: e.regel, varfor: e.varfor,
+      versioner: andringar.filter(a => a.nyckel === nyckel && a.status === 'godkand').length })),
     attGodkanna: vantande.filter(a => a.kanGodkanna), mina: vantande.filter(a => a.egen),
     historik: andringar.filter(a => a.status !== 'vantar').slice(0, 50).map(a => andringUt(db, a, personal)),
     forvalDatum: addDagar(dag, 1),

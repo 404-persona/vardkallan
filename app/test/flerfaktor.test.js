@@ -254,6 +254,10 @@ describe('Flerfaktor', () => {
     await k.post('/api/login/flerfaktor', { typ: 'passkey', svar: aut.hamta(u.passkey) });
     const o = (await k.get('/api/flerfaktor')).data;
     expect(o.metod).toBe('passkey');
+    // Runda 15, r1: efter en inloggning med tillitsnivå 2 behålls den sista faktorn. Efter SITHS-kortet går den att ta bort.
+    expect((await k.post(`/api/flerfaktor/${o.faktorer[0].id}/ta-bort`)).status).toBe(400);
+    await k.post('/api/logout');
+    await k.logga('vch-kard');
     const r = await k.post(`/api/flerfaktor/${o.faktorer[0].id}/ta-bort`);
     expect(r.data.aktiv).toBe(false);
     // Ingen annan än den inloggade kan ta bort faktorn.

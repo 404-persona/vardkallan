@@ -76,12 +76,6 @@ async function andraLagsta(b, id, niva) {
   expect((await b.post(`/api/inloggningstjanster/andring/${f.data.andring.id}/godkann`, {})).status).toBe(200);
   return f.data.andring;
 }
-function kravFlerfaktor(d, varde) {
-  const nu = new Date();
-  if (konfiguration.varde(d, 'sakerhet.flerfaktor_kravs') === varde) return;
-  const { andring } = konfiguration.foresla(d, personal(d, 'sysf'), { nyckel: 'sakerhet.flerfaktor_kravs', varde, giltigFran: datumAv(nu), motivering: 'Prov.' }, nu);
-  konfiguration.godkann(d, personal(d, 'sysf-2'), andring.id, {}, nu);
-}
 // En app för engångskoder för personen, registrerad medan personen är inloggad. Ger nyckeln.
 async function totpFor(b, id) {
   await b.som(id);
@@ -116,10 +110,9 @@ describe('Tillitsnivån tolkas ur acr', () => {
 });
 
 describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
-  test('simulerat SITHS-kort: demorollen loggar in direkt med tillitsnivå 3, också med en registrerad faktor och med kravet på flerfaktor', async () => {
+  test('simulerat SITHS-kort: demorollen loggar in direkt med tillitsnivå 3, också med en registrerad faktor', async () => {
     const b = webblasare();
     await totpFor(b, 'lak-vc');
-    kravFlerfaktor(db(b), true);
     const r = await b.som('lak-vc');
     expect(r.data.inloggad).toBe(true);
     expect(r.data.flerfaktor.kravs).toBeUndefined();
@@ -148,10 +141,9 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     expect(r.data.inloggad).toBe(true);
     expect(r.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
     expect(sakerhet(b).at(-1).beskrivning).toContain('tillitsnivå 2');
-    // Utan faktor: registreringen är den andra faktorn, också när vårdgivarens krav står på nej.
+    // Utan faktor: registreringen är den andra faktorn, oavsett vårdgivaren.
     const c = webblasare();
     await c.get('/api/session');
-    expect(konfiguration.varde(db(c), 'sakerhet.flerfaktor_kravs')).toBe(false);
     const u = await c.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
     expect(u.data.flerfaktor).toMatchObject({ kravs: true, registrera: true, metoder: [] });
     expect(u.data.flerfaktor.text).toContain('tillitsnivå 2');
@@ -159,14 +151,13 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     expect((await c.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 1 })).status).toBe(400);
   });
 
-  test('biljett med nivå 3 från en godkänd inloggningstjänst räknas som flerfaktor, med och utan kravet på flerfaktor', async () => {
+  test('biljett med nivå 3 från en godkänd inloggningstjänst räknas som flerfaktor, också med en registrerad faktor', async () => {
     const b = webblasare();
     await b.get('/api/session');
     const id = await kopplaIn(b);
     op.attribut = () => attributFor(db(b), 'lak-kard');
     op.manipulera = null;
-    for (const krav of [false, true]) {
-      kravFlerfaktor(db(b), krav);
+    for (const krav of ['första', 'andra']) {
       await totpFor(b, 'lak-kard').catch(() => null);
       await b.post('/api/logout', {});
       const r = await b.extern(id);
@@ -197,14 +188,13 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     op.manipulera = null;
   });
 
-  test('biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod, med kravet på och av', async () => {
+  test('biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod', async () => {
     const b = webblasare();
     await b.get('/api/session');
     const id = await kopplaIn(b, { lagsta: 2 });
     op.attribut = () => attributFor(db(b), 'ssk-kard');
     op.manipulera = (h, p) => [h, { ...p, acr: SAMBI(2) }];
-    for (const krav of [false, true]) {
-      kravFlerfaktor(db(b), krav);
+    for (const krav of ['första', 'andra']) {
       db(b).query("DELETE FROM flerfaktorer WHERE agare_id = 'ssk-kard'").run();
       await b.post('/api/logout', {});
       // Utan faktor: resultatet bär utmaningen, och registreringen slutför inloggningen.
@@ -364,10 +354,9 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
 // Beslut från Jonas 2026-11-14: invånarens e-legitimation med tillitsnivå 3 räknas som flerfaktor på samma sätt, och
 // Vårdkällan begär tjänstens lägsta nivå med acr_values men prövar ändå nivån i svaret.
 describe('E-legitimation i Min journal och acr_values', () => {
-  test('e-legitimation: invånaren loggar in direkt med tillitsnivå 3, också med en faktor och med kravet på flerfaktor', async () => {
+  test('e-legitimation: invånaren loggar in direkt med tillitsnivå 3, också med en faktor', async () => {
     const b = webblasare();
     await b.som('lak-kard');
-    kravFlerfaktor(db(b), true);
     await b.post('/api/logout', {});
     // En registrerad app för engångskoder behövs inte efter e-legitimationen.
     expect((await b.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
@@ -390,7 +379,6 @@ describe('E-legitimation i Min journal och acr_values', () => {
   test('e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen', async () => {
     const b = webblasare();
     await b.get('/api/session');
-    expect(konfiguration.varde(db(b), 'sakerhet.flerfaktor_kravs')).toBe(false);
     const u = await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 2 });
     expect(u.data.inloggad).toBe(false);
     expect(u.data.flerfaktor).toMatchObject({ kravs: true, registrera: true });
