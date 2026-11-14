@@ -20,7 +20,7 @@ export const SNOMED = SYSTEM.snomed;
 const SOKORD_R15R5 = {
   'Omvårdnadsproblem': { code: '1269502008', display: 'Diagnosis section' },
   'Mål': { ingen: 'Snomed CT har mål bara som kvalifikator (Goal) och inget avsnittsbegrepp för mål i en anteckning. Målet följs i stället upp mot vårdplanens mål, där det har ett eget id.' },
-  'Resultat': { ingen: 'Snomed CT har inget avsnittsbegrepp för utvärderingen av ett mål. Results section gäller provsvar och Evaluation procedure en åtgärd, så sökordet får ingen kod hellre än en som är fel.' },
+  'Resultat': { ingen: 'Snomed CT har inget avsnittsbegrepp för utvärderingen av ett mål. Avsnittet för resultat gäller provsvar, och begreppet för utvärdering är en åtgärd, så sökordet får ingen kod hellre än en som är fel.' },
   'Medvetande': { code: '6942003', display: 'Level of consciousness' },
   'Psykiskt mående': { code: '36456004', display: 'Mental state finding' },
   'Andning och cirkulation': { ingen: 'Sökordet täcker två områden. Snomed CT har ett begrepp för vart och ett men inget för båda, så sökordet får ingen kod.' },
@@ -28,7 +28,7 @@ const SOKORD_R15R5 = {
   'Rörlighet': { code: '301438001', display: 'Ability to mobilize' },
   'Personlig vård': { code: '284773001', display: 'Ability to perform personal care activity' },
   'Sociala förhållanden': { code: '108329005', display: 'Social context finding' },
-  'Observation': { ingen: 'Undersköterskans observation är fri text om det som har setts och hörts. Vital sign document section gäller bara vitalparametrar, så sökordet får ingen kod.' },
+  'Observation': { ingen: 'Undersköterskans observation är fri text om det som har setts och hörts. Snomed CT:s avsnitt för vitalparametrar gäller bara vitalparametrar, så sökordet får ingen kod.' },
   'Utförd åtgärd': { code: '1269501001', display: 'Procedure section' },
   'Funktion': { code: '1184588000', display: 'Functional status document section' },
 };

@@ -3093,7 +3093,7 @@ Vilka yrken som skriver med vilka mallar är en parameter per yrke under Regler 
 
 Omvårdnadsanteckningen har processens fyra delar, Omvårdnadsproblem, Mål, Åtgärd och Resultat, och tolv statusområden. Statusområdena är Vårdkällans egna. De är grupperade efter kroppsfunktioner och aktiviteter i ICF (WHO:s Klassifikation av funktionstillstånd, funktionshinder och hälsa, i svensk version från Socialstyrelsen) och efter de bedömningar som systemet redan gör: Medvetande (ICF b110 och b114), Psykiskt mående (b152), Sömn (b134), Kommunikation (d3, b210 och b230), Smärta (b280), Andning och cirkulation (b4), Nutrition (b510, b530 och b545), Elimination (b525 och b620), Hud och sår (b8), Rörlighet (d4), Personlig vård (d5) och Sociala förhållanden (d7 och e3). Namnen och ordningen är inte hämtade ur VIPS-modellen, som är upphovsrättsligt skyddad. Processens steg är den allmänna omvårdnadsprocessen. Äldre anteckningar behåller sina sökord.
 
-Statusområdena är utfällbara (`utfallda` i mallen). `mallforslag.js` (`foreslagnaSokord(atk, patientId, mall, kontakt)`, gränssnittet mot anteckningsvyn) föreslår de områden som berör patienten i dag, med en kort förklaring:
+Statusområdena är utfällbara (`utfallda` i mallen). `mallforslag.js` (`foreslagnaSokord(atk, patientId, mall, kontakt)`, gränssnittet mot anteckningsvyn) föreslår de områden som gäller patienten i dag, med en kort förklaring:
 
 - vårdplanen: en pågående standardplan ger sina områden (hjärtsvikt ger andning och cirkulation och nutrition, förebyggande av fall ger rörlighet, och så vidare),
 - förra omvårdnadsanteckningen på vårdenheten: områden som hade text, också med de äldre namnen,

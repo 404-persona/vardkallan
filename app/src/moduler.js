@@ -443,7 +443,7 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
 // journalanteckningarna.
 {
   const a = MODULER.find(x => x.id === 'anteckningar');
-  a.beskrivning += ' Varje yrke skriver med sina mallar, som vårdgivaren bestämmer med fyra ögon: undersköterskan i en observationsanteckning som sjuksköterskan ser i sitt underlag, fysioterapeuten om funktion, aktivitet, mål, åtgärd och resultat, och sjuksköterskan i en omvårdnadsanteckning som följer omvårdnadsprocessen, där systemet föreslår de statusområden och omvårdnadsproblem som berör patienten i dag och resultatet bedöms mot vårdplanens mål.';
+  a.beskrivning += ' Varje yrke skriver med sina mallar, som vårdgivaren bestämmer med fyra ögon: undersköterskan i en observationsanteckning som sjuksköterskan ser i sitt underlag, fysioterapeuten om funktion, aktivitet, mål, åtgärd och resultat, och sjuksköterskan i en omvårdnadsanteckning som följer omvårdnadsprocessen, där systemet föreslår de statusområden och omvårdnadsproblem som gäller patienten i dag och resultatet bedöms mot vårdplanens mål.';
   a.avsnitt.push('3.2.2.1', '12.1.1.7');
   a.kod.push('src/mallar-yrken.js', 'src/omvardnadsprocess.js', 'src/mallforslag.js', 'src/fallrisklakemedel.js', 'src/r15r5-rutter.js', 'public/js/omvardnadsprocess.js');
   a.api.push('/api/patient/:id/omvardnadsprocess');

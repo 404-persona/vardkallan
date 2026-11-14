@@ -24,7 +24,7 @@
           "omfattning": "stor",
           "var": null,
           "rubrik": "Omvårdnadsanteckningen följer omvårdnadsprocessen",
-          "text": "Omvårdnadsanteckningen har omvårdnadsproblem, mål, åtgärd och resultat, och statusområdena fälls ut när de behövs. Systemet föreslår de områden och omvårdnadsproblem som berör patienten i dag ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten, och säger varför. Resultatet bedöms mot vårdplanens mål och står sedan i vårdplanen. Statusområdena har nya namn."
+          "text": "Omvårdnadsanteckningen har omvårdnadsproblem, mål, åtgärd och resultat, och statusområdena fälls ut när de behövs. Systemet föreslår de områden och omvårdnadsproblem som gäller patienten i dag ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten, och säger varför. Resultatet bedöms mot vårdplanens mål och står sedan i vårdplanen. Statusområdena har nya namn."
         },
         {
           "id": "fysioterapi-1-5-0",

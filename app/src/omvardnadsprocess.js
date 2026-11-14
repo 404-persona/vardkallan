@@ -4,7 +4,7 @@
 // ut när de behövs. Omvårdnadsproblemen väljs bland begrepp i Snomed CT som systemet föreslår ur journalen, och
 // resultatet bedöms mot vårdplanens mål, så att uppföljningen står i vårdplanen utan att någon skriver den två gånger.
 //
-// Systemet är experten. Det föreslår de statusområden som berör patienten i dag (mallforslag.js), föreslår
+// Systemet är experten. Det föreslår de statusområden som gäller patienten i dag (mallforslag.js), föreslår
 // omvårdnadsproblemen och de formulär som borde fyllas i, visar vårdplanens mål med den senaste bedömningen och
 // undersköterskans observationer sedan sjuksköterskans förra anteckning. Koderna sätts av systemet och syns inte.
 // Förslagen räknas bara på den egna vårdenhetens uppgifter som den som skriver får se, utan aktiva val och nödåtkomst,
@@ -66,7 +66,7 @@ export const PROBLEM = {
 };
 export const MALSTATUS = { uppnatt: 'Uppnått', delvis: 'Delvis uppnått', ej_uppnatt: 'Inte uppnått' };
 export const DEMOREGLER = 'Förslagen på statusområden, omvårdnadsproblem och formulär är demoregler för att visa flödet. De är inte granskade av vården.';
-// Standardplanerna i vardplan.js och de statusområden de berör.
+// Standardplanerna i vardplan.js och de statusområden de gäller.
 const PLANOMRADEN = { hjartsvikt: ['Andning och cirkulation', 'Nutrition'], trycksar: ['Hud och sår', 'Nutrition'], diabetes: ['Nutrition'], fall: ['Rörlighet'], lpt: ['Psykiskt mående'] };
 
 export const SCHEMA = `
@@ -170,7 +170,7 @@ function viktforandring(matvarden, nu) {
   return Object.keys(ut).length ? ut : null;
 }
 
-// Statusområden som berör patienten i dag, med varför. Används av mallforslag.js.
+// Statusområden som gäller patienten i dag, med varför. Används av mallforslag.js.
 export function foreslagnaOmraden(atk, u = underlag(atk, Date.now())) {
   const ut = new Map();
   const lagg = (omrade, varfor) => { if (!OMRADESNAMN.includes(omrade)) return; if (!ut.has(omrade)) ut.set(omrade, []); if (!ut.get(omrade).includes(varfor) && ut.get(omrade).length < 2) ut.get(omrade).push(varfor); };

@@ -1,7 +1,7 @@
 // Runda 15, r5 (F4): omvårdnadsprocessen i anteckningsformuläret. Modulen ritar det som servern räknar fram
 // (GET /api/patient/:id/omvardnadsprocess): undersköterskans observationer sedan förra anteckningen, formulär som borde
 // fyllas i, omvårdnadsproblemen med systemets förslag förvalda och vårdplanens mål med den senaste bedömningen. Den fäller
-// ihop de statusområden som inte berör patienten i dag och skriver varför de föreslagna står öppna.
+// ihop de statusområden som inte gäller patienten i dag och skriver varför de föreslagna står öppna.
 //
 // Anteckningsvyn anropar:
 //   const d = await hamta(patientId);                 // null när yrket inte skriver med processen eller i läsläget
@@ -11,6 +11,10 @@
 //   const process = las(form);                         // { problem, resultat } att skicka med anteckningen
 // Servern prövar allt igen: problemen mot listan och resultatet mot vårdplanens mål på den egna vårdenheten.
 import { esc, api } from './ui.js';
+
+// Sökordens textfält i formuläret.
+const SOKORD = '[data-sokord]';
+const textfalt = (rot, { dolda = false } = {}) => [...rot.querySelectorAll(SOKORD)].filter(t => t.tagName === 'TEXTAREA' && (!dolda || t.closest('.falt')?.hidden));
 
 const tid = (t) => new Date(t).toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -43,17 +47,17 @@ export function html(d) {
 export function fallIhop(form, mall) {
   const utfallda = new Set(mall?.utfallda ?? []);
   if (!utfallda.size) return;
-  const dolda = [...form.querySelectorAll('textarea[data-sokord]')].filter(t => utfallda.has(t.dataset.sokord) && !t.value.trim()).map(t => t.closest('.falt')).filter(Boolean);
+  const dolda = textfalt(form).filter(t => utfallda.has(t.dataset.sokord) && !t.value.trim()).map(t => t.closest('.falt')).filter(Boolean);
   if (!dolda.length) return;
   for (const f of dolda) f.hidden = true;
-  const sista = [...form.querySelectorAll('textarea[data-sokord]')].at(-1)?.closest('.falt');
+  const sista = textfalt(form).at(-1)?.closest('.falt');
   sista?.insertAdjacentHTML('afterend', '<p class="knapprad tat" data-op-fler-rad><button type="button" class="knapp liten text" data-op-fler aria-expanded="false"></button></p>');
   const knapp = form.querySelector('[data-op-fler]');
-  const rakna = () => { if (!knapp.isConnected) return; const n = form.querySelectorAll('.falt[hidden] textarea[data-sokord]').length; knapp.textContent = `Fler områden (${n})`; if (!n) knapp.closest('p').remove(); };
+  const rakna = () => { if (!knapp.isConnected) return; const n = textfalt(form, { dolda: true }).length; knapp.textContent = `Fler områden (${n})`; if (!n) knapp.closest('p').remove(); };
   rakna();
   knapp.addEventListener('click', () => {
-    const forsta = form.querySelector('.falt[hidden] textarea[data-sokord]');
-    for (const f of form.querySelectorAll('.falt[hidden]')) if (f.querySelector('textarea[data-sokord]')) f.hidden = false;
+    const forsta = textfalt(form, { dolda: true })[0];
+    for (const t of textfalt(form, { dolda: true })) t.closest('.falt').hidden = false;
     knapp.closest('p').remove();
     forsta?.focus();
   });
@@ -65,7 +69,7 @@ export function fallIhop(form, mall) {
 export function koppla(form, d) {
   if (!d) return;
   const varfor = new Map(d.foreslagna.map(f => [f.sokord, f.varfor]));
-  for (const t of form.querySelectorAll('textarea[data-sokord]')) {
+  for (const t of textfalt(form)) {
     const s = t.dataset.sokord;
     if (!varfor.has(s)) continue;
     const falt = t.closest('.falt');

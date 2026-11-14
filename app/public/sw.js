@@ -47,9 +47,7 @@ const FILER = [
   '/js/vyer/kodverk.js', '/exempel/uttag-vas.json',
   '/js/vyer/patient-uppfoljning.js', '/js/vyer/patient-utbildningslage.js',
   '/js/kunskapsstod-ui.js', '/js/vyer/patient-vaccinationer.js',
-  '/js/formularmotor-regler.js', '/js/vyer/patient-formular.js', '/js/vyer/formularbyggare.js', '/js/rost-regler.js', '/js/rostinmatning.js', '/js/stavning-ui.js',
-  // Runda 15, r5: omvårdnadsprocessen i anteckningsformuläret.
-  '/js/omvardnadsprocess.js',
+  '/js/formularmotor-regler.js', '/js/vyer/patient-formular.js', '/js/vyer/formularbyggare.js', '/js/rost-regler.js', '/js/rostinmatning.js', '/js/stavning-ui.js', '/js/omvardnadsprocess.js',
   '/js/vyer/patient-infarter.js', '/js/vyer/patient-restjournaler.js', '/js/vyer/patient-donation.js',
   '/js/vyer/r10r7.js', '/js/vyer/min-r10r7.js',
   '/js/vyer/patient-operation.js', '/js/vyer/operation.js',

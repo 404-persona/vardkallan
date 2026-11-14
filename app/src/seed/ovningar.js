@@ -64,12 +64,12 @@ export const OVNINGAR_V1 = [
     ['a', 'Du berättar det för sjuksköterskan, som skriver det.'],
     ['b', 'Du skriver en observationsanteckning med det du har sett och det du har gjort. Systemet väljer mallen, och sjuksköterskan ser anteckningen i sitt underlag.'],
     ['c', 'Du skriver det i en daganteckning.'],
-  ], 'b', 'Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Observation och Utförd åtgärd. Vårdgivaren bestämmer vilka mallar yrket skriver med.', '#/patient/p04/journal/ny'),
+  ], 'b', 'Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Observation och Utförd åtgärd. Vårdgivaren bestämmer vilka mallar yrket skriver med.', '#/patient/p01'),
   o('omvardnadsprocess', ['sjukskoterska'], 'Du skriver en omvårdnadsanteckning för en patient med vårdplanen Förebyggande av fall. Vad gör systemet?', [
     ['a', 'Visar alla tolv statusområden och låter dig välja.'],
-    ['b', 'Föreslår de områden och omvårdnadsproblem som berör patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.'],
+    ['b', 'Föreslår de områden och omvårdnadsproblem som gäller patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.'],
     ['c', 'Skriver anteckningen åt dig.'],
-  ], 'b', 'Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten på din vårdenhet. Reglerna är demoregler.', '#/patient/p04/journal/ny'),
+  ], 'b', 'Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten på din vårdenhet. Reglerna är demoregler.', '#/patient/p01'),
   o('boka', ['vardadministrator'], 'En remiss väntar på tid. Hur bokar du?', [
     ['a', 'Letar själv efter en ledig tid i tidboken och räknar dagarna mot vårdgarantin.'],
     ['b', 'Väljer en av de tider som systemet föreslår i Dagens arbete. Systemet räknar dagarna mot vårdgarantin och skriver kallelsen.'],

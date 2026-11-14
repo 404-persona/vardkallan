@@ -112,6 +112,8 @@ Rätt svar: Du skriver en observationsanteckning med det du har sett och det du 
 
 Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Observation och Utförd åtgärd. Vårdgivaren bestämmer vilka mallar yrket skriver med.
 
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.

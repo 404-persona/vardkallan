@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon. Omvårdnadsanteckningen följer omvårdnadsprocessen: systemet föreslår de statusområden och omvårdnadsproblem som berör patienten i dag och visar undersköterskans observationer, och du bedömer resultatet mot vårdplanens mål.
+Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon. Omvårdnadsanteckningen följer omvårdnadsprocessen: systemet föreslår de statusområden och omvårdnadsproblem som gäller patienten i dag och visar undersköterskans observationer, och du bedömer resultatet mot vårdplanens mål.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -295,9 +295,11 @@ NEWS2 räknas ur vitalparametrarna. En summa som kräver åtgärd larmar i inkor
 
 Du skriver en omvårdnadsanteckning för en patient med vårdplanen Förebyggande av fall. Vad gör systemet?
 
-Rätt svar: Föreslår de områden och omvårdnadsproblem som berör patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.
+Rätt svar: Föreslår de områden och omvårdnadsproblem som gäller patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.
 
 Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten på din vårdenhet. Reglerna är demoregler.
+
+Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01).
 
 ## Praktiska prov
 

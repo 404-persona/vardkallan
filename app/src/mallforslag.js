@@ -2,7 +2,7 @@
 // Rutten som ger mallen för en patient svarar med foreslagna: [{ sokord, varfor }], och anteckningsvyn visar dem överst
 // och fäller ut resten.
 //
-// Runda 15, r5 (F4): i omvårdnadsanteckningen föreslår systemet de statusområden som berör patienten i dag ur
+// Runda 15, r5 (F4): i omvårdnadsanteckningen föreslår systemet de statusområden som gäller patienten i dag ur
 // vårdplanen, förra omvårdnadsanteckningen, NEWS2, fallrisken, såren, smärtskattningen och vikten (omvardnadsprocess.js).
 // Varje förslag har en kort förklaring. Bara den egna vårdenhetens uppgifter som den som skriver får se räknas, utan
 // aktiva val och nödåtkomst, så att ett förslag aldrig röjer en annan eller spärrad vårdenhet. Andra mallar har inga
