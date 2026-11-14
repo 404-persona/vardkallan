@@ -731,7 +731,17 @@ function everythingPersonal(ctx, id) {
 }
 
 // Huvudingång. ctx: { db, personal, valFor(patientId), url, base }. Returnerar { status, body }.
+// Säkerhetsgranskningen efter sammanslagningen av runda 15: en resurs på id som bara är dold av en spärr ger samma svar
+// som ett id som inte finns, så att svaret aldrig säger att resursen finns. Nödåtkomst häver aldrig en spärr, och
+// samtycket ges i journalen, inte i FHIR.
 export function hantera(ctx) {
+  const delar = ctx.url.pathname.replace(/\/+$/, '').split('/').slice(2);
+  try { return hanteraUtanSparrsvar(ctx); } catch (e) {
+    if (e instanceof Fel && e.status === 403 && e.kod === 'kraver_samtycke' && delar.length >= 2 && delar[1] && !delar[1].startsWith('$')) throw new Fel(404, 'Resursen finns inte.', 'saknas');
+    throw e;
+  }
+}
+function hanteraUtanSparrsvar(ctx) {
   const { db, personal, url, base } = ctx;
   const delar = url.pathname.replace(/\/+$/, '').split('/').slice(2).map(decodeURIComponent);
   const [typ, id] = delar;

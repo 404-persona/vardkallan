@@ -125,7 +125,8 @@ describe('SMART on FHIR', () => {
     const sparrad = await (await medBiljett(p04, '/fhir/Observation?patient=p04')).json();
     expect(sparrad.entry.some(e => e.resource.id === String(psyk))).toBe(false);
     expect(JSON.stringify(sparrad)).not.toContain('uso-psyk');
-    expect((await medBiljett(p04, `/fhir/Observation/${psyk}`)).status).toBe(403);
+    // Säkerhetsgranskningen efter runda 15: en resurs som bara är dold av en spärr ger samma 404 som ett id som inte finns.
+    expect((await medBiljett(p04, `/fhir/Observation/${psyk}`)).status).toBe(404);
     // Ingen tillämpning startas utan behörighet: patient 12 saknar vårdrelation, och nödåtkomst följer aldrig med.
     expect((await k.get('/api/patient/p12/tillampningar')).status).toBe(403);
     expect((await k.post('/api/patient/p12/tillampningar/blodtryck/starta', {})).status).toBe(403);

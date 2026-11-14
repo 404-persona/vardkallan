@@ -135,7 +135,7 @@ describe('FHIR', () => {
     const samtycke = fraga(db, 'lak-kard', '/fhir/Condition?patient=p04', { p04: { samtycke_sparr: true } }).entry.map(e => e.resource.code.coding[0].code);
     expect(samtycke).toContain('F33.1');
     const psykDia = db.query("SELECT id FROM diagnoser WHERE patient_id = 'p04' AND enhet_id = 'uso-psyk'").get().id;
-    expect(fel(() => fraga(db, 'lak-kard', `/fhir/Condition/${psykDia}`, { p04: { andra_enheter: true, nodatkomst: true } })).kod).toBe('kraver_samtycke');
+    expect(fel(() => fraga(db, 'lak-kard', `/fhir/Condition/${psykDia}`, { p04: { andra_enheter: true, nodatkomst: true } })).kod).toBe('saknas'); // Säkerhetsgranskningen efter runda 15: samma svar som ett id som inte finns.
   });
 
   test('FHIR-anrop loggas', () => {

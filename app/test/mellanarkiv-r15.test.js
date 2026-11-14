@@ -412,7 +412,9 @@ describe('FHIR ur mellanarkivet', () => {
     expect(resurser((await k.get('/fhir/Observation?patient=p01')).data).filter(urMellanarkivet)).toEqual([]);
     const id = d.query("SELECT id FROM mellanarkiv_handlingar WHERE enhet_id = 'vc-tybble' AND slag = 'anteckning'").get().id;
     const dold = await k.get(`/fhir/Composition/ma-${id}`);
-    expect(dold.status).toBe(403);
+    // Säkerhetsgranskningen efter runda 15: en resurs som bara är dold av en spärr ger samma 404 som ett id som inte finns.
+    expect(dold.status).toBe(404);
+    expect(dold.data).toEqual((await k.get('/fhir/Composition/ma-99999999')).data);
     expect(JSON.stringify(dold.data)).not.toContain('Tybble');
     expect(JSON.stringify(dold.data)).not.toContain('hypertoni');
     // Det nekade försöket loggas.

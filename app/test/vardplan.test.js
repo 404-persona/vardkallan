@@ -160,7 +160,8 @@ describe('Vårdplan', () => {
     await k.logga('lak-kard');
     await k.post('/api/patient/p04/val', { typ: 'andra_enheter', syfte: 'Genomgång' });
     expect(JSON.stringify((await k.get('/fhir/CarePlan?patient=p04')).data)).not.toContain('Sömn');
-    expect((await k.get(`/fhir/CarePlan/${psyk.id}`)).status).toBe(403);
+    // Säkerhetsgranskningen efter runda 15: en resurs som bara är dold av en spärr ger samma 404 som ett id som inte finns.
+    expect((await k.get(`/fhir/CarePlan/${psyk.id}`)).status).toBe(404);
     // Min journal visar inte vårdplaner, så invånaren får dem inte i FHIR.
     const inv = klient(app);
     await inv.post('/api/login/invanare', { invanareId: 'inv-p01' });
