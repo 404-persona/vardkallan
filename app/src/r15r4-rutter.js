@@ -30,6 +30,12 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
     if (!kat) throw new Fel(400, 'Okänd anteckningstyp.', 'ogiltig', { falt: ['typ'] });
     return medPatient(c, id, journal.skrivHandling(kat), (atk) => utkast.spara(atk, c.body ?? {}));
   });
+  rutt('DELETE', '/api/patient/:id/anteckningsutkast/:aid', (c, id, aid) => {
+    kravInloggad(c);
+    const nr = heltal(aid);
+    if (!Number.isInteger(nr)) throw new Fel(404, 'Utkastet finns inte.', 'saknas');
+    return medPatient(c, id, journal.skrivHandling(utkast.kategori(c.db, id, { anteckningId: nr }) ?? 'lakare'), (atk) => utkast.taBort(atk, nr));
+  });
   rutt('GET', '/api/egna-fraser', (c) => fraser.lista(c.db, kravInloggad(c)));
   rutt('POST', '/api/egna-fraser', (c) => [201, fraser.lagg(c.db, kravPersonal(c), c.body ?? {})]);
   rutt('DELETE', '/api/egna-fraser/:fid', (c, fid) => fraser.taBort(c.db, kravPersonal(c), fid));

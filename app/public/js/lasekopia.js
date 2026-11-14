@@ -334,12 +334,16 @@ const koAad = (kopiaId, personalId, id) => new TextEncoder().encode(`vardkallan-
 const KOBARA = [
   { re: /^\/api\/patient\/([\w-]+)\/matvarden$/, typ: 'matvarde', handling: 'registrera_matvarde' },
   { re: /^\/api\/patient\/([\w-]+)\/administreringar$/, typ: 'dos', handling: 'ge_lakemedel' },
+  // Runda 15, r4: utkastet till en anteckning som sparas av sig självt (anteckningsstod.js). Servern prövar kategorin.
+  { re: /^\/api\/patient\/([\w-]+)\/anteckningsutkast$/, typ: 'utkast', handling: ['skriv_journal', 'skriv_omvardnad'] },
 ];
-const harRatt = (h) => (kopia?.session?.behorigheter ?? []).includes(h);
+const harRatt = (h) => (Array.isArray(h) ? h : [h]).some(x => (kopia?.session?.behorigheter ?? []).includes(x));
 const vem = () => ({ id: kopia.session.personal?.id, namn: kopia.session.personal?.namn });
 
 // Visar en registrering i kön i den öppna läskopian, så att dosen inte ges igen och värdet syns i listan.
 function tillampa(rad) {
+  // Runda 15, r4: ett utkast visas inte i läskopian, eftersom det inte är en del av journalen förrän det signeras.
+  if (rad.typ === 'utkast') return null;
   const post = kopia?.patienter?.[rad.patientId];
   if (!post) return null;
   if (rad.typ === 'matvarde') {
@@ -370,7 +374,15 @@ async function koa(p, data) {
   if (!harRatt(k.handling)) throw ej('Din yrkesroll får inte göra det här.', 'nekad');
   const gjord = typeof data?.tid === 'string' && Number.isFinite(Date.parse(data.tid)) && Date.parse(data.tid) <= Date.now() ? new Date(Date.parse(data.tid)).toISOString() : new Date().toISOString();
   let innehall;
-  if (k.typ === 'matvarde') {
+  // Runda 15, r4: ett utkast ersätter en tidigare version av samma utkast i kön, så att bara den senaste skickas.
+  if (k.typ === 'utkast') {
+    if (typeof data?.typ !== 'string' || !Array.isArray(data?.sokord) || typeof data?.lokalId !== 'string') throw ej('Utkastet saknar mall eller text.', 'ogiltig');
+    if (JSON.stringify(data.sokord).length > 20000) throw ej('Utkastet är för långt för att sparas på datorn under avbrottet. Kopiera texten och spara den när förbindelsen är tillbaka.', 'ogiltig');
+    innehall = { lokalId: data.lokalId, typ: data.typ, sokord: data.sokord, ...(Number.isInteger(data.anteckningId) ? { anteckningId: data.anteckningId } : {}), ...(data.nyKontakt ? { nyKontakt: data.nyKontakt } : {}) };
+    const gamla = [];
+    for (const r of await koRader()) { const x = await lasKo(r); if (x?.typ === 'utkast' && x.data?.lokalId === data.lokalId) gamla.push(r.id); }
+    await taBortKo(gamla);
+  } else if (k.typ === 'matvarde') {
     if (!data?.typ || data.varde == null || data.varde === '') throw ej('Ange mätvärdet.', 'ogiltig');
     innehall = { typ: data.typ, varde: data.varde };
   } else {
@@ -390,6 +402,7 @@ async function koa(p, data) {
   const visad = tillampa(rad);
   // Avbrottsraden räknar raderna i kön (avbrott.js).
   try { window.dispatchEvent(new Event('vk-skrivko')); } catch { /* utan fönster */ }
+  if (k.typ === 'utkast') return { koad: true, ejSparad: true, lokalId: data.lokalId };
   if (k.typ === 'matvarde') return { ...(visad ?? { namn: data.typ, varde: data.varde, enhet: '' }), koad: true, ejSparad: true };
   return { koad: true, administrering: { ...(visad ?? {}), status: 'given', tid: gjord, ejSparad: true }, varningar: [] };
 }

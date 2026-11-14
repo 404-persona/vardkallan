@@ -795,7 +795,21 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-window.addEventListener('hashchange', () => rita());
+// Runda 15, r4: en vy med text som inte har sparats (anteckningsstod.js) får pröva en gång innan sidan byts. Vakten
+// sparar texten och svarar sant, och frågar bara om texten inte gick att spara. Svarar den falskt står sidan kvar.
+export const lamnaVakt = { fn: null };
+let forraHash = location.hash;
+let aterstaller = false;
+window.addEventListener('hashchange', async () => {
+  if (aterstaller) { aterstaller = false; return; }
+  const vakt = lamnaVakt.fn;
+  if (vakt) {
+    lamnaVakt.fn = null;
+    if (!await vakt(location.hash).catch(() => true)) { lamnaVakt.fn = vakt; aterstaller = true; location.hash = forraHash; return; }
+  }
+  forraHash = location.hash;
+  rita();
+});
 
 // Runda 9, r5 (KD1.1.1.5): märkningen av en acceptanstest-, utbildnings- eller testmiljö överst på varje sida, med
 // vägen tillbaka till produktionsmiljön. Produktionsmiljön har ingen märkning utöver demoraden.

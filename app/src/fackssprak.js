@@ -53,6 +53,15 @@ export const SOKORD = {
   'Hud/vävnad': { ingen: 'Snomed CT har kroppsstrukturen hud men inget begrepp för omvårdnadsområdet hud och vävnad, så sökordet får ingen kod.' },
   // Runda 10, r4: donationsanteckningen (donation.js).
   'Närstående': { ingen: 'Sökordet samlar vad de närstående har fått veta och vad de har sagt om den avlidnes inställning. Snomed CT har begrepp för närstående som person men inget för det innehållet, så sökordet får ingen kod.' },
+  // Runda 15, r4: undersökorden i läkarmallarnas varianter (mallvarianter.js). De får ingen kod förrän begreppen är
+  // kontrollerade mot den svenska utgåvan, hellre än en kod som kan vara fel.
+  'Råd och egenvård': { ingen: 'Sökordet samlar de råd som patienten fick vid ett telefonsamtal. Snomed CT har flera begrepp för rådgivning men inget som täcker råd och egenvård som avsnitt, så sökordet får ingen kod.' },
+  'Psykiskt status': { ingen: 'Sökordet är psykiatrins avsnitt för psykiskt status. Begreppet är inte kontrollerat mot den svenska utgåvan av Snomed CT, så sökordet får ingen kod än.' },
+  'Suicidriskbedömning': { ingen: 'Sökordet är den kliniska bedömningen av suicidrisk i text, inte en skattningsskala. Begreppet är inte kontrollerat mot den svenska utgåvan av Snomed CT, så sökordet får ingen kod än.' },
+  'Diabetes': { ingen: 'Sökordet samlar uppföljningen av diabetes vid besöket. Snomed CT har sjukdomen men inget avsnitt för uppföljningen, och diagnosen har redan sin kod i ICD-10-SE, så sökordet får ingen kod.' },
+  'Astma och KOL': { ingen: 'Sökordet samlar uppföljningen av astma och KOL vid besöket. Diagnoserna har sina koder i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
+  'Hypertoni': { ingen: 'Sökordet samlar uppföljningen av högt blodtryck vid besöket. Diagnosen har sin kod i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
+  'Hjärtsvikt': { ingen: 'Sökordet samlar uppföljningen av hjärtsvikt vid besöket. Diagnosen har sin kod i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
 };
 
 // Åtgärderna med KVÅ och samma åtgärd i Snomed CT. Åtgärder utan exakt motsvarighet har ingen Snomed-kod.

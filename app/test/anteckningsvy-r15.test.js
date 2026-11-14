@@ -9,6 +9,7 @@ import * as varianter from '../src/mallvarianter.js';
 import * as fraser from '../src/egna-fraser.js';
 import { foreslagnaSokord } from '../src/mallforslag.js';
 import { klassa } from '../src/lagring.js';
+import { SOKORD } from '../src/fackssprak.js';
 
 let app;
 beforeAll(() => { app = testserver(); });
@@ -196,6 +197,18 @@ describe('Anteckningsvyn: utkast', () => {
     expect((await ssk.put('/api/patient/p01/anteckningsutkast', { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: 'Sov gott' }] })).status).toBe(200);
   });
 
+  test('den som skriver kan ta bort sitt eget utkast, men inte någon annans eller en signerad anteckning', async () => {
+    const k = await inloggad('lak-kard');
+    const r = await k.put('/api/patient/p01/anteckningsutkast', { typ: 'Daganteckning', sokord: [{ sokord: 'Aktuellt', text: 'Byter mall' }] });
+    somPerson(sandlada(app, k), 'ol-kard');
+    expect((await k.raw('DELETE', `/api/patient/p01/anteckningsutkast/${r.data.id}`)).status).toBe(404);
+    somPerson(sandlada(app, k), 'lak-kard');
+    expect((await k.raw('DELETE', `/api/patient/p01/anteckningsutkast/${r.data.id}`)).data).toEqual({ borttaget: r.data.id });
+    expect(db(k).query('SELECT count(*) AS n FROM anteckningar WHERE id = ?').get(r.data.id).n).toBe(0);
+    const signerad = db(k).query("SELECT id FROM anteckningar WHERE patient_id = 'p01' AND status = 'signerad' AND forfattare_id = 'lak-kard'").get();
+    expect((await k.raw('DELETE', `/api/patient/p01/anteckningsutkast/${signerad.id}`)).status).toBe(409);
+  });
+
   test('ett utkast som skrevs under avbrottet sparas från skrivkön, och en senare version av samma utkast ändrar samma anteckning', async () => {
     const k = klient(app);
     await k.logga('lak-kard');
@@ -233,6 +246,10 @@ describe('Anteckningsvyn: varianter och ordning', () => {
     // Utanför primärvården fälls de kroniska sjukdomarna inte ut, och en mall utan varianter har inga.
     expect(varianter.valjVarianter(d, p('lak-kard'), 'Mottagningsanteckning', { diagnoser: [{ kod: 'E11.9' }] })).toEqual([]);
     expect(varianter.valjVarianter(d, p('lak-kard'), 'Epikris', {})).toEqual([]);
+  });
+
+  test('varje undersökord i varianterna finns i fackspråket med en kod eller en förklaring', () => {
+    for (const sk of varianter.VARIANTSOKORD) expect([sk, Boolean(SOKORD[sk]?.code || SOKORD[sk]?.ingen)]).toEqual([sk, true]);
   });
 
   test('mallen för patienten har varianterna och de kroniska sjukdomarna som patienten har, ur diagnoserna som syns', async () => {

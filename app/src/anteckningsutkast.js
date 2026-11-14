@@ -12,6 +12,7 @@
 import { Fel } from './db.js';
 import * as journal from './journal.js';
 import * as vardkontakt from './vardkontakt.js';
+import { formularFor } from './formularmotor.js';
 
 // Utkastet för id:t, om det är den inloggades eget utkast för patienten. Annars samma svar som för ett som inte finns.
 function egetUtkast(atk, id) {
@@ -50,3 +51,13 @@ export function spara(atk, body = {}) {
   return svar(ut);
 }
 const svar = (a) => ({ id: a.id, typ: a.typ, status: a.status, skapad: a.skapad, andrad: a.andrad ?? a.skapad, vardkontaktId: a.vardkontaktId ?? null, sparad: new Date().toISOString() });
+
+// Tar bort den inloggades eget utkast, till exempel när personen byter mall innan något är signerat. Texten följer med
+// till den nya mallen i vyn. Ett utkast i en mall med svar (tobak, levnadsvanor, formulär) tas inte bort här.
+export function taBort(atk, id) {
+  const a = egetUtkast(atk, id);
+  atk.krav(journal.skrivHandling(a.kategori));
+  if (['Tobaksvanor', 'Levnadsvanor'].includes(a.typ) || formularFor(atk.db, a.id)) throw new Fel(400, 'Utkastet har svar i en mall och tas inte bort här.', 'ogiltig');
+  atk.db.query("DELETE FROM anteckningar WHERE id = ? AND status = 'utkast' AND forfattare_id = ?").run(a.id, atk.personal.id);
+  return { borttaget: a.id };
+}
