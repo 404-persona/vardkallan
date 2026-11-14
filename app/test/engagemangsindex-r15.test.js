@@ -186,6 +186,7 @@ describe(T, () => {
     db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p02'").run();
     const svar = (await k.get('/api/nationella-tjanster')).data;
     expect(svar.engagemangsindex.vantar).toBe(1);
+    expect(svar.engagemangsindex.nastaSandning).toBeTruthy();
     const text = JSON.stringify(svar);
     for (const x of ['p02', '196603193373', 'Thomas', 'Lindberg', 'p01', '194502024732']) expect(text).not.toContain(x);
     expect((await k.post('/api/nationella-tjanster/skicka', {})).status).toBe(200);

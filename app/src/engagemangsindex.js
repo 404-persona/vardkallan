@@ -287,7 +287,8 @@ export function lage(db, nu = new Date()) {
   const vantar = db.query('SELECT count(DISTINCT patient_id) AS n FROM ei_markerade').get().n;
   const forsta = db.query('SELECT min(markerad) AS t FROM ei_markerade').get().t;
   const felSedan = status(db, 'fel_sedan');
-  const nasta = status(db, 'nasta_forsok') ?? (forsta ? new Date(Date.parse(forsta) + inst.fordrojningSekunder * 1000).toISOString() : null);
+  // En markering som ingen omgång har sett än har ingen tid, och skickas en fördröjning efter nästa omgång.
+  const nasta = status(db, 'nasta_forsok') ?? new Date(Date.parse(forsta ?? iso(nu)) + inst.fordrojningSekunder * 1000).toISOString();
   const omgangar = db.query('SELECT tid, anrop, poster, resultat, fel FROM ei_omgangar ORDER BY id DESC LIMIT 10').all();
   const ejFramme = Boolean(felSedan) && (Number(status(db, 'forsok') ?? 0) >= 3 || nu.getTime() - Date.parse(felSedan) >= 15 * 60_000);
   return {
