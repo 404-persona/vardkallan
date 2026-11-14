@@ -231,6 +231,40 @@ describe('Mellanarkiv för läkemedel', () => {
     d.close();
   });
 
+  test('exporten till e-arkivet tar med handlingarna i mellanarkivet, med en post i indexet för varje', async () => {
+    const k = await inloggad('ark');
+    const d = db(k);
+    const b = (await k.post('/api/arkiv/beslut', { diarienummer: 'DEMO-2026-0099', beslutsdatum: idag(), typ: 'leverans', patientId: 'p01' })).data;
+    const res = await fetch(`${app.url}/api/arkiv/beslut/${b.id}/paket`, { method: 'POST', headers: { Cookie: k.kaka(), 'Content-Type': 'application/json' }, body: '{}' });
+    expect(res.status).toBe(200);
+    const filer = packaUpp(Buffer.from(await res.arrayBuffer()));
+    const rot = [...filer.keys()][0];
+    const journal = JSON.parse(filer.get(`${rot}representations/rep_1/data/journal/p01.json`).data.toString('utf8'));
+    const ur = journal.entry.map(e => e.resource).filter(r => (r.meta?.tag ?? []).some(t => t.code === 'mellanarkiv'));
+    const antal = d.query("SELECT count(*) AS n FROM mellanarkiv_handlingar WHERE patient_id = 'p01'").get().n;
+    expect(ur).toHaveLength(antal);
+    expect(ur.every(r => /^ma-\d+$/.test(r.id))).toBe(true);
+    const index = filer.get(`${rot}metadata/descriptive/earkiv-index.xml`).data.toString('utf8');
+    for (const r of ur) expect(index).toContain(`<Referens>urn:vardkallan:${r.resourceType}/${r.id}</Referens>`);
+    expect(index).toContain('<Dokumenttyp>Läkemedelsadministrering</Dokumenttyp>');
+  });
+
+  test('gallringsregeln räknar med det som finns i mellanarkivet, och för en ordination med när den sattes ut', async () => {
+    const k = await inloggad('ark');
+    const d = db(k);
+    const gallring = async () => (await k.get(`/api/arkiv/beslut/${(await k.post('/api/arkiv/beslut', { diarienummer: 'DEMO-2026-0100', beslutsdatum: idag(), typ: 'gallring' })).data.id}/underlag`)).data.patienter.map(p => p.id);
+    expect(await gallring()).toContain('p20');
+    // En ordination från 2012 som sattes ut för sex år sedan gör att journalen inte ska gallras än.
+    const utsatt = new Date(Date.now() - 6 * 365.25 * 86400_000).toISOString();
+    const { id } = gammalOrdination(d, { pid: 'p20', enhet: 'uso-med', utsatt });
+    expect(await gallring()).not.toContain('p20');
+    await foverfor(k);
+    expect(d.query('SELECT 1 FROM ordinationer WHERE id = ?').get(id)).toBeNull();
+    expect(d.query("SELECT sista FROM mellanarkiv_handlingar WHERE slag = 'ordination' AND referens = ?").get(`urn:vardkallan:MedicationRequest/${id}`).sista).toBe(utsatt);
+    // Ordinationen finns nu bara i mellanarkivet, och den räknas fortfarande.
+    expect(await gallring()).not.toContain('p20');
+  }, 30_000);
+
   test('vårdenhetens reservdator tar inte med ordinationer ur mellanarkivet', async () => {
     const k = await inloggad('ssk-kard');
     const r = await k.get('/api/reservlista');

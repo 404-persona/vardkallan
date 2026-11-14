@@ -44,12 +44,13 @@ export const MAX_PER_JOURNAL = 500;
 
 // Runda 15, r3: mellanarkivet tar också emot avslutade ordinationer och administreringar (slagen ordination och
 // administrering). ordination_enhet_id är vårdenheten som ordinerade läkemedlet, för en administrering, så att en dos av
-// en spärrad vårdenhets ordination inte syns, som i läkemedelslistan.
+// en spärrad vårdenhets ordination inte syns, som i läkemedelslistan. sista är den sista tidpunkten i handlingen, för
+// en ordination när den sattes ut eller slutade, så att gallringsregeln räknar från den (arkiv.js, sistaUppgift).
 const HANDLINGAR_TABELL = `
 CREATE TABLE IF NOT EXISTS mellanarkiv_handlingar (
   id INTEGER PRIMARY KEY AUTOINCREMENT, paket_id TEXT NOT NULL, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, slag TEXT NOT NULL,
   kategori TEXT, typ TEXT NOT NULL, referens TEXT NOT NULL, datum TEXT NOT NULL, rubrik TEXT NOT NULL, forfattare TEXT, text TEXT NOT NULL,
-  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT,
+  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT, sista TEXT,
   CHECK (slag IN ('anteckning', 'matvarde', 'ordination', 'administrering'))
 );`;
 const HANDLINGAR_SKYDD = `
@@ -210,6 +211,10 @@ function ordinationsresurs(db, o) {
     return vh ? { text: 'Händelse: Tiden för läkemedlet ändrades.' }
       : { time: h.tid, ...(namnFor(db, h.personal_id) ? { authorString: namnFor(db, h.personal_id) } : {}), text: `Händelse: ${h.handelse}${h.detalj ? `. ${h.detalj}` : ''}.`.replace(/\.\.$/, '.') };
   });
+  // När ordinationen sattes ut, också för en migrerad ordination som saknar händelsen i historiken.
+  if (o.status === 'utsatt' && o.utsatt_tid && !db.query("SELECT 1 FROM ordination_historik WHERE ordination_id = ? AND handelse = 'Utsatt'").get(o.id)) {
+    noter.push({ time: o.utsatt_tid, ...(namnFor(db, o.utsatt_av) ? { authorString: namnFor(db, o.utsatt_av) } : {}), text: `Händelse: Utsatt${o.utsatt_orsak ? `. ${o.utsatt_orsak}` : ''}.` });
+  }
   for (const m of db.query('SELECT * FROM nll_meddelanden WHERE ordination_id = ? ORDER BY id').all(o.id)) {
     noter.push({ time: m.skickad, text: `Nationella läkemedelslistan (simulerad): ${m.typ === 'utsattning' ? 'utsättningen' : 'ordinationen'} skickades, status ${m.status}${m.kvittens ? `, kvittens ${m.kvittens}` : ''}.` });
   }
@@ -362,7 +367,8 @@ function handlingUr(r) {
     const namn = String(r.medicationCodeableConcept?.text ?? 'Läkemedel');
     const dos = r.dosageInstruction?.map(d => d.text).filter(Boolean).join('. ') ?? '';
     const utsatt = (r.extension ?? []).find(e => e.url?.endsWith('/utsattningsorsak'))?.valueString;
-    return { slag: 'ordination', kategori: null, typ: String(r.medicationCodeableConcept?.coding?.[0]?.code ?? ''), enhet: tagg(r, TAGG_ENHET), ordinationEnhet: null,
+    const tider = [r.authoredOn, r.dispenseRequest?.validityPeriod?.end, ...(r.note ?? []).map(n => n.time)].filter(t => t && !Number.isNaN(Date.parse(t))).map(String).sort();
+    return { slag: 'ordination', kategori: null, typ: String(r.medicationCodeableConcept?.coding?.[0]?.code ?? ''), enhet: tagg(r, TAGG_ENHET), ordinationEnhet: null, sista: tider.at(-1) ?? null,
       patient: idUr(r.subject?.reference, 'Patient'), datum: r.authoredOn, rubrik: namn, forfattare: r.requester?.display ?? null,
       text: [dos, r.reasonCode?.[0]?.text ? `Orsak: ${r.reasonCode[0].text}` : '', utsatt ? `Utsatt: ${utsatt}` : ''].filter(Boolean).map(x => x.replace(/\.$/, '')).join('. ') + '.' };
   }
@@ -419,8 +425,8 @@ export function taEmot(db, paket, { kalla, beslutId = null, av = null, tid = iso
   db.query('INSERT INTO mellanarkiv_paket (id, patient_id, beslut_id, kalla, mottaget, overfort_av, storlek, sha256, handlingar, data, kontroll) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(objid, pid, beslutId, kalla, tid, av, paket.length, sha(paket).toUpperCase(), handlingar.length, paket, JSON.stringify(kv));
   // Runda 15, r3: ordination_enhet_id för en administrering.
-  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null);
+  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id, sista) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null, h.sista ?? h.datum);
   return { paket: objid, patient: pid, handlingar: handlingar.length, kontroll: kv };
 }
 
@@ -635,6 +641,16 @@ export function fhirResurs(db, r) {
   }
   return res;
 }
+
+// Runda 15, r3: exporten till e-arkivet och återföringen av all data tar med hela journalen, också det som finns i
+// mellanarkivet (arkiv.fhirJournal och earkiv.index). Arkivarien läser inte innehållet, och exporten prövas därför inte
+// mot behörighetsmotorn, som exporten av den aktiva journalen.
+export const RESURSTYP = Object.fromEntries(Object.entries(FHIR_SLAG).map(([t, s]) => [s, t]));
+export function exportResurser(db, pid) {
+  if (!finnsTabell(db)) return [];
+  return db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY id').all(pid).map(r => fhirResurs(db, r));
+}
+export const exportRader = (db, pid) => (finnsTabell(db) ? db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY id').all(pid) : []);
 
 // Sökningen på patient: handlingarna av resurstypen som anroparen får se, utan dem som är undantagna från FHIR.
 export function fhirResurser(atk, typ, { nationell = false } = {}) {
