@@ -99,8 +99,9 @@ export async function visa(el, ctx) {
 // Runda 14, r4 (Sussa 5.4.2.2): en handling ur mellanarkivet läses i journalen som en anteckning, med samma behörighet,
 // och läsningen loggas. Den ändras aldrig, och systemet säger själv om innehållet är detsamma som när det togs emot.
 // Runda 15, r3: en ordination och en administrering ur mellanarkivet har egna rubriker för vem och när.
-const MA_AV = { ordination: 'Ordinerad av', administrering: 'Given av' };
-const MA_TID = { matvarde: 'Mätt', ordination: 'Ordinerad', administrering: 'Registrerad' };
+const MA_AV = { ordination: 'Ordinerad av', administrering: 'Given av', remiss: 'Remitterad av' };
+// Beslut 2026-11-14: vårdkontakter, remisser och diagnoser.
+const MA_TID = { matvarde: 'Mätt', ordination: 'Ordinerad', administrering: 'Registrerad', vardkontakt: 'Början', remiss: 'Skickad', diagnos: 'Registrerad' };
 async function lasMellanarkiv(las, ctx, id) {
   let h;
   try { h = await api(`/api/mellanarkiv/${encodeURIComponent(id)}`); } catch (e) {

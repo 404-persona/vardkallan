@@ -62,7 +62,7 @@ describe('Läskopia', () => {
     // ett aktivt val räknas då inte heller bland de dolda.
     const utanMa = async (id, ov) => {
       const ma = (await k.get(`/api/patient/${id}/mellanarkiv`)).data;
-      return { ...ov, tidslinje: ov.tidslinje.filter(t => t.typ !== 'mellanarkiv'), dolda: { ...ov.dolda, kraverVal: ov.dolda.kraverVal - (ma.dolda?.kraverVal ?? 0) } };
+      return { ...ov, tidslinje: ov.tidslinje.filter(t => t.typ !== 'mellanarkiv'), ...(ov.diagnoser ? { diagnoser: ov.diagnoser.filter(x => !x.mellanarkiv) } : {}), dolda: { ...ov.dolda, kraverVal: ov.dolda.kraverVal - (ma.dolda?.kraverVal ?? 0) } };
     };
     for (const [id, post] of Object.entries(kopia.patienter)) {
       expect(post.huvud).toEqual((await k.get(`/api/patient/${id}`)).data);

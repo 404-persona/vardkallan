@@ -39,6 +39,8 @@ export const TAGG_MATTYP = 'urn:vardkallan:matvardestyp';
 // MedicationRequest och MedicationAdministration har inget eget element för vårdenheten som ansvarar för uppgiften.
 export const TAGG_ENHET = 'urn:vardkallan:vardenhet';
 export const TAGG_ORDINATIONSENHET = 'urn:vardkallan:ordinationsenhet';
+// Beslut 2026-11-14: vårdenheten som remissen gick till.
+export const TAGG_MOTTAGARE = 'urn:vardkallan:mottagare';
 // Högst så många handlingar per journal och överföring, så att ett paket inte blir orimligt stort i demon.
 export const MAX_PER_JOURNAL = 500;
 
@@ -46,12 +48,14 @@ export const MAX_PER_JOURNAL = 500;
 // administrering). ordination_enhet_id är vårdenheten som ordinerade läkemedlet, för en administrering, så att en dos av
 // en spärrad vårdenhets ordination inte syns, som i läkemedelslistan. sista är den sista tidpunkten i handlingen, för
 // en ordination när den sattes ut eller slutade, så att gallringsregeln räknar från den (arkiv.js, sistaUppgift).
+// Beslut 2026-11-14: också avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser (slagen vardkontakt,
+// remiss och diagnos). mottagare_enhet_id är vårdenheten som remissen gick till.
 const HANDLINGAR_TABELL = `
 CREATE TABLE IF NOT EXISTS mellanarkiv_handlingar (
   id INTEGER PRIMARY KEY AUTOINCREMENT, paket_id TEXT NOT NULL, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, slag TEXT NOT NULL,
   kategori TEXT, typ TEXT NOT NULL, referens TEXT NOT NULL, datum TEXT NOT NULL, rubrik TEXT NOT NULL, forfattare TEXT, text TEXT NOT NULL,
-  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT, sista TEXT,
-  CHECK (slag IN ('anteckning', 'matvarde', 'ordination', 'administrering'))
+  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT, sista TEXT, mottagare_enhet_id TEXT,
+  CHECK (slag IN ('anteckning', 'matvarde', 'ordination', 'administrering', 'vardkontakt', 'remiss', 'diagnos'))
 );`;
 const HANDLINGAR_SKYDD = `
 CREATE INDEX IF NOT EXISTS ix_mellanarkiv_handlingar_patient ON mellanarkiv_handlingar (patient_id);
@@ -76,12 +80,14 @@ CREATE TRIGGER IF NOT EXISTS mellanarkiv_paket_raderas_ej BEFORE DELETE ON mella
 // och triggrarna läggs tillbaka. Inget innehåll ändras.
 function uppgradera(db) {
   const sql = db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get()?.sql;
-  if (!sql || sql.includes("'ordination'")) return;
+  if (!sql || sql.includes("'diagnos'")) return;
   db.transaction(() => {
     db.exec('DROP TRIGGER IF EXISTS mellanarkiv_handlingar_andras_ej; DROP TRIGGER IF EXISTS mellanarkiv_handlingar_raderas_ej;');
     db.exec('ALTER TABLE mellanarkiv_handlingar RENAME TO mellanarkiv_handlingar_v14');
     db.exec(HANDLINGAR_TABELL);
-    const kol = 'id, paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256';
+    // Kolumnerna som båda tabellerna har, så att också en tabell med en tidigare version av rundans kolumner följer med.
+    const nya = new Set(db.query('PRAGMA table_info(mellanarkiv_handlingar)').all().map(k => k.name));
+    const kol = db.query('PRAGMA table_info(mellanarkiv_handlingar_v14)').all().map(k => k.name).filter(k => nya.has(k)).join(', ');
     db.exec(`INSERT INTO mellanarkiv_handlingar (${kol}) SELECT ${kol} FROM mellanarkiv_handlingar_v14`);
     db.exec('DROP TABLE mellanarkiv_handlingar_v14');
     db.exec(HANDLINGAR_SKYDD);
@@ -123,7 +129,7 @@ function pekasPa(db, slag) {
 export function kandidater(db, fore) {
   const ut = new Map();
   const lagg = (pid, slag, rad) => {
-    if (!ut.has(pid)) ut.set(pid, { anteckningar: [], matvarden: [], ordinationer: [], administreringar: [] });
+    if (!ut.has(pid)) ut.set(pid, { anteckningar: [], matvarden: [], ordinationer: [], administreringar: [], vardkontakter: [], remisser: [], diagnoser: [] });
     const l = ut.get(pid)[slag];
     if (l.length < MAX_PER_JOURNAL) l.push(rad);
   };
@@ -148,7 +154,101 @@ export function kandidater(db, fore) {
     for (const o of l.ordinationer) { n += 1 + o.administreringar.length; if (n <= MAX_PER_JOURNAL * 4) lagg(pid, 'ordinationer', o); }
     for (const a of l.administreringar) lagg(pid, 'administreringar', a);
   }
+  // Beslut 2026-11-14: avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser.
+  strukturKandidater(db, fore, aktiv, ut, lagg);
   return ut;
+}
+
+// ---- Beslut 2026-11-14: vårdkontakter, remisser och diagnoser -----------------------------------------------------
+//
+// En vårdkontakt förs över när den avslutades före gränsen och inget i den aktiva journalen pekar på den längre: allt som
+// dokumenterades under den (anteckningar, mätvärden, ordinationer, doser, diagnoser och remisser) förs över samtidigt,
+// och den hör inte till ett vårdtillfälle eller ett hälsoärende och har ingen efterföljande kontakt. Bokningar,
+// kallelser, åtgärder, intyg, avgifter, beställningar och allt annat som har en kolumn för vårdkontakten håller den kvar,
+// eftersom systemet läser vilka tabeller som har kolumnen. En remiss förs över när svaret kvitterades eller den
+// avvisades eller vidarebefordrades före gränsen och inget pekar på den: väntelistan, vårdgarantin, kallelser, bilagor,
+// e-remisser och vårdkontakter som skapades ur remissen håller den kvar. En diagnos förs över bara när den är tillfällig
+// till sin natur (symtom, skador, akuta infektioner och undersökningar), registrerades före gränsen och hör till en
+// vårdkontakt som förs över eller ingen vårdkontakt alls. Kroniska tillstånd stannar alltid, eftersom
+// beslutsstöden läser dem. Inget som uppmärksamhetsinformation eller något annat pekar på förs över.
+//
+// Vårdrelationen påverkas inte: den kommer av pågående kontakter och kontakter som avslutades de senaste 90 dagarna, av
+// listningen, av pågående remisser och av remisser vars svar kvitterades de senaste 90 dagarna (atkomst.js,
+// harVardrelation), och inget av det förs någonsin över.
+export const TILLFALLIGA_DIAGNOSER = /^(R\d|S\d|T(?!86)\d|Z0\d|Z1[0-3]|Z2\d|Z3[0-9]|J0[0-6]|J09|J1[0-8]|J2[0-2]|A0\d|H6[56]|N30)/;
+const radId = (r) => Number(r.id);
+// Tabeller med en kolumn som pekar på raden, och rader i dem som inte förs över samtidigt.
+function pekarPa(db, kolumn, id, flyttas) {
+  for (const t of tabellerMedKolumn(db, kolumn)) {
+    const s = flyttas.get(t);
+    const rader = db.query(`SELECT ${t === 'vardkontakter' && kolumn === 'foregaende_id' ? 'id' : s ? 'id' : '1 AS id'} FROM ${t} WHERE ${kolumn} = ?`).all(id);
+    if (rader.some(r => !s || !s.has(Number(r.id)))) return true;
+  }
+  return false;
+}
+// En uppgift som har raden som källa (uppmärksamhetsinformation och andra med kalla_typ och kalla_id).
+function kallaFor(db, slag, id) {
+  for (const t of tabellerMedKolumn(db, 'kalla_id')) {
+    const kol = db.query(`PRAGMA table_info(${t})`).all().map(k => k.name);
+    const typ = kol.includes('kalla_typ') ? 'kalla_typ' : kol.includes('kalla') ? 'kalla' : null;
+    if (typ && db.query(`SELECT 1 FROM ${t} WHERE ${typ} = ? AND kalla_id = ? LIMIT 1`).get(slag, id)) return true;
+  }
+  return false;
+}
+function strukturKandidater(db, fore, aktiv, ut, lagg) {
+  const idn = (slag) => new Set([...ut.values()].flatMap(v => v[slag].map(radId)));
+  // Remisserna.
+  for (const r of db.query(`SELECT r.* FROM remisser r JOIN patienter p ON p.id = r.patient_id WHERE ${aktiv} AND (
+      (r.status = 'svar_kvitterat' AND r.svar_kvitterat_tid < ?) OR (r.status = 'bedomd' AND r.beslut IN ('avvisad', 'vidarebefordrad') AND r.bedomd_tid < ?)) ORDER BY r.patient_id, r.id`).all(fore, fore)) {
+    if (pekarPa(db, 'remiss_id', r.id, new Map()) || kallaFor(db, 'remiss', r.id)) continue;
+    lagg(r.patient_id, 'remisser', r);
+  }
+  // Diagnoserna som är tillfälliga och som inget pekar på. Om de förs över avgörs efter vårdkontakterna.
+  const diagnoser = db.query(`SELECT d.* FROM diagnoser d JOIN patienter p ON p.id = d.patient_id WHERE ${aktiv} AND d.datum < ? ORDER BY d.patient_id, d.id`).all(fore)
+    .filter(d => TILLFALLIGA_DIAGNOSER.test(String(d.kod)) && !pekarPa(db, 'diagnos_id', d.id, new Map()) && !kallaFor(db, 'diagnos', d.id));
+  const flyttas = new Map([['anteckningar', idn('anteckningar')], ['matvarden', idn('matvarden')], ['ordinationer', idn('ordinationer')], ['remisser', idn('remisser')],
+    ['administreringar', new Set([...idn('administreringar'), ...[...ut.values()].flatMap(v => v.ordinationer.flatMap(o => o.administreringar.map(radId)))])],
+    ['diagnoser', new Set(diagnoser.map(radId))]]);
+  const kontakter = new Set();
+  for (const v of db.query(`SELECT v.* FROM vardkontakter v JOIN patienter p ON p.id = v.patient_id WHERE ${aktiv} AND v.slut IS NOT NULL AND v.slut < ?
+      AND coalesce(v.planerad, 0) = 0 AND v.vardtillfalle_id IS NULL AND v.halsoarende_id IS NULL ORDER BY v.patient_id, v.id`).all(fore)) {
+    if (pekarPa(db, 'vardkontakt_id', v.id, flyttas) || pekarPa(db, 'foregaende_id', v.id, new Map()) || kallaFor(db, 'vardkontakt', v.id)) continue;
+    const fore2 = ut.get(v.patient_id)?.vardkontakter.length ?? 0;
+    lagg(v.patient_id, 'vardkontakter', v);
+    if ((ut.get(v.patient_id)?.vardkontakter.length ?? 0) > fore2) kontakter.add(v.id);
+  }
+  for (const d of diagnoser) if (d.vardkontakt_id == null || kontakter.has(d.vardkontakt_id)) lagg(d.patient_id, 'diagnoser', d);
+  // En diagnos som inte fick plats under taket håller sin vårdkontakt kvar.
+  for (const [, v] of ut) {
+    const kvar = new Set(v.diagnoser.map(radId));
+    const saknas = diagnoser.filter(d => kontakter.has(d.vardkontakt_id) && !kvar.has(d.id)).map(d => d.vardkontakt_id);
+    if (saknas.length) v.vardkontakter = v.vardkontakter.filter(k => !saknas.includes(k.id));
+  }
+}
+function strukturresurser(db, v) {
+  const res = [];
+  for (const k of v.vardkontakter ?? []) res.push(medTagg(fhir.encounter(db, k), TAGG_ENHET, k.enhet_id));
+  for (const r of v.remisser ?? []) {
+    const s = fhir.serviceRequest(db, r, true);
+    const slut = r.svar_kvitterat_tid ?? r.bedomd_tid;
+    if (slut) s.note = [...(s.note ?? []), { time: slut, text: r.status === 'svar_kvitterat' ? 'Svaret kvitterades.' : `Remissen ${r.beslut === 'avvisad' ? 'avvisades' : 'vidarebefordrades'}.` }];
+    res.push(medTagg(medTagg(s, TAGG_ENHET, r.fran_enhet_id), TAGG_MOTTAGARE, r.till_enhet_id));
+  }
+  for (const d of v.diagnoser ?? []) {
+    const c = fhir.condition(db, d);
+    c.clinicalStatus = { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-clinical', code: 'resolved' }] };
+    c.note = [{ text: 'En tillfällig diagnos från en avslutad vårdkontakt, förd till mellanarkivet.' }];
+    res.push(medTagg(c, TAGG_ENHET, d.enhet_id));
+  }
+  return res;
+}
+function taBortStruktur(db, pid, v) {
+  const tabeller = ['vardkontakter', 'remisser', 'diagnoser'];
+  slappTriggrar(db, tabeller, () => {
+    for (const d of v.diagnoser ?? []) db.query('DELETE FROM diagnoser WHERE id = ? AND patient_id = ?').run(d.id, pid);
+    for (const r of v.remisser ?? []) db.query('DELETE FROM remisser WHERE id = ? AND patient_id = ?').run(r.id, pid);
+    for (const k of v.vardkontakter ?? []) db.query('DELETE FROM vardkontakter WHERE id = ? AND patient_id = ?').run(k.id, pid);
+  });
 }
 
 // ---- Runda 15, r3 (Sussa 5.4.2.2): avslutade ordinationer och administreringar ---------------------------------------
@@ -261,7 +361,8 @@ function taBortLakemedel(db, pid, valda) {
   });
 }
 export const antalHandlingar = (v) => v.anteckningar.length + v.matvarden.length + (v.ordinationer?.length ?? 0)
-  + (v.administreringar?.length ?? 0) + (v.ordinationer ?? []).reduce((s, o) => s + o.administreringar.length, 0);
+  + (v.administreringar?.length ?? 0) + (v.ordinationer ?? []).reduce((s, o) => s + o.administreringar.length, 0)
+  + (v.vardkontakter?.length ?? 0) + (v.remisser?.length ?? 0) + (v.diagnoser?.length ?? 0);
 
 const periodText = (rader) => {
   const d = rader.map(r => String(r).slice(0, 10)).sort();
@@ -279,12 +380,13 @@ export function underlag(db, personal, b) {
       // Runda 15, r3: ordinationerna och administreringarna.
       ...k.ordinationer.map(o => o.skapad), ...k.administreringar.map(a => a.tid)];
     const adm = k.administreringar.length + k.ordinationer.reduce((s, o) => s + o.administreringar.length, 0);
-    patienter.push({ ...patientKort(p), anteckningar: k.anteckningar.length, matvarden: k.matvarden.length, ordinationer: k.ordinationer.length, administreringar: adm, period: periodText(tider) });
+    patienter.push({ ...patientKort(p), anteckningar: k.anteckningar.length, matvarden: k.matvarden.length, ordinationer: k.ordinationer.length, administreringar: adm,
+      vardkontakter: k.vardkontakter.length, remisser: k.remisser.length, diagnoser: k.diagnoser.length, period: periodText(tider) });
   }
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: null, handling: 'registrera_arkivbeslut', resurs: `beslut:${b.id}:underlag`,
     grund: 'arkivbeslut', syfte: `Underlag för överföring till mellanarkivet, ${patienter.length} journaler`, resultat: 'tillaten' });
   return { beslut: beslutUt(db, b), patienter, delar: [], mottagare: MOTTAGARE,
-    regel: `Signerade anteckningar som inte har rättats, mätvärden som inte är det senaste av sin typ och ordinationer som avslutades med sina administreringar, från före ${omf.fore}, som inget annat i journalen pekar på. Pågående och aktuella ordinationer och det som uppmärksamhetsinformationen pekar på stannar i journalen.` };
+    regel: `Signerade anteckningar som inte har rättats, mätvärden som inte är det senaste av sin typ, ordinationer som avslutades med sina administreringar, avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser, från före ${omf.fore}, som inget annat i journalen pekar på. Pågående och aktuella ordinationer, kroniska diagnoser och det som uppmärksamhetsinformationen, en bokning, en kallelse, väntelistan, en avgift eller ett intyg pekar på stannar i journalen.` };
 }
 
 // ---- Paketet ---------------------------------------------------------------------------------------------------------
@@ -294,7 +396,7 @@ const medTagg = (r, system, code) => ({ ...r, meta: { ...(r.meta ?? {}), tag: [.
 // En Bundle av typen collection med patienten, handlingarna som förs över och de vårdenheter och den personal som de
 // hänvisar till. Kategorin för en anteckning och typen för ett mätvärde följer med som taggar, så att mellanarkivet kan
 // pröva inre sekretess och undantag på samma sätt som journalen.
-function bundleFor(db, pid, { anteckningar, matvarden, ordinationer = [], administreringar = [] }) {
+function bundleFor(db, pid, { anteckningar, matvarden, ordinationer = [], administreringar = [], vardkontakter = [], remisser = [], diagnoser = [] }) {
   const p = db.query('SELECT * FROM patienter WHERE id = ?').get(pid);
   const res = [fhir.patient(db, p, true)];
   for (const a of anteckningar) res.push(medTagg(fhir.composition(db, a), TAGG_KATEGORI, a.kategori));
@@ -305,6 +407,8 @@ function bundleFor(db, pid, { anteckningar, matvarden, ordinationer = [], admini
     for (const a of o.administreringar) res.push(administreringsresurs(db, a, o.enhet_id));
   }
   for (const a of administreringar) res.push(administreringsresurs(db, a, null));
+  // Beslut 2026-11-14.
+  res.push(...strukturresurser(db, { vardkontakter, remisser, diagnoser }));
   const json = JSON.stringify(res);
   for (const id of new Set([...json.matchAll(/"Organization\/([\w-]+)"/g)].map(x => x[1]))) { const e = db.query('SELECT * FROM enheter WHERE id = ?').get(id); if (e) res.push(fhir.organization(db, e)); }
   for (const id of new Set([...json.matchAll(/"Practitioner\/([\w-]+)"/g)].map(x => x[1]))) { const x = db.query('SELECT * FROM personal WHERE id = ?').get(id); if (x) res.push(fhir.practitioner(db, x)); }
@@ -326,7 +430,10 @@ Taggen ${TAGG_KATEGORI} anger anteckningens kategori (journal eller omvårdnad) 
 export function paketFor(db, pid, valda, { version = null, kalla = 'Överföring ur Vårdkällan', scheman = true, tid = undefined } = {}) {
   const refs = new Set([...valda.anteckningar.map(a => `urn:vardkallan:Composition/${a.id}`), ...valda.matvarden.map(m => `urn:vardkallan:Observation/${m.id}`),
     // Runda 15, r3.
-    ...(valda.ordinationer ?? []).map(o => `urn:vardkallan:MedicationRequest/${o.id}`)]);
+    ...(valda.ordinationer ?? []).map(o => `urn:vardkallan:MedicationRequest/${o.id}`),
+    // Beslut 2026-11-14.
+    ...(valda.vardkontakter ?? []).map(v => `urn:vardkallan:Encounter/${v.id}`), ...(valda.remisser ?? []).map(r => `urn:vardkallan:ServiceRequest/${r.id}`),
+    ...(valda.diagnoser ?? []).map(d => `urn:vardkallan:Condition/${d.id}`)]);
   const index = earkiv.index(db, pid).filter(x => refs.has(x.Referens));
   // Runda 15, r3: administreringarna har ingen egen post i e-arkivets index för hela journalen, så de får en här.
   const adm = [...(valda.administreringar ?? []).map(a => [a, null]), ...(valda.ordinationer ?? []).flatMap(o => o.administreringar.map(a => [a, o.enhet_id]))];
@@ -364,6 +471,23 @@ function handlingUr(r) {
   if (r.resourceType === 'Observation') {
     return { slag: 'matvarde', kategori: null, typ: tagg(r, TAGG_MATTYP) ?? String(r.code?.text ?? ''), enhet: idUr(r.performer?.[0]?.reference, 'Organization'),
       patient: idUr(r.subject?.reference, 'Patient'), datum: r.effectiveDateTime, rubrik: String(r.code?.text ?? 'Mätvärde'), forfattare: null, text: vardeText(r) };
+  }
+  // Beslut 2026-11-14: en vårdkontakt, en remiss och en diagnos.
+  if (r.resourceType === 'Encounter') {
+    return { slag: 'vardkontakt', kategori: null, typ: String(r.class?.code ?? ''), enhet: tagg(r, TAGG_ENHET) ?? idUr(r.serviceProvider?.reference, 'Organization'),
+      patient: idUr(r.subject?.reference, 'Patient'), datum: r.period?.start, sista: r.period?.end ?? null, rubrik: String(r.reasonCode?.[0]?.text ?? 'Vårdkontakt'),
+      forfattare: null, text: [r.class?.display, r.location?.[0]?.location?.display].filter(Boolean).join('. ') };
+  }
+  if (r.resourceType === 'ServiceRequest') {
+    const tider = [r.authoredOn, ...(r.note ?? []).map(n => n.time)].filter(t => t && !Number.isNaN(Date.parse(t))).map(String).sort();
+    return { slag: 'remiss', kategori: null, typ: String(r.category?.[0]?.coding?.[0]?.code ?? 'remiss'), enhet: tagg(r, TAGG_ENHET), mottagare: tagg(r, TAGG_MOTTAGARE),
+      patient: idUr(r.subject?.reference, 'Patient'), datum: r.authoredOn, sista: tider.at(-1) ?? null, rubrik: `Remiss till ${r.performer?.[0]?.display ?? 'en annan vårdenhet'}`,
+      forfattare: r.requester?.display ?? null, text: r.reasonCode?.[0]?.text ?? '' };
+  }
+  if (r.resourceType === 'Condition') {
+    const kod = r.code?.coding?.[0]?.code ?? '';
+    return { slag: 'diagnos', kategori: null, typ: String(kod), enhet: tagg(r, TAGG_ENHET), patient: idUr(r.subject?.reference, 'Patient'), datum: r.recordedDate,
+      rubrik: `${kod} ${r.code?.text ?? ''}`.trim(), forfattare: null, text: r.code?.text ?? '' };
   }
   // Runda 15, r3: en ordination och en administrering.
   if (r.resourceType === 'MedicationRequest') {
@@ -416,6 +540,7 @@ export function taEmot(db, paket, { kalla, beslutId = null, av = null, tid = iso
     for (const h of handlingar) {
       if (h.patient !== patient) { fel.push('En handling i paketet gäller en annan patient.'); break; }
       if (!h.enhet || !db.query('SELECT 1 FROM enheter WHERE id = ?').get(h.enhet)) { fel.push('En handling i paketet saknar en känd vårdenhet.'); break; }
+      if (h.slag === 'remiss' && !h.mottagare) { fel.push('En remiss i paketet saknar vårdenheten den gick till.'); break; }
       if (!h.datum || Number.isNaN(Date.parse(h.datum))) { fel.push('En handling i paketet saknar datum.'); break; }
       // Runda 15, r3: en administrering av en ordination har ordinationen i samma paket.
       if (h.slag === 'administrering' && h.ordination && !handlingar.some(x => x.referens === h.ordination)) { fel.push('En administrering i paketet saknar sin ordination.'); break; }
@@ -428,8 +553,8 @@ export function taEmot(db, paket, { kalla, beslutId = null, av = null, tid = iso
   db.query('INSERT INTO mellanarkiv_paket (id, patient_id, beslut_id, kalla, mottaget, overfort_av, storlek, sha256, handlingar, data, kontroll) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(objid, pid, beslutId, kalla, tid, av, paket.length, sha(paket).toUpperCase(), handlingar.length, paket, JSON.stringify(kv));
   // Runda 15, r3: ordination_enhet_id för en administrering.
-  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id, sista) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null, h.sista ?? h.datum);
+  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id, sista, mottagare_enhet_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null, h.sista ?? h.datum, h.mottagare ?? null);
   return { paket: objid, patient: pid, handlingar: handlingar.length, kontroll: kv };
 }
 
@@ -443,7 +568,7 @@ export function overfor(db, personal, b, { version = null } = {}) {
   if (b.verkstallt) throw new Fel(409, 'Beslutet är redan verkställt.', 'ogiltig');
   const omf = JSON.parse(b.omfattning);
   const tid = iso();
-  const resultat = { patienter: 0, anteckningar: 0, matvarden: 0, ordinationer: 0, administreringar: 0, paket: [] };
+  const resultat = { patienter: 0, anteckningar: 0, matvarden: 0, ordinationer: 0, administreringar: 0, vardkontakter: 0, remisser: 0, diagnoser: 0, paket: [] };
   db.transaction(() => {
     for (const [pid, valda] of kandidater(db, omf.fore)) {
       const { paket } = paketFor(db, pid, valda, { version, kalla: `Beslut ${b.diarienummer}` });
@@ -454,14 +579,21 @@ export function overfor(db, personal, b, { version = null } = {}) {
       });
       // Runda 15, r3: ordinationerna och administreringarna, med raderna som hör till dem.
       taBortLakemedel(db, pid, valda);
+      // Beslut 2026-11-14: diagnoserna, remisserna och sist vårdkontakterna.
+      taBortStruktur(db, pid, valda);
       const adm = valda.administreringar.length + valda.ordinationer.reduce((s, o) => s + o.administreringar.length, 0);
       resultat.patienter++;
       resultat.anteckningar += valda.anteckningar.length;
       resultat.matvarden += valda.matvarden.length;
       resultat.ordinationer += valda.ordinationer.length;
       resultat.administreringar += adm;
+      resultat.vardkontakter += valda.vardkontakter.length;
+      resultat.remisser += valda.remisser.length;
+      resultat.diagnoser += valda.diagnoser.length;
       resultat.paket.push(mot.paket);
-      const lm = valda.ordinationer.length || adm ? `, ${valda.ordinationer.length} ordinationer och ${adm} administreringar` : '';
+      const lm = [valda.ordinationer.length || adm ? `${valda.ordinationer.length} ordinationer och ${adm} administreringar` : '',
+        valda.vardkontakter.length ? `${valda.vardkontakter.length} vårdkontakter` : '', valda.remisser.length ? `${valda.remisser.length} remisser` : '',
+        valda.diagnoser.length ? `${valda.diagnoser.length} diagnoser` : ''].filter(Boolean).map(x => `, ${x}`).join('');
       loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: pid, handling: 'arkivera', resurs: `beslut:${b.id}:mellanarkiv:${mot.paket}`, grund: 'arkivbeslut',
         syfte: `Överföring till mellanarkivet enligt ${b.diarienummer}: ${valda.anteckningar.length} anteckningar och ${valda.matvarden.length} mätvärden${lm}. Uppgifterna finns kvar i journalen.`, resultat: 'tillaten' });
     }
@@ -474,9 +606,16 @@ export function overfor(db, personal, b, { version = null } = {}) {
 
 // Runda 15, r3: en ordination och en administrering läses med läkemedelslistans handling.
 const LAKEMEDEL = new Set(['ordination', 'administrering']);
-export const handlingFor = (r) => (r.slag === 'anteckning' ? lasHandling(r.kategori) : LAKEMEDEL.has(r.slag) ? 'las_lakemedel' : 'las_matvarden');
-export const kanLasaNagot = (personal) => ['las_journal', 'las_omvardnad', 'las_matvarden', 'las_lakemedel'].some(h => kanRoll(personal, h));
-export const listHandling = (personal) => ['las_journal', 'las_omvardnad', 'las_matvarden', 'las_lakemedel'].find(h => kanRoll(personal, h)) ?? 'las_journal';
+// Beslut 2026-11-14: en vårdkontakt läses med vårdkontakternas handling, en diagnos med diagnosernas och en remiss med
+// remissernas, där den som bara får läsa remissens status ser statusen och inget av innehållet (remiss.js, forPatient).
+const HANDLING = { matvarde: 'las_matvarden', ordination: 'las_lakemedel', administrering: 'las_lakemedel', vardkontakt: 'las_admin', diagnos: 'las_diagnoser' };
+const remissHandling = (personal) => (personal && kanRoll(personal, 'las_remiss') ? 'las_remiss' : 'las_remiss_status');
+export const handlingFor = (r, personal = null) => (r.slag === 'anteckning' ? lasHandling(r.kategori) : r.slag === 'remiss' ? remissHandling(personal) : HANDLING[r.slag]);
+const LASHANDLINGAR = ['las_journal', 'las_omvardnad', 'las_matvarden', 'las_lakemedel', 'las_diagnoser', 'las_admin', 'las_remiss', 'las_remiss_status'];
+export const kanLasaNagot = (personal) => LASHANDLINGAR.some(h => kanRoll(personal, h));
+export const listHandling = (personal) => LASHANDLINGAR.find(h => kanRoll(personal, h)) ?? 'las_journal';
+const klinisk = (atk) => kanRoll(atk.personal, 'las_remiss');
+const egenRemiss = (atk, r) => { const min = vardenhetFor(atk.db, atk.personal.enhet_id); return r.enhet_id === min || r.mottagare_enhet_id === min; };
 
 // Handlingarna som anroparen får se, med samma prövning som journalens egna anteckningar och mätvärden.
 // Runda 15, r3: ordinationer och administreringar prövas som i läkemedelslistan, som är gemensam för vårdgivaren och
@@ -488,13 +627,18 @@ export function synliga(atk, { slag = null, visning = true } = {}) {
   sakra(atk.db);
   const rader = atk.db.query('SELECT * FROM mellanarkiv_handlingar WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId)
     .filter(r => !slag || slag.includes(r.slag));
-  const tillatna = atk.filtrera(rader.filter(r => !LAKEMEDEL.has(r.slag)), handlingFor);
+  const tillatna = atk.filtrera(rader.filter(r => !LAKEMEDEL.has(r.slag) && r.slag !== 'remiss'), handlingFor);
+  // Beslut 2026-11-14: en remiss från eller till den egna vårdenheten syns, andra prövas på vårdenheten som skickade
+  // den, som i remisslistan.
+  const rem = rader.filter(r => r.slag === 'remiss');
+  const remisser = kanRoll(atk.personal, 'las_remiss') || kanRoll(atk.personal, 'las_remiss_status')
+    ? [...rem.filter(r => egenRemiss(atk, r)), ...atk.filtrera(rem.filter(r => !egenRemiss(atk, r)), remissHandling(atk.personal))] : [];
   const lm = atk.filtrera(rader.filter(r => LAKEMEDEL.has(r.slag)), 'las_lakemedel', { gemensam: true });
   const viaOrdination = new Set(atk.filtrera(lm.filter(r => r.ordination_enhet_id).map(r => ({ ...r, enhet_id: r.ordination_enhet_id, ursprung: r })), 'las_lakemedel', { gemensam: true }).map(x => x.ursprung));
   // visning: false för FHIR-API:t, som prövar undantagen från FHIR i stället, som för den aktiva journalen.
   const v = (rader, sort) => (visning ? visas(atk, rader, sort) : rader);
   return [...v(tillatna.filter(r => r.slag === 'anteckning'), 'anteckning'), ...v(tillatna.filter(r => r.slag === 'matvarde'), 'matvarde'),
-    ...lm.filter(r => !r.ordination_enhet_id || viaOrdination.has(r))]
+    ...lm.filter(r => !r.ordination_enhet_id || viaOrdination.has(r)), ...tillatna.filter(r => ['vardkontakt', 'diagnos'].includes(r.slag)), ...remisser]
     .sort((a, b) => String(b.datum).localeCompare(String(a.datum)) || b.id - a.id);
 }
 // Undantagen från visning prövas på vårdenhet och typ. Ett undantag för en enskild anteckning gäller en anteckning i den
@@ -505,9 +649,13 @@ function visas(atk, rader, sort) {
   return rader.filter(r => kvar.has(r));
 }
 
-const kort = (db, r) => ({
-  id: r.id, slag: r.slag, typ: r.rubrik, datum: r.datum, enhet: enhetKort(db, r.enhet_id), kategori: r.kategori, forfattare: r.forfattare ? { namn: r.forfattare } : null,
-  sammanfattning: r.slag === 'matvarde' ? r.text : r.text.replace(/\s+/g, ' ').slice(0, 200), kalla: 'mellanarkiv', kallaEtikett: ETIKETT,
+// Beslut 2026-11-14: den som bara får läsa en remiss status ser inget av dess innehåll.
+const remissStatus = (r) => { const res = JSON.parse(r.resurs); return res.status === 'completed' ? 'Svaret är kvitterat.' : res.status === 'revoked' ? 'Avvisad.' : 'Avslutad.'; };
+export const textFor = (atk, r) => (r.slag === 'remiss' && !(atk && klinisk(atk)) ? remissStatus(r) : r.text);
+const kort = (db, r, atk = null) => ({
+  id: r.id, slag: r.slag, typ: r.rubrik, datum: r.datum, enhet: enhetKort(db, r.enhet_id), kategori: r.kategori, forfattare: r.forfattare && r.slag !== 'remiss' ? { namn: r.forfattare } : (r.forfattare && atk && klinisk(atk) ? { namn: r.forfattare } : null),
+  sammanfattning: r.slag === 'matvarde' ? r.text : textFor(atk, r).replace(/\s+/g, ' ').slice(0, 200), kalla: 'mellanarkiv', kallaEtikett: ETIKETT,
+  ...(r.slag === 'remiss' ? { till: enhetKort(db, r.mottagare_enhet_id) } : {}),
 });
 
 // GET /api/patient/:id/mellanarkiv: handlingarna som anroparen får se, och perioden de gäller.
@@ -517,7 +665,7 @@ export function lista(atk) {
   atk.krav(listHandling(atk.personal));
   const rader = synliga(atk);
   if (rader.length) atk.logga(listHandling(atk.personal), atk.grund(), 'mellanarkiv');
-  return { handlingar: rader.map(r => kort(atk.db, r)), period: periodText(rader.map(r => r.datum)), etikett: ETIKETT,
+  return { handlingar: rader.map(r => kort(atk.db, r, atk)), period: periodText(rader.map(r => r.datum)), etikett: ETIKETT,
     dolda: { kraverVal: atk.doldaVal, sparrade: atk.doldaSparr, undantagna: undantagnaUt(atk) } };
 }
 
@@ -528,24 +676,36 @@ export function handlingRad(db, id) {
   return r;
 }
 
+// Prövningen av en enskild handling, samma som för raden i listan (synliga). Kastar Fel och loggar ett nekat försök.
+// Runda 15, r3: en ordination och en administrering prövas som i läkemedelslistan. Beslut 2026-11-14: en remiss som
+// i remisslistan.
+function provaRad(atk, r, beskrivning) {
+  const h = handlingFor(r, atk.personal);
+  if (LAKEMEDEL.has(r.slag)) {
+    atk.krav(h, { resurs: { enhet_id: r.enhet_id, gemensam: true }, beskrivning });
+    if (r.ordination_enhet_id) atk.krav(h, { resurs: { enhet_id: r.ordination_enhet_id, gemensam: true }, beskrivning });
+  } else if (r.slag === 'remiss') {
+    atk.krav(h, { beskrivning });
+    if (!egenRemiss(atk, r)) atk.krav(h, { resurs: { enhet_id: r.enhet_id }, beskrivning });
+  } else atk.krav(h, { resurs: { enhet_id: r.enhet_id }, beskrivning });
+}
+
 // GET /api/mellanarkiv/:id: en handling, med samma prövning som raden i listan. Loggas. Kontrollsumman visar att
 // handlingen är oförändrad sedan mellanarkivet tog emot den.
 export function las(atk, r) {
   if (r.patient_id !== atk.patientId) throw new Fel(404, 'Uppgiften finns inte.', 'saknas');
-  // Runda 15, r3: en ordination och en administrering prövas som i läkemedelslistan (synliga).
-  if (LAKEMEDEL.has(r.slag)) {
-    atk.krav('las_lakemedel', { resurs: { enhet_id: r.enhet_id, gemensam: true }, beskrivning: `mellanarkiv:${r.id}` });
-    if (r.ordination_enhet_id) atk.krav('las_lakemedel', { resurs: { enhet_id: r.ordination_enhet_id, gemensam: true }, beskrivning: `mellanarkiv:${r.id}` });
-  } else atk.krav(handlingFor(r), { resurs: { enhet_id: r.enhet_id }, beskrivning: `mellanarkiv:${r.id}` });
+  provaRad(atk, r, `mellanarkiv:${r.id}`);
   if (!visas(atk, [r], r.slag).length) throw new Fel(404, 'Uppgiften finns inte.', 'saknas');
-  atk.logga(handlingFor(r), atk.grund(), `mellanarkiv:${r.id}`);
+  atk.logga(handlingFor(r, atk.personal), atk.grund(), `mellanarkiv:${r.id}`);
   const p = atk.db.query('SELECT id, mottaget, kalla, sha256 FROM mellanarkiv_paket WHERE id = ?').get(r.paket_id);
   const resurs = JSON.parse(r.resurs);
   return {
-    ...kort(atk.db, r),
+    ...kort(atk.db, r, atk),
     sokord: r.slag === 'anteckning' ? (resurs.section ?? []).map(s => ({ sokord: String(s.title ?? ''), text: avHtml(s.text?.div) }))
       // Runda 15, r3: ordinationen och administreringen visas med samma rubriker som i läkemedelslistan.
-      : r.slag === 'ordination' ? ordinationSokord(atk, r, resurs) : r.slag === 'administrering' ? administreringSokord(resurs) : [],
+      : r.slag === 'ordination' ? ordinationSokord(atk, r, resurs) : r.slag === 'administrering' ? administreringSokord(resurs)
+        // Beslut 2026-11-14.
+        : r.slag === 'vardkontakt' ? vardkontaktSokord(resurs) : r.slag === 'remiss' ? remissSokord(atk, r, resurs) : r.slag === 'diagnos' ? diagnosSokord(resurs) : [],
     varde: r.slag === 'matvarde' ? r.text : null,
     mellanarkiv: { mottagare: MOTTAGARE, paket: p?.id ?? null, mottaget: p?.mottaget ?? null, kalla: p?.kalla ?? null, oforandrad: sha(r.resurs) === r.sha256 },
   };
@@ -554,12 +714,28 @@ export function las(atk, r) {
 // Händelserna i översiktens tidslinje, ur det som anroparen får se.
 // Runda 15, r3: en ordination står i tidslinjen som i den aktiva journalen. Administreringarna står inte där, som i den
 // aktiva journalen, men de finns i ordinationen när den öppnas.
-const RUBRIK = { anteckning: (r) => r.rubrik, matvarde: (r) => `Mätvärde: ${r.rubrik}`, ordination: (r) => `Ordinerat: ${r.rubrik}` };
+// Beslut 2026-11-14: vårdkontakter och remisser står i tidslinjen som i den aktiva journalen, diagnoserna inte.
+const RUBRIK = { anteckning: (r) => r.rubrik, matvarde: (r) => `Mätvärde: ${r.rubrik}`, ordination: (r) => `Ordinerat: ${r.rubrik}`, vardkontakt: (r) => r.rubrik, remiss: (r) => r.rubrik };
 export function tidslinje(atk) {
-  return synliga(atk, { slag: ['anteckning', 'matvarde', 'ordination'] }).map(r => ({
-    tid: r.datum, typ: 'mellanarkiv', rubrik: RUBRIK[r.slag](r), text: r.slag === 'matvarde' ? r.text : r.text.replace(/\s+/g, ' ').slice(0, 160),
+  return synliga(atk, { slag: Object.keys(RUBRIK) }).map(r => ({
+    tid: r.datum, typ: 'mellanarkiv', rubrik: RUBRIK[r.slag](r), text: r.slag === 'matvarde' ? r.text : textFor(atk, r).replace(/\s+/g, ' ').slice(0, 160),
     enhet: enhetKort(atk.db, r.enhet_id), kalla: 'mellanarkiv', kallaEtikett: ETIKETT, ref: { typ: 'mellanarkiv', id: r.id },
   }));
+}
+
+// Beslut 2026-11-14: diagnoserna i översikten och remisserna i remisslistan, med samma prövning som i synliga.
+export function diagnoser(atk) {
+  return synliga(atk, { slag: ['diagnos'] }).map(r => {
+    const res = JSON.parse(r.resurs);
+    return { id: `ma-${r.id}`, kod: r.typ, text: res.code?.text ?? '', typ: /^Huvud/.test(res.category?.[0]?.text ?? '') ? 'huvud' : 'bi', datum: r.datum,
+      vardenhet: enhetKort(atk.db, r.enhet_id), kalla: 'mellanarkiv', kallaEtikett: ETIKETT, mellanarkiv: true, ref: { typ: 'mellanarkiv', id: r.id } };
+  });
+}
+export function remisser(atk) {
+  const ur = synliga(atk, { slag: ['remiss'] });
+  if (ur.length) atk.logga(remissHandling(atk.personal), atk.grund(), 'mellanarkiv');
+  return ur.map(r => ({ id: r.id, rubrik: r.rubrik, datum: r.datum, fran: enhetKort(atk.db, r.enhet_id), till: enhetKort(atk.db, r.mottagare_enhet_id),
+    sammanfattning: textFor(atk, r).replace(/\s+/g, ' ').slice(0, 200), status: remissStatus(r), kalla: 'mellanarkiv', kallaEtikett: ETIKETT }));
 }
 
 // Runda 15, r3: läkemedelslistans del ur mellanarkivet (lakemedel.lista), som utsatta och avslutade ordinationer.
@@ -594,6 +770,30 @@ function ordinationSokord(atk, r, res) {
     { sokord: 'Administreringar', text: adm.length ? `${doser.join('\n')}${adm.length > 50 ? `\noch ${adm.length - 50} till` : ''}` : 'Inga registrerade doser.' },
   ].filter(x => x.text);
 }
+function vardkontaktSokord(res) {
+  return [
+    { sokord: 'Kontaktorsak', text: res.reasonCode?.[0]?.text ?? '' },
+    { sokord: 'Slag', text: [res.class?.display, res.type?.[0]?.text].filter(Boolean).join(', ') },
+    { sokord: 'Period', text: `${String(res.period?.start ?? '').slice(0, 16).replace('T', ' ')}${res.period?.end ? ` till ${String(res.period.end).slice(0, 16).replace('T', ' ')}` : ''}` },
+    { sokord: 'Plats', text: res.location?.[0]?.location?.display ?? '' },
+  ].filter(x => x.text);
+}
+function remissSokord(atk, r, res) {
+  const status = { sokord: 'Status', text: remissStatus(r) };
+  if (!klinisk(atk)) return [{ sokord: 'Till', text: enhetsnamn(atk.db, r.mottagare_enhet_id) }, status];
+  return [
+    { sokord: 'Till', text: enhetsnamn(atk.db, r.mottagare_enhet_id) },
+    { sokord: 'Frågeställning', text: res.reasonCode?.[0]?.text ?? '' },
+    ...(res.note ?? []).map(n => ({ sokord: /^Svar: /.test(n.text) ? 'Svar' : /^Motivering: /.test(n.text) ? 'Motivering' : n.time ? 'Avslutad' : 'Anamnes', text: String(n.text ?? '').replace(/^(Svar|Motivering): /, '') })),
+    status,
+  ].filter(x => x.text);
+}
+function diagnosSokord(res) {
+  return [
+    { sokord: 'Diagnos', text: `${res.code?.coding?.[0]?.code ?? ''} ${res.code?.text ?? ''}`.trim() },
+    { sokord: 'Slag', text: res.category?.[0]?.text ?? '' },
+  ].filter(x => x.text);
+}
 function administreringSokord(res) {
   return [
     { sokord: 'Läkemedel', text: String(res.medicationCodeableConcept?.text ?? '') },
@@ -606,8 +806,9 @@ function administreringSokord(res) {
 // Runda 15, r3: ordinationerna är sökbara som i den aktiva journalen, administreringarna inte.
 export function sokTraffar(atk, ord, markera) {
   const ut = [];
-  for (const r of synliga(atk, { slag: ['anteckning', 'matvarde', 'ordination'] })) {
-    const text = `${r.rubrik} ${r.text}`.replace(/\s+/g, ' ');
+  // Beslut 2026-11-14: också vårdkontakterna, diagnoserna och remisserna, en remiss bara med det som anroparen får läsa.
+  for (const r of synliga(atk, { slag: ['anteckning', 'matvarde', 'ordination', 'vardkontakt', 'diagnos', 'remiss'] })) {
+    const text = `${r.rubrik} ${textFor(atk, r)}`.replace(/\s+/g, ' ');
     const lag = text.toLocaleLowerCase('sv-SE');
     const i = ord.map(o => lag.indexOf(o)).filter(x => x >= 0).sort((a, b) => a - b)[0];
     if (i == null) continue;
@@ -627,23 +828,42 @@ export function sokTraffar(atk, ord, markera) {
 // mellanarkivet. FHIR R4 har inget eget element för var en uppgift lagras, och HL7 Swedens basprofiler säger inget om
 // det, så taggen följer samma mönster som källan (kalla). Taggarna som bara behövs i paketet tas bort, och referenserna
 // till patienten och till ordinationen pekar på den gällande journalen och på ordinationen i mellanarkivet.
-export const FHIR_SLAG = { Composition: 'anteckning', Observation: 'matvarde', MedicationRequest: 'ordination', MedicationAdministration: 'administrering' };
-const PAKETTAGGAR = new Set([TAGG_KATEGORI, TAGG_MATTYP, TAGG_ENHET, TAGG_ORDINATIONSENHET]);
+export const FHIR_SLAG = { Composition: 'anteckning', Observation: 'matvarde', MedicationRequest: 'ordination', MedicationAdministration: 'administrering',
+  // Beslut 2026-11-14.
+  Encounter: 'vardkontakt', ServiceRequest: 'remiss', Condition: 'diagnos' };
+const PAKETTAGGAR = new Set([TAGG_KATEGORI, TAGG_MATTYP, TAGG_ENHET, TAGG_ORDINATIONSENHET, TAGG_MOTTAGARE]);
+// En referens till en vårdkontakt, ordination, remiss eller diagnos som har förts över pekar på den i mellanarkivet:
+// samma paket först, annars den i den aktiva journalen om den finns där, annars den senaste i mellanarkivet.
+const REFERERBARA = /^(Encounter|MedicationRequest|ServiceRequest|Condition)\/(\d{1,9})$/;
+const AKTIV_TABELL = { Encounter: 'vardkontakter', MedicationRequest: 'ordinationer', ServiceRequest: 'remisser', Condition: 'diagnoser' };
+function skrivOmReferenser(db, r, v) {
+  if (Array.isArray(v)) { for (const x of v) skrivOmReferenser(db, r, x); return; }
+  if (!v || typeof v !== 'object') return;
+  const m = typeof v.reference === 'string' ? REFERERBARA.exec(v.reference) : null;
+  if (m) {
+    const ref = `urn:vardkallan:${m[1]}/${m[2]}`;
+    const samma = db.query('SELECT id FROM mellanarkiv_handlingar WHERE paket_id = ? AND referens = ?').get(r.paket_id, ref);
+    const aktiv = !samma && db.query(`SELECT 1 FROM ${AKTIV_TABELL[m[1]]} WHERE id = ? AND patient_id = ?`).get(Number(m[2]), r.patient_id);
+    const annan = !samma && !aktiv && db.query('SELECT id FROM mellanarkiv_handlingar WHERE patient_id = ? AND referens = ? ORDER BY id DESC').get(r.patient_id, ref);
+    const ny = samma ?? annan;
+    if (ny) v.reference = `${m[1]}/ma-${ny.id}`;
+  }
+  for (const [k, x] of Object.entries(v)) if (k !== 'meta' && x && typeof x === 'object') skrivOmReferenser(db, r, x);
+}
 const undantagenFhir = (db, typ, nationell) => { const p = undantag.fhirProvare(db, typ, { nationell }); return (r) => Boolean(p({ enhet_id: r.enhet_id, typ: r.typ, id: null })); };
 
 // paketTaggar: true i exporten till e-arkivet, så att mottagaren har vårdenheterna och kategorin som spärrar, inre
 // sekretess och undantag prövas på, som i mellanarkivets eget paket.
-export function fhirResurs(db, r, { paketTaggar = false } = {}) {
+export function fhirResurs(db, r, { paketTaggar = false, klinisk: kl = true } = {}) {
   const res = JSON.parse(r.resurs);
   res.id = `ma-${r.id}`;
+  // Beslut 2026-11-14: en remiss för den som bara får läsa statusen, utan frågeställning och noter, som fhir.serviceRequest.
+  if (res.resourceType === 'ServiceRequest' && !kl) { delete res.reasonCode; delete res.note; }
+  skrivOmReferenser(db, r, res);
   res.meta = { ...(res.meta ?? {}), source: `urn:vardkallan:mellanarkiv:${r.paket_id}`,
     tag: [...(res.meta?.tag ?? []).filter(t => paketTaggar || !PAKETTAGGAR.has(t.system)), { system: fhir.SYSTEM.lagring, code: 'mellanarkiv', display: ETIKETT }] };
   if (res.subject?.reference?.startsWith('Patient/')) res.subject = { ...res.subject, reference: `Patient/${r.patient_id}` };
-  if (res.resourceType === 'MedicationAdministration' && res.request?.reference) {
-    const o = db.query("SELECT id FROM mellanarkiv_handlingar WHERE paket_id = ? AND slag = 'ordination' AND referens = ?").get(r.paket_id, `urn:vardkallan:${res.request.reference}`);
-    if (o) res.request = { ...res.request, reference: `MedicationRequest/ma-${o.id}` };
-    else delete res.request;
-  }
+  if (res.resourceType === 'MedicationAdministration' && res.request?.reference && !/^MedicationRequest\/ma-/.test(res.request.reference)) delete res.request;
   return res;
 }
 
@@ -662,7 +882,7 @@ export function fhirResurser(atk, typ, { nationell = false } = {}) {
   const slag = FHIR_SLAG[typ];
   if (!slag || !finnsTabell(atk.db)) return [];
   const ute = undantagenFhir(atk.db, typ, nationell);
-  return synliga(atk, { slag: [slag], visning: false }).filter(r => !ute(r)).map(r => fhirResurs(atk.db, r));
+  return synliga(atk, { slag: [slag], visning: false }).filter(r => !ute(r)).map(r => fhirResurs(atk.db, r, { klinisk: klinisk(atk) }));
 }
 
 // GET /fhir/<typ>/ma-<nummer>: samma prövning som läsningen i journalen, och en handling som anroparen inte får se, som
@@ -672,16 +892,13 @@ export function fhirLas(ctx, typ, id) {
   sakra(db);
   const r = db.query('SELECT * FROM mellanarkiv_handlingar WHERE id = ?').get(Number(String(id).slice(3)));
   if (!r || FHIR_SLAG[typ] !== r.slag) throw new Fel(404, 'Resursen finns inte.', 'saknas');
-  const handling = handlingFor(r);
+  const handling = handlingFor(r, personal);
   const atk = new Atkomst(db, personal, r.patient_id, ctx.valFor(r.patient_id), handling);
   const beskrivning = `fhir/${typ}/${id}`;
-  if (LAKEMEDEL.has(r.slag)) {
-    atk.krav(handling, { resurs: { enhet_id: r.enhet_id, gemensam: true }, beskrivning });
-    if (r.ordination_enhet_id) atk.krav(handling, { resurs: { enhet_id: r.ordination_enhet_id, gemensam: true }, beskrivning });
-  } else atk.krav(handling, { resurs: { enhet_id: r.enhet_id }, beskrivning });
+  provaRad(atk, r, beskrivning);
   if (undantagenFhir(db, typ, ctx.url?.searchParams?.has('_kontrakt') ?? false)(r)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
   atk.logga(handling, atk.grund(), beskrivning);
-  return fhirResurs(db, r);
+  return fhirResurs(db, r, { klinisk: klinisk(atk) });
 }
 
 // ---- Seeden ----------------------------------------------------------------------------------------------------------

@@ -849,8 +849,10 @@ export function hantera(ctx) {
     // Runda 7, r4: vårdkontakter från en vårdenhet som är undantagen från FHIR.
     { const undantagen = undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') }); rader = rader.filter(r => vardtillfalle(typ, r) || !undantagen(r)); }
     for (const [, synliga] of vt) for (const v of synliga.slice(0, 1)) atk.krav(handling, { resurs: { enhet_id: v.enhet_id } });
+    // Beslut 2026-11-14: vårdkontakterna i mellanarkivet, prövade före loggningen (mellanarkiv.js).
+    const urE = require('./mellanarkiv.js').fhirResurser(atk, typ, { nationell: url.searchParams.has('_kontrakt') });
     atk.logga(handling, atk.grund(), `fhir/${typ}${url.search}`);
-    return { status: 200, body: bundle(base, url, rader.map(r => (vardtillfalle(typ, r) ? vardtillfalleEncounter(db, r, vt.get(r.id)) : encounter(db, r)))) };
+    return { status: 200, body: bundle(base, url, [...rader.map(r => (vardtillfalle(typ, r) ? vardtillfalleEncounter(db, r, vt.get(r.id)) : encounter(db, r))), ...urE]) };
   } else rader = atk.filtrera(rader, handling, { gemensam: GEMENSAM.has(typ) });
   if (ORDINATIONSENHET[typ]) rader = rader.filter(r => { const e = ORDINATIONSENHET[typ](db, r); return !e || atk.filtrera([{ enhet_id: e }], handling, { gemensam: true }).length; });
   // Runda 7, r4: undantag från FHIR, prövat efter behörigheten.

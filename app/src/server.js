@@ -227,7 +227,8 @@ const LASKOPIA_JOURNAL = {
   matvarden: { handling: () => 'las_matvarden', hamta: (atk, p) => ({ ...vitalparametrar.matvardesvy(atk, p), mt: mtPatientvy(atk),
     // Namn och enhet per typ, så att ett mätvärde som registreras under avbrottet kan visas i listan.
     typer: Object.fromEntries(Object.entries(journal.MATTYPER).map(([k, v]) => [k, { namn: v.namn, enhet: v.enhet }])) }) },
-  remisser: { handling: (pers) => (kanRoll(pers, 'las_remiss') ? 'las_remiss' : 'las_remiss_status'), hamta: (atk) => remiss.forPatient(atk) },
+  // Beslut 2026-11-14: läskopian tar inte med avslutade remisser i mellanarkivet.
+  remisser: { handling: (pers) => (kanRoll(pers, 'las_remiss') ? 'las_remiss' : 'las_remiss_status'), hamta: (atk) => remiss.forPatient(atk, { medMellanarkiv: false }) },
 };
 // Varför utlämnandet till läskopian slutade, i loggen.
 const LASKOPIA_SLUT = {
@@ -910,7 +911,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       UNION SELECT enhet_id FROM matvarden WHERE patient_id = ?1 UNION SELECT enhet_id FROM vardkontakter WHERE patient_id = ?1`).all(p.id).map(x => vardenhetFor(db, x.enhet_id)));
     // Runda 14, r4: vårdenheter med handlingar i mellanarkivet räknas också, så att det aktiva valet erbjuds för dem.
     // Runda 15, r3: bara anteckningar och mätvärden, eftersom läkemedelslistan är gemensam och inte kräver ett aktivt val.
-    if (mellanarkiv.finnsTabell(db)) for (const x of db.query("SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ? AND slag IN ('anteckning', 'matvarde')").all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
+    // Beslut 2026-11-14: också vårdkontakter, diagnoser och remisser, som kräver ett aktivt val som i den aktiva journalen.
+    if (mellanarkiv.finnsTabell(db)) for (const x of db.query("SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ? AND slag IN ('anteckning', 'matvarde', 'vardkontakt', 'diagnos', 'remiss')").all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
     const andra = [...enheter].filter(e => e !== min && !sparrar.includes(e));
     const visad = p.skyddad ? val.visa_identitet : true;
     const listning = db.query('SELECT * FROM listningar WHERE patient_id = ?').get(p.id);
@@ -958,7 +960,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const mv = kanRoll(pers, 'las_matvarden') ? journal.synligaMatvarden(atk) : null;
     const kanAnt = kanRoll(pers, 'las_journal') || kanRoll(pers, 'las_omvardnad');
     const ant = kanAnt ? journal.listaAnteckningar(atk).anteckningar : null;
-    const rem = (kanRoll(pers, 'las_remiss') || kanRoll(pers, 'las_remiss_status')) ? remiss.forPatient(atk).remisser : null;
+    const rem = (kanRoll(pers, 'las_remiss') || kanRoll(pers, 'las_remiss_status')) ? remiss.forPatient(atk, { medMellanarkiv: false }).remisser : null;
     const vk = journal.synligaVardkontakter(atk);
     const tidslinje = [
       ...vk.map(v => ({ tid: v.start, typ: 'vardkontakt', rubrik: v.orsak, text: v.plats, enhet: enhetKort(db, v.enhet_id), kalla: v.kalla, kallaEtikett: journal.kallaEtikett(v.kalla, v.start), ref: { typ: 'vardkontakt', id: v.id } })),
@@ -981,7 +983,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const vardstruktur = vardkontakt.oversiktDel(atk, { vk, ant, dia, mv, ord, rem });
     return {
       lakemedel: ord ? ord.filter(lakemedel.aktuell).map(o => lakemedel.ordinationUt(db, o, { historik: false })) : null,
-      diagnoser: dia ? dia.map(d => journal.diagnosUt(db, d)) : null,
+      // Beslut 2026-11-14: tillfälliga diagnoser i mellanarkivet står sist, märkta, men inte i läskopian.
+      diagnoser: dia ? [...dia.map(d => journal.diagnosUt(db, d)), ...(utanMellanarkiv ? [] : mellanarkiv.diagnoser(atk))] : null,
       matvarden: mv ? journal.senastePerTyp(mv).map(m => journal.matvardeUt(db, m)) : null,
       anteckningar: ant ? ant.slice(0, 5) : null,
       remisser: rem ? rem.filter(r => r.status !== 'svar_kvitterat' && r.beslut !== 'avvisad') : null,

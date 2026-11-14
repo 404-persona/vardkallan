@@ -78,7 +78,8 @@ export function index(db, pid) {
   }
   // Runda 15, r3: handlingarna i mellanarkivet, som står i paketets FHIR-fil med id ma-<nummer> (arkiv.fhirJournal).
   const ma = require('./mellanarkiv.js');
-  const TYP = { anteckning: (r) => r.rubrik, matvarde: () => 'Mätvärde', ordination: () => 'Läkemedelsordination', administrering: () => 'Läkemedelsadministrering' };
+  const TYP = { anteckning: (r) => r.rubrik, matvarde: () => 'Mätvärde', ordination: () => 'Läkemedelsordination', administrering: () => 'Läkemedelsadministrering',
+    vardkontakt: () => 'Vårdkontakt', remiss: () => 'Remiss', diagnos: () => 'Diagnos' };
   for (const r of ma.exportRader(db, pid)) {
     const ve = vardenhetFor(db, r.enhet_id);
     ut.push({
