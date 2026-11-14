@@ -12,7 +12,7 @@ export const T = {
   usk: `${Y}undersköterskan skriver observationsanteckningar och ingen annan mall, och sjuksköterskan ser anteckningen`,
   api: `${Y}mallarna i API:t är bara yrkets, och yrkets huvudmall står först`,
   parameter: `${Y}vilka yrken som skriver med vilka mallar är en parameter med fyra ögon, och behörigheten går inte att vidga`,
-  uskFormular: `${Y}undersköterskan fyller bara i formulär som uttryckligen är gjorda för yrket`,
+  uskFormular: `${Y}undersköterskan fyller bara i de formulär som vårdgivaren har gett yrket`,
   mall: `${O}omvårdnadsanteckningen har processens delar och statusområden med egna namn, utan VIPS-modellens namn`,
   forslag: `${O}systemet föreslår statusområden ur vårdplanen, förra anteckningen, NEWS2, smärtan och vikten, med förklaring`,
   forslagSparr: `${O}förslagen räknas bara på den egna vårdenhetens uppgifter: en spärrad eller annan vårdenhet ändrar inte svaret`,
@@ -26,9 +26,11 @@ export const T = {
   dubbletter: `${N}inga två sökord har samma kod i Snomed CT`,
   status: `${N}Status har en avsnittskod, och Planering och Aktivitet skiljs från Åtgärd och Fysisk aktivitet`,
   begrepp: `${N}omvårdnadsproblemen och de nya sökorden har giltiga begrepp i den internationella utgåvan`,
+  uskFormularParameter: 'Undersköterskans behörighet i runda 15 > undersköterskan fyller i de formulär som vårdgivaren har gett yrket, fallriskbedömningen från början, och ett formulär som yrket inte har stoppas',
+  uskSmal: 'Undersköterskans behörighet i runda 15 > undersköterskans behörigheter är desamma som före runda 15, med bara den smala handlingen för anteckningar tillagd',
   seed: `${S}seeden har undersköterskans, sjuksköterskans och fysioterapeutens anteckningar med de nya mallarna, och en ny sandlåda fungerar`,
 };
-export const TESTER_YRKEN = [T.usk, T.api, T.parameter, T.uskFormular];
+export const TESTER_YRKEN = [T.usk, T.api, T.parameter, T.uskFormular, T.uskFormularParameter, T.uskSmal];
 export const TESTER_PROCESS = [T.mall, T.forslag, T.forslagSparr, T.resultat, T.resultatKrav, T.processApi, T.fhir];
 export const TESTER_FORIFYLL = [T.fallrisk, T.fallriskForifyll, T.news2];
 export const TESTER_FACKSPRAK = [T.dubbletter, T.status, T.begrepp];

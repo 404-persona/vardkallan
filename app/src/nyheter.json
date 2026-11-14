@@ -13,7 +13,7 @@
           "omfattning": "stor",
           "var": null,
           "rubrik": "Du dokumenterar dina observationer i journalen",
-          "text": "Undersköterskan skriver en kort observationsanteckning med det som har observerats och det som har gjorts. Systemet väljer mallen åt dig. Sjuksköterskan ser anteckningen i sitt underlag när hon skriver nästa omvårdnadsanteckning, så att inget behöver föras vidare muntligt."
+          "text": "Undersköterskan skriver en kort observationsanteckning med det som har observerats och det som har gjorts, och fyller i fallriskbedömningen. Systemet väljer mallen åt dig. Sjuksköterskan ser anteckningen i sitt underlag när hon skriver nästa omvårdnadsanteckning, så att inget behöver föras vidare muntligt."
         },
         {
           "id": "omvardnadsprocess-1-5-0",

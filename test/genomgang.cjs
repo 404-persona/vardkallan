@@ -1243,7 +1243,8 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await gaTill(page, '#/patient/p01/journal/ny');
       await forvanta(page, '.ant-form h2', 'Ny anteckning');
       const mallar = await page.locator('select[name="typ"] option').allTextContents();
-      if (JSON.stringify(mallar) !== JSON.stringify(['Observationsanteckning'])) throw new Error(`mallar ${mallar}`);
+      // Beslut 2026-11-14: och fallriskbedömningen, som vårdgivaren ger yrket i samma parameter.
+      if (JSON.stringify(mallar) !== JSON.stringify(['Observationsanteckning', 'Fallriskbedömning'])) throw new Error(`mallar ${mallar}`);
       await page.fill('textarea[data-sokord="Observation"]', 'Blek efter frukost, säger att hon mår illa.');
       await page.fill('textarea[data-sokord="Utförd åtgärd"]', 'Mätte puls och syremättnad och sa till sjuksköterskan.');
       await page.click('.ant-form [data-signera]');

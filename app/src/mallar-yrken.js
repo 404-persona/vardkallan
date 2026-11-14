@@ -44,15 +44,16 @@ const plural = { lakare: 'läkare', sjukskoterska: 'sjuksköterskor', underskote
 export const STANDARD = {
   lakare: ['Daganteckning', 'Mottagningsanteckning', 'Akutanteckning', 'Inskrivningsanteckning', 'Epikris', 'Omvårdnadsanteckning', 'Tobaksvanor', 'Levnadsvanor', 'Donationsanteckning'],
   sjukskoterska: ['Omvårdnadsanteckning', 'Tobaksvanor', 'Levnadsvanor'],
-  underskoterska: ['Observationsanteckning'],
+  // Beslut 2026-11-14: undersköterskan fyller i fallriskbedömningen från början.
+  underskoterska: ['Observationsanteckning', 'Fallriskbedömning'],
   fysioterapeut: ['Fysioterapianteckning', 'Tobaksvanor', 'Levnadsvanor'],
   arbetsterapeut: ['Arbetsterapianteckning'],
   kurator: ['Kuratorsanteckning'],
   dietist: ['Dietistanteckning'],
 };
-// Yrken som bara skriver med de mallar som står i deras lista, och inte med systemförvaltningens egna mallar eller
-// formulär som inte uttryckligen är gjorda för yrket. Undersköterskans dokumentation är avgränsad, och vårdgivaren
-// lägger till en mall för yrket med parametern.
+// Yrken som bara skriver med de mallar och formulär som står i deras lista, och inte med systemförvaltningens egna
+// mallar. Undersköterskans dokumentation är avgränsad, och vårdgivaren lägger till en mall eller ett formulär för
+// omvårdnad med parametern (beslut 2026-11-14).
 export const ENDAST_LISTADE = new Set(['underskoterska']);
 
 const journal = () => require('./journal.js');
@@ -62,6 +63,12 @@ const konfiguration = () => require('./konfiguration.js');
 const harBehorighet = (yrke, kategori) => (kategori === 'omvardnad' ? ['skriv_omvardnad', 'skriv_observation'] : ['skriv_journal']).some(h => (ROLLER[yrke] ?? []).includes(h));
 // De inbyggda mallarna, efter typ.
 const inbyggda = () => new Map(journal().MALLAR.map(m => [m.typ, m]));
+// Ett aktivt formulär med namnet, som en mall { typ, kategori }, eller null.
+function formularMall(db, namn) {
+  if (!db || !db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'formular'").get()) return null;
+  const r = db.query("SELECT namn, definition FROM formular WHERE lower(namn) = lower(?) AND status = 'aktiv'").get(String(namn));
+  return r ? { typ: r.namn, kategori: JSON.parse(r.definition).kategori, formular: true } : null;
+}
 // Yrken som finns som roller och kan skriva anteckningar, och därför har en parameter.
 export const yrkenMedParameter = () => Object.keys(STANDARD).filter(y => Object.hasOwn(ROLLER, y));
 
@@ -71,12 +78,15 @@ export function yrkesparameter(yrke) {
     omrade: 'strukturerad', rubrik: `Mallar som ${plural[yrke]} skriver med`, enhet: 'mallar', typ: 'lista', standard: [...STANDARD[yrke]], tomTillaten: true,
     anvands: 'mallar-yrken.js, journal.js och anteckningsformuläret',
     beskrivning: `Mallarna som ${plural[yrke]} får skriva anteckningar med, i den ordning de visas. Den första är yrkets huvudmall, som systemet väljer när inget annat passar bättre. En mall kan bara ges till ett yrke som har behörighet att skriva i mallens kategori.`,
-    provaLista: (lista) => {
+    // En mall är en av journalens inbyggda mallar eller ett aktivt formulär. Formulären prövas mot sandlådans formulär
+    // när databasen finns (förhandsvisning, förslag och godkännande).
+    provaLista: (lista, { db = null } = {}) => {
       const finns = inbyggda();
       const sett = new Set();
       for (const typ of lista) {
-        const m = [...finns.values()].find(x => x.typ.toLocaleLowerCase('sv') === typ.toLocaleLowerCase('sv'));
-        if (!m) return `${typ} är ingen av journalens mallar. Mallarna är ${[...finns.keys()].join(', ')}.`;
+        const m = [...finns.values()].find(x => x.typ.toLocaleLowerCase('sv') === typ.toLocaleLowerCase('sv')) ?? formularMall(db, typ);
+        if (!m && !db) continue;
+        if (!m) return `${typ} är ingen av journalens mallar eller formulär. Mallarna är ${[...finns.keys()].join(', ')}, och formulären står under Formulär.`;
         if (sett.has(m.typ)) return `${m.typ} står två gånger.`;
         sett.add(m.typ);
         if (!harBehorighet(yrke, m.kategori)) {
@@ -85,7 +95,7 @@ export function yrkesparameter(yrke) {
       }
       return null;
     },
-    normalisera: (lista) => { const finns = [...inbyggda().keys()]; return lista.map(t => finns.find(x => x.toLocaleLowerCase('sv') === t.toLocaleLowerCase('sv')) ?? t); },
+    normalisera: (lista, { db = null } = {}) => { const finns = [...inbyggda().keys()]; return lista.map(t => finns.find(x => x.toLocaleLowerCase('sv') === t.toLocaleLowerCase('sv')) ?? formularMall(db, t)?.typ ?? t); },
     effekt: (db, nytt, forra) => {
       const ut = [];
       for (const t of nytt.filter(x => !forra.includes(x))) ut.push(`${YRKEN[yrke]} kan skriva ${t}.`);
@@ -111,7 +121,8 @@ export function mallarForYrke(db, yrke, nu = new Date()) {
 export function far(db, personal, mall, nu = new Date()) {
   if (!personal || !mall) return false;
   if (inbyggda().has(mall.typ) && !mall.egen && !mall.formular) return mallarForYrke(db, personal.yrke, nu).includes(mall.typ);
-  if (ENDAST_LISTADE.has(personal.yrke)) return Boolean(mall.formular?.definition?.roller?.includes(personal.yrke));
+  // Beslut 2026-11-14: ett formulär för omvårdnad som vårdgivaren har gett yrket i samma parameter.
+  if (ENDAST_LISTADE.has(personal.yrke)) return Boolean(mall.formular) && mall.kategori === 'omvardnad' && mallarForYrke(db, personal.yrke, nu).includes(mall.typ);
   return true;
 }
 
@@ -128,6 +139,6 @@ export function provaMall(db, personal, mall) {
 export function mallarForPerson(db, personal, mallar) {
   const ordning = personal ? mallarForYrke(db, personal.yrke) : [];
   const tillatna = mallar.filter(m => far(db, personal, m));
-  const plats = (m) => { const i = m.egen || m.formular ? -1 : ordning.indexOf(m.typ); return i < 0 ? ordning.length : i; };
+  const plats = (m) => { const i = m.egen ? -1 : ordning.indexOf(m.typ); return i < 0 ? ordning.length : i; };
   return tillatna.map((m, i) => ({ m, i })).sort((a, b) => plats(a.m) - plats(b.m) || a.i - b.i).map(({ m }) => (ordning[0] === m.typ ? { ...m, huvudmall: true } : m));
 }

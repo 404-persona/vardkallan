@@ -54,7 +54,7 @@ describe('Yrkesmallar', () => {
   test('mallarna i API:t är bara yrkets, och yrkets huvudmall står först', async () => {
     const mallar = async (pid) => { const k = klient(app); await k.logga(pid); return (await k.get('/api/mallar')).data; };
     const usk = await mallar('usk-kard');
-    expect(usk.map(m => m.typ)).toEqual(['Observationsanteckning']);
+    expect(usk.map(m => m.typ)).toEqual(['Observationsanteckning', 'Fallriskbedömning']);
     expect(usk[0]).toMatchObject({ huvudmall: true, sokord: ['Observation', 'Utförd åtgärd'] });
     const fys = await mallar('fys-kard');
     expect(fys[0]).toMatchObject({ typ: 'Fysioterapianteckning', huvudmall: true, sokord: ['Funktion', 'Aktivitet', 'Mål', 'Åtgärd', 'Resultat'] });
@@ -75,16 +75,16 @@ describe('Yrkesmallar', () => {
   test('vilka yrken som skriver med vilka mallar är en parameter med fyra ögon, och behörigheten går inte att vidga', () => {
     const db = byggSeed(NU);
     const nyckel = 'journal.yrkesmallar.underskoterska';
-    expect(konfiguration.parametrar()[nyckel]).toMatchObject({ omrade: 'strukturerad', typ: 'lista', standard: ['Observationsanteckning'] });
-    expect(konfiguration.varde(db, nyckel)).toEqual(['Observationsanteckning']);
+    expect(konfiguration.parametrar()[nyckel]).toMatchObject({ omrade: 'strukturerad', typ: 'lista', standard: ['Observationsanteckning', 'Fallriskbedömning'] });
+    expect(konfiguration.varde(db, nyckel)).toEqual(['Observationsanteckning', 'Fallriskbedömning']);
     // En läkaranteckning kan inte ges till undersköterskan, och en mall som inte finns förklaras.
     expect(konfiguration.prova(nyckel, 'Observationsanteckning, Daganteckning').varfor).toContain('behörighet');
-    expect(konfiguration.prova(nyckel, 'Observationsanteckning, Påhittad').varfor).toContain('ingen av journalens mallar');
+    expect(konfiguration.forhandsvisa(db, personal(db, 'sysf'), { nyckel, varde: 'Observationsanteckning, Påhittad' }).varfor).toContain('ingen av journalens mallar');
     expect(konfiguration.prova('journal.yrkesmallar.sjukskoterska', 'Omvårdnadsanteckning, Epikris').varfor).toContain('behörighet');
     expect(konfiguration.prova(nyckel, 'observationsanteckning, omvårdnadsanteckning')).toEqual({ ok: true, varde: ['Observationsanteckning', 'Omvårdnadsanteckning'] });
     // Ändringen föreslås av en systemförvaltare och gäller först när en annan har godkänt den.
     const f = konfiguration.foresla(db, personal(db, 'sysf'), { nyckel, varde: 'Observationsanteckning, Omvårdnadsanteckning', giltigFran: idag(), motivering: 'Undersköterskorna på avdelningen skriver omvårdnadsanteckningar.' });
-    expect(yrken.mallarForYrke(db, 'underskoterska')).toEqual(['Observationsanteckning']);
+    expect(yrken.mallarForYrke(db, 'underskoterska')).toEqual(['Observationsanteckning', 'Fallriskbedömning']);
     expect(fel(() => konfiguration.godkann(db, personal(db, 'sysf'), f.andring.id)).status).toBe(403);
     konfiguration.godkann(db, personal(db, 'sysf-2'), f.andring.id);
     expect(yrken.mallarForYrke(db, 'underskoterska')).toEqual(['Observationsanteckning', 'Omvårdnadsanteckning']);
@@ -95,10 +95,10 @@ describe('Yrkesmallar', () => {
     expect(fel(() => journal.skapaAnteckning(atk(db, 'usk-kard', 'p04'), { typ: 'Omvårdnadsanteckning', sokord: sokordAv({ Resultat: 'x' }), process: { resultat: [{ malId: mal, status: 'uppnatt' }] } })).status).toBe(403);
   });
 
-  test('undersköterskan fyller bara i formulär som uttryckligen är gjorda för yrket', () => {
+  test('undersköterskan fyller bara i de formulär som vårdgivaren har gett yrket', () => {
     const db = byggSeed(NU);
     const p = personal(db, 'usk-kard');
-    expect(fm.mallarFor(db, p).map(m => m.typ)).toEqual([]);
+    expect(fm.mallarFor(db, p).map(m => m.typ)).toEqual(['Fallriskbedömning']);
     expect(fel(() => fm.forifyllnad(atk(db, 'usk-kard', 'p01'), 'sar')).status).toBe(403);
     expect(fel(() => journal.skapaAnteckning(atk(db, 'usk-kard', 'p01'), { typ: 'Sårdokumentation', formular: { lage: [{ vy: 'bak', x: 56, y: 95 }], sartyp: 'trycksar' } })).status).toBe(403);
     // Sjuksköterskan fyller i båda som förut.

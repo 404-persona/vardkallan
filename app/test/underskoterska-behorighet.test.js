@@ -5,6 +5,9 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { ROLLER, kanRoll } from '../src/atkomst.js';
 import * as bilder from '../src/bilder.js';
+import * as journal from '../src/journal.js';
+import * as fm from '../src/formularmotor.js';
+import * as konfiguration from '../src/konfiguration.js';
 import { byggSeed } from '../src/db.js';
 import { atk, personal, testserver, klient, sandlada } from './hjalp.js';
 
@@ -43,10 +46,11 @@ describe('Undersköterskans behörighet i runda 15', () => {
     if (m) expect((await k.post(`/api/media/${m.id}/annoteringar`, {})).status).toBe(403);
   });
 
-  test('formulären och omvårdnadsprocessen är stängda för undersköterskan, men observationsanteckningen går att skriva, ändra och signera', async () => {
+  test('sårdokumentationen och omvårdnadsprocessen är stängda för undersköterskan, men observationsanteckningen går att skriva, ändra och signera', async () => {
     const k = klient(app);
     await k.logga('usk-kard');
-    expect((await k.get('/api/patient/p01/formular/fallrisk/forifyllnad')).status).toBe(403);
+    // Beslut 2026-11-14: undersköterskan fyller i de formulär som vårdgivaren har gett yrket. Sårdokumentationen har hon inte.
+    expect((await k.get('/api/patient/p01/formular/sar/forifyllnad')).status).toBe(403);
     expect((await k.get('/api/patient/p01/omvardnadsprocess')).status).toBe(403);
     expect((await k.post('/api/patient/p01/anteckningar', { typ: 'Tobaksvanor', tobak: {} })).status).toBe(403);
     expect((await k.post('/api/patient/p01/anteckningar', { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: 'x' }] })).status).toBe(403);
@@ -60,5 +64,34 @@ describe('Undersköterskans behörighet i runda 15', () => {
     const beh = JSON.stringify(sess);
     expect(beh).toContain('skriv_observation');
     expect(beh).not.toContain('skriv_omvardnad');
+  });
+
+  // Beslut 2026-11-14: formulär för observation och omvårdnad, styrda av samma parameter för yrken som mallarna.
+  test('undersköterskan fyller i de formulär som vårdgivaren har gett yrket, fallriskbedömningen från början, och ett formulär som yrket inte har stoppas', async () => {
+    const db = byggSeed();
+    const usk = personal(db, 'usk-kard');
+    expect(konfiguration.varde(db, 'journal.yrkesmallar.underskoterska')).toEqual(['Observationsanteckning', 'Fallriskbedömning']);
+    expect(fm.mallarFor(db, usk).map(m => m.typ)).toEqual(['Fallriskbedömning']);
+    const a = atk(db, 'usk-kard', 'p01', {}, 'skriv_observation');
+    const f = fm.forifyllnad(a, 'fallrisk');
+    expect(f.varden.alder.varde).toBeGreaterThan(60);
+    expect(fel(() => fm.forifyllnad(a, 'sar'))?.status).toBe(403);
+    const ny = journal.skapaAnteckning(a, { typ: 'Fallriskbedömning', formular: { alder: f.varden.alder.varde, fall: 'nej', lakemedel: 'ett', syn: 'nej', gang: 'hjalpmedel', forvirring: 'nej' } });
+    expect(ny).toMatchObject({ kategori: 'omvardnad', typ: 'Fallriskbedömning' });
+    expect(journal.signera(a, journal.hamtaAnteckningRad(db, ny.id)).status).toBe('signerad');
+    expect(fel(() => journal.skapaAnteckning(a, { typ: 'Sårdokumentation', formular: { lage: [{ vy: 'bak', x: 56, y: 95 }], sartyp: 'trycksar' } }))?.status).toBe(403);
+    // Den smala behörigheten öppnar inget annat: skriv_omvardnad har hon fortfarande inte.
+    expect(kanRoll(usk, 'skriv_omvardnad')).toBe(false);
+    // Parametern prövar formulären mot sandlådans aktiva formulär och deras kategori.
+    const nyckel = 'journal.yrkesmallar.underskoterska';
+    const sysf = personal(db, 'sysf');
+    expect(konfiguration.forhandsvisa(db, sysf, { nyckel, varde: 'Observationsanteckning, Sårdokumentation' }).ok).toBe(true);
+    expect(konfiguration.forhandsvisa(db, sysf, { nyckel, varde: 'Observationsanteckning, Påhittat formulär' }).varfor).toContain('ingen av journalens mallar eller formulär');
+    // I API:t.
+    const k = klient(app);
+    await k.logga('usk-kard');
+    expect((await k.get('/api/mallar')).data.map(m => m.typ)).toEqual(['Observationsanteckning', 'Fallriskbedömning']);
+    expect((await k.get('/api/patient/p01/formular/fallrisk/forifyllnad')).status).toBe(200);
+    expect((await k.get('/api/patient/p01/formular/sar/forifyllnad')).status).toBe(403);
   });
 });

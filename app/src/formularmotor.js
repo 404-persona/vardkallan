@@ -24,7 +24,7 @@ import * as R from '../public/js/formularmotor-regler.js';
 import { SCHEMA_FORMULAR } from './schema-runda10-r3.js';
 // Runda 15, r5 (F7): läkemedel som ökar risken för fall (fallrisklakemedel.js) och yrken med avgränsad dokumentation.
 import * as fallrisk from './fallrisklakemedel.js';
-import { ENDAST_LISTADE } from './mallar-yrken.js';
+import { ENDAST_LISTADE, mallarForYrke } from './mallar-yrken.js';
 
 const harTabell = (db, namn = 'formular') => Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(namn));
 export function sakra(db) { db.exec(SCHEMA_FORMULAR); }
@@ -282,10 +282,16 @@ export function byggstenar(db, personal) {
 // Får personen fylla i formuläret? Kategorin prövas av behörighetsmotorn som för andra anteckningar, och yrkena och
 // vårdenheterna här.
 function far(db, personal, def) {
+  if (!personal) return false;
+  // Runda 15, r5 (beslut 2026-11-14): ett yrke med avgränsad dokumentation (undersköterskan) fyller i de formulär för
+  // omvårdnad som vårdgivaren har gett yrket i parametern för yrkets mallar, med den smala behörigheten
+  // skriv_observation. Parametern avgör för yrket, och vårdenheterna i formuläret gäller som för andra.
+  if (ENDAST_LISTADE.has(personal.yrke)) {
+    return def.kategori === 'omvardnad' && kanRoll(personal, 'skriv_observation') && mallarForYrke(db, personal.yrke).includes(def.namn)
+      && (!def.enheter || def.enheter.includes(vardenhetFor(db, personal.enhet_id)));
+  }
   const handling = def.kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal';
-  if (!personal || !kanRoll(personal, handling)) return false;
-  // Runda 15, r5: ett yrke med avgränsad dokumentation fyller bara i formulär som uttryckligen är gjorda för yrket.
-  if (ENDAST_LISTADE.has(personal.yrke) && !def.roller?.includes(personal.yrke)) return false;
+  if (!kanRoll(personal, handling)) return false;
   if (def.roller && !def.roller.includes(personal.yrke)) return false;
   if (def.enheter && !def.enheter.includes(vardenhetFor(db, personal.enhet_id))) return false;
   return true;
@@ -403,7 +409,8 @@ export function forifyllnad(atk, kod) {
   if (!r) throw new Fel(404, 'Formuläret finns inte.', 'saknas');
   const def = JSON.parse(r.definition);
   if (!far(atk.db, atk.personal, def)) throw new Fel(403, 'Din yrkesroll fyller inte i formuläret.', 'nekad');
-  atk.krav(def.kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
+  // Runda 15, r5: samma behörighet som anteckningen, också den smala för undersköterskan (journal.skrivHandling).
+  atk.krav(journalModul().skrivHandling(def.kategori, atk.personal));
   const v = forifyllda(atk, def, r.kod);
   return { formular: { id: r.id, kod: r.kod, version: r.version }, varden: Object.fromEntries(Object.entries(v).map(([id, x]) => [id, { varde: x.varde, kalla: x.kalla }])) };
 }
