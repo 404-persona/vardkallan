@@ -430,10 +430,22 @@ function arkivAnteckningFull(db, a) {
   return { id: a.id, typ: a.typ, datum: a.signerad_tid, ...enhetUt(db, a.enhet_id), forfattare: arkivForfattare(db, res.author?.[0]), signeradAv: null, version: 1,
     rattelseOrsak: null, ersatt: null, sokord: (res.section ?? []).map(s => ({ sokord: String(s.title ?? ''), text: avHtml(s.text?.div) })), kallaEtikett: ARKIV_ETIKETT, arkiv: true };
 }
+// Beslut 2026-11-14 (runda 15, r3): om en handling i mellanarkivet visas i Min journal. Invånarens FHIR-API lämnar ut
+// precis det som visas här (fhir.js). Anteckningarna följer visningsreglerna, och patientens egna mätningar och värden
+// från utrustning som vården inte har godkänt visas inte. Diagnoser, läkemedel, remisser och vårdkontakter visas
+// direkt. Doserna visas inte, som i dag.
+const ARKIV_I_MIN_JOURNAL = new Set(['anteckning', 'matvarde', 'diagnos', 'ordination', 'remiss', 'vardkontakt']);
+export function arkivVisas(db, r, nu = new Date()) {
+  if (!r || !ARKIV_I_MIN_JOURNAL.has(r.slag)) return false;
+  if (r.slag === 'anteckning') return anteckningVisning(db, arkivAnteckning(r), nu).visas;
+  if (r.slag === 'matvarde') { const res = resursAv(r); return taggAv(res, KALLA_SYSTEM) !== 'patient' && res.status !== 'preliminary'; }
+  return true;
+}
+export const arkivForInvanare = (db, pid, slag, nu = new Date()) => arkivRader(db, pid, slag).filter(r => arkivVisas(db, r, nu));
 function arkivMatvarden(db, pid) {
   return arkivRader(db, pid, 'matvarde').map(r => ({ r, res: resursAv(r) }))
     // Patientens egna mätningar och värden från utrustning som vården inte har godkänt visas inte, som i dag.
-    .filter(({ res }) => taggAv(res, KALLA_SYSTEM) !== 'patient' && res.status !== 'preliminary')
+    .filter(({ r }) => arkivVisas(db, r))
     .map(({ r, res }) => {
       const varde = res.component?.length ? res.component.map(c => c.valueQuantity?.value).join('/') : res.valueQuantity?.value ?? res.valueCodeableConcept?.text ?? null;
       const enhet = res.component?.[0]?.valueQuantity?.unit ?? res.valueQuantity?.unit ?? null;

@@ -100,4 +100,99 @@ describe('Min journal och mellanarkivet', () => {
     // En annan patients journal är som en som inte finns, också för det som ligger i mellanarkivet.
     expect((await v.get('/api/min/journal/p01/anteckningar')).status).toBe(404);
   }, 30_000);
+
+  // Beslut 2026-11-14 (runda 15, r3): invånarens FHIR-API med samma regler som Min journal.
+  const urFhir = (b) => (b?.entry ?? []).map(e => e.resource).filter(r => String(r.id).startsWith('ma-'));
+  const LAGRING = 'https://vardkallan.404haven.se/fhir/CodeSystem/lagring';
+
+  test('invånarens FHIR-API tar med det som Min journal visar ur mellanarkivet, märkt med samma tagg, och inget som Min journal inte visar', async () => {
+    const k = await invanare('inv-p01');
+    const d = db(k);
+    gammalKontakt(d);
+    const ins = d.query("INSERT INTO matvarden (patient_id, enhet_id, typ, varde, varde_num, matt_enhet, tid, kalla) VALUES ('p01', 'uso-kard', 'puls', ?, ?, '/min', ?, ?)");
+    ins.run('123', 123, '2011-05-01T08:00:00.000Z', 'patient');
+    ins.run('64', 64, '2011-05-02T08:00:00.000Z', 'vardkallan');
+    overfor(d);
+    // En anteckningstyp som inte visas i Min journal.
+    const dold = d.query("SELECT id FROM mellanarkiv_handlingar WHERE slag = 'anteckning' AND enhet_id = 'uso-kard'").get().id;
+    d.query("INSERT INTO visningsregler (enhet_id, anteckningstyp, visning, dagar, motivering) VALUES ('uso-kard', 'Mottagningsanteckning', 'visas_inte', NULL, 'Test av regel')").run();
+    const min = async (del) => (await k.get(`/api/min/journal/p01/${del}`)).data;
+    const minIdn = {
+      Composition: arkiverade((await min('anteckningar')).anteckningar),
+      Observation: (({ provsvar, matvarden }) => [...arkiverade(provsvar), ...arkiverade(matvarden)])(await min('provsvar')),
+      Condition: arkiverade((await min('diagnoser')).diagnoser),
+      MedicationRequest: arkiverade((await min('lakemedel')).tidigare),
+      ServiceRequest: arkiverade((await min('remisser')).remisser),
+      Encounter: arkiverade((await min('vardkontakter')).vardkontakter),
+    };
+    const allt = (await k.get('/fhir/Patient/p01/$everything')).data;
+    for (const [typ, lista] of Object.entries(minIdn)) {
+      const sok = await k.get(`/fhir/${typ}?patient=p01`);
+      expect([typ, sok.status]).toEqual([typ, 200]);
+      const res = urFhir(sok.data);
+      // Exakt samma handlingar som Min journal visar, varken fler eller färre.
+      expect([typ, res.map(r => r.id).sort()]).toEqual([typ, lista.map(x => x.id).sort()]);
+      expect([typ, urFhir(allt).filter(r => r.resourceType === typ).map(r => r.id).sort()]).toEqual([typ, lista.map(x => x.id).sort()]);
+      // Samma tagg som för personalen.
+      for (const r of res) {
+        const rad = d.query('SELECT * FROM mellanarkiv_handlingar WHERE id = ?').get(Number(r.id.slice(3)));
+        expect(r.meta.tag.find(t => t.system === LAGRING)).toEqual(mellanarkiv.fhirResurs(d, rad).meta.tag.find(t => t.system === LAGRING));
+        expect(r.meta.source).toBe(`urn:vardkallan:mellanarkiv:${rad.paket_id}`);
+      }
+    }
+    expect(minIdn.Condition.length).toBeGreaterThan(0);
+    expect(minIdn.MedicationRequest.length).toBeGreaterThan(0);
+    expect(minIdn.Encounter.length).toBeGreaterThan(0);
+    expect(minIdn.ServiceRequest.length).toBeGreaterThan(0);
+    // Det som Min journal inte visar lämnas inte ut: anteckningen med visningsregeln, patientens egen mätning och doserna.
+    expect(urFhir(allt).map(r => r.id)).not.toContain(`ma-${dold}`);
+    expect((await k.get(`/fhir/Composition/ma-${dold}`)).status).toBe(404);
+    const egen = d.query("SELECT id FROM mellanarkiv_handlingar WHERE slag = 'matvarde' AND typ = 'puls' AND datum = '2011-05-01T08:00:00.000Z'").get().id;
+    expect((await k.get(`/fhir/Observation/ma-${egen}`)).status).toBe(404);
+    expect(urFhir(allt).some(r => r.resourceType === 'MedicationAdministration')).toBe(false);
+    const dos = d.query("SELECT id FROM mellanarkiv_handlingar WHERE slag = 'administrering'").get().id;
+    expect((await k.get(`/fhir/MedicationAdministration/ma-${dos}`)).status).toBe(404);
+    // En handling av en annan typ än adressen finns inte.
+    const dia = minIdn.Condition[0].id;
+    expect((await k.get(`/fhir/Encounter/${dia}`)).status).toBe(404);
+    // Läsningen på id: samma resurs, och den loggas på journalen.
+    const las = await k.get(`/fhir/Condition/${dia}`);
+    expect(las.status).toBe(200);
+    expect(las.data.meta.tag.some(t => t.system === LAGRING && t.code === 'mellanarkiv')).toBe(true);
+    expect(d.query('SELECT * FROM atkomstlogg WHERE resurs = ? ORDER BY id DESC').get(`fhir/Condition/${dia}`)).toMatchObject({ invanare_id: 'inv-p01', patient_id: 'p01' });
+    // Ingen resurs ur mellanarkivet har personalens id eller remissens remitterande läkare.
+    expect(JSON.stringify(urFhir(allt))).not.toMatch(/Practitioner\//);
+    expect(urFhir(allt).filter(r => r.resourceType === 'ServiceRequest').every(r => !r.requester)).toBe(true);
+  }, 30_000);
+
+  test('invånarens FHIR-API: ett ombud får inget ur mellanarkivet, och vårdnadshavaren får barnets äldre uppgifter men inget ur en annan journal', async () => {
+    const o = await invanare('inv-om01');
+    const od = db(o);
+    gammalKontakt(od);
+    overfor(od);
+    const p01 = od.query("SELECT id FROM mellanarkiv_handlingar WHERE patient_id = 'p01' AND slag = 'diagnos'").get().id;
+    for (const typ of ['Composition', 'Observation', 'Condition', 'MedicationRequest', 'ServiceRequest', 'Encounter']) {
+      const r = await o.get(`/fhir/${typ}?patient=p01`);
+      expect([typ, r.status]).toEqual([typ, 403]);
+      expect(urFhir(r.data)).toEqual([]);
+    }
+    expect((await o.get('/fhir/Patient/p01/$everything')).status).toBe(403);
+    // En handling på id svarar som en som inte finns.
+    expect((await o.get(`/fhir/Condition/ma-${p01}`)).status).toBe(404);
+    // Vårdnadshavaren för Leo (p09).
+    const v = await invanare('inv-vh01');
+    const d = db(v);
+    gammalKontakt(d, 'p09');
+    gammalKontakt(d, 'p01');
+    overfor(d);
+    const vk = urFhir((await v.get('/fhir/Encounter?patient=p09')).data);
+    expect(vk.map(r => r.reasonCode?.[0]?.text)).toContain('Halsont och feber');
+    expect(vk.every(r => r.subject?.reference === 'Patient/p09')).toBe(true);
+    const allt = (await v.get('/fhir/Patient/p09/$everything')).data;
+    expect(urFhir(allt).some(r => r.resourceType === 'Condition' && r.code?.coding?.[0]?.code === 'J06.9')).toBe(true);
+    expect(JSON.stringify(urFhir(allt))).not.toContain('Patient/p01');
+    const annan = d.query("SELECT id FROM mellanarkiv_handlingar WHERE patient_id = 'p01' AND slag = 'diagnos'").get().id;
+    expect((await v.get(`/fhir/Condition/ma-${annan}`)).status).toBe(404);
+    expect((await v.get('/fhir/Condition?patient=p01')).status).toBe(404);
+  }, 30_000);
 });
