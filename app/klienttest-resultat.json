@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-13T08:53:50.927Z",
-  "bas": "http://127.0.0.1:18140",
+  "tid": "2026-11-14T16:05:29.186Z",
+  "bas": "http://127.0.0.1:18154",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "fbfad8053070c0f5cab8084ef337295aba97a2513e543ddbdea4b4aac780435d",
+  "gransnittHash": "0cf3c064228f949c6cb42d291fd670a3e397bb96e534c4a351dd9f6a5f8c6a00",
   "tester": [
     {
       "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
@@ -94,6 +94,10 @@
     },
     {
       "namn": "Gränssnitt > Avbrott > en dos som någon annan gav under avbrottet blir en konflikt som sjuksköterskan avgör, och dosen sparas inte två gånger",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > ett utkast som skrivs när avbrottet börjar sparas krypterat i kön och blir ett utkast i journalen när servern svarar",
       "status": "grön"
     },
     {
