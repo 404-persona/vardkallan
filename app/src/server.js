@@ -2516,7 +2516,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
   // Runda 15, r2.
-  r15r2Rutter({ rutt, kravInloggad, medPatient });
+  r15r2Rutter({ rutt, kravInloggad, medPatient, valFor });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.

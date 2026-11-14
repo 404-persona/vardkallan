@@ -24,7 +24,7 @@ export function lage(db, nu = new Date()) {
   };
 }
 
-export function registreraRutter({ rutt, kravInloggad, medPatient }) {
+export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Runda 15, r2, andra omgången: makulering av en genomförd vårdkontakt som har registrerats på fel patient.
   const medKontakt = (c, id, fn) => {
     kravInloggad(c);
@@ -32,7 +32,7 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
     return medPatient(c, v.patient_id, 'registrera_vardkontakt', (atk) => fn(atk, v));
   };
   rutt('GET', '/api/vardkontakt/:id/makulering', (c, id) => medKontakt(c, id, (atk, v) => makulering.forhandsvisa(atk, v)));
-  rutt('POST', '/api/vardkontakt/:id/makulera', (c, id) => medKontakt(c, id, (atk, v) => makulering.makulera(atk, v, c.body)));
+  rutt('POST', '/api/vardkontakt/:id/makulera', (c, id) => medKontakt(c, id, (atk, v) => makulering.makulera(atk, v, c.body, { valFor: (pid) => valFor(c.s, pid) })));
   rutt('GET', '/api/nationella-tjanster', (c) => { kravForvaltare(c, kravInloggad); return lage(c.db); });
   // Skickar allt som väntar nu, utan att vänta på nästa försök.
   rutt('POST', '/api/nationella-tjanster/skicka', (c) => {

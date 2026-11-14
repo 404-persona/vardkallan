@@ -13,7 +13,8 @@
 //     återbetalas först i kassan.
 //   - På fel patient står kvar att en vårdkontakt makulerades, när, av vem och varför, men ingenting om den andra
 //     patienten. Kopplingen mellan de två finns bara i åtkomstloggen, med samma referens på båda patienterna.
-//   - En makulerad kontakt ger ingen vårdrelation, och engagemangsindex rättas av sig självt för båda patienterna.
+//   - En makulerad kontakt ger ingen vårdrelation, och inte heller en flyttad. Engagemangsindex rättas av sig självt för
+//     båda patienterna.
 //   - Ett vårdtillfälle och en planerad kontakt makuleras inte här: en planerad kontakt avbokas, och ett vårdtillfälle
 //     rättas för sig.
 import { Fel, iso } from './db.js';
@@ -116,32 +117,58 @@ function flytta(db, tabell, ids, fran, till) {
   }
 }
 
-// Rätt patient ur numret, med samma uppslag som när en patient registreras. Ett nummer som inte går att använda ger samma
-// svar. Rätt patient behöver inte ha någon vårdrelation till vårdenheten än: besöket har ju gjorts av den patienten, och
-// det är kontakten som flyttas som ger vårdrelationen, efter samma regel som för alla kontakter. Flytten loggas på rätt
-// patient med motiveringen, så att logguppföljningen ser den.
-function rattPatient(atk, nummer, v) {
+// Säkerhetsgranskningen av andra omgången: rätt patient prövas i behörighetsmotorn innan något ändras, och alla nummer
+// som inte kan användas ger exakt samma svar (okänt nummer, samma patient, en sammanslagen journal, en patient som avled
+// före besöket, en patient som personen inte får registrera en vårdkontakt på vid vårdenheten, och skyddad identitet
+// utan aktivt val att visa identiteten), så att rutten inte kan användas för att pröva om ett nummer finns. Försöken
+// har ett tak per person och per sandlåda, som fullmakterna (ombud.js), och räknas ur åtkomstloggen.
+//
+// Den strängaste av de två reglerna gäller: flytten är en del av identitetshanteringen och kräver vårdadministratörens
+// handling för sammanslagning (sla_samman), och personen ska få registrera en vårdkontakt på rätt patient vid kontaktens
+// vårdenhet, med samma prövning som för en ny kontakt. Flytten skapar aldrig en vårdrelation: den flyttade kontakten ger
+// ingen vårdrelation hos rätt patient, så att en registrering aldrig ger åtkomst.
+export const MAX_FORSOK = 10;
+export const MAX_FORSOK_SANDLADA = 30;
+export const EJ_ANVANDBAR = 'Vårdkontakten kan inte flyttas till den journalen. Kontrollera numret, eller registrera patienten och vårdrelationen först.';
+const NEKAD_RESURS = 'makulering:vardkontakt:nekad';
+function rattPatient(atk, nummer, v, valFor) {
+  const db = atk.db;
+  const { kanRoll, Atkomst } = require('./atkomst.js');
+  if (!kanRoll(atk.personal, 'sla_samman')) throw new Fel(403, 'Bara vårdadministratören flyttar en vårdkontakt till en annan patient, som när två journaler slås samman.', 'nekad');
+  const misslyckade = (villkor, ...arg) => db.query(`SELECT count(*) AS n FROM atkomstlogg WHERE resurs = ? AND resultat = 'nekad' ${villkor}`).get(NEKAD_RESURS, ...arg).n;
+  if (misslyckade('AND personal_id = ?', atk.personal.id) >= MAX_FORSOK || misslyckade('') >= MAX_FORSOK_SANDLADA) {
+    throw new Fel(429, 'Du har gjort många försök att flytta vårdkontakter till nummer som inte kan användas. Fler försök stoppas. Kontakta systemförvaltaren.', 'for_manga');
+  }
+  const fel = () => {
+    loggaRad(db, { personal_id: atk.personal.id, enhet_id: atk.personal.enhet_id, patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: NEKAD_RESURS, grund: 'nekad', resultat: 'nekad' });
+    return new Fel(404, EJ_ANVANDBAR, 'saknas', { falt: ['rattPatient'] });
+  };
+  if (typeof nummer !== 'string' || nummer.length > 20) throw fel();
   const { tolka, hittaPaIdentitet } = require('./identitet.js');
-  const fel = new Fel(404, 'Ingen journal med det numret kan få vårdkontakten. Kontrollera numret, eller registrera patienten först.', 'saknas', { falt: ['rattPatient'] });
-  if (typeof nummer !== 'string' || nummer.length > 20) throw fel;
   const t = tolka(nummer);
-  if (!t?.ok || !['personnummer', 'samordningsnummer', 'reservnummer'].includes(t.typ)) throw fel;
-  const till = hittaPaIdentitet(atk.db, t)?.patientId;
-  if (!till || till === v.patient_id) throw fel;
-  const p = atk.db.query('SELECT sammanslagen_till FROM patienter WHERE id = ?').get(till);
-  if (!p || p.sammanslagen_till) throw fel;
+  if (!t?.ok || !['personnummer', 'samordningsnummer', 'reservnummer'].includes(t.typ)) throw fel();
+  const till = hittaPaIdentitet(db, t)?.patientId;
+  if (!till || till === v.patient_id) throw fel();
+  const p = db.query('SELECT * FROM patienter WHERE id = ?').get(till);
+  if (!p || p.sammanslagen_till) throw fel();
+  const avliden = require('./avliden.js').avlidenFor(db, till);
+  if (avliden && avliden.datum < String(v.start).slice(0, 10)) throw fel();
+  const val = valFor(till) ?? {};
+  const a = new Atkomst(db, atk.personal, till, val, 'registrera_vardkontakt');
+  if (!a.prova('registrera_vardkontakt', { enhet_id: v.enhet_id }).tillaten) throw fel();
+  if (p.skyddad && !(val.visa_identitet && kanRoll(atk.personal, 'visa_identitet'))) throw fel();
   return till;
 }
 
 // POST: makulerar kontakten med motivering, och flyttar det som hör till den när rätt patient anges.
 // body: { orsak, rattPatient? }
-export function makulera(atk, v, body = {}, { nu = new Date() } = {}) {
+export function makulera(atk, v, body = {}, { nu = new Date(), valFor = () => ({}) } = {}) {
   const db = atk.db;
   sakra(db);
   provaKontakt(atk, v);
   const orsak = typeof body.orsak === 'string' ? body.orsak.trim().slice(0, 500) : '';
   if (orsak.length < 10) throw new Fel(400, 'Skriv varför vårdkontakten makuleras, med minst tio tecken. Motiveringen står kvar i journalen.', 'ogiltig', { falt: ['orsak'] });
-  const till = body.rattPatient ? rattPatient(atk, body.rattPatient, v) : null;
+  const till = body.rattPatient ? rattPatient(atk, body.rattPatient, v, valFor) : null;
   const foljer = tillhor(db, v);
   if (!till && harDokumentation(foljer)) throw new Fel(409, `Vårdkontakten har dokumentation (${sammanfattning(new Map([...foljer].filter(([t]) => !DOKUMENTATION_UTAN.has(t))))}), som aldrig förstörs. Ange rätt patient, så flyttas den dit.`, 'ogiltig', { falt: ['rattPatient'] });
   if (!till && db.query("SELECT 1 FROM sqlite_master WHERE name = 'betalningar'").get() && (foljer.get('bokningar') ?? []).some(b => db.query('SELECT 1 FROM betalningar WHERE bokning_id = ?').get(b))) {
@@ -157,8 +184,9 @@ export function makulera(atk, v, body = {}, { nu = new Date() } = {}) {
       db.query("INSERT OR REPLACE INTO installningar VALUES ('sammanslagning_pagar', ?)").run(`${fran}>${till}`);
       for (const [tabell, ids] of foljer) flytta(db, tabell, ids, fran, till);
       flytta(db, 'vardkontakter', [v.id], fran, till);
-      // Hälsoärendet och kedjan av kontakter hör till den första patienten.
-      db.query('UPDATE vardkontakter SET halsoarende_id = NULL, foregaende_id = NULL WHERE id = ?').run(v.id);
+      // Hälsoärendet och kedjan av kontakter hör till den första patienten, och den flyttade kontakten ger ingen
+      // vårdrelation hos rätt patient.
+      db.query('UPDATE vardkontakter SET halsoarende_id = NULL, foregaende_id = NULL, ger_vardrelation = 0 WHERE id = ?').run(v.id);
       db.query("DELETE FROM installningar WHERE nyckel = 'sammanslagning_pagar'").run();
     } else {
       // En bokning för kontakten pekar inte längre på den. Kontakten själv tas bort ur vårdkontakterna och finns kvar som
