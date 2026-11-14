@@ -2,7 +2,7 @@
 import { esc, api, tidpunkt, datum, migreradEtikett, notis, faltFel, medKnapp, ikon, ApiFel, felNotis, dialog } from '../ui.js';
 // Runda 7, r2: hjälp i sammanhanget.
 import { hjalpRuta } from '../hjalp.js';
-import { far, S, minVardenhet, uppdateraInkorg, vardenhetAv as enhetsVardenhet, lamnaVakt } from '../app.js';
+import { far, S, minVardenhet, uppdateraInkorg, vardenhetAv as enhetsVardenhet, lamnaVakt, rita } from '../app.js';
 import { doldaRad, kravRuta } from './patient.js';
 import { dokumenterasHtml, kopplaDokumenteras, nyKontaktData, kontaktNotis } from './patient-vardkontakt.js';
 import * as kontrasignering from '../kontrasignering.js';
@@ -415,12 +415,23 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
         if (signera) await api(`/api/anteckning/${x.id}/signera`, { metod: 'POST', data: {} });
         return x;
       }, form);
+      const dit = ctx.href('journal', ny.id);
+      // Runda 15, r4: ett sparat utkast stannar i skrivrutan, som fortsätter att spara av sig självt. Adressen blir
+      // utkastets utan att vyn byggs om, så att inget anrop görs i onödan (till exempel när tidsgränsen loggar ut).
+      if (!signera && !arStrukturerad && ctrl) {
+        ctrl.satt(ny.id);
+        notis('Utkastet är sparat. Det syns bara för dig tills du signerar.');
+        kontaktNotis(ny);
+        form.querySelector('h2').textContent = `${mall().typ}, utkast`;
+        history.replaceState(null, '', dit);
+        return;
+      }
       ctrl?.stopp();
       notis(signera ? 'Anteckningen är signerad.' : 'Utkastet är sparat. Det syns bara för dig tills du signerar.');
       kontaktNotis(ny);
       await uppdateraInkorg();
-      const dit = ctx.href('journal', ny.id);
-      if (location.hash === dit) ctx.ladda(); else location.hash = dit;
+      // Adressen kan redan vara utkastets (efter Spara utkast), och då ritas vyn om från adressen.
+      if (location.hash === dit) rita(); else location.hash = dit;
     } catch { /* felet visas i formuläret */ }
   };
   form.querySelector('[data-spara]').addEventListener('click', e => spara(e.currentTarget, false));

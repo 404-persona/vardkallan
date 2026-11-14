@@ -342,6 +342,8 @@ export function autospara(form, ctx, { typ, anteckningId = null, las, nyKontakt 
   visa(id ? `Utkastet sparas av sig självt.` : 'Utkastet sparas av sig självt när du har börjat skriva.');
   return {
     spara, osparat, anteckningId: () => id,
+    // Utkastet som skapades med knappen, när inget hade sparats av sig självt än.
+    satt: (nytt) => { id = nytt; senast = JSON.stringify(las()); },
     stopp: () => {
       clearTimeout(timer);
       form.removeEventListener('input', schemalagg);
