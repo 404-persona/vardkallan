@@ -76,6 +76,8 @@ export const PROVA = {
   '#/utbildning': null, '#/patient/p01': 'patient', '#/patient/p01/lakemedel': 'patient',
   // Runda 7: ekonomens och systemförvaltarens startsidor.
   '#/ekonomi': 'faktureringsunderlag', '#/regler': 'konfigurera',
+  // Runda 15, r2: köerna till de nationella tjänsterna.
+  '#/nationella-tjanster': 'forvalta_api',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

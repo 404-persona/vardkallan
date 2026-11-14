@@ -93,6 +93,8 @@ Rätt svar: De gäller i Vårdkällan och ligger i kön. Systemet skickar dem n�
 
 Köerna till samtyckestjänsten och engagemangsindex försöker igen av sig själva, med allt längre mellan försöken. Du kan skicka det som väntar direkt.
 
+Pröva i demon: logga in som Tomas Lindh och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/nationella-tjanster).
+
 ## Uppdrag i testinbjudan
 
 Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Sussas användbarhetstestfall och ligger i den ordning en arbetsdag har dem. Systemet bockar av ett uppdrag själv när det har hänt, och ett uppdrag som går ut på att hitta något har en fråga som systemet rättar.
