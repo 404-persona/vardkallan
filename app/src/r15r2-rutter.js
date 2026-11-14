@@ -68,6 +68,30 @@ export function efterTid(db, nu = new Date(), { anrop = true } = {}) {
   if (!anrop) ei.efterTid(db, nu, { avstamning: true, maxPatienter: 3 });
 }
 
+// Efter en handling som ändrar något: borttagningar ur engagemangsindex för skydd och spärr skickas direkt.
+export function efterHandling(db, nu = new Date()) {
+  ei.efterHandling(db, nu);
+}
+
+// Timerns schema över de vakna sandlådorna. Sandlådor med en borttagning för skydd eller spärr först, och de skickas alltid,
+// sedan sandlådor med ändringar och sist avstämningen. Inom samma nivå börjar varje varv där förra varvet slutade, så att
+// ingen sandlåda svälter. Det som inte är brådskande slutar när varvets tid (maxMs) är slut.
+let markor = 0;
+export function schemalagg(dbs, { nu = new Date(), maxMs = 150 } = {}) {
+  const t0 = performance.now();
+  const n = dbs.length;
+  if (!n) return;
+  const start = markor % n;
+  const ordning = dbs.map((db, i) => ({ db, plats: (i - start + n) % n, prio: ei.prioritet(db) })).sort((a, b) => b.prio - a.prio || a.plats - b.plats);
+  let senast = start;
+  for (const x of ordning) {
+    if (x.prio < 2 && performance.now() - t0 > maxMs) break;
+    try { efterTid(x.db, nu, { anrop: false }); } catch (e) { console.error('De nationella köerna:', e.message); }
+    senast = (start + x.plats) % n;
+  }
+  markor = senast + 1;
+}
+
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.
 export function inkorg(c) {
   if (!c.personal || !kanRoll(c.personal, 'forvalta_api') || !c.db) return {};

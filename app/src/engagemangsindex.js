@@ -70,6 +70,14 @@ function triggrar(db) {
     ut.push([`ei_mark_${t}_andrad`, `CREATE TRIGGER IF NOT EXISTS ei_mark_${t}_andrad AFTER UPDATE ON ${t} BEGIN ${markera('OLD.patient_id')} ${markera('NEW.patient_id')} END`]);
     ut.push([`ei_mark_${t}_bort`, `CREATE TRIGGER IF NOT EXISTS ei_mark_${t}_bort AFTER DELETE ON ${t} BEGIN ${markera('OLD.patient_id')} END`]);
   }
+  // Säkerhetsgranskningen: när en patient får skyddad identitet eller en spärr märks patienten som brådskande ('skydd'),
+  // så att borttagningen ur indexet skickas direkt i samma handling och före allt annat.
+  const skydd = (uttryck) => `INSERT INTO ei_markerade (patient_id, kalla) SELECT ${uttryck}, 'skydd' WHERE NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ${uttryck} AND markerad IS NULL AND kalla = 'skydd');`;
+  ut.push(['ei_skydd_patienter', `CREATE TRIGGER IF NOT EXISTS ei_skydd_patienter AFTER UPDATE OF skyddad ON patienter WHEN NEW.skyddad = 1 AND coalesce(OLD.skyddad, 0) = 0 BEGIN ${skydd('NEW.id')} END`]);
+  if (finns.has('sparrar')) {
+    ut.push(['ei_skydd_sparrar_ny', `CREATE TRIGGER IF NOT EXISTS ei_skydd_sparrar_ny AFTER INSERT ON sparrar WHEN coalesce(NEW.aktiv, 1) = 1 BEGIN ${skydd('NEW.patient_id')} END`]);
+    ut.push(['ei_skydd_sparrar_andrad', `CREATE TRIGGER IF NOT EXISTS ei_skydd_sparrar_andrad AFTER UPDATE OF aktiv ON sparrar WHEN NEW.aktiv = 1 BEGIN ${skydd('NEW.patient_id')} END`]);
+  }
   ut.push(['ei_mark_patienter_andrad', `CREATE TRIGGER IF NOT EXISTS ei_mark_patienter_andrad AFTER UPDATE ON patienter BEGIN ${markera('NEW.id')} ${markera('NEW.sammanslagen_till')} END`]);
   ut.push(['ei_mark_patienter_ny', `CREATE TRIGGER IF NOT EXISTS ei_mark_patienter_ny AFTER INSERT ON patienter BEGIN ${markera('NEW.id')} END`]);
   // Ett beslutat undantag från nationella tjänster gäller en anteckning.
@@ -101,8 +109,10 @@ const status = (db, nyckel, varde) => {
 export function markeraPatienter(db, patientIds = null) {
   sakra(db);
   const ids = patientIds ?? db.query('SELECT id FROM patienter WHERE sammanslagen_till IS NULL ORDER BY id').all().map(r => r.id);
-  const ins = db.query('INSERT INTO ei_markerade (patient_id, kalla) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ? AND markerad IS NULL)');
+  // Säkerhetsgranskningen: en uttrycklig ändring prövas mot väntande ändringar (som triggrarna), så att en väntande
+  // avstämning för samma patient aldrig tar bort ändringens prioritet. En avstämning läggs bara till om inget väntar.
   const kalla = patientIds ? null : 'avstamning';
+  const ins = db.query(`INSERT INTO ei_markerade (patient_id, kalla) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ? AND markerad IS NULL ${kalla ? '' : 'AND kalla IS NULL'})`);
   db.transaction(() => { for (const id of ids) ins.run(id, kalla, id); })();
   return ids.length;
 }
@@ -190,7 +200,7 @@ export const vantetidMs = (forsok) => Math.min(30, 2 ** Math.max(0, forsok - 1))
 // ---------------------------------------------------------------------------------------------------------------
 // Skickar det som väntar. tvinga: utan att vänta på fördröjningen eller nästa försök. patientId: bara den patienten.
 // Ger { skickade, poster, fel } där fel är en text när indexet inte tog emot omgången.
-export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, maxPatienter = null } = {}) {
+export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, maxPatienter = null, bradskande = false } = {}) {
   sakra(db);
   const inst = installningar(db);
   const t = iso(nu);
@@ -198,10 +208,13 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, 
   const nasta = status(db, 'nasta_forsok');
   if (!tvinga && nasta && nasta > t) return { skickade: 0, poster: 0, fel: null, vantar: true };
   const grans = new Date(nu.getTime() - inst.fordrojningSekunder * 1000).toISOString();
+  // Ordningen: borttagningar för skydd och spärr först (utan fördröjning), sedan ändringar, sist avstämningen.
   const urval = patientId
     ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE patient_id = ? GROUP BY patient_id').all(patientId)
-    : tvinga ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade GROUP BY patient_id ORDER BY forsta').all()
-      : db.query('SELECT patient_id, min(id) AS forsta, max(kalla IS NULL) AS andring FROM ei_markerade WHERE markerad <= ? GROUP BY patient_id ORDER BY andring DESC, forsta LIMIT ?').all(grans, Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
+    : bradskande ? db.query("SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE kalla = 'skydd' GROUP BY patient_id ORDER BY forsta").all()
+      : tvinga ? db.query("SELECT patient_id, min(id) AS forsta, max(coalesce(kalla, '') = 'skydd') AS skydd FROM ei_markerade GROUP BY patient_id ORDER BY skydd DESC, forsta").all()
+        : db.query("SELECT patient_id, min(id) AS forsta, max(coalesce(kalla, '') = 'skydd') AS skydd, max(kalla IS NULL) AS andring FROM ei_markerade WHERE markerad <= ? OR kalla = 'skydd' GROUP BY patient_id ORDER BY skydd DESC, andring DESC, forsta LIMIT ?")
+          .all(grans, Math.max(Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity), db.query("SELECT count(DISTINCT patient_id) AS n FROM ei_markerade WHERE kalla = 'skydd'").get().n));
   if (patientId && !urval.length) urval.push({ patient_id: patientId });
   if (!urval.length) return { skickade: 0, poster: 0, fel: null };
   const vg = require('./rivta/konsumenter.js').vardgivare(db);
@@ -283,6 +296,24 @@ const klockslag = (t) => {
   const kl = d.toLocaleTimeString('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit' }).replace(':', '.');
   return `den ${dag} klockan ${kl}`;
 };
+// Hur brådskande sandlådans kö är: 2 när en borttagning för skydd eller spärr väntar, 1 när en ändring väntar, annars 0.
+export function prioritet(db) {
+  sakra(db);
+  const r = db.query("SELECT max(coalesce(kalla, '') = 'skydd') AS skydd, max(kalla IS NULL) AS andring FROM ei_markerade").get();
+  return r?.skydd ? 2 : r?.andring ? 1 : 0;
+}
+// Efter en handling: det brådskande skickas direkt, i samma anrop. Svarar indexet inte ligger det kvar först i kön.
+export function efterHandling(db, nu = new Date()) {
+  try {
+    sakra(db);
+    if (!db.query("SELECT 1 FROM ei_markerade WHERE kalla = 'skydd' LIMIT 1").get()) return null;
+    return skicka(db, { nu, bradskande: true });
+  } catch (e) {
+    console.error('Engagemangsindex:', e.message);
+    return null;
+  }
+}
+
 // Läget för systemförvaltaren. Inga patientuppgifter: bara antal, tider och resultat.
 export function lage(db, nu = new Date()) {
   sakra(db);

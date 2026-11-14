@@ -82,6 +82,10 @@ export default medR14r3([
       `${EI}en ny journalanteckning märker patienten, och posten skickas i nästa omgång utan att någon gör något`,
       `${EI}beräkningen av posterna lämnar inga spår i åtkomstloggen, och varje omgång står i anropsloggen utan patientuppgifter`,
       `${EI}en ändring i journalen skickas före avstämningen av hela indexet`,
+      // Säkerhetsgranskningen av kön.
+      'Kön till engagemangsindex, ordning och prioritet > många sandlådor: borttagningen för en patient som just har fått skyddad identitet i den sista går fram inom ett varv',
+      'Kön till engagemangsindex, ordning och prioritet > en spärr eller skyddad identitet tas bort ur indexet direkt i samma handling',
+      'Kön till engagemangsindex, ordning och prioritet > en uttrycklig ändring får prioritet också när en avstämning väntar för samma patient',
       `${EI}spärrade uppgifter anmäls inte, och mostRecentContent minskar aldrig när en spärr läggs`,
       `${EI}skyddade personuppgifter anmäls aldrig, och posterna tas bort när identiteten skyddas`,
       `${EI}ett reservnummer anmäls inte, och när journalen får ett personnummer skapas posterna för det`,

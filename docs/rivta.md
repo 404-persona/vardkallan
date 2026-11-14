@@ -175,6 +175,7 @@ Engagemangsindex uppdateras av sig självt (`app/src/engagemangsindex.js`) efter
 - owner, creationTime och updateTime skickas aldrig, eftersom indexet sätter dem. En post tas bort med deleteFlag när den sista uppgiften av sitt slag försvinner, till exempel när en planerad vårdkontakt tas bort vid en avbokning.
 - mostRecentContent räknas bara på det kontot får se och minskar aldrig, så att en spärr eller en borttagen uppgift inte syns som en ändring bakåt i tiden.
 - Person- och samordningsnummer anmäls. Ett reservnummer anmäls inte, men när journalen får ett nationellt nummer skapas posterna för det (kR4).
+- När en patient får skyddad identitet eller en spärr skickas borttagningen ur indexet direkt, i samma handling, och ligger först i kön om indexet inte svarar. Andra ändringar går före avstämningen, och timern går igenom sandlådorna i ett rättvist schema som börjar där förra varvet slutade, utan att räkna i användarnas anrop.
 - Ändringarna skickas i omgångar, som standard en minut efter ändringen (Ineras riktmärke är högst 60 minuter), med högst 1000 poster per anrop (den nationella instansens tak, inställbart nedåt). Svarar indexet inte ligger ändringarna kvar och skickas om med allt längre mellan försöken. Hela indexet stäms av mot journalen en gång om dygnet.
 - Det simulerade indexet följer reglerna för producenten av Update: högst 1000 poster, unika poster i begäran, inga fält som indexet sätter och ingen mostRecentContent när en post tas bort.
 

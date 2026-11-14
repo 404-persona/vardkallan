@@ -162,7 +162,7 @@ import { registreraRutter as r13r1Rutter } from './r13r1-rutter.js';
 // Runda 14, r3: intyg genom intygsapplikationen och e-remiss (r14r3-rutter.js).
 import { registreraRutter as r14r3Rutter } from './r14r3-rutter.js';
 // Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex, som systemet skickar själv.
-import { registreraRutter as r15r2Rutter, efterTid as r15r2EfterTid, inkorg as r15r2Inkorg } from './r15r2-rutter.js';
+import { registreraRutter as r15r2Rutter, efterTid as r15r2EfterTid, inkorg as r15r2Inkorg, schemalagg as r15r2Schemalagg, efterHandling as r15r2EfterHandling } from './r15r2-rutter.js';
 // Runda 14, r5: incidentregistret, servicenivårapporten och incidentrapporten till beställaren (servicenivaer-rutter.js).
 import { registreraRutter as r14r5Rutter } from './servicenivaer-rutter.js';
 // Runda 14, r1: inloggning genom beställarens inloggningstjänst (inloggningstjanster-rutter.js, Sussa 5.2.1.1).
@@ -706,13 +706,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   const vilaTimer = setInterval(() => { try { vilaStadning(); } catch (e) { console.error('Vilan:', e.message); } }, 60_000);
   vilaTimer.unref?.();
   // Runda 15, r2: köerna till de nationella tjänsterna skickas också när ingen gör något, i de sandlådor som är vakna.
-  // Högst 150 ms per varv, så att anrop som väntar aldrig får längre svarstid eller tar av sandlådans tidsbudget märkbart.
+  // Högst 150 ms per varv för det som inte är brådskande, med ett rättvist schema (r15r2-rutter.js schemalagg).
   const nationellaTimer = setInterval(() => {
-    const t0 = performance.now();
-    for (const x of [...vakna]) {
-      if (performance.now() - t0 > 150) break;
-      try { if (x.dbOmVaken) r15r2EfterTid(x.dbOmVaken, new Date(), { anrop: false }); } catch (e) { console.error('De nationella köerna:', e.message); }
-    }
+    try { r15r2Schemalagg([...vakna].map(x => x.dbOmVaken).filter(Boolean)); } catch (e) { console.error('De nationella köerna:', e.message); }
   }, 60_000);
   nationellaTimer.unref?.();
 
@@ -2614,6 +2610,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     c.url = url;
     // Runda 11, r5: en rutt kan svara med ett löfte (avkodning och miniatyrer av bilder görs asynkront i bildmedia.js).
     let ut = await traff[0](c, ...traff[1]);
+    // Runda 15, r2: en borttagning ur engagemangsindex för skydd eller spärr skickas direkt, i samma handling.
+    if (metod !== 'GET' && c.db) r15r2EfterHandling(c.db);
     // En fil, till exempel exportpaketet eller datauttaget, går ut som den är.
     // Runda 14, r1: en omdirigering i inloggningen genom en extern tjänst får sessionskakan, ny när sessionen är ny eller
     // när inloggningen har bytt sessionsnyckel.
