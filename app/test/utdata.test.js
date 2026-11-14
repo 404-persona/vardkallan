@@ -310,7 +310,9 @@ describe('Arkiv', () => {
     for (const [, summa, vag] of listade) expect(createHash('sha256').update(filer.get(rot + vag).data).digest('hex').toUpperCase()).toBe(summa);
     const bundle = JSON.parse(filer.get(`${rot}representations/rep_1/data/journal/p01.json`).data);
     expect(bundle).toMatchObject({ resourceType: 'Bundle', type: 'collection' });
-    const ant = db(k).query("SELECT count(*) AS n FROM anteckningar WHERE patient_id = 'p01' AND status = 'signerad'").get().n;
+    // Runda 15, r3: anteckningarna i mellanarkivet följer också med.
+    const ant = db(k).query("SELECT count(*) AS n FROM anteckningar WHERE patient_id = 'p01' AND status = 'signerad'").get().n
+      + db(k).query("SELECT count(*) AS n FROM mellanarkiv_handlingar WHERE patient_id = 'p01' AND slag = 'anteckning'").get().n;
     expect(bundle.entry.filter(e => e.resource.resourceType === 'Composition').length).toBe(ant);
     expect(filer.has(`${rot}representations/rep_1/data/ovrigt/p01-atkomstlogg.ndjson`)).toBe(true);
     expect(db(k).query('SELECT * FROM arkivexporter WHERE beslut_id = ?').get(b.id)).toMatchObject({ patienter: 1, sha256: r.headers.get('x-paket-sha256') });

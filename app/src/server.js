@@ -172,6 +172,9 @@ import { Database } from 'bun:sqlite';
 import * as vila from './sandlada-vila.js';
 // Runda 14, r4: testprotokollet med spårbarhet till kraven (testprotokoll.js, Sussa 11.2.1.7).
 import * as testprotokoll from './testprotokoll.js';
+// Runda 15, r3: den fristående reservservern (reservserver.js), som startas med RESERVSERVER=1 eller reservserver.js.
+import * as reservserverMod from './reservserver.js';
+import { registreraRutter as reservloggRutter } from './reservlogg-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -212,7 +215,8 @@ const LASKOPIA_LAKEMEDEL_MAX_MS = 10 * 60_000;
 // som ger samma svar som det vanliga anropet. Läsläget svarar på /api/patient/:id/<namn> ur kopian och loggar läsningen
 // med handlingen.
 const LASKOPIA_LAKEMEDEL = {
-  lakemedel: { handling: 'las_lakemedel', hamta: (atk) => lakemedel.lista(atk) },
+  // Runda 15, r3: läskopian tar inte med avslutade ordinationer i mellanarkivet, som inte behövs vid ett avbrott.
+  lakemedel: { handling: 'las_lakemedel', hamta: (atk) => lakemedel.lista(atk, { medMellanarkiv: false }) },
   // Dagens administreringar med givna doser (administrering.js).
   administreringar: { handling: 'las_lakemedel', hamta: (atk) => administrering.lista(atk) },
 };
@@ -224,7 +228,8 @@ const LASKOPIA_JOURNAL = {
   matvarden: { handling: () => 'las_matvarden', hamta: (atk, p) => ({ ...vitalparametrar.matvardesvy(atk, p), mt: mtPatientvy(atk),
     // Namn och enhet per typ, så att ett mätvärde som registreras under avbrottet kan visas i listan.
     typer: Object.fromEntries(Object.entries(journal.MATTYPER).map(([k, v]) => [k, { namn: v.namn, enhet: v.enhet }])) }) },
-  remisser: { handling: (pers) => (kanRoll(pers, 'las_remiss') ? 'las_remiss' : 'las_remiss_status'), hamta: (atk) => remiss.forPatient(atk) },
+  // Beslut 2026-11-14: läskopian tar inte med avslutade remisser i mellanarkivet.
+  remisser: { handling: (pers) => (kanRoll(pers, 'las_remiss') ? 'las_remiss' : 'las_remiss_status'), hamta: (atk) => remiss.forPatient(atk, { medMellanarkiv: false }) },
 };
 // Varför utlämnandet till läskopian slutade, i loggen.
 const LASKOPIA_SLUT = {
@@ -344,8 +349,19 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 13, r1: synpunkterna i en egen databas bredvid sandlådorna (synpunkter.js), och taken som testerna kan ändra.
   synpunktFil = '', synpunktTak = undefined,
   // Runda 14, r1: ursprungen (schema, värd och port) för de inloggningstjänster som servern får anropa. Driftens tak.
-  inloggningTillatna = process.env.INLOGGNING_TILLATNA ?? '' } = {}) {
+  inloggningTillatna = process.env.INLOGGNING_TILLATNA ?? '',
+  // Runda 15, r3: reservserver ger en reservserver som läser den senaste verifierade kopian på kopiornas platser
+  // ({ katalog, andraKatalog, nyckel, loggKatalog }, där det som saknas tas ur kopieKatalog, kopieAndra,
+  // RESERV_SANDLADA och RESERV_LOGG). Inställningen RESERVSERVER=1 gör samma sak.
+  reservserver = process.env.RESERVSERVER === '1' ? {} : null,
+  // Beslut 2026-11-14: katalogen där driften gör reservserverns loggfiler tillgängliga för kärnsystemet.
+  reservloggKatalog = process.env.RESERV_LOGG || null } = {}) {
   if (maxSessioner) maxSandlador = maxSessioner;
+  // Runda 15, r3: reservservern har en databas för alla som loggar in, ur kopian, och tar inga egna kopior, sparar inga
+  // sandlådor och flyttar inget till disk. Den läser platserna men skriver aldrig där.
+  const reserv = reservserver ? reservserverMod.oppna({ katalog: reservserver.katalog ?? kopieKatalog, andraKatalog: reservserver.andraKatalog ?? kopieAndra,
+    nyckel: reservserver.nyckel ?? (process.env.RESERV_SANDLADA || null), loggKatalog: reservserver.loggKatalog ?? (process.env.RESERV_LOGG || null) }) : null;
+  if (reserv) { kopieKatalog = null; kopieAndra = null; kopieMinuter = 0; sessionFil = ''; vilaKatalog = null; }
   const sessioner = new Map();
   // Runda 12, r3: nyckeln som krypterar nycklarna för engångskoder, bredvid sessionsfilen så att den följer med en omstart.
   flerfaktor.satNyckel({ fil: sessionFil ? join(dirname(sessionFil), 'flerfaktor.nyckel') : null });
@@ -416,12 +432,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // personalId och invanareId är aldrig satta samtidigt: personalens och invånarens inloggning utesluter varandra.
   // Runda 12, r2: kopieId är sandlådans stabila id för säkerhetskopiorna. Det skapas med sandlådan och roteras aldrig,
   // till skillnad från sessionskakan, så att kopiorna hittas efter en ny inloggning.
-  const nySession = () => medVila({ db: nySessionsDb(), personalId: null, invanareId: null, val: {}, sist: Date.now(), matning: new Matning(200), lasnyckel: null, oppnade: new Set(), kopior: new Map(), kopieId: slumpId() });
+  // Runda 15, r3: på reservservern delar alla sessioner reservserverns databas.
+  const nySession = () => medVila({ db: reserv ? reserv.db : nySessionsDb(), personalId: null, invanareId: null, val: {}, sist: Date.now(), matning: new Matning(200), lasnyckel: null, oppnade: new Set(), kopior: new Map(), kopieId: slumpId() });
   // Runda 12, r2: en sandlåda som försvinner tar sina säkerhetskopior med sig. Runda 13, r2: och sin fil på disken.
   function taBortSandlada(sid) {
     const s = sessioner.get(sid);
     if (!s) return;
-    s.dbOmVaken?.close();
+    // Runda 15, r3: reservserverns databas delas av alla sessioner och stängs aldrig med en av dem.
+    if (!reserv) s.dbOmVaken?.close();
     s.db = null;
     sessioner.delete(sid);
     pagande.delete(s);
@@ -516,6 +534,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   const kopiorFranJson = (a) => new Map((a ?? []).map(([id, k]) => [id, { ...k, patienter: new Map(k.patienter), loggIds: new Set(k.loggIds) }]));
   // Skriver sandlådan till disk och släpper den ur minnet. Gör inget med en sandlåda som har ett pågående anrop.
   function vilaSandlada(s, { tvinga = false } = {}) {
+    // Runda 15, r3: reservserverns databas flyttas aldrig till disk.
+    if (reserv) return false;
     const db = s.dbOmVaken;
     if (!db || (!tvinga && pagande.get(s))) return false;
     try {
@@ -835,6 +855,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const p = personalRad(s.db, s.personalId);
     const inv = p ? null : minJournal.invanareRad(s.db, s.invanareId);
     const ut = { inloggad: Boolean(p || inv), demoDatum: installning(s.db, 'seed_datum') ?? idag() };
+    // Runda 15, r3: på reservservern säger varje svar om sessionen att det är en reservserver och hur gamla uppgifterna är.
+    if (reserv) ut.reservserver = reservserverMod.info(reserv);
     // Runda 9, r5 (KD1.1.1.5): vilken miljö sandlådan är, så att gränssnittet kan märka den.
     ut.miljo = miljoer.miljoFor(s.db);
     // Runda 7, r2: när inloggningen går ut utan aktivitet, så att gränssnittet kan varna.
@@ -891,7 +913,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const enheter = new Set(db.query(`SELECT enhet_id FROM anteckningar WHERE patient_id = ?1 UNION SELECT enhet_id FROM diagnoser WHERE patient_id = ?1
       UNION SELECT enhet_id FROM matvarden WHERE patient_id = ?1 UNION SELECT enhet_id FROM vardkontakter WHERE patient_id = ?1`).all(p.id).map(x => vardenhetFor(db, x.enhet_id)));
     // Runda 14, r4: vårdenheter med handlingar i mellanarkivet räknas också, så att det aktiva valet erbjuds för dem.
-    if (mellanarkiv.finnsTabell(db)) for (const x of db.query('SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ?').all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
+    // Runda 15, r3: bara anteckningar och mätvärden, eftersom läkemedelslistan är gemensam och inte kräver ett aktivt val.
+    // Beslut 2026-11-14: också vårdkontakter, diagnoser och remisser, som kräver ett aktivt val som i den aktiva journalen.
+    if (mellanarkiv.finnsTabell(db)) for (const x of db.query("SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ? AND slag IN ('anteckning', 'matvarde', 'vardkontakt', 'diagnos', 'remiss')").all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
     const andra = [...enheter].filter(e => e !== min && !sparrar.includes(e));
     const visad = p.skyddad ? val.visa_identitet : true;
     const listning = db.query('SELECT * FROM listningar WHERE patient_id = ?').get(p.id);
@@ -929,7 +953,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     };
   }
 
-  function oversikt(c, atk, p) {
+  // Runda 15, r3: utanMellanarkiv för läskopian vid avbrott, som inte tar med handlingar ur mellanarkivet.
+  function oversikt(c, atk, p, { utanMellanarkiv = false } = {}) {
     const db = c.db;
     const pers = c.personal;
     atk.krav(kanRoll(pers, 'las_oversikt') ? 'las_oversikt' : 'las_admin');
@@ -938,7 +963,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const mv = kanRoll(pers, 'las_matvarden') ? journal.synligaMatvarden(atk) : null;
     const kanAnt = kanRoll(pers, 'las_journal') || kanRoll(pers, 'las_omvardnad');
     const ant = kanAnt ? journal.listaAnteckningar(atk).anteckningar : null;
-    const rem = (kanRoll(pers, 'las_remiss') || kanRoll(pers, 'las_remiss_status')) ? remiss.forPatient(atk).remisser : null;
+    const rem = (kanRoll(pers, 'las_remiss') || kanRoll(pers, 'las_remiss_status')) ? remiss.forPatient(atk, { medMellanarkiv: false }).remisser : null;
     const vk = journal.synligaVardkontakter(atk);
     const tidslinje = [
       ...vk.map(v => ({ tid: v.start, typ: 'vardkontakt', rubrik: v.orsak, text: v.plats, enhet: enhetKort(db, v.enhet_id), kalla: v.kalla, kallaEtikett: journal.kallaEtikett(v.kalla, v.start), ref: { typ: 'vardkontakt', id: v.id } })),
@@ -955,13 +980,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       // Runda 10, r4: in- och utfarter och skannade restjournaler, med samma behörighet som deras egna vyer.
       ...r10r4Tidslinje(atk),
       // Runda 14, r4: handlingar i mellanarkivet, med samma behörighet som journalen.
-      ...mellanarkiv.tidslinje(atk),
+      ...(utanMellanarkiv ? [] : mellanarkiv.tidslinje(atk)),
     ].sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
     // Vårdkontakter, vårdtillfällen och hälsoärenden (vardkontakt.js), byggt av det som redan är filtrerat ovan.
     const vardstruktur = vardkontakt.oversiktDel(atk, { vk, ant, dia, mv, ord, rem });
     return {
       lakemedel: ord ? ord.filter(lakemedel.aktuell).map(o => lakemedel.ordinationUt(db, o, { historik: false })) : null,
-      diagnoser: dia ? dia.map(d => journal.diagnosUt(db, d)) : null,
+      // Beslut 2026-11-14: tillfälliga diagnoser i mellanarkivet står sist, märkta, men inte i läskopian.
+      diagnoser: dia ? [...dia.map(d => journal.diagnosUt(db, d)), ...(utanMellanarkiv ? [] : mellanarkiv.diagnoser(atk))] : null,
       matvarden: mv ? journal.senastePerTyp(mv).map(m => journal.matvardeUt(db, m)) : null,
       anteckningar: ant ? ant.slice(0, 5) : null,
       remisser: rem ? rem.filter(r => r.status !== 'svar_kvitterat' && r.beslut !== 'avvisad') : null,
@@ -1170,7 +1196,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       if (!ny().prova(handling).tillaten) continue;
       // Runda 10, r2: översikten i läskopian har samma vy som i appen (presentationsvyer.js).
       const ovAtk = ny();
-      const post = { handling, huvud: patientHuvud(c, ny(), pat), oversikt: presentationsvyer.medVy(ovAtk, oversikt(c, ovAtk, pat)), lakemedel: null, lakemedelsdel: null, anteckningar: null, anteckning: {} };
+      // Runda 15, r3: översikten i läskopian utan handlingar ur mellanarkivet, som inte behövs vid ett avbrott.
+      const post = { handling, huvud: patientHuvud(c, ny(), pat), oversikt: presentationsvyer.medVy(ovAtk, oversikt(c, ovAtk, pat, { utanMellanarkiv: true })), lakemedel: null, lakemedelsdel: null, anteckningar: null, anteckning: {} };
       // Läkemedelsdelen har en egen tid per patient, så att läsläget kan visa hur gammal den är.
       const lmTid = new Date().toISOString();
       const lmDelar = Object.entries(LASKOPIA_LAKEMEDEL).filter(([, d]) => kanRoll(pers, d.handling));
@@ -2362,7 +2389,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (!Object.hasOwn(MIN_DELAR, del)) throw new Fel(404, 'Okänd adress.', 'saknas');
     return medMinJournal(c, id, `min:${del}`, (atk) => MIN_DELAR[del](atk));
   });
-  rutt('GET', '/api/min/journal/:id/anteckning/:aid', (c, id, aid) => medMinJournal(c, id, `min:anteckning:${Number(aid) || 0}`, (atk) => minJournal.anteckning(atk, aid)));
+  // Beslut 2026-11-14: en anteckning ur mellanarkivet har id:t ma-<nummer>, som också står i loggen.
+  rutt('GET', '/api/min/journal/:id/anteckning/:aid', (c, id, aid) => medMinJournal(c, id, `min:anteckning:${/^ma-\d{1,9}$/.test(aid) ? aid : Number(aid) || 0}`, (atk) => minJournal.anteckning(atk, aid)));
   rutt('POST', '/api/min/journal/:id/begaran', (c, id) => [201, medMinJournal(c, id, 'min:begaran', (atk) => minJournal.skapaBegaran(atk, c.body))]);
   // Patientens egna tider i Min journal: incheckning, ombokning, avbokning, bekräftelse, betalning och egen bokning.
   rutt('GET', '/api/min/journal/:id/bokning/:bid/forslag', (c, id, bid) => medMinJournal(c, id, `min:bokning:${Number(bid) || 0}:forslag`, (atk) => tidbok.minForslag(atk, bid)));
@@ -2517,6 +2545,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     s.vantande = null; s.flerfaktorMetod = null; s.flerfaktorUtmaning = null; s.kopior = new Map();
   };
   r12r2Rutter({ rutt, kravInloggad, testresultat, kopior, migrera, loggaUtAlla });
+  // Beslut 2026-11-14: loggen från reservservern på sidan Lagring (reservlogg-rutter.js). Inte på reservservern själv.
+  if (!reserv) reservloggRutter({ rutt, kravInloggad, kopior, reservloggKatalog });
   // Runda 14, r5 (servicenivaer-rutter.js): svarstiderna med målet och säkerhetskopiornas lager till månadsrapporten.
   r14r5Rutter({ rutt, kravInloggad, kopior, matning: () => medMal(serverMatning.sammanstall()), malP95: MAL_P95 });
   // Runda 14, r1 (inloggningstjanster-rutter.js).
@@ -2555,7 +2585,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       // Runda 12, r2: programmets schemaversion, den högsta migreringen det känner till (releaser.js).
       schemaversion: Math.max(0, ...r12r2Migreringar.map(m => m.id)),
       // Runda 11, r1: bara i en testcontainer med falsk klocka, så att Playwright kan ställa webbläsarens klocka lika.
-      ...(TESTKLOCKA ? { testklocka: new Date().toISOString() } : {}) });
+      ...(TESTKLOCKA ? { testklocka: new Date().toISOString() } : {}),
+      // Runda 15, r3: reservservern säger att den är en reservserver och hur gamla uppgifterna är, också före inloggningen.
+      ...(reserv ? { reservserver: reservserverMod.info(reserv) } : {}) });
     // Runda 9, r5: länken till en ny miljö byter session utan att skapa en sandlåda.
     if (req.method === 'GET' && /^\/api\/miljoer\/oppna\/[A-Za-z0-9_-]{32}$/.test(url.pathname)) return oppnaMiljo(req, url);
     // Runda 10, r7: kalenderprenumerationen hämtas av ett kalenderprogram utan session (r10r7-rutter.js).
@@ -2576,18 +2608,20 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     }
     if (!traff) throw new Fel(404, 'Okänd adress.', 'saknas');
     if (traff === 'metod') throw new Fel(405, 'Metoden stöds inte.', 'ogiltig');
+    // Runda 15, r3: reservservern kan bara läsas. Inloggningen, ett aktivt val och loggen från läsläget görs som vanligt.
+    if (reserv && metod !== 'GET' && metod !== 'HEAD' && !reservserverMod.tillatenSkrivning(url.pathname)) throw reservserverMod.skrivningNekad(reserv);
     let sess = hamtaSession(req);
     // Runda 13, r2: sandlådans tidsbudget, som följer sandlådan också när den har vilat.
     if (sess) kravBudget(c, sess.s);
     if (!sess && !UTAN_SESSION.has(url.pathname)) sess = skapaSession(req, server);
     // Runda 7, r4: en förberedd omorganisation genomförs av systemet den dag den gäller, före allt annat i anropet.
-    if (sess) systemforvaltningEfterDatum(sess.s.db);
+    if (sess && !reserv) systemforvaltningEfterDatum(sess.s.db);
     // Runda 8, r1: det simulerade laboratoriet svarar på det som har hunnit bli klart.
-    if (sess) labbEfterTid(sess.s.db);
+    if (sess && !reserv) labbEfterTid(sess.s.db);
     // Runda 9, r2: den simulerade utrustningen skickar det som har hunnit mätas.
-    if (sess) mtEfterTid(sess.s.db);
+    if (sess && !reserv) mtEfterTid(sess.s.db);
     // Runda 9, r4: masterdatan läses in från källorna efter schemat.
-    if (sess) masterdataEfterTid(sess.s.db);
+    if (sess && !reserv) masterdataEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, sid: sess.sid, ny: sess.ny, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare && url.pathname.startsWith('/api/min/')) avvisaFranAnnanWebbplats(req);
     c.body = metod === 'GET' ? {} : await lasKropp(req);
@@ -2665,10 +2699,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     // Runda 13, r2: tidsbudgeten gäller också FHIR-API:t.
     kravBudget(c, sess?.s ?? null);
     // Runda 7, r4: förberedda omorganisationer som gäller i dag genomförs först.
-    if (sess) systemforvaltningEfterDatum(sess.s.db);
+    if (sess && !reserv) systemforvaltningEfterDatum(sess.s.db);
     // Runda 8, r1: det simulerade laboratoriet svarar på det som har hunnit bli klart.
-    if (sess) labbEfterTid(sess.s.db);
-    if (sess) mtEfterTid(sess.s.db);
+    if (sess && !reserv) labbEfterTid(sess.s.db);
+    if (sess && !reserv) mtEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     const base = origin || `${url.protocol}//${url.host}`;
@@ -2694,6 +2728,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       const c = url.pathname === '/api/health' ? {} : { adress: adressHmac(klientIp(req, srv)) };
       let svar;
       try {
+        // Runda 15, r3: på reservservern tas inget emot från utrustning, producentsystem eller skrivningar genom FHIR.
+        if (reserv && req.method !== 'GET' && req.method !== 'HEAD' && !url.pathname.startsWith('/api/')) throw reservserverMod.skrivningNekad(reserv);
         if (url.pathname.startsWith('/api/')) svar = await api(req, srv, url, c);
         else if (url.pathname.startsWith('/fhir/') && req.method === 'PATCH') svar = await fhirIncheckning(req, url, c);
         else if (url.pathname === '/fhir' || url.pathname.startsWith('/fhir/')) svar = await fhirSvar(req, url, c);
@@ -2749,12 +2785,16 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
         if (vdb) { try { c.s.dbByte = vdb.query('PRAGMA page_count').get().page_count * vdb.query('PRAGMA page_size').get().page_size; } catch { /* stängd */ } }
       }
       slappa(req);
+      // Runda 15, r3: reservserverns nya loggrader skrivs till dess loggfil efter varje anrop.
+      if (reserv) { try { reservserverMod.sparaLogg(reserv); } catch (e) { console.error('Reservserverns logg:', e.message); } }
       return svar;
     },
   });
 
   return {
     server, sessioner, port: server.port, url: `http://127.0.0.1:${server.port}`, spara, oppetApi,
+    // Runda 15, r3.
+    reservserver: reserv ? reservserverMod.info(reserv) : null, reservDb: reserv?.db ?? null, sparaReservlogg: () => (reserv ? reservserverMod.sparaLogg(reserv) : 0),
     kopior, stadaKopior,
     // Runda 13, r1.
     synpunkter,

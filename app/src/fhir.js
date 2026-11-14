@@ -70,6 +70,8 @@ export const SYSTEM = {
   sesakerhet: 'http://hl7.se/fhir/ig/base/CodeSystem/SecurityLabel',
   actcode: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
   uppmarksamhet: `${CS}/uppmarksamhet`,
+  // Runda 15, r3: var journalhandlingen finns (mellanarkiv.js).
+  lagring: `${CS}/lagring`,
 };
 export const TYPER = ['Patient', 'Encounter', 'EpisodeOfCare', 'Condition', 'Observation', 'MedicationRequest', 'AllergyIntolerance', 'Flag', 'ServiceRequest', 'Composition', 'Organization', 'Practitioner', 'AuditEvent', 'MedicationAdministration', 'List'];
 // Runda 6, r3: vårdplanen är en CarePlan (vardplan.js), med samma behörighet som i gränssnittet.
@@ -795,6 +797,9 @@ export function hantera(ctx) {
     atk.logga('las_matvarden', atk.grund(), `fhir/Observation/${id}`);
     return { status: 200, body: obs };
   }
+  // Runda 15, r3 (Sussa 5.4.2.2): en resurs ur mellanarkivet har id:t ma-<nummer>, med samma prövning och loggning som
+  // resursen i den aktiva journalen (mellanarkiv.js).
+  if (id && /^ma-\d{1,9}$/.test(id) && require('./mellanarkiv.js').FHIR_SLAG[typ]) return { status: 200, body: require('./mellanarkiv.js').fhirLas(ctx, typ, id) };
   if (id) {
     const rad = radMedId(db, typ, id);
     if (!rad || !finnsSomResurs(typ, rad)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
@@ -844,15 +849,21 @@ export function hantera(ctx) {
     // Runda 7, r4: vårdkontakter från en vårdenhet som är undantagen från FHIR.
     { const undantagen = undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') }); rader = rader.filter(r => vardtillfalle(typ, r) || !undantagen(r)); }
     for (const [, synliga] of vt) for (const v of synliga.slice(0, 1)) atk.krav(handling, { resurs: { enhet_id: v.enhet_id } });
+    // Beslut 2026-11-14: vårdkontakterna i mellanarkivet, prövade före loggningen (mellanarkiv.js).
+    const urE = require('./mellanarkiv.js').fhirResurser(atk, typ, { nationell: url.searchParams.has('_kontrakt') });
     atk.logga(handling, atk.grund(), `fhir/${typ}${url.search}`);
-    return { status: 200, body: bundle(base, url, rader.map(r => (vardtillfalle(typ, r) ? vardtillfalleEncounter(db, r, vt.get(r.id)) : encounter(db, r)))) };
+    return { status: 200, body: bundle(base, url, [...rader.map(r => (vardtillfalle(typ, r) ? vardtillfalleEncounter(db, r, vt.get(r.id)) : encounter(db, r))), ...urE]) };
   } else rader = atk.filtrera(rader, handling, { gemensam: GEMENSAM.has(typ) });
   if (ORDINATIONSENHET[typ]) rader = rader.filter(r => { const e = ORDINATIONSENHET[typ](db, r); return !e || atk.filtrera([{ enhet_id: e }], handling, { gemensam: true }).length; });
   // Runda 7, r4: undantag från FHIR, prövat efter behörigheten.
   // Runda 12, r1: producenten för tjänstekontrakt (_kontrakt) prövar också undantagen från publicering till nationella tjänster.
   { const undantagen = undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') }); rader = rader.filter(r => !undantagen(r)); }
+  // Runda 15, r3 (Sussa 5.4.2.2): journalhandlingarna i mellanarkivet som anroparen får se, märkta med var de finns. De
+  // prövas före loggningen, så att loggen får grunden för dem också.
+  const ur = require('./mellanarkiv.js').FHIR_SLAG[typ] ? require('./mellanarkiv.js').fhirResurser(atk, typ, { nationell: url.searchParams.has('_kontrakt') }) : [];
   atk.logga(handling, atk.grund(), `fhir/${typ}${url.search}`);
   const resurser = rader.map(r => (typ === 'ServiceRequest' ? serviceRequest(db, r, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, r, forstaSynliga(atk, r)) : mappa(db, r)));
+  resurser.push(...ur);
   // Runda 8, r1: labbeställningarna står med bland patientens ServiceRequest.
   if (typ === 'ServiceRequest') resurser.push(...labbFhir.serviceRequestsFor(db, personal, pid, ctx.valFor(pid)));
   // Runda 6, r1: NEWS2 räknat ur de synliga mätvärdena.
@@ -932,6 +943,41 @@ export const MAPPA_INVANARE = {
 };
 const mappaInvanare = (db, typ, rad) => MAPPA_INVANARE[typ](db, rad);
 
+// Beslut 2026-11-14 (runda 15, r3): handlingarna i mellanarkivet med exakt samma regler som Min journal
+// (patientvy.arkivVisas): det som inte visas där lämnas inte ut. De bär samma tagg som för personalen (meta.tag lagring
+// mellanarkiv och meta.source) och lämnar inte ut mer än resurserna i den aktiva journalen gör för invånaren.
+const INV_ARKIV = { Composition: 'anteckning', Observation: 'matvarde', Condition: 'diagnos', MedicationRequest: 'ordination', ServiceRequest: 'remiss', Encounter: 'vardkontakt' };
+const ARKIV_ID = /^ma-\d{1,9}$/;
+function arkivresursInvanare(db, typ, rad) {
+  const r = require('./mellanarkiv.js').fhirResurs(db, rad);
+  if (typ === 'Composition') {
+    r.author = (r.author ?? []).map(utanPersonalId);
+    if (r.attester) r.attester = r.attester.map(x => ({ ...x, party: utanPersonalId(x.party) }));
+  } else if (typ === 'MedicationRequest') {
+    if (r.medicationCodeableConcept?.coding) r.medicationCodeableConcept.coding = r.medicationCodeableConcept.coding.filter(c => c.system !== SYSTEM.nplid && c.system !== SYSTEM.nplpackid);
+    if (r.extension) r.extension = r.extension.filter(e => e.url !== `${EXT}/nll-status`);
+    if (r.requester) r.requester = utanPersonalId(r.requester);
+    if (r.recorder) r.recorder = utanPersonalId(r.recorder);
+  } else if (typ === 'ServiceRequest') {
+    delete r.requester;
+    const note = (r.note ?? []).filter(n => /^(Motivering|Svar): /.test(String(n.text ?? '')));
+    if (note.length) r.note = note; else delete r.note;
+  } else if (typ === 'Encounter') {
+    delete r.partOf;
+    delete r.episodeOfCare;
+  }
+  return r;
+}
+const arkivInvanare = (db, typ, pid) => (Object.hasOwn(INV_ARKIV, typ)
+  ? require('./patientvy.js').arkivForInvanare(db, pid, INV_ARKIV[typ]).map(r => arkivresursInvanare(db, typ, r)) : []);
+function arkivRadInvanare(db, typ, id) {
+  if (!Object.hasOwn(INV_ARKIV, typ) || !ARKIV_ID.test(id)) return null;
+  const m = require('./mellanarkiv.js');
+  if (!m.finnsTabell(db)) return null;
+  const r = db.query('SELECT * FROM mellanarkiv_handlingar WHERE id = ?').get(Number(id.slice(3)));
+  return r && r.slag === INV_ARKIV[typ] ? r : null;
+}
+
 // Resursen i loggen för invånarens anrop: sökvägen och bara de sökparametrar som används, korta. Annan text i adressen
 // hamnar aldrig i loggen, varken i invånarens egen eller i en annan patients.
 // Loggen får bara sökvägen och id:n i de format som Vårdkällans id har: resurstyp, löpnummer, patient-id och
@@ -940,7 +986,7 @@ const mappaInvanare = (db, typ, rad) => MAPPA_INVANARE[typ](db, rad);
 const LOGGADE_PARAMETRAR = ['patient', 'subject', '_id', 'identifier'];
 const PATIENT_ID = /^p\d{1,4}$/;
 const LOPNUMMER = /^\d{1,9}$/;
-const loggbarDel = (d, i) => (i === 0 ? TYPER.includes(d) : PATIENT_ID.test(d) || LOPNUMMER.test(d) || VT_ID.test(d) || d === '$everything');
+const loggbarDel = (d, i) => (i === 0 ? TYPER.includes(d) : PATIENT_ID.test(d) || LOPNUMMER.test(d) || VT_ID.test(d) || ARKIV_ID.test(d) || d === '$everything');
 function loggResurs(delar, url) {
   const q = LOGGADE_PARAMETRAR.filter(n => url.searchParams.has(n)).map((n) => {
     const v = String(url.searchParams.get(n)).replace(/^Patient\//, '');
@@ -978,6 +1024,8 @@ function hanteraInvanare(ctx, delar) {
       const resurser = [patientForInvanare(db, atk.patient)];
       for (const t of Object.keys(MAPPA_INVANARE)) {
         for (const r of patientRader(db, t, id, { invanare: true })) if (synligFor(db, t, r)) resurser.push(mappaInvanare(db, t, r));
+        // Beslut 2026-11-14: det som Min journal visar ur mellanarkivet.
+        resurser.push(...arkivInvanare(db, t, id));
       }
       atk.logga(sokvag);
       return { status: 200, body: bundle(base, url, resurser) };
@@ -1009,7 +1057,9 @@ function hanteraInvanare(ctx, delar) {
 
   if (!Object.hasOwn(MAPPA_INVANARE, typ) || delar.length > 2) throw new Fel(404, 'Okänd FHIR-resurs.', 'saknas');
   if (id) {
-    const rad = radMedId(db, typ, id, { invanare: true });
+    // Beslut 2026-11-14: ett id som börjar med ma- är en handling i mellanarkivet, som prövas på samma sätt.
+    const arkiv = arkivRadInvanare(db, typ, id);
+    const rad = arkiv ?? (ARKIV_ID.test(id) ? null : radMedId(db, typ, id, { invanare: true }));
     // En resurs som inte visas i Min journal finns inte för invånaren. En resurs i en journal som invånaren inte får
     // läsa prövas som journalen, så att försöket loggas där och svaret blir detsamma som för en journal som inte finns.
     const finnsInte = () => new Fel(404, 'Resursen finns inte.', 'saknas');
@@ -1029,14 +1079,14 @@ function hanteraInvanare(ctx, delar) {
       if (e.status === 403 && ctx.nekade && fore >= MAX_NEKADE) throw e;
       throw e.status === 403 || e.status === 404 ? finnsInte() : e;
     }
-    if (!synligFor(db, typ, rad)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
+    if (arkiv ? !require('./patientvy.js').arkivVisas(db, arkiv) : !synligFor(db, typ, rad)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
     atk.logga(sokvag);
-    return { status: 200, body: mappaInvanare(db, typ, rad) };
+    return { status: 200, body: arkiv ? arkivresursInvanare(db, typ, arkiv) : mappaInvanare(db, typ, rad) };
   }
   const pid = (url.searchParams.get('patient') ?? url.searchParams.get('subject') ?? '').replace(/^Patient\//, '');
   if (!pid) throw new Fel(400, 'Sökparametern patient krävs.', 'ogiltig');
   const atk = oppna(pid);
   const rader = patientRader(db, typ, pid, { invanare: true }).filter(r => synligFor(db, typ, r));
   atk.logga(sokvag);
-  return { status: 200, body: bundle(base, url, rader.map(r => mappaInvanare(db, typ, r))) };
+  return { status: 200, body: bundle(base, url, [...rader.map(r => mappaInvanare(db, typ, r)), ...arkivInvanare(db, typ, pid)]) };
 }

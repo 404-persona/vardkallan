@@ -1,5 +1,5 @@
 // Patientens remisser och formuläret för att skicka en ny.
-import { esc, api, notis, medKnapp, ikon, idag, plusDagar } from '../ui.js';
+import { esc, api, notis, medKnapp, ikon, idag, plusDagar, datum, migreradEtikett } from '../ui.js';
 // Runda 7, r2: hjälp i sammanhanget.
 import { hjalpRuta } from '../hjalp.js';
 import { far, minVardenhet, enhetLista, laddaEnheter } from '../app.js';
@@ -33,7 +33,8 @@ export async function visa(el, ctx) {
       <span class="under-text">Sparat ${esc(x.andrad.slice(0, 10))}${x.bilagor.length ? `, ${x.bilagor.length} ${x.bilagor.length === 1 ? 'bilaga' : 'bilagor'}` : ''}. Utkastet syns bara för dig.</span>
       <span class="knapprad tat"><button type="button" class="knapp liten sekundar" data-utkast="${x.id}">Fortsätt</button><button type="button" class="knapp liten text" data-utkast-bort="${x.id}">Ta bort</button></span></li>`).join('')}</ul></section>` : ''}
     <div id="remissform-plats"></div>
-    <div id="p-remisser">${lista.length ? lista.map(r => remissKort(r)).join('') : '<p class="tom">Patienten har inga remisser som du kan se.</p>'}</div>`;
+    <div id="p-remisser">${lista.length ? lista.map(r => remissKort(r)).join('') : '<p class="tom">Patienten har inga remisser som du kan se.</p>'}</div>
+    ${(d.mellanarkiv ?? []).length ? mellanarkivRemisser(d.mellanarkiv, ctx) : ''}`;
   kopplaAtgarder(el.querySelector('#p-remisser'), (id) => lista.find(r => String(r.id) === String(id)), () => ctx.ladda());
   el.querySelector('[data-ny]')?.addEventListener('click', (e) => {
     const plats = el.querySelector('#remissform-plats');
@@ -136,4 +137,12 @@ function remissForm(plats, ctx, utkast = null, lista = tidigare) {
       ctx.ladda();
     } catch { /* felet visas i formuläret */ }
   });
+}
+
+// Beslut 2026-11-14 (Sussa 5.4.2.2): avslutade remisser i mellanarkivet, märkta Ur mellanarkivet. De öppnas i journalens
+// läsruta, och den som bara får läsa statusen ser bara statusen.
+function mellanarkivRemisser(rader, ctx) {
+  return `<section class="lm-sektion" aria-labelledby="rem-ma" data-remisser-mellanarkiv><h3 id="rem-ma">Avslutade remisser <span class="antal">${rader.length}</span></h3>
+    <ul class="enkel-lista">${rader.map(r => `<li><a href="${ctx.href('journal', `ma-${r.id}`)}">${esc(r.rubrik)}</a> ${migreradEtikett(r)}
+      <span class="under-text">${esc(datum(r.datum))}, från ${esc(r.fran?.namn ?? '')}. ${esc(r.status)}</span></li>`).join('')}</ul></section>`;
 }

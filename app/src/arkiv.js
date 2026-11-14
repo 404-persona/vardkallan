@@ -190,13 +190,16 @@ export const listaBeslut = (db) => db.query('SELECT * FROM arkivbeslut ORDER BY 
 
 // Den sista uppgiften i journalen, för gallringsregeln.
 function sistaUppgift(db, pid) {
+  // Runda 15, r3: det som har förts till mellanarkivet räknas också, med en ordinations utsättning eller slut.
+  const ma = db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get()
+    ? 'UNION ALL SELECT max(coalesce(sista, datum)) FROM mellanarkiv_handlingar WHERE patient_id = ?1' : '';
   return db.query(`SELECT max(t) AS t FROM (
     SELECT max(coalesce(signerad_tid, skapad)) AS t FROM anteckningar WHERE patient_id = ?1
     UNION ALL SELECT max(coalesce(slut, start)) FROM vardkontakter WHERE patient_id = ?1
     UNION ALL SELECT max(datum) FROM diagnoser WHERE patient_id = ?1
     UNION ALL SELECT max(tid) FROM matvarden WHERE patient_id = ?1
     UNION ALL SELECT max(coalesce(utsatt_tid, skapad)) FROM ordinationer WHERE patient_id = ?1
-    UNION ALL SELECT max(coalesce(svar_kvitterat_tid, besvarad_tid, skickad_tid)) FROM remisser WHERE patient_id = ?1)`).get(pid)?.t ?? null;
+    UNION ALL SELECT max(coalesce(svar_kvitterat_tid, besvarad_tid, skickad_tid)) FROM remisser WHERE patient_id = ?1 ${ma})`).get(pid)?.t ?? null;
 }
 
 // Vad beslutet gäller, som systemet räknar fram. För gallring: journaler vars sista uppgift är äldre än gränsen, utan
@@ -258,6 +261,8 @@ export function fhirJournal(db, pid) {
   }
   for (const r of db.query('SELECT * FROM remisser WHERE patient_id = ? ORDER BY id').all(pid)) res.push(fhir.serviceRequest(db, r, true));
   for (const a of db.query("SELECT * FROM anteckningar WHERE patient_id = ? AND status = 'signerad' ORDER BY id").all(pid)) res.push(fhir.composition(db, a));
+  // Runda 15, r3: handlingarna i mellanarkivet, märkta med var de finns (mellanarkiv.js).
+  res.push(...require('./mellanarkiv.js').exportResurser(db, pid));
   const json = JSON.stringify(res);
   const orgs = [...new Set([...json.matchAll(/"Organization\/([\w-]+)"/g)].map(m => m[1]))];
   const pers = [...new Set([...json.matchAll(/"Practitioner\/([\w-]+)"/g)].map(m => m[1]))];
@@ -287,6 +292,7 @@ Paketet är skapat i en demo med påhittade patienter och testpersonnummer från
 Paketet följer FGS Paketstruktur 2.0 (E-ARK CSIP 2.1.0 och E-ARK SIP 2.1.0 i Riksarkivets tillämpning, version 1.0, 2023-03-30). METS.xml beskriver alla filer med storlek och SHA-256.
 
 - representations/rep_1/data/journal/: journalhandlingarna, en fil per patient i HL7 FHIR R4 (4.0.1) som JSON, Bundle av typen collection.
+- Handlingar som har förts till mellanarkivet står i samma fil med id ma-<nummer>, koden mellanarkiv i meta.tag och paketet i meta.source. Taggen urn:vardkallan:vardenhet anger vårdenheten som ordinerade eller gav ett läkemedel och taggen urn:vardkallan:ordinationsenhet vårdenheten som ordinerade läkemedlet i en administrering, så att en spärr på någon av dem gäller också hos mottagaren.
 - representations/rep_1/data/journal/<patient>-utlamnanden.json: utlämnade journalhandlingar (patientdatalagen 3 kap. 11 §) och utskrifter.
 - representations/rep_1/data/journal/<patient>-sparr-och-skydd.json: spärrar och skyddade personuppgifter, som gäller för den som tar emot paketet.
 - representations/rep_1/data/ovrigt/<patient>-atkomstlogg.ndjson: åtkomstloggen för patienten, en rad per åtkomst med hashkedjans värden. Loggen är inte en journalhandling och ligger därför för sig.

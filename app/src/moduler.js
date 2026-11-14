@@ -339,6 +339,9 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   sf.vyer.push('uppgraderingar.js');
   sf.kod.push('src/releaser.js', 'src/sakerhetskopior.js', 'src/lagringsprognos.js');
   sf.api.push('/api/uppgraderingar', '/api/sakerhetskopior');
+  // Beslut 2026-11-14 (runda 15, r3): loggen från reservservern på sidan Lagring.
+  sf.kod.push('src/reservserver.js', 'src/reservlogg-rutter.js');
+  sf.api.push('/api/reservlogg');
   sf.beskrivning += ' Uppgraderingar som två systemförvaltare godkänner och som går att backa, och schemalagda säkerhetskopior på två platser med återställning till en tidpunkt.';
   sf.simulerat += ' I demon byter en uppgradering eller återgång bara databasen i sandlådan, inte programmet, och säkerhetskopiornas två platser är två kataloger på samma server.';
 }

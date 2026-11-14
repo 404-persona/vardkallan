@@ -37,7 +37,7 @@ function beslutKort(b) {
       <div><dt>Beslut</dt><dd>${esc(datum(b.beslutsdatum))}, ${esc(b.beslutsfattare)}</dd></div>
       <div><dt>Lagrum</dt><dd>${esc(b.lagrum)}</dd></div>
       <div><dt>Gäller</dt><dd>${esc(vad)}</dd></div>
-      <div><dt>Status</dt><dd>${esc(STATUS(b))}${res && b.typ === 'mellanarkiv' ? `. ${esc(plural(res.patienter, 'journal', 'journaler'))}, ${esc(plural(res.anteckningar, 'anteckning', 'anteckningar'))} och ${esc(plural(res.matvarden, 'mätvärde', 'mätvärden'))} i mellanarkivet` : res && !res.paket ? `. ${esc(plural(res.patienter, 'journal', 'journaler'))}` : ''}</dd></div>
+      <div><dt>Status</dt><dd>${esc(STATUS(b))}${res && b.typ === 'mellanarkiv' ? `. ${esc(plural(res.patienter, 'journal', 'journaler'))}, ${esc(maDelar(res))} i mellanarkivet` : res && !res.paket ? `. ${esc(plural(res.patienter, 'journal', 'journaler'))}` : ''}</dd></div>
       ${b.exporter.map(e => `<div><dt>Paket</dt><dd>${esc(e.id)}, ${esc(plural(e.filer, 'fil', 'filer'))}, ${esc(Math.round(e.storlek / 1024))} kB<span class="under-text">SHA-256 ${esc(e.sha256)}</span>${leveransText(e.leverans)}</dd></div>`).join('')}
     </dl>
     <div class="knapprad">
@@ -225,10 +225,19 @@ async function visaGodkannande(main) {
 
 // Runda 14, r4 (Sussa 5.4.2.2): systemet har tagit fram handlingarna. Arkivarien ser antal och period per journal, aldrig
 // innehållet, och för över dem med ett klick. Handlingarna visas sedan i journalen som förut.
+// Runda 15, r3: vad som förs eller har förts över, med ordinationer och administreringar när det finns sådana.
+function maDelar(x) {
+  const delar = [plural(x.anteckningar ?? 0, 'anteckning', 'anteckningar'), plural(x.matvarden ?? 0, 'mätvärde', 'mätvärden')];
+  if (x.ordinationer) delar.push(plural(x.ordinationer, 'ordination', 'ordinationer'));
+  if (x.administreringar) delar.push(plural(x.administreringar, 'administrering', 'administreringar'));
+  return `${delar.slice(0, -1).join(', ')} och ${delar.at(-1)}`;
+}
+
 function underlagMellanarkiv(ut, u, main) {
-  const n = u.patienter.reduce((s, p) => s + p.anteckningar + p.matvarden, 0);
+  // Runda 15, r3: ordinationerna och administreringarna räknas också.
+  const n = u.patienter.reduce((s, p) => s + p.anteckningar + p.matvarden + (p.ordinationer ?? 0) + (p.administreringar ?? 0), 0);
   ut.innerHTML = `<p>${esc(u.regel)} Mottagare: ${esc(u.mottagare)}.</p>
-    ${u.patienter.length ? `<ul class="post-lista">${u.patienter.map(p => `<li>${esc(pnamn(p))}<span class="under-text">${esc(plural(p.anteckningar, 'anteckning', 'anteckningar'))} och ${esc(plural(p.matvarden, 'mätvärde', 'mätvärden'))}${p.period ? `, ${esc(p.period)}` : ''}</span></li>`).join('')}</ul>
+    ${u.patienter.length ? `<ul class="post-lista">${u.patienter.map(p => `<li>${esc(pnamn(p))}<span class="under-text">${esc(maDelar(p))}${p.period ? `, ${esc(p.period)}` : ''}</span></li>`).join('')}</ul>
       <div class="knapprad"><button type="button" class="knapp" data-overfor>${ikon.arkiv}<span>För över till mellanarkivet</span></button></div>
       <p class="dampad liten">Mellanarkivet kontrollerar varje paket innan något förs över. Uppgifterna visas sedan i journalen för den som har rätt att läsa dem, och de ändras aldrig.</p>`
     : '<p class="tom">Inga journalhandlingar uppfyller beslutet.</p>'}`;

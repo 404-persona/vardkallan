@@ -177,7 +177,8 @@ describe('Min journal', () => {
     expect((await k.get(`/api/min/journal/p01/anteckning/${utkast.id}`)).status).toBe(404);
     // Signerade anteckningar visas, och en rättad anteckning visas i sin senaste version med den gamla kvar.
     const signerade = db(k).query("SELECT count(*) AS n FROM anteckningar a WHERE patient_id = 'p01' AND status = 'signerad' AND NOT EXISTS (SELECT 1 FROM anteckningar b WHERE b.ersatter_id = a.id)").get().n;
-    expect(lista.anteckningar.length).toBe(signerade);
+    // Beslut 2026-11-14: anteckningarna i mellanarkivet visas också (mellanarkiv-min-journal-r15.test.js).
+    expect(lista.anteckningar.filter(a => !a.arkiv).length).toBe(signerade);
     const rattad = lista.anteckningar.find(a => a.rattad);
     const full = (await k.get(`/api/min/journal/p01/anteckning/${rattad.id}`)).data;
     expect(full.versioner.length).toBe(2);

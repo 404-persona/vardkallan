@@ -95,7 +95,10 @@ describe('Läskopia', () => {
       // det som GET /api/patient/:id/<namn> ger. Administreringar läggs till som en ny del och prövas då här.
       for (const [namn, handling] of Object.entries(post.lakemedelsdel.delar)) {
         expect(handling).toBe('las_lakemedel');
-        expect(post[namn]).toEqual((await k.get(`/api/patient/${id}/${namn}`)).data);
+        // Runda 15, r3: läskopian tar inte med avslutade ordinationer i mellanarkivet. Allt annat är detsamma.
+        const { mellanarkiv: _, ...vanligt } = (await k.get(`/api/patient/${id}/${namn}`)).data;
+        expect(post[namn]).toEqual(vanligt);
+        expect(post[namn].mellanarkiv).toBeUndefined();
       }
     }
     // Den som inte får läsa läkemedel får ingen läkemedelsdel.

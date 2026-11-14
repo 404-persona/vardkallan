@@ -13,8 +13,8 @@ Systemet ger stöd där det går utan någon motpart: servicenivårapporten räk
 | [Processhandbok](processhandbok.md) | Processerna för incidenter, problem, ändringar, releaser och beställningar enligt ITIL, med roller för driftleverantören och beställaren, att ta över och komma överens om. | KD1.3.1.1, KD1.3.1.2, KD1.3.1.3, KD1.3.2.1, KD1.3.2.2, KD1.3.2.3, KD1.3.2.4, KD1.3.3.1, KD1.3.3.2, KD1.3.4.1, KD1.3.4.2, KD1.3.5.1, KD1.3.5.2, KD1.3.6.1, KD1.3.6.2, KD1.3.7.1, KD1.2.1.4, 12.1.1.2 |
 | [Servicenivåer](servicenivaer.md) | Regler och anvisningar för servicenivåhantering, mall för servicenivåavtal och månadsrapport, och hur referensnivån för svarstider tas fram och följs upp. | KD1.2.1.1, KD1.2.1.2, KD1.2.1.3, KD1.2.1.5 |
 | [Incidentrapportering](incidentrapportering.md) | Rutin för hur incidenter rapporteras till beställaren, med ett förslag till anvisning, vad exporten innehåller och vem som gör vad. | 5.3.1.14 |
-| [Kontinuitetsplan](kontinuitetsplan.md) | Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar. | 5.3.1.15, KD1.1.1.11 |
-| [Återställning efter haveri](aterstallning.md) | Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning och förslag till återställningstid och högsta dataförlust. | 5.3.1.16, KD1.1.3.1, KD1.1.3.2 |
+| [Kontinuitetsplan](kontinuitetsplan.md) | Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna, reservservern och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar. | 5.3.1.15, KD1.1.1.11, 11.2.1.8, KD1.2.1.4 |
+| [Återställning efter haveri](aterstallning.md) | Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning, reservservern och förslag till återställningstid och högsta dataförlust. | 5.3.1.16, KD1.1.3.1, KD1.1.3.2, KD1.1.3.3, KD1.1.3.6 |
 | [Säkerhetsuppdateringar och underhåll](sakerhetsuppdateringar.md) | Hur systemet och plattformen hålls säkerhetsuppdaterade, hur planerat underhåll görs med så lite avbrott som möjligt, och hur uppdateringarna förhåller sig till CE-märkningen. | 5.3.1.11, KD1.1.1.6, KD1.1.1.12 |
 | [Support](support.md) | Upplägg för support dygnet runt i nivåer, ärendehantering och beställarens åtkomst, språkkrav och servicenivåerna för support, och vad systemet har som stöd. | 12.3.1.1, 12.3.1.2, 12.3.1.3, 12.3.1.4, 12.3.1.5 |
 | [Samverkansmodell](samverkansmodell.md) | Samverkansmodell och samverkansorganisation på strategisk, taktisk och operativ nivå, landstingsgemensamt och per region, med forum, roller och förändringsarbetet i samarbete. | 9.1.1.1, 9.1.1.2, 9.1.1.3, 11.1.1.1, 11.1.1.2, 11.2.1.2, 11.2.1.3 |
@@ -51,6 +51,7 @@ Systemet ger stöd där det går utan någon motpart: servicenivårapporten räk
 | 11.2.1.2 | En ansvarig person för helheten | [Samverkansmodell](samverkansmodell.md) |
 | 11.2.1.3 | Samverkansorganisation och mötesfora | [Samverkansmodell](samverkansmodell.md) |
 | 11.2.1.6 | Ansvar för tester fram till acceptanstest | [Införande, utbildning och test](inforande.md) |
+| 11.2.1.8 | Reservlösning för läkemedelsinformation | [Kontinuitetsplan](kontinuitetsplan.md) |
 | 11.2.1.9 | Projektplan för grundimplementationen | [Införande, utbildning och test](inforande.md) |
 | 11.2.1.10 | Plan för grundimplementation | [Införande, utbildning och test](inforande.md) |
 | 11.2.1.11 | Utbildningsplan för grundimplementationen | [Införande, utbildning och test](inforande.md) |
@@ -80,6 +81,8 @@ Systemet ger stöd där det går utan någon motpart: servicenivårapporten räk
 | KD1.1.2.2 | Datakommunikation | [Krav på datahallar och drift](datahallar.md) |
 | KD1.1.3.1 | Krav på datalagring | [Återställning efter haveri](aterstallning.md) |
 | KD1.1.3.2 | Krav på datalagring | [Återställning efter haveri](aterstallning.md) |
+| KD1.1.3.3 | Krav på datalagring | [Återställning efter haveri](aterstallning.md) |
+| KD1.1.3.6 | Dataförlust | [Återställning efter haveri](aterstallning.md) |
 | KD1.1.4.1 | Krav på följsamhet mot klient och klientplattform | [Klienter och klientplattform](klienter.md) |
 | KD1.1.4.2 | Krav på följsamhet mot klient och klientplattform | [Klienter och klientplattform](klienter.md) |
 | KD1.1.4.4 | Klient och klientplattform | [Klienter och klientplattform](klienter.md) |
@@ -91,7 +94,7 @@ Systemet ger stöd där det går utan någon motpart: servicenivårapporten räk
 | KD1.2.1.1 | Krav på tillgänglighet och servicenivå | [Servicenivåer](servicenivaer.md) |
 | KD1.2.1.2 | Krav på tillgänglighet och servicenivå | [Servicenivåer](servicenivaer.md) |
 | KD1.2.1.3 | Krav på tillgänglighet och servicenivå | [Servicenivåer](servicenivaer.md) |
-| KD1.2.1.4 | Krav på tillgänglighet och servicenivå | [Processhandbok](processhandbok.md) |
+| KD1.2.1.4 | Krav på tillgänglighet och servicenivå | [Processhandbok](processhandbok.md), [Kontinuitetsplan](kontinuitetsplan.md) |
 | KD1.2.1.5 | SLA-uppföljning | [Servicenivåer](servicenivaer.md) |
 | KD1.3.1.1 | Krav på processhandbok | [Processhandbok](processhandbok.md) |
 | KD1.3.1.2 | Krav på processhandbok | [Processhandbok](processhandbok.md) |

@@ -527,7 +527,9 @@ describe('E-arkiv', () => {
     const idx = filer.get(`${rot}metadata/descriptive/earkiv-index.xml`).data.toString('utf8');
     const poster = [...idx.matchAll(/<handling>([\s\S]*?)<\/handling>/g)].map(m => m[1]);
     const antal = ['anteckningar WHERE status = \'signerad\' AND', 'diagnoser WHERE', 'matvarden WHERE', 'ordinationer WHERE', 'vardkontakter WHERE', 'remisser WHERE']
-      .reduce((s, t) => s + db.query(`SELECT count(*) AS n FROM ${t} patient_id = 'p01'`).get().n, 0);
+      .reduce((s, t) => s + db.query(`SELECT count(*) AS n FROM ${t} patient_id = 'p01'`).get().n, 0)
+      // Runda 15, r3: och handlingarna i mellanarkivet, som exporten också tar med.
+      + db.query("SELECT count(*) AS n FROM mellanarkiv_handlingar WHERE patient_id = 'p01'").get().n;
     expect(poster.length).toBe(antal);
     for (const p of poster) for (const d of earkiv.DATAELEMENT.filter(x => x.obligatorisk)) expect(p).toMatch(new RegExp(`<${d.namn}>[^<]+</${d.namn}>`));
     // Varje post pekar på en resurs som finns i filen.

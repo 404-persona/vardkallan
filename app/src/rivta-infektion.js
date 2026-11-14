@@ -21,6 +21,8 @@ import { tolka, barn } from './rivta/xml.js';
 import { RIVTA_ROT } from './rivta/kontrakt.js';
 import { vardgivare } from './rivta/konsumenter.js';
 import * as r3 from './rivta-r3.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 const DOMAN = 'riv.processdevelopment.infections';
 export const DEF = {
@@ -107,14 +109,14 @@ export async function overfor(db, { patientId = null } = {}) {
   const filter = patientId ? 'AND patient_id = ?' : '';
   const arg = patientId ? [patientId] : [];
   // Vårdtillfällen i slutenvård.
-  for (const v of db.query(`SELECT * FROM vardkontakter WHERE typ = 'slutenvard' AND coalesce(kalla, 'vardkallan') = 'vardkallan' ${filter}`).all(...arg)) {
+  for (const v of db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE typ = 'slutenvard' AND coalesce(kalla, 'vardkallan') = 'vardkallan' ${filter}`).all(...arg)) {
     if (!far(v.patient_id, v.enhet_id)) continue;
     const r = await skicka(db, 'vardkontakt', v, { ...patientVarden(patient(v.patient_id)), vårdgivare: vg, 'registrerande enhet': hsa(v.enhet_id), vårdkontaktid: `VK-${v.id}`,
       vårdkontakttid_starttidpunkt: tid(v.start), vårdkontakttid_sluttidpunkt: tid(v.slut ?? v.start) }, 'vardkontakt', String(v.id));
     if (r === 'ok') ut.vardkontakter++;
   }
   // Infektionsdiagnoser.
-  const diagnoser = db.query(`SELECT * FROM diagnoser WHERE coalesce(kalla, 'vardkallan') = 'vardkallan' ${filter}`).all(...arg).filter(d => INFEKTION.test(d.kod));
+  const diagnoser = db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} WHERE coalesce(kalla, 'vardkallan') = 'vardkallan' ${filter}`).all(...arg).filter(d => INFEKTION.test(d.kod));
   for (const d of diagnoser) {
     if (!far(d.patient_id, d.enhet_id)) continue;
     const r = await skicka(db, 'tillstand', d, { ...patientVarden(patient(d.patient_id)), vårdgivare: vg, 'registrerande enhet': hsa(d.enhet_id), tillståndsid: `D-${d.id}`,
@@ -122,12 +124,12 @@ export async function overfor(db, { patientId = null } = {}) {
     if (r === 'ok') ut.tillstand++;
   }
   // Antibiotika med ordinationsorsak: den senaste infektionsdiagnosen på samma vårdenhet.
-  for (const o of db.query(`SELECT o.*, k.atc FROM ordinationer o JOIN katalog k ON k.id = o.lakemedel_id WHERE coalesce(o.kalla, 'vardkallan') = 'vardkallan' ${patientId ? 'AND o.patient_id = ?' : ''}`).all(...arg)) {
+  for (const o of db.query(`SELECT o.*, k.atc FROM ${statVy(db, 'ordinationer')} o JOIN katalog k ON k.id = o.lakemedel_id WHERE coalesce(o.kalla, 'vardkallan') = 'vardkallan' ${patientId ? 'AND o.patient_id = ?' : ''}`).all(...arg)) {
     if (!ANTIBIOTIKA.test(o.atc) || !far(o.patient_id, o.enhet_id)) continue;
     const ve = vardenhetFor(db, o.enhet_id);
     const d = diagnoser.filter(x => x.patient_id === o.patient_id && vardenhetFor(db, x.enhet_id) === ve).sort((a, b) => b.datum.localeCompare(a.datum))[0];
     if (!d) continue;
-    const inskrivning = db.query("SELECT start FROM vardkontakter WHERE patient_id = ? AND typ = 'slutenvard' AND start <= ? ORDER BY start DESC LIMIT 1").get(o.patient_id, o.start);
+    const inskrivning = db.query(`SELECT start FROM ${statVy(db, 'vardkontakter')} WHERE patient_id = ? AND typ = 'slutenvard' AND start <= ? ORDER BY start DESC LIMIT 1`).get(o.patient_id, o.start);
     const smittvag = inskrivning && Date.parse(o.start) - Date.parse(inskrivning.start) > 48 * 3600_000 ? 'vard' : 'samhalle';
     const r = await skicka(db, 'orsak', o, { ...patientVarden(patient(o.patient_id)), vårdgivare: vg, 'registrerande enhet': hsa(o.enhet_id),
       registreringstidpunkt_ordinationstidpunkt: tid(o.start), registreringstidpunkt: tid(o.skapad), id_terminologi: '1.2.752.116.1.1.1', tillståndskod: d.kod.replace('.', ''), smittväg: smittvag,

@@ -15,6 +15,8 @@ import * as lakemedel from './lakemedel.js';
 import * as vidimering from './vidimering.js';
 import { kravVardande } from './administrering.js';
 import { datumI } from './lakemedelsprocess.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 const personNamn = (db, id) => (id ? db.query('SELECT namn FROM personal WHERE id = ?').get(id)?.namn ?? id : null);
 const katalog = (db, id) => db.query('SELECT * FROM katalog WHERE id = ?').get(id);
@@ -129,7 +131,7 @@ export function patientgrupp(db, personal) {
   }
   const ve = vardenhetFor(db, personal.enhet_id);
   const enheter = new Set(enheterUnder(db, ve));
-  const ord = db.query('SELECT * FROM ordinationer').all().filter(o => enheter.has(o.enhet_id));
+  const ord = db.query(`SELECT * FROM ${statVy(db, 'ordinationer')}`).all().filter(o => enheter.has(o.enhet_id));
   const per = new Map();
   for (const o of ord) {
     const lm = katalog(db, o.lakemedel_id);

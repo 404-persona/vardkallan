@@ -71,7 +71,13 @@ export function hamtaRad(db, id) {
 }
 
 // Remisser för en patient. Remisser till eller från min vårdenhet syns alltid, andra enligt inre sekretess.
-export function forPatient(atk) {
+// Beslut 2026-11-14: avslutade remisser i mellanarkivet står med i fältet mellanarkiv, med samma prövning (mellanarkiv.js).
+// Läskopian vid avbrott tar inte med dem (medMellanarkiv: false).
+export function forPatient(atk, { medMellanarkiv = true } = {}) {
+  const ut = forPatientAktiva(atk);
+  return medMellanarkiv ? { ...ut, mellanarkiv: require('./mellanarkiv.js').remisser(atk) } : ut;
+}
+function forPatientAktiva(atk) {
   const klinisk = kanRoll(atk.personal, 'las_remiss');
   atk.krav(klinisk ? 'las_remiss' : 'las_remiss_status');
   const db = atk.db;

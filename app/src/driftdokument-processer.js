@@ -376,8 +376,9 @@ Exporten ger underlaget om incidenten. För en anmälan behöver vårdgivaren oc
   {
     fil: 'kontinuitetsplan.md',
     rubrik: 'Kontinuitetsplan',
-    sammanfattning: 'Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar.',
-    sussa: ['5.3.1.15', 'KD1.1.1.11'],
+    sammanfattning: 'Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna, reservservern och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar.',
+    // Runda 15, r3: reservservern.
+    sussa: ['5.3.1.15', 'KD1.1.1.11', '11.2.1.8', 'KD1.2.1.4'],
     text: `## Syfte
 
 Kontinuitetsplanen ska säkerställa att vården har tillgång till informationen också när tjänsten störs (5.3.1.15). Planen beskriver vad systemet gör själv, vad den som driver systemet ska göra och vad verksamheten gör. Den ska övas och hållas aktuell.
@@ -392,7 +393,11 @@ Kontinuitetsplanen ska säkerställa att vården har tillgång till informatione
 
 **Säkerhetskopiorna.** Systemet tar en kopia av databasen var femtonde minut när något har ändrats och skriver den på två platser, där den verifieras. Se Återställning efter haveri.
 
-Begränsningar: läskopian innehåller inte hela journalen, under avbrottet går bara doser och mätvärden att registrera, och läsläget förutsätter att personen var inloggad på datorn innan avbrottet. Läsläget ersätter inte en reservrutin på papper för längre avbrott.
+**Vad läskopian har med.** Det som behövs vid ett avbrott finns i läskopian hur gammalt det än är: uppmärksamhetsinformationen, de aktuella läkemedlen och det senaste mätvärdet av varje typ. De förs aldrig till mellanarkivet. Det som har förts till mellanarkivet tas inte med, och läskopians storlek har ett tak per patient och totalt som prövas i testerna (11.2.1.8).
+
+**Reservservern.** Vid ett längre avbrott, eller när den som behöver journalen inte var inloggad när avbrottet började, startar driften en reservserver på en annan plats. Den är samma program som kärnsystemet, startat med inställningen «RESERVSERVER=1» eller kommandot «bun src/reservserver.js», och läser den senaste verifierade säkerhetskopian från den andra platsen för kopiorna. Den kontrollerar kopian som vid en återställning och ändrar aldrig något där. Reservservern kan bara läsas: varje registrering nekas med en förklaring, och journalens tabeller har triggrar som stoppar en ändring. Den säger överst på varje sida och i varje svar att den är en reservserver och hur gamla uppgifterna är. Inloggning, aktivt val och nödåtkomst fungerar som vanligt, och varje läsning loggas i åtkomstloggen och i en fil på reservserverns egen disk, som läses in i kärnsystemets logg när det är i drift igen. Reservservern är en redundans för läsning (KD1.2.1.4), inte för registrering. Hur den startas står i Återställning efter haveri («app/src/reservserver.js»).
+
+Begränsningar: läskopian innehåller inte hela journalen, under avbrottet går bara doser och mätvärden att registrera, och läsläget förutsätter att personen var inloggad på datorn innan avbrottet. Reservservern visar journalen som den var i kopian, högst femton minuter före avbrottet, och inget kan registreras där. Läsläget och reservservern ersätter inte en reservrutin på papper för längre avbrott.
 
 ## Systemet när integrerade system inte svarar
 
@@ -425,10 +430,10 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Scenario | Verksamheten | Driftleverantören |
 | --- | --- | --- |
 | Avbrott under 30 minuter | Fortsätter i läsläget. Ger doser och registrerar mätvärden i skrivkön. | Incident prioritet 1, åtgärd, rapport till beställaren. |
-| Avbrott 30 minuter till 4 timmar | Läsläget och skrivkön. Nya anteckningar, ordinationer och remisser på papper enligt reservrutinen. | Större incident, lägesrapporter, beslut om återställning. |
-| Avbrott längre än 4 timmar | Reservrutin på papper, utskrifter av läkemedelslistor från läsläget innan kopian blir för gammal. | Återställning efter haveri, se det dokumentet. |
+| Avbrott 30 minuter till 4 timmar | Läsläget och skrivkön. Reservservern för den som inte har en läskopia. Nya anteckningar, ordinationer och remisser på papper enligt reservrutinen. | Större incident, lägesrapporter, beslut om att starta reservservern och om återställning. |
+| Avbrott längre än 4 timmar | Läser journalen på reservservern. Reservrutin på papper, utskrifter av läkemedelslistor från läsläget innan kopian blir för gammal. | Reservservern i drift, återställning efter haveri, se det dokumentet. |
 | Avbrott hos integrerat system | Arbetar som vanligt i Vårdkällan, följer avstämningen mot NLL. | Incident hos rätt part, uppföljning av avstämning. |
-| Efter avbrottet | Skrivkön skickas, konflikter löses. Papper förs in i journalen. | Kontroll att loggarna från läsläget har förts över, uppföljningsmöte. |
+| Efter avbrottet | Skrivkön skickas, konflikter löses. Papper förs in i journalen. | Kontroll att loggarna från läsläget och reservservern har förts över, reservservern stängs, uppföljningsmöte. |
 
 ## Roller
 
@@ -437,14 +442,15 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Driftleverantörens kontinuitetsansvarig | Äger planen, leder övningarna och håller planen aktuell. |
 | Beställarens kontinuitetsansvarig | Äger verksamhetens reservrutiner och beslutar om övergång till papper. |
 | Incidentansvarig | Leder vid avbrottet enligt processhandboken. |
-| Systemförvaltare | Följer skrivkön och avstämningen efter avbrottet. |
+| Systemförvaltare | Ger driften nyckeln från sidan Säkerhetskopior när reservservern ska visa en viss databas, följer skrivkön och avstämningen efter avbrottet och ser till att reservserverns logg läses in. |
 
 ## Övning av planen
 
 1. Läsläget övas på varje enhet [fyll i: hur ofta, förslag två gånger per år], med knappen som simulerar avbrott i en flik, också reservinloggningen.
 2. En återställning från säkerhetskopiorna övas i acceptanstestmiljön [fyll i: hur ofta, förslag varje kvartal], se Återställning efter haveri.
 3. Ett avbrott hos ett integrerat system övas tillsammans med systemets ägare en gång per år.
-4. Varje övning dokumenteras med vad som fungerade och vad som ändras i planen.
+4. Reservservern startas på sin plats och prövas med en inloggning, en läsning och en inläsning av loggen [fyll i: hur ofta, förslag två gånger per år].
+5. Varje övning dokumenteras med vad som fungerade och vad som ändras i planen.
 
 ## Det systemet redan har som stöd
 
@@ -453,6 +459,7 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 - Säkerhetskopior på två platser med verifiering och återställning till en tidpunkt («app/src/sakerhetskopior.js»).
 - Felhanteringen mot NLL, prenumerationerna, laboratoriernas system och masterdata («app/src/lakemedel.js», «app/src/prenumeration.js», «app/src/produktionssystem.js», «app/src/masterdata.js»).
 - Återgång till förra versionen («app/src/releaser.js»).
+- Reservservern, som läser den senaste verifierade kopian och bara kan läsas («app/src/reservserver.js»).
 
 ## Att fylla i för den som driver systemet
 
@@ -463,6 +470,7 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Verksamhetens reservrutin på papper | [fyll i: hänvisning till beställarens rutin] |
 | Reservväg för inloggning | [fyll i: lösning när den nationella inloggningstjänsten inte svarar] |
 | Andra server och växling | [fyll i: hur och var] |
+| Plats för reservservern | [fyll i: datahall, ström och nät, och vem som startar den] |
 | Sannolikhet och konsekvens i riskanalysen | [fyll i: bedömning per risk] |
 | Övningsplan | [fyll i: datum för nästa övningar] |
 | Planen senast granskad | [fyll i: datum] |
@@ -471,8 +479,9 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
   {
     fil: 'aterstallning.md',
     rubrik: 'Återställning efter haveri',
-    sammanfattning: 'Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning och förslag till återställningstid och högsta dataförlust.',
-    sussa: ['5.3.1.16', 'KD1.1.3.1', 'KD1.1.3.2'],
+    sammanfattning: 'Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning, reservservern och förslag till återställningstid och högsta dataförlust.',
+    // Runda 15, r3: reservservern.
+    sussa: ['5.3.1.16', 'KD1.1.3.1', 'KD1.1.3.2', 'KD1.1.3.3', 'KD1.1.3.6'],
     text: `## Syfte
 
 Den som driver systemet ska ha en plan, en process och verktyg för att återställa efter ett systemhaveri (5.3.1.16), tillhandahålla den datalagring som krävs (KD1.1.3.1) och utföra och ansvara för säkerhetskopieringen (KD1.1.3.2). Dokumentet beskriver vad systemet gör själv och vad driften måste lägga till.
@@ -515,11 +524,24 @@ En systemförvaltare kan göra en provåterläsning i vyn Lagring: systemet tar 
 | Återställning till en tidpunkt i acceptanstestmiljön | [fyll i: förslag varje kvartal] | Systemförvaltare och driftleverantören |
 | Återuppbyggnad av hela tjänsten på en ny server | [fyll i: förslag en gång per år] | Driftleverantören |
 
+## Reservservern
+
+Medan kärnsystemet återställs kan vården läsa journalen på en reservserver på en annan plats. Reservservern läser den senaste verifierade kopian, så att återläsningen ger ett fungerande system att läsa i (KD1.1.3.3), och inget som fanns i kopian går förlorat för den som behöver det (KD1.1.3.6).
+
+1. Starta avbildningen av den version som är i drift på reservserverns plats, med kopiornas platser monterade bara för läsning och med inställningarna «RESERVSERVER=1», «KOPIOR_KATALOG» och «KOPIOR_ANDRA» (eller kommandot «bun src/reservserver.js»). «RESERV_LOGG» är katalogen på reservserverns egen disk där loggen skrivs, och «FLERFAKTOR_NYCKEL» ska vara densamma som i kärnsystemet, så att engångskoderna fungerar.
+2. Ska reservservern visa en viss databas, och inte den senaste kopian av alla, anger driften «RESERV_SANDLADA» med nyckeln som systemförvaltaren ser på sidan Säkerhetskopior.
+3. Reservservern väljer själv den senaste kopian som är verifierad, kontrollerar den på samma sätt som vid en återställning och läser den från den andra platsen om den första är skadad. Finns ingen kopia som håller startar den inte, och säger varför.
+4. Kontrollera att «GET /api/health» har fältet reservserver med kopians tid och ålder, och logga in som en vanlig användare. Raden överst på sidan säger att det är en reservserver och hur gamla uppgifterna är.
+5. Meddela verksamheten adressen till reservservern och att den bara kan läsas.
+6. När kärnsystemet är i drift igen: stäng reservservern och gör katalogen med dess logg tillgänglig för kärnsystemet med «RESERV_LOGG». Sidan Lagring visar då att det finns en logg som inte är inläst, med antal rader, period och kopia, och systemförvaltaren läser in den med ett klick. Kommandot «bun src/reservserver.js --las-in-logg <fil> --databas <fil>» gör samma sak och finns som reserv. Varje rad läses in en gång, med sin tid och person, märkt Reservservern, och en logg vars kedja inte håller läses inte in.
+
+Reservservern ändrar aldrig något på platserna för kopiorna, och den tar inga egna kopior. Det som registrerades efter kopian finns inte där.
+
 ## Haveri av hela servern
 
 Systemets egna kopior skyddar mot skadad databas och fel i en version. Ett haveri av hela servern eller datahallen kräver driftens egen plan:
 
-1. Bekräfta haveriet och starta processen för större incident.
+1. Bekräfta haveriet och starta processen för större incident, och starta reservservern så att vården kan läsa journalen under tiden.
 2. Starta avbildningen av den version som var i drift på en ny server. Varje version är en egen avbildning, byggd ur samma källkod, och bygget stoppas om ett test är rött («app/Dockerfile»).
 3. Gör kopiorna från den andra platsen och nyckeln till dem tillgängliga för den nya servern.
 4. Läs in den senaste verifierade kopian och kontrollera den med en provåterläsning.
@@ -539,6 +561,7 @@ Driftleverantören tillhandahåller lagringen: databasen, säkerhetskopiorna på
 - Provåterläsning och lagringsprognos («app/src/lagring.js»).
 - Migreringar som går att backa, så att en äldre version kan starta mot databasen («app/src/releaser.js»).
 - Loggarna med hashkedjor, som kontrolleras i varje kopia («app/src/logg.js», «app/src/sakerhetslogg.js»).
+- Reservservern, som läser den senaste verifierade kopian, bara kan läsas och loggar till en egen fil som läses in efteråt («app/src/reservserver.js»).
 
 ## Att fylla i för den som driver systemet
 
@@ -550,7 +573,7 @@ Driftleverantören tillhandahåller lagringen: databasen, säkerhetskopiorna på
 | Andra platsen för kopiorna | [fyll i: volym på annan ort] |
 | Driftens egna kopior med längre lagringstid | [fyll i: hur ofta, var och hur länge] |
 | Förvaring av nyckeln till kopiorna | [fyll i: var och vem som har åtkomst] |
-| Reservserver | [fyll i: var och hur den startas] |
+| Reservserver | [fyll i: var den står, vem som startar den och hur verksamheten får adressen] |
 | Senaste övade återuppbyggnad | [fyll i: datum och resultat] |
 `,
   },

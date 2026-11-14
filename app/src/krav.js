@@ -309,6 +309,10 @@ export const KRAV = [
   k('M13', 'Medicinteknisk klassning sent: avsett ändamål och klassning före bygget', `${RAPPORT}, Misstag att inte upprepa`, 'planerat', null, [], 'Vårdkällans egen bedömning och klassning per beslutsstödsmodul enligt MDR med MDCG 2019-11 finns i docs/mdr-bedomning.md, men den gjordes i efterhand och inte före bygget. Varningarna är märkta som demoregler.'),
 ];
 
+// Runda 15, r3: läsåtkomsten vid avbrott med läskopian och reservservern (D4), och mellanarkivet i exporten och FHIR (M12).
+import { EGNA as R15R3_EGNA } from './sussa/runda15-r3.js';
+for (const [id, tester] of Object.entries(R15R3_EGNA)) { const x = KRAV.find(k => k.id === id); if (x) x.tester.push(...tester.filter(t => !x.tester.includes(t))); }
+
 export function lasTestresultat(fil) {
   try {
     if (!fil || !existsSync(fil)) return null;

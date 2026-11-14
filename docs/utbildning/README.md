@@ -57,7 +57,7 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 
 | Roll | Arbetsflöden | Filmer | Övningar | Uppdrag |
 | --- | --- | --- | --- | --- |
-| [Läkare](lakare.md) | 61 | 4 | 7 | 22 |
+| [Läkare](lakare.md) | 62 | 4 | 7 | 22 |
 | [Sjuksköterska](sjukskoterska.md) | 29 | 2 | 8 | 19 |
 | [Undersköterska](underskoterska.md) | 1 | 1 | 7 | 7 |
 | [Vårdadministratör](vardadministrator.md) | 19 | 1 | 7 | 12 |
@@ -68,6 +68,6 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 | [Farmaceut](farmaceut.md) | 1 | 0 | 6 | 0 |
 | [Verksamhetschef](verksamhetschef.md) | 1 | 0 | 4 | 0 |
 | [Ekonom](ekonom.md) | 1 | 0 | 3 | 0 |
-| [Systemförvaltare](systemforvaltare.md) | 4 | 1 | 3 | 7 |
+| [Systemförvaltare](systemforvaltare.md) | 5 | 1 | 3 | 7 |
 | [Fysioterapeut](fysioterapeut.md) | 0 | 0 | 5 | 7 |
 | [Invånare i Min journal](invanare.md) | 5 | 1 | 0 | 7 |

@@ -13,6 +13,8 @@
 // varför står i manifestet, men inte vilka.
 import { createHmac, randomBytes } from 'node:crypto';
 import { vardenhetFor, aktivaSparrar } from './atkomst.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 const TZ = 'Europe/Stockholm';
 export const UPPDATERAS_KLOCKAN = 2;
@@ -205,7 +207,7 @@ export function bygg(db, { pseudonymnyckel = null } = {}) {
     return p;
   };
   const person = (p, datum) => ({ patient: pseudonym(k, `patient:${p.id}`), aldersgrupp: aldersgrupp(p.fodd, datum ?? p.fodd), kon: p.kon });
-  for (const v of db.query('SELECT * FROM vardkontakter ORDER BY id').all()) {
+  for (const v of db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} ORDER BY id`).all()) {
     const p = far(v.patient_id, v.enhet_id);
     if (!p) continue;
     const start = datumI(v.start);
@@ -218,19 +220,19 @@ export function bygg(db, { pseudonymnyckel = null } = {}) {
       besoksMinuter: v.besok_slut ? Math.max(0, Math.round((Date.parse(v.besok_slut) - Date.parse(v.ankomst ?? v.start)) / 60_000)) : null,
     });
   }
-  for (const d of db.query('SELECT * FROM diagnoser ORDER BY id').all()) {
+  for (const d of db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} ORDER BY id`).all()) {
     const p = far(d.patient_id, d.enhet_id);
     if (!p) continue;
     data.Diagnos.push({ rad: pseudonym(k, `diagnos:${d.id}`), ...person(p, d.datum), vardenhet: ve(d.enhet_id)?.hsa_id ?? null, kod: d.kod, kodKategori: d.kod.slice(0, 3), typ: d.typ, datum: d.datum });
   }
   const atc = new Map(db.query('SELECT id, atc FROM katalog').all().map(x => [x.id, x.atc]));
-  for (const o of db.query('SELECT * FROM ordinationer ORDER BY id').all()) {
+  for (const o of db.query(`SELECT * FROM ${statVy(db, 'ordinationer')} ORDER BY id`).all()) {
     const p = far(o.patient_id, o.enhet_id);
     if (!p) continue;
     data.Ordination.push({ rad: pseudonym(k, `ordination:${o.id}`), ...person(p, o.start), vardenhet: ve(o.enhet_id)?.hsa_id ?? null, atc: atc.get(o.lakemedel_id) ?? null, typ: o.typ, startdatum: o.start, status: o.status, utsattDatum: datumI(o.utsatt_tid) });
   }
   const dagar = (fran, till) => (fran && till ? Math.max(0, Math.floor((Date.parse(till) - Date.parse(fran)) / 86400_000)) : null);
-  for (const r of db.query('SELECT * FROM remisser ORDER BY id').all()) {
+  for (const r of db.query(`SELECT * FROM ${statVy(db, 'remisser')} ORDER BY id`).all()) {
     // Remissen saknar patient i uttaget, men en remiss från eller till en spärrad vårdenhet kommer inte med.
     if (!far(r.patient_id, r.fran_enhet_id) || sparrad(r.patient_id, r.till_enhet_id)) continue;
     data.Remiss.push({
@@ -241,13 +243,13 @@ export function bygg(db, { pseudonymnyckel = null } = {}) {
   }
   // Runda 9, r7: mätvärden, anteckningar, vårdtillfällen och patientavgifter, med samma regler som de andra tabellerna.
   const vk = (id) => (id ? pseudonym(k, `vardkontakt:${id}`) : null);
-  for (const m of db.query('SELECT * FROM matvarden ORDER BY id').all()) {
+  for (const m of db.query(`SELECT * FROM ${statVy(db, 'matvarden')} ORDER BY id`).all()) {
     const p = far(m.patient_id, m.enhet_id);
     if (!p) continue;
     const d = datumI(m.tid);
     data.Matvarde.push({ rad: pseudonym(k, `matvarde:${m.id}`), ...person(p, d), vardenhet: ve(m.enhet_id)?.hsa_id ?? null, vardkontakt: vk(m.vardkontakt_id), typ: m.typ, varde: m.varde_num ?? m.varde, enhet: m.matt_enhet || null, datum: d });
   }
-  for (const a of db.query('SELECT * FROM anteckningar WHERE id NOT IN (SELECT ersatter_id FROM anteckningar WHERE ersatter_id IS NOT NULL) ORDER BY id').all()) {
+  for (const a of db.query(`SELECT * FROM ${statVy(db, 'anteckningar')} WHERE id NOT IN (SELECT ersatter_id FROM ${statVy(db, 'anteckningar')} WHERE ersatter_id IS NOT NULL) ORDER BY id`).all()) {
     const p = far(a.patient_id, a.enhet_id);
     if (!p) continue;
     data.Anteckning.push({ rad: pseudonym(k, `anteckning:${a.id}`), patient: pseudonym(k, `patient:${p.id}`), vardenhet: ve(a.enhet_id)?.hsa_id ?? null, vardkontakt: vk(a.vardkontakt_id),
@@ -256,7 +258,7 @@ export function bygg(db, { pseudonymnyckel = null } = {}) {
   for (const t of db.query('SELECT * FROM vardtillfallen ORDER BY id').all()) {
     const p = far(t.patient_id, t.enhet_id);
     if (!p) continue;
-    const vistelser = db.query("SELECT enhet_id FROM vardkontakter WHERE vardtillfalle_id = ? AND typ = 'slutenvard'").all(t.id);
+    const vistelser = db.query(`SELECT enhet_id FROM ${statVy(db, 'vardkontakter')} WHERE vardtillfalle_id = ? AND typ = 'slutenvard'`).all(t.id);
     if (vistelser.some(x => sparrad(t.patient_id, x.enhet_id))) { utelamnat.sparrade++; continue; }
     const inn = datumI(t.inskriven);
     data.Vardtillfalle.push({ rad: pseudonym(k, `vardtillfalle:${t.id}`), ...person(p, inn), vardenhet: ve(t.enhet_id)?.hsa_id ?? null, inskrivenDatum: inn, utskrivenDatum: datumI(t.utskriven),
@@ -267,7 +269,7 @@ export function bygg(db, { pseudonymnyckel = null } = {}) {
   // patienten har LMA-kort (som röjer att patienten är asylsökande).
   // Runda 12, r1: avgifterna är parametrar (vardkontakt.avgifter).
   const AVGIFT_DEMO = require('./vardkontakt.js').avgifter(db);
-  for (const v of db.query("SELECT * FROM vardkontakter WHERE kalla = 'vardkallan' AND typ <> 'slutenvard' ORDER BY id").all()) {
+  for (const v of db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE kalla = 'vardkallan' AND typ <> 'slutenvard' ORDER BY id`).all()) {
     const p = far(v.patient_id, v.enhet_id);
     if (!p) continue;
     const d = datumI(v.start);

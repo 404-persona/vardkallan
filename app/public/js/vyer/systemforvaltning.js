@@ -388,7 +388,8 @@ export const lagring = {
     main.innerHTML = vyRubrik('Lagring', 'Databasens storlek, varje huvudmans uppgifter för sig och provåterläsning av säkerhetskopian.') + '<div id="sf-lagring"><p class="tom">Hämtar.</p></div>';
     // Runda 9, r5: miljöerna (KD1.1.1.5) och certifikaten och de signerade meddelandena (Sussa 5.3.1.5 och 5.3.1.8).
     // Runda 12, r2: de schemalagda säkerhetskopiorna på två platser (Sussa KD1.1.3.6).
-    const [o, mi, ce, sk] = await Promise.all([api('/api/lagring'), api('/api/miljoer'), api('/api/certifikat'), api('/api/sakerhetskopior')]);
+    // Beslut 2026-11-14 (runda 15, r3): loggen från reservservern.
+    const [o, mi, ce, sk, rl] = await Promise.all([api('/api/lagring'), api('/api/miljoer'), api('/api/certifikat'), api('/api/sakerhetskopior'), api('/api/reservlogg').catch(() => null)]);
     const el = main.querySelector('#sf-lagring');
     if (!el) return;
     const senaste = o.matningar[0];
@@ -398,6 +399,7 @@ export const lagring = {
         <button type="button" class="knapp" data-prova>Pröva säkerhetskopiering och återläsning</button>
         <div data-provresultat aria-live="polite"></div></section>
       ${kopieSektion(sk)}
+      ${rl ? reservloggSektion(rl) : ''}
       ${miljoSektion(mi)}
       ${certifikatSektion(ce)}
       <section class="lm-sektion" aria-labelledby="sf-l-huvudman"><h2 id="sf-l-huvudman">Uppgifter per huvudman</h2>
@@ -426,6 +428,20 @@ export const lagring = {
       if (ak) return aterkallaCert(main, ak);
       const kb = e.target.closest('[data-kontrollera-bevis]');
       if (kb) return kontrolleraBevis(kb);
+      // Beslut 2026-11-14: loggen från reservservern läses in med ett klick, och demon kan skapa en simulerad logg.
+      const rli = e.target.closest('[data-las-in-reservlogg]');
+      if (rli) {
+        try {
+          const r = await medKnapp(rli, () => api('/api/reservlogg/las-in', { metod: 'POST', data: { fil: rli.dataset.lasInReservlogg } }));
+          notis(r.inlasta ? `${r.inlasta} ${r.inlasta === 1 ? 'rad' : 'rader'} från reservservern är inlästa i åtkomstloggen.` : 'Alla rader i loggen var redan inlästa.', 'ok');
+        } catch { /* notis visad */ }
+        return lagring.visa(main);
+      }
+      const rld = e.target.closest('[data-demo-reservlogg]');
+      if (rld) {
+        try { await medKnapp(rld, () => api('/api/reservlogg/demo', { metod: 'POST', data: {} })); } catch { /* notis visad */ }
+        return lagring.visa(main);
+      }
       // Runda 12, r2: en kopia nu och återställning till en tidpunkt.
       const tk = e.target.closest('[data-ta-kopia]');
       if (tk) {
@@ -619,4 +635,18 @@ async function vyforvalSektion(el) {
     }));
   };
   rita(o);
+}
+
+// Beslut 2026-11-14 (runda 15, r3): loggen från reservservern. Systemet säger själv om det finns en logg som inte är
+// inläst, från vilken kopia och för vilken period, och om kedjan i den håller. Ett klick läser in den.
+function reservloggSektion(rl) {
+  const rad = (f) => `<li class="ik-ater" data-reservlogg="${esc(f.fil)}"><div class="ik-text"><span class="ik-rubrik">${f.inlast ? 'Inläst' : `${tal(f.kvar, 0)} av ${tal(f.rader, 0)} rader väntar`}${f.simulerad ? ' <span class="tagg tagg-demo">Simulerad i demon</span>' : ''}</span>
+      <span class="under-text">Åtkomster ${esc(tidpunkt(f.fran))} till ${esc(tidpunkt(f.till))}${f.kopia ? `, ur kopian från ${esc(tidpunkt(f.kopia.tid))}` : ''}.</span>
+      ${f.kedjaHel ? '' : '<span class="under-text">Kedjan i loggen håller inte, så den läses inte in. Kontakta driften, som har originalet.</span>'}</div>
+    <div class="ik-knappar">${!f.inlast && f.kedjaHel ? `<button type="button" class="knapp liten" data-las-in-reservlogg="${esc(f.fil)}">Läs in</button>` : ''}</div></li>`;
+  return `<section class="lm-sektion" aria-labelledby="sf-l-reservlogg" data-reservlogg-sektion><h2 id="sf-l-reservlogg">Logg från reservservern</h2>
+    <p class="${rl.vantar ? 'ruta ruta-info' : ''} liten">${esc(rl.text)}</p>
+    ${rl.filer.length ? `<ul class="inkorg-lista">${rl.filer.map(rad).join('')}</ul>` : ''}
+    <p class="liten dampad">${esc(rl.kommando)}</p>
+    <button type="button" class="knapp liten sekundar" data-demo-reservlogg>Demo: skapa en simulerad logg från reservservern</button></section>`;
 }

@@ -799,6 +799,19 @@ window.addEventListener('hashchange', () => rita());
 
 // Runda 9, r5 (KD1.1.1.5): märkningen av en acceptanstest-, utbildnings- eller testmiljö överst på varje sida, med
 // vägen tillbaka till produktionsmiljön. Produktionsmiljön har ingen märkning utöver demoraden.
+// Runda 15, r3: reservservern säger överst på varje sida att den är en reservserver, hur gamla uppgifterna är och att
+// den bara kan läsas. Åldern räknas om av servern varje minut.
+let reservTimer = null;
+function reservrad(r) {
+  const el = document.getElementById('reservrad');
+  if (!el) return;
+  if (!r) { el.hidden = true; return; }
+  el.innerHTML = `<p><strong>${esc(r.text)}</strong></p><p>${esc(r.gor)}</p>`;
+  el.hidden = false;
+  document.title = 'Reservserver: Vårdkällan';
+  if (!reservTimer) reservTimer = setInterval(async () => { try { reservrad((await (await fetch('/api/health', { cache: 'no-store' })).json()).reservserver); } catch { /* nästa minut */ } }, 60_000);
+}
+
 function miljorad(m) {
   const el = document.getElementById('miljorad');
   if (!el || !m || m.typ === 'produktion') return;
@@ -815,6 +828,8 @@ async function start() {
   try {
     S.session = await api('/api/session', { tyst: true });
     miljorad(S.session.miljo);
+    // Runda 15, r3.
+    reservrad(S.session.reservserver);
     // Åtkomster från ett tidigare läsläge som finns kvar på datorn, till exempel för att fliken stängdes, skickas nu.
     if (!avbrott.aktivt) avbrottslage.meddelaLogg(await avbrottslage.skickaLoggar().catch(() => null));
     if (!avbrott.aktivt) await avbrottslage.slutforUtloggning().catch(() => {});

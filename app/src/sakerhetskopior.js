@@ -254,6 +254,9 @@ export function oversikt(lager, sid, db, personal, vantande = null) {
     senaste: senaste ? postUt(db, senaste) : null,
     senasteVerifierade: lista.find(x => x.verifierad) ? postUt(db, lista.find(x => x.verifierad)) : null,
     kopior: lista.slice(0, 20).map(p => postUt(db, p)),
+    // Runda 15, r3: nyckeln som reservservern får i RESERV_SANDLADA för att läsa just den här sandlådans kopior
+    // (reservserver.js). Den är namnet på katalogen med kopiorna och säger inget om sandlådans id.
+    reservserver: { nyckel: lager.nyckel(sid) },
     rutin: [
       `En kopia av sandlådan tas var ${lager.intervallMinuter}:e minut när något har ändrats, och före varje återställning och återgång till en tidigare version.`,
       'Varje kopia skrivs på två platser. Båda verifieras: kontrollsumman ska vara densamma som för ögonblicksbilden, och kopian läst från platsen ska vara en hel databas med alla tabeller och loggar vars hashkedjor håller.',

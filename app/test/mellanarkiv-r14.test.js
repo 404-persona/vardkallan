@@ -12,12 +12,15 @@ afterAll(() => app.stopp());
 
 const inloggad = async (roll) => { const k = klient(app); await k.logga(roll); return k; };
 const db = (k) => sandlada(app, k).db;
-const typer = (svar) => svar.handlingar.map(h => `${h.slag}:${h.typ}:${h.enhet.id}`).sort();
+// Runda 15, r3: läkemedlen ur VAS ligger i ett eget paket och prövas i mellanarkiv-r15.test.js. Här gäller anteckningar
+// och mätvärden.
+const JOURNAL = ['anteckning', 'matvarde'];
+const typer = (svar) => svar.handlingar.filter(h => JOURNAL.includes(h.slag)).map(h => `${h.slag}:${h.typ}:${h.enhet.id}`).sort();
 
 describe('Mellanarkiv', () => {
   test('mellanarkivet har tagit emot ett FGS-paket med äldre uppgifter ur VAS, och mottagningskontrollen är utan fel', () => {
     const d = nyDb();
-    const p = d.query('SELECT * FROM mellanarkiv_paket').all();
+    const p = d.query("SELECT * FROM mellanarkiv_paket WHERE kalla = 'Migreringen från VAS (demo)'").all();
     expect(p).toHaveLength(1);
     expect(p[0]).toMatchObject({ patient_id: 'p01', handlingar: 4, kalla: 'Migreringen från VAS (demo)' });
     expect(JSON.parse(p[0].kontroll).fel).toEqual([]);
@@ -26,7 +29,7 @@ describe('Mellanarkiv', () => {
     expect(filer).toContain(`${p[0].id}/METS.xml`);
     expect(filer).toContain(`${p[0].id}/representations/rep_1/data/journal/p01.json`);
     expect(filer).toContain(`${p[0].id}/metadata/descriptive/earkiv-index.xml`);
-    const h = d.query('SELECT slag, kategori, enhet_id FROM mellanarkiv_handlingar ORDER BY datum').all();
+    const h = d.query('SELECT slag, kategori, enhet_id FROM mellanarkiv_handlingar WHERE paket_id = ? ORDER BY datum').all(p[0].id);
     expect(h.map(x => `${x.slag}:${x.enhet_id}`)).toEqual(['anteckning:uso-kard', 'matvarde:vc-tybble', 'anteckning:vc-tybble', 'anteckning:uso-med']);
     // Handlingarna finns inte i den aktiva journalen.
     expect(d.query("SELECT count(*) AS n FROM anteckningar WHERE patient_id = 'p01' AND skapad < '2013-01-01'").get().n).toBe(0);
@@ -38,7 +41,7 @@ describe('Mellanarkiv', () => {
     expect(r.status).toBe(200);
     expect(typer(r.data)).toEqual(['anteckning:Mottagningsanteckning:uso-kard']);
     expect(r.data.dolda.kraverVal).toBe(3);
-    expect(r.data.handlingar[0]).toMatchObject({ kallaEtikett: 'Ur mellanarkivet', forfattare: { namn: 'Läkare, VAS (migrerad)' } });
+    expect(r.data.handlingar.find(h => h.slag === 'anteckning')).toMatchObject({ kallaEtikett: 'Ur mellanarkivet', forfattare: { namn: 'Läkare, VAS (migrerad)' } });
     // Huvudet erbjuder det aktiva valet, eftersom det finns uppgifter på andra vårdenheter.
     expect((await k.get('/api/patient/p01')).data.harAndraEnheter).toBe(true);
     await k.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Vården av patienten' });
@@ -52,7 +55,7 @@ describe('Mellanarkiv', () => {
 
   test('yrkesrollen styr vad som visas: inre sekretess för journal och omvårdnad som i journalen', () => {
     const d = nyDb();
-    const typ = (rader) => rader.map(r => `${r.slag}:${r.kategori ?? '-'}`).sort();
+    const typ = (rader) => rader.filter(r => JOURNAL.includes(r.slag)).map(r => `${r.slag}:${r.kategori ?? '-'}`).sort();
     expect(typ(mellanarkiv.synliga(atk(d, 'usk-kard', 'p01', { andra_enheter: true })))).toEqual(['anteckning:omvardnad', 'matvarde:-']);
     expect(typ(mellanarkiv.synliga(atk(d, 'lak-kard', 'p01', { andra_enheter: true })))).toEqual(['anteckning:journal', 'anteckning:journal', 'anteckning:omvardnad', 'matvarde:-']);
     // Arkivarien läser aldrig journalen.
@@ -77,7 +80,8 @@ describe('Mellanarkiv', () => {
     expect(JSON.stringify((await k2.get('/api/patient/p01/mellanarkiv')).data)).toBe(JSON.stringify(med.data));
     // Tidslinjen och sökningen nämner inte heller den spärrade vårdenheten.
     const ov = await k.get('/api/patient/p01/oversikt');
-    expect(ov.data.tidslinje.filter(t => t.typ === 'mellanarkiv').map(t => t.enhet.id).sort()).toEqual(['uso-kard', 'uso-med']);
+    // Runda 15, r3: kuren med Alvedon på Kardiologiska kliniken står också i tidslinjen.
+    expect(ov.data.tidslinje.filter(t => t.typ === 'mellanarkiv').map(t => t.enhet.id).sort()).toEqual(['uso-kard', 'uso-kard', 'uso-med']);
     expect((await k.get('/api/patient/p01/sok?q=hypertoni')).data.traffar.filter(t => t.typ === 'mellanarkiv')).toEqual([]);
     // En handling på den spärrade vårdenheten hämtad på id är som en som inte finns.
     const id = db(k).query("SELECT id FROM mellanarkiv_handlingar WHERE enhet_id = 'vc-tybble' AND slag = 'anteckning'").get().id;
@@ -167,7 +171,7 @@ describe('Mellanarkiv', () => {
     ins.run('enhet:vc-tybble', JSON.stringify({ kanaler: ['visning'] }));
     const synliga = mellanarkiv.synliga(atk(d, 'lak-kard', 'p01', { andra_enheter: true }));
     expect(synliga.map(r => r.enhet_id)).not.toContain('vc-tybble');
-    expect(synliga.length).toBe(2);
+    expect(synliga.filter(r => JOURNAL.includes(r.slag)).length).toBe(2);
     // En anteckning med ett eget undantag stannar i journalen och förs inte över.
     const epikris = d.query("SELECT id FROM anteckningar WHERE patient_id = 'p01' AND typ = 'Epikris' AND skapad < '2015-01-01'").get().id;
     expect(mellanarkiv.kandidater(d, '2016-01-01').get('p01').anteckningar.map(a => a.id)).toContain(epikris);
@@ -195,7 +199,8 @@ describe('Mellanarkiv', () => {
     await k.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Vården av patienten' });
     const ov = await k.get('/api/patient/p01/oversikt');
     const t = ov.data.tidslinje.filter(x => x.typ === 'mellanarkiv');
-    expect(t).toHaveLength(4);
+    // Runda 15, r3: tre anteckningar, ett mätvärde och kuren med Alvedon ur läkemedelspaketet.
+    expect(t).toHaveLength(5);
     expect(t.every(x => x.kallaEtikett === 'Ur mellanarkivet' && x.ref.typ === 'mellanarkiv')).toBe(true);
     const s = await k.get('/api/patient/p01/sok?q=hypertoni');
     const traff = s.data.traffar.find(x => x.typ === 'mellanarkiv');
@@ -207,8 +212,9 @@ describe('Mellanarkiv', () => {
     const d = nyDb();
     const pers = d.query("SELECT * FROM personal WHERE id = 'adm-kard'").get() ?? d.query("SELECT * FROM personal WHERE yrke = 'vardadministrator' LIMIT 1").get();
     slaSamman(d, { fran: 'p01', till: 'p02', personal: pers, grund: 'Test' });
-    expect(d.query("SELECT count(*) AS n FROM mellanarkiv_handlingar WHERE patient_id = 'p02'").get().n).toBe(4);
-    expect(d.query("SELECT count(*) AS n FROM mellanarkiv_paket WHERE patient_id = 'p02'").get().n).toBe(1);
+    // Runda 15, r3: fyra journalhandlingar och läkemedelspaketet med en ordination och fyra administreringar.
+    expect(d.query("SELECT count(*) AS n FROM mellanarkiv_handlingar WHERE patient_id = 'p02'").get().n).toBe(9);
+    expect(d.query("SELECT count(*) AS n FROM mellanarkiv_paket WHERE patient_id = 'p02'").get().n).toBe(2);
     // Ett beslut om förstöring av hela journalen tar också bort det som finns i mellanarkivet.
     const k = await inloggad('ark');
     const b = await k.post('/api/arkiv/beslut', { typ: 'radering', diarienummer: 'IVO 2026-77', patientId: 'p01', omfattning: 'hela' });

@@ -252,6 +252,34 @@ const riskparameter = () => ({
   effekt: (db, nytt) => [`Systemet räknar ${nytt.length} diagnoskoder som riskgrupp.`],
 });
 
+// Beslut 2026-11-14 (runda 15, r3): vilka diagnoser som är tillfälliga och får föras till mellanarkivet tillsammans med sin
+// avslutade vårdkontakt. Varje post är början av en ICD-10-SE-kod, till exempel R eller J06. Bara koder i de kapitel som
+// kan vara tillfälliga (symtom, skador, undersökningar och akuta infektioner, mellanarkiv.js MOJLIGA_TILLFALLIGA) godtas,
+// så att en kronisk diagnos aldrig kan läggas till, och en diagnos som ett beslutsstöd läser stannar alltid i journalen
+// oavsett listan. Grundinställningen är försiktig: symtom och akuta övre luftvägsinfektioner.
+export const TILLFALLIGA_STANDARD = ['R', 'J00', 'J01', 'J02', 'J03', 'J04', 'J06'];
+const tillfalligaDiagnoserParameter = () => ({
+  omrade: 'administration', rubrik: 'Diagnoser som är tillfälliga och får föras till mellanarkivet', enhet: 'kodgrupper', typ: 'lista', standard: [...TILLFALLIGA_STANDARD], anvands: 'mellanarkiv.js',
+  beskrivning: 'Början av ICD-10-SE-koder, till exempel R för symtom eller J06 för akut övre luftvägsinfektion. En diagnos med en sådan kod förs till mellanarkivet med sin avslutade vårdkontakt när den är äldre än gränsen. Bara symtom, skador, undersökningar och akuta infektioner kan väljas, och en kronisk diagnos eller en diagnos som ett beslutsstöd läser (vaccinationsprogrammens riskgrupper, uppmärksamhetsinformationen, förbrukningsartiklarna, intensivvården och mödrahälsovården) stannar alltid i den aktiva journalen. Listan och grundinställningen är en demoregel som en läkare ska granska före verklig användning.',
+  provaLista: (lista) => {
+    const { MOJLIGA_TILLFALLIGA } = require('./mellanarkiv.js');
+    const fel = lista.find(x => !/^[A-Z](\d{1,2}(\.\d{1,2})?)?$/.test(x));
+    if (fel) return `${fel} är ingen början av en ICD-10-SE-kod, till exempel R, J06 eller S52.5.`;
+    const kronisk = lista.find(x => !MOJLIGA_TILLFALLIGA.test(x.length === 1 ? `${x}00` : x.padEnd(3, '0')));
+    if (kronisk) return `${kronisk} kan omfatta kroniska tillstånd. Bara symtom (R), skador (S och T utom T86), undersökningar och kontakter (Z00 till Z39), akuta infektioner (A00 till A09, J00 till J22, H65, H66 och N30) kan räknas som tillfälliga.`;
+    if (lista.length > 40) return 'Högst 40 kodgrupper.';
+    return null;
+  },
+  effekt: (db, nytt, forra, nu = new Date()) => {
+    const m = require('./mellanarkiv.js');
+    const fore = new Date(nu.getTime() - 5 * 365.25 * DAG).toISOString().slice(0, 10);
+    const r = (lista) => m.paverkadeDiagnoser(db, lista, fore);
+    const n = r(nytt);
+    const f = r(forra);
+    return [`Med listan räknas ${st(n.tillfalliga, 'diagnos', 'diagnoser')} från före ${fore} som tillfälliga, mot ${f.tillfalliga} med den nuvarande. ${st(n.beslutsstod, 'diagnos', 'diagnoser')} i listan stannar ändå, eftersom ett beslutsstöd läser dem. Om en diagnos förs över avgör systemet vid nästa beslut om överföring, med sin vårdkontakt.`];
+  },
+});
+
 // Runda 10, r7: om avgiften för en tjänst i kassan ingår i högkostnadsskyddet, per avgiftstyp (kassa.js, Sussa 3.4.4.4).
 // Förvalet är nej, som demoregel.
 for (const [typ, namn] of [['receptfornyelse', 'Förnyelse av recept'], ['intyg', 'Intyg']]) {
@@ -471,6 +499,8 @@ export function parametrar() {
     // Runda 10, r5: opioider per administrationssätt och riskgrupperna i vaccinationsprogrammen.
     alla['lakemedel.kollegakontroll.opioider'] = opioidparameter();
     alla['vaccination.riskgrupper'] = riskparameter();
+    // Beslut 2026-11-14 (runda 15, r3): diagnoserna som är tillfälliga och får föras till mellanarkivet (mellanarkiv.js).
+    alla['arkiv.tillfalliga_diagnoser'] = tillfalligaDiagnoserParameter();
     // Runda 11, r6: beställning och svar (Sussa 12.1.1.9).
     Object.assign(alla, labbR11Parametrar());
     // Runda 12, r1: läkemedelsvarningarnas interaktioner och maxdoser (Sussa 12.1.1.8).

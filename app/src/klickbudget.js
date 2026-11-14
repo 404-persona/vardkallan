@@ -564,6 +564,18 @@ FLODEN.push(
     motivering: 'Sussa 11.2.1.8. Ett klick på Läkemedel att ge och ett på Reservdator för läkemedel. Sedan hämtar sidan själv listan över alla inskrivna patienter var fjärde minut, och ingen behöver göra något mer.',
   },
 );
+// Runda 15, r3: en avslutad ordination ur mellanarkivet (Sussa 5.4.2.2).
+FLODEN.push(
+  {
+    id: 'las-mellanarkiv-ordination', namn: 'Läsa en utsatt ordination ur mellanarkivet', roll: 'lak-kard', start: 'Patientens översikt', budget: 2,
+    motivering: 'Sussa 5.4.2.2. Ett klick på fliken Läkemedel och ett på Öppna vid ordinationen, som står bland de utsatta och avslutade märkt Ur mellanarkivet. Ordinationen öppnas med dosering, period, historik och doser, och systemet säger att innehållet är oförändrat.',
+  },
+  // Beslut 2026-11-14: loggen från reservservern.
+  {
+    id: 'las-in-reservlogg', namn: 'Läsa in loggen från reservservern', roll: 'sysf', start: 'Lagring med en logg från reservservern', budget: 1,
+    motivering: 'Sussa 11.2.1.8 och KD1.1.3.6. Ett klick på Läs in vid loggen. Systemet har själv hittat loggen, säger hur många rader den har, för vilken period och ur vilken kopia, kontrollerar kedjan och läser in varje rad en gång.',
+  },
+);
 // Runda 14, r5: systemförvaltaren registrerar en incident (servicenivaer.js, Sussa KD1.2.1.4, KD1.3.2.3 och 5.3.1.14).
 FLODEN.push(
   {

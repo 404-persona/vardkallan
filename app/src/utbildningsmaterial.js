@@ -50,8 +50,9 @@ export const ROLLER = {
     ['göra ett stickprov i logguppföljningen', 'följa upp en nödåtkomst', 'förklara varför loggen inte går att ändra'],
   ),
   arkivarie: R(
-    'Som arkivarie registrerar du beslut om gallring och bevarande och tar fram exportpaket till e-arkivet. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.',
-    ['registrera ett beslut om gallring', 'ta fram ett exportpaket till e-arkivet', 'veta vad som aldrig gallras'],
+    // Runda 15, r3: mellanarkivet med avslutade ordinationer och administreringar.
+    'Som arkivarie registrerar du beslut om gallring och bevarande, tar fram exportpaket till e-arkivet och för över äldre journalhandlingar till mellanarkivet. Systemet räknar själv fram vad som förs över: avslutade ordinationer med alla doser, äldre anteckningar och mätvärden, avslutade vårdkontakter och remisser och tillfälliga diagnoser, men aldrig något som pågår eller gäller, som aktuella läkemedel, kroniska diagnoser, det som en bokning eller uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Vilka diagnoser som är tillfälliga bestämmer vårdgivaren med en parameter. Statistik och rapporter räknar med det som har förts över, så att resultaten inte ändras. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.',
+    ['registrera ett beslut om gallring', 'ta fram ett exportpaket till e-arkivet', 'veta vad som aldrig gallras', 'föra över äldre journalhandlingar till mellanarkivet och veta vad som stannar i journalen'],
   ),
   uppfoljning: R(
     'Som analytiker tar du fram datauttag för uppföljning och statistik och granskar och skickar rapporterna till myndigheter och kvalitetsregister. Datauttaget har inga namn eller personnummer.',
@@ -74,8 +75,9 @@ export const ROLLER = {
     ['exportera faktureringsunderlaget för en vårdenhet och en månad', 'förklara hur systemet räknar fram priserna och betalningsmottagarna'],
   ),
   systemforvaltare: R(
-    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.',
-    ['föreslå en ändrad regel och godkänna en annan systemförvaltares förslag', 'förbereda ett namnbyte för en enhet', 'registrera en extern tillämpning på sidan Öppet API', 'kontrollera att säkerhetskopian går att läsa tillbaka'],
+    // Runda 15, r3: reservservern och parametern för tillfälliga diagnoser.
+    'Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen läser du in reservserverns logg med ett klick på sidan Lagring. Vilka diagnoser som är tillfälliga och får föras till mellanarkivet är en parameter under Regler och parametrar, där förhandsvisningen säger hur många diagnoser som påverkas och en läkare ska granska listan. Du läser inte journalerna.',
+    ['föreslå en ändrad regel och godkänna en annan systemförvaltares förslag', 'förbereda ett namnbyte för en enhet', 'registrera en extern tillämpning på sidan Öppet API', 'kontrollera att säkerhetskopian går att läsa tillbaka', 'veta när reservservern används och vad den visar, och läsa in dess logg på sidan Lagring', 'ändra listan över tillfälliga diagnoser och läsa förhandsvisningen'],
   ),
   fysioterapeut: R(
     'Som fysioterapeut tar du emot och bedömer remisser, skriver anteckningar efter besök, registrerar mätvärden och bockar av planerade uppgifter som träning. Fysioterapeuten spelar också Sussas paramedicinare, alltså arbetsterapeut, dietist och kurator.',

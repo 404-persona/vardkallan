@@ -47,6 +47,9 @@ export async function visa(el, ctx) {
   const kanOrdinera = far('ordinera');
   const aktuella = d.ordinationer.filter(o => o.aktuell);
   const ovriga = d.ordinationer.filter(o => !o.aktuell);
+  // Runda 15, r3 (Sussa 5.4.2.2): avslutade ordinationer ur mellanarkivet står bland de andra, märkta Ur mellanarkivet,
+  // och öppnas i journalen med dosering, historik och doser. Läsläget har dem inte.
+  const ur = d.mellanarkiv ?? [];
   el.innerHTML = `<div class="flikhuvud"><h2>Läkemedel</h2>
       <div class="knapprad">${kanOrdinera ? `<button type="button" class="knapp" data-ny aria-expanded="false" aria-controls="ordform">${ikon.plus}<span>Ordinera</span></button><button type="button" class="knapp sekundar" data-mall aria-expanded="false">Ordinera från mall</button>`
         : far('registrera_muntlig_ordination') ? '<button type="button" class="knapp sekundar" data-muntlig aria-expanded="false">Muntlig ordination</button><p class="dampad liten">Din yrkesroll kan läsa läkemedelslistan men inte ordinera. Dokumentera en muntlig ordination från en läkare, eller ordinera enligt ett generellt direktiv.</p>' : '<p class="dampad liten">Din yrkesroll kan läsa läkemedelslistan men inte ordinera.</p>'}</div></div>
@@ -69,7 +72,7 @@ export async function visa(el, ctx) {
     ${lms.doseringsSektion(dygn)}
     ${lms.fordjupadSektion(fg)}
     <div id="lm-vb-plats">${vb ? lms.vatskeSektion(vb) : ''}</div>
-    ${ovriga.length ? `<section aria-labelledby="lm-utsatt"><h3 id="lm-utsatt">Utsatta och avslutade <span class="antal">${ovriga.length}</span></h3>${tabell(ovriga, kanOrdinera, false)}</section>` : ''}`;
+    ${ovriga.length || ur.length ? `<section aria-labelledby="lm-utsatt" data-lm-utsatta><h3 id="lm-utsatt">Utsatta och avslutade <span class="antal">${ovriga.length + ur.length}</span></h3>${tabell(ovriga, kanOrdinera, false, ur, ctx)}</section>` : ''}`;
   if (adm) administrering.koppla(el.querySelector('#lm-adm-sektion') ?? document.createElement('div'), () => ctx.ladda());
   // Runda 9, r1: förbrukningsartiklarna, beställningarna och den kliniska prövningen.
   if (fb) forbrukning.visa(el.querySelector('#lm-fb-plats'), ctx.id, fb);
@@ -228,8 +231,9 @@ export function nllResultat(nll) {
   return '';
 }
 
-function tabell(rader, kanOrdinera, aktuella) {
-  if (!rader.length) return '<p class="tom liten">Inga.</p>';
+// Runda 15, r3: ur är avslutade ordinationer ur mellanarkivet, som står sist i tabellen över utsatta och avslutade.
+function tabell(rader, kanOrdinera, aktuella, ur = [], ctx = null) {
+  if (!rader.length && !ur.length) return '<p class="tom liten">Inga.</p>';
   return `<div class="tabellrulle"><table class="tabell lm-tabell">
     <thead><tr><th scope="col">Läkemedel</th><th scope="col">Dosering</th><th scope="col">Typ</th><th scope="col">Ordinationsorsak</th><th scope="col">${aktuella ? 'Uppföljning' : 'Utsatt'}</th><th scope="col">NLL</th><th scope="col"><span class="sr">Åtgärder</span></th></tr></thead>
     <tbody>${rader.map(o => `<tr>
@@ -249,7 +253,22 @@ function tabell(rader, kanOrdinera, aktuella) {
         ${aktuella && o.status === 'aktiv' && far('utvardera_lakemedel') ? `<button type="button" class="knapp liten sekundar" data-utvardera="${o.id}">Utvärdera</button>` : ''}
         <details class="historik"><summary>Historik</summary><ol>${(o.historik ?? []).map(h => `<li><time>${esc(tidpunkt(h.tid))}</time> ${esc(h.handelse)}${h.detalj ? `: ${esc(h.detalj)}` : ''}${h.av ? ` <span class="dampad">(${esc(h.av)})</span>` : ''}</li>`).join('')}</ol></details>
       </td>
-    </tr>`).join('')}</tbody></table></div>`;
+    </tr>`).join('')}${ur.map(o => mellanarkivRad(o, ctx)).join('')}</tbody></table></div>`;
+}
+
+// Runda 15, r3: en avslutad ordination ur mellanarkivet. Den ändras aldrig, och den öppnas i journalen.
+function mellanarkivRad(o, ctx) {
+  const lank = ctx ? ctx.href('journal', `ma-${o.id}`) : null;
+  return `<tr data-mellanarkiv="${esc(o.id)}">
+      <td><strong>${esc(o.lakemedel?.namn)}</strong> ${migreradEtikett(o)}
+        <span class="under-text">ATC ${esc(o.lakemedel?.atc)}, ordinerat ${esc(datum(o.start))}${o.ordineradAv?.namn ? ` av ${esc(o.ordineradAv.namn)}` : ''}, ${esc(o.vardenhet?.namn ?? '')}</span></td>
+      <td>${esc(o.dosering)}</td>
+      <td>${esc(o.status === 'utsatt' ? 'Utsatt' : 'Avslutad')}</td>
+      <td>${esc(o.ordinationsorsak ?? '')}</td>
+      <td>${o.utsatt ? `<span class="under-text">${esc(o.utsatt.orsak ?? '')}</span>` : ''}${o.slut ? `Slut ${esc(datum(o.slut))}` : ''}</td>
+      <td></td>
+      <td class="atgarder">${lank ? `<a class="knapp liten sekundar" href="${lank}">Öppna<span class="sr"> ${esc(o.lakemedel?.namn)} ur mellanarkivet</span></a>` : ''}</td>
+    </tr>`;
 }
 
 // Runda 8, r4: dosen kan ändras i en pågående ordination utan trappschema, spädning, osignerad muntlig ordination eller
