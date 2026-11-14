@@ -293,7 +293,16 @@ export function autospara(form, ctx, { typ, anteckningId = null, las, nyKontakt 
     if (json === senast) return id;
     pagar = (async () => {
       try {
-        const r = await api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { metod: 'PUT', tyst: true, ko: true, data: { ...(id ? { anteckningId: id } : {}), typ, sokord, lokalId, ...nyKontakt() } });
+        // Ett anrop som avbryts när avbrottet börjar, eller som inte når servern, görs om, så att utkastet hamnar i
+        // skrivkön i stället för att försvinna med formuläret.
+        const skicka = () => api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { metod: 'PUT', tyst: true, ko: true, data: { ...(id ? { anteckningId: id } : {}), typ, sokord, lokalId, ...nyKontakt() } });
+        let r;
+        for (let forsok = 0; ; forsok++) {
+          try { r = await skicka(); break; } catch (e) {
+            if (forsok >= 3 || !(e?.kod === 'avbruten' || e?.kod === 'natverk' || e?.status === 0) || e?.kod === 'laslage') throw e;
+            await new Promise(klar => setTimeout(klar, 600));
+          }
+        }
         senast = json;
         fel = null;
         if (r?.koad) visa('Utkastet är sparat krypterat på datorn och sparas i journalen när servern svarar igen.');

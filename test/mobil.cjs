@@ -246,7 +246,7 @@ const KONTEXT = { viewport: { width: 360, height: 760 }, locale: 'sv-SE', timezo
     await kontrolleraMobil('mätvärden under avbrottet');
     await page.screenshot({ path: join(UT, '63-mobil-skrivko.png') });
     await page.click('[data-avbrott="avsluta"]');
-    await synlig(page, '.notis', 'från avbrottet är nu sparade i journalen');
+    await synlig(page, '.notis', 'från avbrottet är nu sparad');
     const mv = await page.evaluate(async () => (await (await fetch('/api/patient/p01/matvarden')).json()).matvarden.filter(m => m.typ === 'saturation' && String(m.varde) === '93').length);
     if (mv < 1) throw new Error('saturationen från kön finns inte i journalen');
   });
