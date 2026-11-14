@@ -1,5 +1,5 @@
 {
-  "tid": "2026-11-14T17:27:00.394Z",
+  "tid": "2026-11-14T19:00:28.884Z",
   "bas": "http://127.0.0.1:18152",
   "webblasare": "Chromium 147.0.7727.15",
   "gransnittHash": "73cd617f40cd84bb79a720ec421d9a644947fbfbbdfe772e57af748513f05d4b",
@@ -194,8 +194,7 @@
     },
     {
       "namn": "Gränssnitt > Tillgänglighet > inloggning, att öppna en patient, byta flik och stänga nyheterna går med bara tangentbordet",
-      "status": "röd",
-      "fel": "1 fynd, till exempel rollen gick inte att nå med tabb (http://127.0.0.1:18152/#/)"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Tillgänglighet > att ett element får fokus byter inte sida och öppnar inget",
