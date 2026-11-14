@@ -706,7 +706,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   const vilaTimer = setInterval(() => { try { vilaStadning(); } catch (e) { console.error('Vilan:', e.message); } }, 60_000);
   vilaTimer.unref?.();
   // Runda 15, r2: köerna till de nationella tjänsterna skickas också när ingen gör något, i de sandlådor som är vakna.
-  const nationellaTimer = setInterval(() => { for (const x of [...vakna]) { try { if (x.dbOmVaken) r15r2EfterTid(x.dbOmVaken, new Date(), { anrop: false }); } catch (e) { console.error('De nationella köerna:', e.message); } } }, 60_000);
+  // Högst 150 ms per varv, så att anrop som väntar aldrig får längre svarstid eller tar av sandlådans tidsbudget märkbart.
+  const nationellaTimer = setInterval(() => {
+    const t0 = performance.now();
+    for (const x of [...vakna]) {
+      if (performance.now() - t0 > 150) break;
+      try { if (x.dbOmVaken) r15r2EfterTid(x.dbOmVaken, new Date(), { anrop: false }); } catch (e) { console.error('De nationella köerna:', e.message); }
+    }
+  }, 60_000);
   nationellaTimer.unref?.();
 
   function lasSparade() {

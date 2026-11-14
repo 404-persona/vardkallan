@@ -73,6 +73,19 @@ describe(T, () => {
     expect(db.query('SELECT count(*) AS n FROM ei_markerade WHERE patient_id = ?').get(id).n).toBe(0);
   });
 
+  test('en ändring i journalen skickas före avstämningen av hela indexet', async () => {
+    const k = await inloggad('lak-kard');
+    const db = sandlada(app, k).db;
+    grundladda(db);
+    ei.markeraPatienter(db);
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p02'").run();
+    const nu = new Date();
+    ei.skicka(db, { nu, maxPatienter: 1 });
+    ei.skicka(db, { nu: new Date(nu.getTime() + 2 * 60_000), maxPatienter: 1 });
+    expect(indexet(db, '196603193373')).toEqual([]);
+    expect(db.query("SELECT count(*) AS n FROM ei_markerade WHERE kalla = 'avstamning'").get().n).toBeGreaterThan(10);
+  });
+
   test('beräkningen av posterna lämnar inga spår i åtkomstloggen, och varje omgång står i anropsloggen utan patientuppgifter', async () => {
     const k = await inloggad('lak-kard');
     const db = sandlada(app, k).db;

@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS ei_status (nyckel TEXT PRIMARY KEY, varde TEXT);
 // patienten. En sammanslagning flyttar raderna med triggrarna för UPDATE borttagna (identitet.js), och märks i stället
 // genom patienten, som får sammanslagen_till.
 const TABELLER = ['anteckningar', 'diagnoser', 'uppmarksamhet', 'overkanslighet', 'vardkontakter', 'vardtillfallen', 'vaccinationer', 'sparrar', 'remisser'];
-const markera = (uttryck) => `INSERT INTO ei_markerade (patient_id) SELECT ${uttryck} WHERE ${uttryck} IS NOT NULL AND NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ${uttryck} AND markerad IS NULL);`;
+const markera = (uttryck) => `INSERT INTO ei_markerade (patient_id) SELECT ${uttryck} WHERE ${uttryck} IS NOT NULL AND NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ${uttryck} AND markerad IS NULL AND kalla IS NULL);`;
 function triggrar(db) {
   const finns = new Set(db.query("SELECT name FROM sqlite_master WHERE type IN ('table', 'trigger')").all().map(r => r.name));
   const ut = [];
@@ -85,6 +85,8 @@ export function sakra(db) {
   const nu = Date.now();
   if (sakrad.has(db) && nu - sakrad.get(db) < 60_000) return;
   db.exec(SCHEMA);
+  // En markering från en avstämning har kalla 'avstamning'. Ändringar i journalen (triggrarna) skickas före avstämningen.
+  if (!db.query('PRAGMA table_info(ei_markerade)').all().some(k => k.name === 'kalla')) db.exec('ALTER TABLE ei_markerade ADD COLUMN kalla TEXT');
   for (const [, sql] of triggrar(db)) db.exec(sql);
   sakrad.set(db, nu);
 }
@@ -99,8 +101,9 @@ const status = (db, nyckel, varde) => {
 export function markeraPatienter(db, patientIds = null) {
   sakra(db);
   const ids = patientIds ?? db.query('SELECT id FROM patienter WHERE sammanslagen_till IS NULL ORDER BY id').all().map(r => r.id);
-  const ins = db.query('INSERT INTO ei_markerade (patient_id) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ? AND markerad IS NULL)');
-  db.transaction(() => { for (const id of ids) ins.run(id, id); })();
+  const ins = db.query('INSERT INTO ei_markerade (patient_id, kalla) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM ei_markerade WHERE patient_id = ? AND markerad IS NULL)');
+  const kalla = patientIds ? null : 'avstamning';
+  db.transaction(() => { for (const id of ids) ins.run(id, kalla, id); })();
   return ids.length;
 }
 
@@ -198,7 +201,7 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, 
   const urval = patientId
     ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE patient_id = ? GROUP BY patient_id').all(patientId)
     : tvinga ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade GROUP BY patient_id ORDER BY forsta').all()
-      : db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE markerad <= ? GROUP BY patient_id ORDER BY forsta LIMIT ?').all(grans, Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
+      : db.query('SELECT patient_id, min(id) AS forsta, max(kalla IS NULL) AS andring FROM ei_markerade WHERE markerad <= ? GROUP BY patient_id ORDER BY andring DESC, forsta LIMIT ?').all(grans, Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
   if (patientId && !urval.length) urval.push({ patient_id: patientId });
   if (!urval.length) return { skickade: 0, poster: 0, fel: null };
   const vg = require('./rivta/konsumenter.js').vardgivare(db);
@@ -259,7 +262,7 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, 
 }
 
 // Körs vid varje anrop med en sandlåda och av en timer, och skickar när det är dags. Ett fel stoppar aldrig anropet.
-// maxPatienter begränsar hur mycket ett anrop från en användare får räkna, så att svarstiden inte märks.
+// maxPatienter begränsar hur mycket varje omgång räknar, så att servern aldrig blir upptagen länge.
 // avstamning: grundladdningen och den dagliga avstämningen, som bara timern gör, så att ett anrop från en användare
 // aldrig räknar om hela indexet.
 export function efterTid(db, nu = new Date(), { maxPatienter = null, avstamning = false } = {}) {

@@ -81,6 +81,7 @@ export default medR14r3([
       `${EI}grundladdningen ger en post per informationsmängd med Ineras fält, och indexet sätter själv owner och tiderna`,
       `${EI}en ny journalanteckning märker patienten, och posten skickas i nästa omgång utan att någon gör något`,
       `${EI}beräkningen av posterna lämnar inga spår i åtkomstloggen, och varje omgång står i anropsloggen utan patientuppgifter`,
+      `${EI}en ändring i journalen skickas före avstämningen av hela indexet`,
       `${EI}spärrade uppgifter anmäls inte, och mostRecentContent minskar aldrig när en spärr läggs`,
       `${EI}skyddade personuppgifter anmäls aldrig, och posterna tas bort när identiteten skyddas`,
       `${EI}ett reservnummer anmäls inte, och när journalen får ett personnummer skapas posterna för det`,

@@ -64,7 +64,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
 // räknas aldrig om i en användares anrop, så att arbetet aldrig syns i svarstiden eller i sandlådans tidsbudget.
 export function efterTid(db, nu = new Date(), { anrop = true } = {}) {
   samtycke.efterTid(db, nu);
-  if (!anrop) ei.efterTid(db, nu, { avstamning: true });
+  // Högst tre patienter per sandlåda och minut, ändringar före avstämningen, så att servern aldrig blir upptagen länge.
+  if (!anrop) ei.efterTid(db, nu, { avstamning: true, maxPatienter: 3 });
 }
 
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.
