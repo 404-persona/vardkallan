@@ -61,7 +61,10 @@ export function kategoriFor(db, typ) {
 }
 
 export const lasHandling = (kategori) => (kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal');
-export const skrivHandling = (kategori) => (kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
+// Runda 15, r5: ett yrke som bara har den smala handlingen skriv_observation (undersköterskan) skriver omvårdnadens
+// anteckningar med den, och bara med de mallar som vårdgivaren har gett yrket (yrkesmallar.provaMall).
+export const skrivHandling = (kategori, personal = null) => (kategori !== 'omvardnad' ? 'skriv_journal'
+  : personal && !kanRoll(personal, 'skriv_omvardnad') && kanRoll(personal, 'skriv_observation') ? 'skriv_observation' : 'skriv_omvardnad');
 
 export function kallaEtikett(kalla, tid) {
   if (!kalla?.startsWith('migrerad:')) return null;
@@ -187,7 +190,7 @@ function valideraVardkontakt(db, patientId, vardkontaktId) {
 export function skapaAnteckning(atk, { typ, vardkontaktId, sokord, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar, process: processSvar }) {
   const mall = mallFor(atk, typ);
   if (!mall) throw new Fel(400, 'Okänd anteckningstyp.', 'ogiltig', { falt: ['typ'] });
-  atk.krav(skrivHandling(mall.kategori));
+  atk.krav(skrivHandling(mall.kategori, atk.personal));
   // Runda 15, r5 (F3): yrket skriver bara med sina mallar, som vårdgivaren har bestämt (mallar-yrken.js).
   yrkesmallar.provaMall(atk.db, atk.personal, mall);
   // Runda 15, r5 (F4): omvårdnadsproblemen och resultaten mot vårdplanens mål.
@@ -220,7 +223,7 @@ function processFor(atk, mall, processSvar) {
 export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar, process: processSvar }) {
   if (a.status === 'signerad') throw new Fel(400, 'En signerad anteckning kan inte ändras. Gör en rättelse i stället.', 'ogiltig');
   if (a.forfattare_id !== atk.personal.id) throw new Fel(403, 'Bara författaren kan ändra ett utkast.', 'nekad');
-  atk.krav(skrivHandling(a.kategori));
+  atk.krav(skrivHandling(a.kategori, atk.personal));
   // Runda 8, r5: ett utkast om tobaksvanor ändras med svaren, aldrig med sökorden.
   const t = a.typ === tobak.TYP && tobakSvar !== undefined ? tobak.forbered(atk, tobakSvar) : null;
   if (a.typ === tobak.TYP && sokord !== undefined) throw new Fel(400, 'Texten i en anteckning om tobaksvanor skrivs av systemet ur svaren. Ändra svaren i stället.', 'ogiltig', { falt: ['sokord'] });
@@ -245,7 +248,7 @@ export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, l
 export function signera(atk, a) {
   if (a.status === 'signerad') throw new Fel(400, 'Anteckningen är redan signerad.', 'ogiltig');
   if (a.forfattare_id !== atk.personal.id) throw new Fel(403, 'Bara författaren kan signera anteckningen.', 'nekad');
-  atk.krav(skrivHandling(a.kategori));
+  atk.krav(skrivHandling(a.kategori, atk.personal));
   if (!JSON.parse(a.sokord).some(s => s.text)) throw new Fel(400, 'Anteckningen är tom.', 'ogiltig', { falt: ['sokord'] });
   const t = iso();
   atk.db.transaction(() => {
@@ -269,7 +272,7 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   if (a.status !== 'signerad') throw new Fel(400, 'Bara signerade anteckningar rättas. Ett utkast ändras direkt.', 'ogiltig');
   if (ersattAv(atk.db, a.id) != null) throw new Fel(400, 'Anteckningen har redan rättats. Rätta den senaste versionen.', 'ogiltig');
   if (typeof orsak !== 'string' || orsak.trim().length < 3) throw new Fel(400, 'Ange orsak till rättelsen.', 'ogiltig', { falt: ['orsak'] });
-  atk.krav(skrivHandling(a.kategori), { resurs: { enhet_id: a.enhet_id } });
+  atk.krav(skrivHandling(a.kategori, atk.personal), { resurs: { enhet_id: a.enhet_id } });
   if (vardenhetFor(atk.db, a.enhet_id) !== vardenhetFor(atk.db, atk.personal.enhet_id)) {
     throw new Fel(403, 'Anteckningen kan bara rättas av den vårdenhet som skrev den.', 'nekad');
   }

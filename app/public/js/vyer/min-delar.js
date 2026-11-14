@@ -195,7 +195,7 @@ export async function remisser(el, ctx) {
 const HANDLING = {
   las_oversikt: 'Öppnade journalens översikt', las_admin: 'Läste administrativa uppgifter', las_journal: 'Läste anteckningar', las_omvardnad: 'Läste omvårdnadsanteckningar',
   las_lakemedel: 'Läste läkemedelslistan', las_matvarden: 'Läste provsvar och mätvärden', las_diagnoser: 'Läste diagnoser', las_remiss: 'Läste remisser',
-  las_remiss_status: 'Såg remissernas status', skriv_journal: 'Skrev en anteckning', skriv_omvardnad: 'Skrev en omvårdnadsanteckning', ordinera: 'Ordinerade eller ändrade ett läkemedel',
+  las_remiss_status: 'Såg remissernas status', skriv_journal: 'Skrev en anteckning', skriv_omvardnad: 'Skrev en omvårdnadsanteckning', skriv_observation: 'Skrev en anteckning', ordinera: 'Ordinerade eller ändrade ett läkemedel',
   registrera_matvarde: 'Registrerade ett mätvärde', remittera: 'Skickade en remiss', mottag_remiss: 'Tog emot en remiss', bedom_remiss: 'Bedömde en remiss',
   svara_remiss: 'Svarade på en remiss', kvittera_svar: 'Kvitterade ett remissvar', nodatkomst: 'Öppnade journalen med nödåtkomst',
   andra_enheter: 'Valde att visa uppgifter från andra vårdenheter', samtycke_sparr: 'Registrerade ditt samtycke till att visa spärrade uppgifter',

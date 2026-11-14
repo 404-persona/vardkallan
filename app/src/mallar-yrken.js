@@ -57,7 +57,9 @@ export const ENDAST_LISTADE = new Set(['underskoterska']);
 
 const journal = () => require('./journal.js');
 const konfiguration = () => require('./konfiguration.js');
-const handlingFor = (kategori) => (kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
+// Behörigheten som en mall i kategorin kräver av yrket. Omvårdnadens mallar godtar också den smala handlingen
+// skriv_observation (atkomst.js), som bara anteckningsflödet prövar.
+const harBehorighet = (yrke, kategori) => (kategori === 'omvardnad' ? ['skriv_omvardnad', 'skriv_observation'] : ['skriv_journal']).some(h => (ROLLER[yrke] ?? []).includes(h));
 // De inbyggda mallarna, efter typ.
 const inbyggda = () => new Map(journal().MALLAR.map(m => [m.typ, m]));
 // Yrken som finns som roller och kan skriva anteckningar, och därför har en parameter.
@@ -77,7 +79,7 @@ export function yrkesparameter(yrke) {
         if (!m) return `${typ} är ingen av journalens mallar. Mallarna är ${[...finns.keys()].join(', ')}.`;
         if (sett.has(m.typ)) return `${m.typ} står två gånger.`;
         sett.add(m.typ);
-        if (!(ROLLER[yrke] ?? []).includes(handlingFor(m.kategori))) {
+        if (!harBehorighet(yrke, m.kategori)) {
           return `${YRKEN[yrke]} har inte behörighet att skriva ${m.kategori === 'omvardnad' ? 'omvårdnadsanteckningar' : 'läkaranteckningar'}, så ${m.typ} kan inte ges till yrket. Behörigheten följer patientdatalagen och ändras inte här.`;
         }
       }

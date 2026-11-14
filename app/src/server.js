@@ -1742,7 +1742,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('POST', '/api/patient/:id/anteckningar', (c, id) => {
     kravInloggad(c);
     // Runda 10, r3: kategorin för ett formulär kommer ur formulärets definition (journal.kategoriFor).
-    return [201, medPatient(c, id, journal.skrivHandling(journal.kategoriFor(c.db, c.body.typ)), (atk) => vardkontakt.knyt(atk, 'anteckningar', journal.skapaAnteckning(atk, c.body), c.body))];
+    return [201, medPatient(c, id, journal.skrivHandling(journal.kategoriFor(c.db, c.body.typ), c.personal), (atk) => vardkontakt.knyt(atk, 'anteckningar', journal.skapaAnteckning(atk, c.body), c.body))];
   });
   const medAnteckning = (c, id, handling, fn) => {
     kravInloggad(c);
@@ -1750,9 +1750,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     return medPatient(c, a.patient_id, handling(a), (atk) => fn(atk, a));
   };
   rutt('GET', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => utdata.anteckning(c.db, c.personal, journal.hamtaAnteckning(atk, a))));
-  rutt('PUT', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => journal.andraUtkast(atk, a, c.body)));
-  rutt('POST', '/api/anteckning/:id/signera', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => journal.signera(atk, a)));
-  rutt('POST', '/api/anteckning/:id/ratta', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => [201, journal.ratta(atk, a, c.body)]));
+  rutt('PUT', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.andraUtkast(atk, a, c.body)));
+  rutt('POST', '/api/anteckning/:id/signera', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.signera(atk, a)));
+  rutt('POST', '/api/anteckning/:id/ratta', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => [201, journal.ratta(atk, a, c.body)]));
   // Runda 13, r3 (beslut från Jonas): den som skrev anteckningen eller patientens ansvariga läkare begär att den undantas
   // från visning eller publicering. Begäran kräver att anteckningen får läsas, och den ger ingen åtkomst.
   rutt('POST', '/api/anteckning/:id/undantag', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => {

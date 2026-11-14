@@ -32,7 +32,9 @@ let mallar = null;
 let mallarFor = null;
 const filter = { enhet: '', typ: '' };
 
-const kanSkriva = (kategori) => far(kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
+// Runda 15, r5: undersköterskan skriver omvårdnadens anteckningar med den smala handlingen skriv_observation. Servern
+// ger bara de mallar som yrket skriver med.
+const kanSkriva = (kategori) => (kategori === 'omvardnad' ? far('skriv_omvardnad') || far('skriv_observation') : far('skriv_journal'));
 
 export async function visa(el, ctx) {
   const [lista, , ur] = await Promise.all([
@@ -148,6 +150,7 @@ async function lasAnteckning(las, ctx, id) {
   las.innerHTML = `<article class="anteckning" aria-labelledby="ant-rubrik">
       ${anteckningHuvud(senaste, 'ant-rubrik', a.id !== senaste.id ? `<p class="ruta ruta-info liten">Du öppnade version ${a.version}. Här visas den gällande versionen ${senaste.version}.</p>` : '')}
       ${senaste.formular ? `<p class="under-text">Formuläret ${esc(senaste.formular.namn)}, version ${senaste.formular.version}. Texten är skriven av systemet ur svaren.</p>${formular.lasBild(senaste.formular)}` : ''}
+      ${omvardnadsprocess.lasHtml(senaste.omvardnadsprocess)}
       ${sokordHtml(senaste.sokord)}
       ${kontrasignering.html(a, senaste)}
       ${word}

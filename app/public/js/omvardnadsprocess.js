@@ -88,3 +88,9 @@ export function las(form) {
   const resultat = [...ruta.querySelectorAll('[data-op-mal]')].map(f => ({ malId: Number(f.dataset.opMal), status: f.querySelector('input:checked')?.value ?? '' })).filter(x => x.status);
   return { problem, resultat };
 }
+
+// Omvårdnadsproblemen och resultaten mot vårdplanens mål när anteckningen läses.
+export function lasHtml(p) {
+  if (!p) return '';
+  return `<div class="op-las" data-op-las>${p.problem.length ? `<p class="liten"><strong>Omvårdnadsproblem:</strong> ${p.problem.map(x => esc(x.text)).join(', ')}.</p>` : ''}${p.resultat.length ? `<p class="liten"><strong>Resultat mot vårdplanens mål:</strong> ${p.resultat.map(x => `${esc(x.mal)}: ${esc(x.statusText.toLowerCase())}`).join('. ')}.</p>` : ''}</div>`;
+}
