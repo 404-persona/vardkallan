@@ -230,21 +230,19 @@ export function oversikt(db, typ, id, { metod = null, kravsAvVardgivaren = false
   const a = aktiva(db, typ, id);
   // Runda 15, r1: för personalen är en inloggning med tillitsnivå 3, som SITHS-kortet, redan flerfaktor, så faktorn
   // används bara vid en inloggning med lägre nivå.
-  const personalText = `${kravsAvVardgivaren ? 'Vårdgivaren kräver flerfaktor. ' : ''}${a.length
-    ? 'Flerfaktor är på. Din faktor används när du loggar in med lägre tillitsnivå än 3, till exempel utan SITHS-kortet. Med SITHS-kortet och PIN-koden behövs den inte, eftersom den inloggningen redan är flerfaktor.'
-    : 'Flerfaktor är av, men med SITHS-kortet och PIN-koden (tillitsnivå 3) är inloggningen ändå flerfaktor. Registrera en passkey eller en app för engångskoder om du ibland loggar in med lägre tillitsnivå.'}`;
+  // Runda 15, r1: invånarens e-legitimation med tillitsnivå 3 räknas på samma sätt (beslut från Jonas).
+  const kort = typ === 'personal' ? 'SITHS-kortet och PIN-koden' : 'e-legitimationen';
+  const lagre = typ === 'personal' ? 'till exempel utan SITHS-kortet' : 'till exempel med en e-legitimation med lägre nivå';
+  const text = `${kravsAvVardgivaren ? 'Vårdgivaren kräver flerfaktor. ' : ''}${a.length
+    ? `Flerfaktor är på. Din faktor används när du loggar in med lägre tillitsnivå än 3, ${lagre}. Med ${kort} behövs den inte, eftersom den inloggningen redan är flerfaktor.${kravsAvVardgivaren ? ' Den sista faktorn går inte att ta bort.' : ''}`
+    : `Flerfaktor är av, men med ${kort} (tillitsnivå 3) är inloggningen ändå flerfaktor. Registrera en passkey eller en app för engångskoder om du ibland loggar in med lägre tillitsnivå.`}`;
   return {
     aktiv: a.length > 0,
     faktorer: a.map(faktorUt),
     metod,
     max: MAX_FAKTORER,
     kravsAvVardgivaren,
-    text: typ === 'personal' ? personalText : kravsAvVardgivaren
-      ? (a.length ? 'Vårdgivaren kräver flerfaktor. Varje inloggning bekräftas med en av faktorerna nedan, och den sista faktorn går inte att ta bort.'
-        : 'Vårdgivaren kräver flerfaktor. Registrera en passkey eller en app för engångskoder för att logga in.')
-      : a.length
-        ? 'Flerfaktor är på för dig i den här sandlådan. Varje inloggning bekräftas med en av faktorerna nedan.'
-        : 'Flerfaktor är av. Registrera en passkey eller en app för engångskoder, så krävs den vid varje inloggning som du i den här sandlådan.',
+    text,
   };
 }
 

@@ -24,6 +24,16 @@
           "var": "#/inloggningstjanster",
           "rubrik": "Lägsta tillitsnivå per inloggningstjänst",
           "text": "För varje inloggningstjänst anger du lägsta tillitsnivå, med fyra ögon som andra ändringar. Systemet förklarar vad varje nivå betyder. Nivå 3 är förvald och rekommenderas. Med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen innan de får behörighet. Säkerhetsloggen visar metod och tillitsnivå för varje inloggning."
+        },
+        {
+          "id": "e-legitimation-flerfaktor-1-5-0",
+          "roller": [
+            "invanare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "E-legitimationen räcker som flerfaktor",
+          "text": "När du loggar in i Min journal med en e-legitimation med tillitsnivå 3, till exempel BankID, är inloggningen redan flerfaktor, och systemet frågar inte efter din passkey eller en kod från appen. Loggar du in med en e-legitimation med lägre tillitsnivå ber systemet om passkey eller kod. I demon är e-legitimationen simulerad."
         }
       ]
     },

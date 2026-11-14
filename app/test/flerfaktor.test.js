@@ -190,7 +190,7 @@ describe('Flerfaktor', () => {
     const h = ff.fran32(b.nyckel);
     expect((await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) })).status).toBe(201);
     await k.post('/api/logout');
-    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01' });
+    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.flerfaktor.metoder).toEqual(['totp']);
     expect((await k.get('/api/min/journal/p01')).status).toBe(401);

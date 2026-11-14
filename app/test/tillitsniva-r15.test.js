@@ -360,3 +360,103 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     expect(sakerhet(b).at(-1)).toMatchObject({ typ: 'avvisat_anrop', status: 403 });
   });
 });
+
+// Beslut från Jonas 2026-11-14: invånarens e-legitimation med tillitsnivå 3 räknas som flerfaktor på samma sätt, och
+// Vårdkällan begär tjänstens lägsta nivå med acr_values men prövar ändå nivån i svaret.
+describe('E-legitimation i Min journal och acr_values', () => {
+  test('e-legitimation: invånaren loggar in direkt med tillitsnivå 3, också med en faktor och med kravet på flerfaktor', async () => {
+    const b = webblasare();
+    await b.som('lak-kard');
+    kravFlerfaktor(db(b), true);
+    await b.post('/api/logout', {});
+    // En registrerad app för engångskoder behövs inte efter e-legitimationen.
+    expect((await b.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
+    const bo = (await b.post('/api/flerfaktor/totp/borja')).data;
+    expect((await b.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(bo.nyckel), Date.now()) })).data.inloggad).toBe(true);
+    await b.post('/api/logout', {});
+    const r = await b.post('/api/login/invanare', { invanareId: 'inv-p01' });
+    expect(r.data.inloggad).toBe(true);
+    expect(r.data.roll).toBe('invanare');
+    expect(r.data.flerfaktor.kravs).toBeUndefined();
+    expect(r.data.inloggningsniva).toMatchObject({ niva: 3, flerfaktor: true });
+    expect(r.data.inloggningsniva.metod).toContain('E-legitimation (simulerad)');
+    expect(sakerhet(b).at(-1)).toMatchObject({ typ: 'inloggning', invanare_id: 'inv-p01' });
+    expect(sakerhet(b).at(-1).beskrivning).toContain('tillitsnivå 3, flerfaktor');
+    expect((await b.get('/api/min/journal/p01')).status).toBe(200);
+    const o = (await b.get('/api/flerfaktor')).data;
+    expect(o.inloggning.text).toContain('redan flerfaktor');
+  });
+
+  test('e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen', async () => {
+    const b = webblasare();
+    await b.get('/api/session');
+    expect(konfiguration.varde(db(b), 'sakerhet.flerfaktor_kravs')).toBe(false);
+    const u = await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 2 });
+    expect(u.data.inloggad).toBe(false);
+    expect(u.data.flerfaktor).toMatchObject({ kravs: true, registrera: true });
+    expect(u.data.flerfaktor.text).toContain('tillitsnivå 2');
+    expect((await b.get('/api/min/journal/p02')).status).toBe(401);
+    const bo = (await b.post('/api/flerfaktor/totp/borja')).data;
+    const h = ff.fran32(bo.nyckel);
+    const klar = await b.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
+    expect(klar.data.inloggad).toBe(true);
+    expect(klar.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
+    await b.post('/api/logout', {});
+    const igen = await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 2 });
+    expect(igen.data.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
+    expect(igen.data.flerfaktor.orsak).toContain('din journal');
+    // Bara nivå 2 och 3 finns i demon, och invånarens biljett godtas aldrig som personalens.
+    expect((await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 4 })).status).toBe(400);
+    expect((await b.post('/api/login/biljett', { biljett: idp.autentiseraInvanare({ id: 'inv-p02' }) })).status).toBe(401);
+  });
+
+  test('e-legitimation: ombud och vårdnadshavare loggar in som förut, med tillitsnivå 3', async () => {
+    for (const id of ['inv-om01', 'inv-vh01']) {
+      const b = webblasare();
+      const r = await b.post('/api/login/invanare', { invanareId: id });
+      expect({ id, inloggad: r.data.inloggad, niva: r.data.inloggningsniva?.niva }).toEqual({ id, inloggad: true, niva: 3 });
+    }
+  });
+
+  test('acr_values: inloggningsbegäran ber om tjänstens lägsta nivå och högre, och nivån i svaret prövas ändå', async () => {
+    const b = webblasare();
+    await b.get('/api/session');
+    const id = await kopplaIn(b);
+    op.attribut = () => attributFor(db(b), 'lak-kard');
+    op.manipulera = null;
+    expect((await b.extern(id)).ok).toBe(true);
+    // Testutfärdaren anger inga stödda nivåer, så systemet ber om de kända nivåerna 3 och 4 i båda ramverken.
+    const nivaer = op.begaran.acr_values.split(' ');
+    expect(nivaer).toEqual(expect.arrayContaining([SAMBI(3), SAMBI(4), 'http://id.elegnamnden.se/loa/1.0/loa3', 'http://id.elegnamnden.se/loa/1.0/loa4']));
+    expect(nivaer.some(n => tillit.tolka(n).niva < 3)).toBe(false);
+    expect(nivaer.some(n => /uncertified/.test(n))).toBe(false);
+    // Tjänsten svarar ändå med nivå 2: biljetten avvisas.
+    await b.post('/api/logout', {});
+    op.manipulera = (h, p) => [h, { ...p, acr: SAMBI(2) }];
+    expect((await b.extern(id)).text).toContain('tillitsnivån räcker inte');
+    op.manipulera = null;
+    // Med lägsta nivå 2 ber systemet också om nivå 2, och med nivå 1 om ingen viss nivå.
+    await andraLagsta(b, id, 2);
+    await b.post('/api/logout', {});
+    await b.extern(id);
+    expect(op.begaran.acr_values.split(' ')).toEqual(expect.arrayContaining([SAMBI(2), SAMBI(3)]));
+    await andraLagsta(b, id, 1);
+    await b.post('/api/logout', {});
+    await b.extern(id);
+    expect(op.begaran.acr_values).toBeUndefined();
+  });
+
+  test('acr_values: en tjänst som anger sina nivåer får bara de nivåer den stödjer, från lägsta nivån', async () => {
+    const b = webblasare();
+    await b.som('sysf');
+    const f = await b.post('/api/inloggningstjanster', { ovning: true, motivering: 'Prov av acr_values.' });
+    expect(f.status).toBe(201);
+    await b.som('sysf-2');
+    await b.post(`/api/inloggningstjanster/andring/${f.data.andring.id}/godkann`, {});
+    await b.post('/api/logout', {});
+    const r = await fetch(`${app.url}/api/inloggning/extern/${f.data.andring.tjanst}`, { headers: { Cookie: b.kaka() }, redirect: 'manual' });
+    const u = new URL(r.headers.get('location'), app.url);
+    // Övningstjänsten anger Sambi nivå 2 och 3. Med lägsta nivå 3 begärs bara nivå 3.
+    expect(u.searchParams.get('acr_values')).toBe(SAMBI(3));
+  });
+});

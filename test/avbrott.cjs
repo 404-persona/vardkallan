@@ -1026,6 +1026,8 @@ const undersok = (page, kod, nyckelB64) => page.evaluate(async ({ kod, nyckelB64
       await synlig(fp, '[data-ff-status="pa"]', 'Flerfaktor är på');
       await fp.click('[data-a="loggaut"]');
       await fp.click('#flik-patient');
+      // Runda 15, r1: e-legitimationen med tillitsnivå 3 behöver ingen kod, så testet loggar in med lägre nivå.
+      await fp.check('#inv-niva-2');
       await fp.click('[data-invanare="inv-p01"]');
       const dl = fp.locator('dialog[open].flerfaktor-dialog');
       await dl.waitFor();

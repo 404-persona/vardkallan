@@ -716,7 +716,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
         if (x.v === SPARVERSION_VILA) {
           if (typeof x.kopieId !== 'string' || !vilolager.finns(x.kopieId)) continue;
           sessioner.set(x.sid, medVila({
-            personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, anvand: x.anvand ?? x.sist,
+            personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, anvand: x.anvand ?? x.sist,
             lasnyckel: x.lasnyckel ?? null, oppnade: new Set(x.oppnade ?? []), kopieId: x.kopieId, kopiaIds: x.kopiaIds ?? [], vilaIndex: x.vilaIndex ?? { kalender: [], konton: [] },
             harLoggatIn: Boolean(x.harLoggatIn), kopior: null, matning: null,
             adress: typeof x.adress === 'string' ? x.adress : null, dbByte: Number(x.dbByte) || null,
@@ -725,7 +725,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
           continue;
         }
         const s = {
-          db: lasSandlada(x.db), personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, matning: new Matning(200),
+          db: lasSandlada(x.db), personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, matning: new Matning(200),
           lasnyckel: x.lasnyckel ?? null, oppnade: new Set(x.oppnade ?? []),
           // Runda 12, r2: en session som sparades före kopieId har sina kopior under sitt sid.
           kopieId: x.kopieId ?? x.sid,
@@ -757,7 +757,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (vilolager.typ === 'katalog') {
       for (const x of [...vakna]) vilaSandlada(x, { tvinga: true });
       const lista = [...sessioner].filter(([, x]) => x.vilar).map(([sid, x]) => ({
-        v: SPARVERSION_VILA, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, anvand: x.anvand,
+        v: SPARVERSION_VILA, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, anvand: x.anvand,
         lasnyckel: x.lasnyckel, oppnade: [...x.oppnade], kopieId: x.kopieId, kopiaIds: x.kopiaIds, vilaIndex: x.vilaIndex, harLoggatIn: Boolean(x.harLoggatIn),
         adress: x.adress ?? null, dbByte: x.dbByte ?? null,
       }));
@@ -767,7 +767,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     }
     for (const x of sessioner.values()) if (x.vilar) vaknaSandlada(x);
     const lista = [...sessioner].map(([sid, x]) => ({
-      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(x.db.serialize()).toString('base64'),
+      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(x.db.serialize()).toString('base64'),
       lasnyckel: x.lasnyckel, oppnade: [...x.oppnade], kopieId: x.kopieId,
       kopior: [...x.kopior].map(([id, k]) => [id, { ...k, patienter: [...k.patienter], loggIds: [...k.loggIds] }]),
     }));
@@ -846,6 +846,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (p || inv) ut.flerfaktor = { aktiv: flerfaktor.kravs(s.db, p ? 'personal' : 'invanare', p ? p.id : inv.id), metod: s.flerfaktorMetod ?? null };
     else if (s.vantande && s.vantande.utgar > Date.now()) ut.flerfaktorVantar = { typ: s.vantande.typ, namn: s.vantande.namn, metoder: flerfaktor.metoder(s.db, s.vantande.typ, s.vantande.id), ...(s.vantande.registrera ? { registrera: true } : {}) };
     if (inv) Object.assign(ut, { roll: 'invanare' }, minJournal.sessionDel(s.db, inv));
+    // Runda 15, r1: invånarens tillitsnivå, som för personalen.
+    if (inv) ut.inloggningsniva = s.invanareInloggning ? tillit.ut(s.invanareInloggning) : null;
     if (p) {
       const ve = vardenhetFor(s.db, p.enhet_id);
       ut.roll = 'personal';
@@ -1456,14 +1458,23 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('GET', '/api/demo/invanare', (c) => minJournal.demoInvanare(c.db));
   rutt('POST', '/api/login/invanare', (c) => {
     const inv = minJournal.provaInloggning(c.db, c.body.invanareId);
+    // Runda 15, r1 (beslut från Jonas): den simulerade e-legitimationen ger en signerad biljett med tillitsnivå, som
+    // prövas som personalens. Tillitsnivå 3 är redan flerfaktor. En lägre nivå kompletteras alltid med passkey eller kod,
+    // eftersom invånarens elektroniska tillgång kräver flerfaktorsautentisering (HSLF-FS 2016:40 4 kap. 11 §).
+    const niva = c.body.tillitsniva === undefined ? 3 : c.body.tillitsniva;
+    const p = idp.verifiera(idp.autentiseraInvanare(inv, { niva }), { forbruka: false, lagsta: niva, mottagare: idp.MOTTAGARE_MIN_JOURNAL, attribut: idp.INVANARENS_ATTRIBUT });
+    if (p.sub !== inv.id) throw new Fel(403, 'Biljetten gäller en annan person.', 'nekad');
+    const inloggning = { invanare: true, tillitsniva: p.acr, amr: Array.isArray(p.amr) ? p.amr.slice(0, 8) : [] };
+    const namn = minJournal.sessionDel(c.db, inv).invanare.namn;
+    if (tillit.forUppdrag(inloggning).flerfaktor) return slutforInvanare(c, inv, { inloggning, stark: true });
     // Runda 12, r3: med en passkey eller en app för engångskoder väntar inloggningen på den.
     stoppaOprovbarFaktor(c, 'invanare', inv.id, null);
-    if (flerfaktor.kravs(c.db, 'invanare', inv.id)) return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn: minJournal.sessionDel(c.db, inv).invanare.namn });
-    // Runda 13, r3: kräver vårdgivaren flerfaktor leds invånaren till att registrera en faktor.
-    if (flerfaktorKravs(c.db)) return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn: minJournal.sessionDel(c.db, inv).invanare.namn, registrera: true });
-    return slutforInvanare(c, inv);
+    const har = flerfaktor.kravs(c.db, 'invanare', inv.id);
+    const orsak = tillit.andraFaktorText(inloggning, { harFaktor: har });
+    // Runda 13, r3: den som saknar en faktor leds till att registrera en.
+    return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn, inloggning, orsak, ...(har ? {} : { registrera: true }) });
   });
-  function slutforInvanare(c, inv, { metod = null } = {}) {
+  function slutforInvanare(c, inv, { metod = null, inloggning = null, stark = false } = {}) {
     glomIdentiteter(c.s);
     oppetApi.aterkalla(c.s, 'Åtkomstbiljetten återkallades när någon loggade in i Min journal i samma webbläsare.');
     c.s.invanareId = inv.id;
@@ -1477,8 +1488,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     c.s.oppnade = new Set();
     c.s.vantande = null;
     c.s.flerfaktorMetod = metod;
-    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor.
-    c.s.flerfaktorTid = metod ? Date.now() : null;
+    // Runda 15, r1: inloggningens tillitsnivå och en eventuell andra faktor.
+    c.s.invanareInloggning = inloggning ? { ...inloggning, ...(metod ? { andraFaktor: metod } : {}) } : null;
+    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor. Runda 15: också med tillitsnivå 3.
+    c.s.flerfaktorTid = metod || stark ? Date.now() : null;
     c.rotera = true;
     return sessionUt(c.s);
   }
@@ -1510,7 +1523,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     c.s.vantande = { ...agare, utgar: Date.now() + flerfaktor.UTMANING_S * 1000 * (agare.registrera ? 2 : 1), forsok: 0 };
     c.rotera = true;
     // Runda 15, r1: för personalen säger loggen tillitsnivån som gjorde att den andra faktorn behövs.
-    const forsta = agare.uppdrag ? `Den första faktorn är godkänd (${tillit.forUppdrag(agare.uppdrag).metod}).` : 'Den första faktorn är godkänd.';
+    const forstaU = agare.uppdrag ?? agare.inloggning;
+    const forsta = forstaU ? `Den första faktorn är godkänd (${tillit.forUppdrag(forstaU).metod}).` : 'Den första faktorn är godkänd.';
     sakerhetslogg.logga(c.db, { typ: 'flerfaktor', personal_id: agare.typ === 'personal' ? agare.id : null, invanare_id: agare.typ === 'invanare' ? agare.id : null, enhet_id: agare.enhet ?? null,
       metod: 'POST', vag: c.url.pathname, status: 200, beskrivning: agare.registrera ? `${forsta} ${agare.orsak ? 'Tillitsnivån räcker inte ensam' : 'Vårdgivaren kräver flerfaktor'}, och inloggningen väntar på att en faktor registreras.` : `${forsta} Inloggningen väntar på den andra faktorn.` });
     const u = flerfaktor.inloggningsutmaning(c.db, c.s, agare, webbplats(c));
@@ -1545,7 +1559,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       if (orsak) throw new Fel(403, orsak, 'nekad');
       return slutforPersonal(c, p, v.uppdrag, { demo: v.demo, metod });
     }
-    return slutforInvanare(c, minJournal.provaInloggning(c.db, v.id), { metod });
+    return slutforInvanare(c, minJournal.provaInloggning(c.db, v.id), { metod, inloggning: v.inloggning ?? null });
   }
   rutt('POST', '/api/login/flerfaktor/avbryt', (c) => { c.s.vantande = null; c.s.flerfaktorUtmaning = null; return sessionUt(c.s); });
   // Den inloggade registrerar och tar bort sina faktorer. Personalen och invånaren har var sina, i sandlådan.
@@ -1599,7 +1613,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     enhet_id: a.enhet ?? null, metod: 'POST', vag: c.url.pathname.replace(/\/\d+\//, '/:id/'), status: 200, beskrivning: text });
   // Runda 15, r1: för personalen också inloggningens tillitsnivå, så att sidan kan säga om en faktor alls behövs.
   const oversiktFor = (c, a) => ({ ...flerfaktor.oversikt(c.db, a.typ, a.id, { metod: c.s.flerfaktorMetod ?? null, kravsAvVardgivaren: flerfaktorKravs(c.db) }),
-    ...(a.typ === 'personal' && c.personal ? { inloggning: tillit.ut(c.s.uppdrag) } : {}) });
+    ...(a.typ === 'personal' && c.personal ? { inloggning: tillit.ut(c.s.uppdrag) } : {}),
+    ...(a.typ === 'invanare' && c.invanare && c.s.invanareInloggning ? { inloggning: tillit.ut(c.s.invanareInloggning) } : {}) });
   rutt('GET', '/api/flerfaktor', (c) => oversiktFor(c, agareFor(c, { vantande: true })));
   // Runda 13, r2 (säkerhetsgranskningen av runda 12, fynd 8): en faktor läggs till eller tas bort bara efter en färsk
   // bekräftelse med en faktor som redan var aktiv: inloggningen med faktor de senaste fem minuterna, eller en kod från
@@ -2655,8 +2670,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
 
   // Runda 15, r1: hur personalen loggade in, med tillitsnivån, för säkerhetsloggen.
   function inloggningsTextFor(s) {
-    if (!s?.personalId || !s.uppdrag) return {};
-    const b = tillit.forUppdrag(s.uppdrag);
+    const u = s?.personalId ? s.uppdrag : s?.invanareId ? s.invanareInloggning : null;
+    if (!u) return {};
+    const b = tillit.forUppdrag(u);
     return { inloggningText: `${b.metod}, ${b.flerfaktor ? 'flerfaktor' : 'en faktor'}` };
   }
 

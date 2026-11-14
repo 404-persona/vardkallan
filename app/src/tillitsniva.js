@@ -120,6 +120,7 @@ export function forUppdrag(uppdrag) {
   const andra = Object.hasOwn(ANDRA, uppdrag.andraFaktor ?? '') ? uppdrag.andraFaktor : null;
   const forsta = uppdrag.extern
     ? `${uppdrag.tjanstNamn ?? 'Inloggningstjänsten'}${amrText(uppdrag.amr) ? ` med ${amrText(uppdrag.amr)}` : ''}`
+    : uppdrag.invanare ? (t.niva >= FLERFAKTOR_NIVA ? 'E-legitimation (simulerad)' : 'Simulerad e-legitimation med lägre tillitsnivå')
     : t.niva >= FLERFAKTOR_NIVA ? 'SITHS-kort med PIN-kod (simulerat)' : 'Simulerad inloggning utan SITHS-kort';
   const flerfaktor = (t.niva ?? 0) >= FLERFAKTOR_NIVA || Boolean(andra);
   const nivaText = t.niva ? `tillitsnivå ${t.niva}` : 'okänd tillitsnivå';
@@ -138,7 +139,8 @@ export function forUppdrag(uppdrag) {
 export function andraFaktorText(uppdrag, { harFaktor }) {
   const t = tolka(uppdrag?.tillitsniva);
   const har = t.niva ? `tillitsnivå ${t.niva}` : 'en inloggning utan känd tillitsnivå';
-  return `Du loggade in med ${har}. Det är en faktor, och åtkomst till patientuppgifter kräver flerfaktor (tillitsnivå 3, till exempel SITHS-kortet med PIN-kod). ${harFaktor ? 'Bekräfta med din passkey eller en kod från appen.' : 'Registrera en passkey eller en app för engångskoder. Nästa gång räcker det att bekräfta med den.'}`;
+  const krav = uppdrag?.invanare ? 'åtkomst till din journal kräver flerfaktor (tillitsnivå 3, till exempel en e-legitimation som BankID)' : 'åtkomst till patientuppgifter kräver flerfaktor (tillitsnivå 3, till exempel SITHS-kortet med PIN-kod)';
+  return `Du loggade in med ${har}. Det är en faktor, och ${krav}. ${harFaktor ? 'Bekräfta med din passkey eller en kod från appen.' : 'Registrera en passkey eller en app för engångskoder. Nästa gång räcker det att bekräfta med den.'}`;
 }
 
 // Det som sessionen och API:t visar om inloggningens nivå.
@@ -165,4 +167,21 @@ export function kanslig(metod, vag, body) {
 export function kanslighetsText(k, uppdrag) {
   const b = forUppdrag(uppdrag);
   return `${k.text} kräver att inloggningen är flerfaktor: SITHS-kortet med PIN-kod eller en annan inloggning med tillitsnivå 3, eller en bekräftad passkey eller kod från appen. Din inloggning har ${b.niva ? `tillitsnivå ${b.niva}` : 'ingen känd tillitsnivå'} utan andra faktor. Logga ut och logga in igen med SITHS-kortet.`;
+}
+
+// Runda 15, r1 (beslut från Jonas): nivåerna som Vårdkällan begär av inloggningstjänsten med acr_values (OpenID Connect
+// Core 3.1.2.1), så att tjänsten själv väljer en legitimation som räcker. Nivån i svaret prövas ändå. Har tjänsten angett
+// sina nivåer (acr_values_supported) begärs bara de som är kända, granskade och minst den lägsta nivån; annars Ineras och
+// DIGG:s identifierare för nivåerna från den lägsta och uppåt. Med lägsta nivå 1 begärs ingen viss nivå. Lägsta nivån
+// först, eftersom den räcker och oftast är den som personalen har, till exempel SITHS eID.
+const STANDARD_BEGARAN = ['http://id.sambi.se/loa/loa', 'http://id.elegnamnden.se/loa/1.0/loa'];
+export function begardaNivaer(lagsta, stodda = null) {
+  const min = lagstaNiva(lagsta) ?? STANDARD_LAGSTA;
+  if (min <= 1) return null;
+  const godkand = (uri) => { const k = IDENTIFIERARE.get(uri); return Boolean(k && !k.sjalvdeklarerad && k.niva >= min); };
+  const lista = Array.isArray(stodda) && stodda.length
+    ? [...new Set(stodda.filter(u => typeof u === 'string' && godkand(u)))]
+    : [2, 3, 4].filter(n => n >= min).flatMap(n => STANDARD_BEGARAN.map(p => p + n));
+  lista.sort((a, b) => IDENTIFIERARE.get(a).niva - IDENTIFIERARE.get(b).niva);
+  return lista.length ? lista : null;
 }

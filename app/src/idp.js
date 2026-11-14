@@ -111,6 +111,21 @@ export function autentisera(db, p, { nu = Date.now(), nonce = null, niva = 3 } =
     acr: niva === 3 ? TILLITSNIVA : TILLITSNIVA_2, amr: AMR_FOR[niva], auth_time: iat, iat, exp: iat + GILTIG_SEKUNDER, jti: randomUUID(), ...(nonce ? { nonce } : {}),
   });
 }
+// Runda 15, r1 (beslut från Jonas): invånarens simulerade e-legitimation i Min journal ger också en signerad biljett med
+// tillitsnivå, så att samma regler gäller som för personalen: nivån läses ur den signerade biljetten, och en okänd nivå
+// räknas som en faktor. Biljetten har en egen mottagare, så att den aldrig godtas som personalens. Tillitsnivå 3 motsvarar
+// en e-legitimation som BankID (nyckel i programvara och PIN-kod), och tillitsnivå 2 en e-legitimation med lägre nivå.
+export const MOTTAGARE_MIN_JOURNAL = 'vardkallan-min-journal';
+export const PERSONALENS_ATTRIBUT = ['employeeHsaId', 'commissionHsaId', 'commissionPurpose', 'healthCareUnitHsaId', 'professionCode', 'jti'];
+export const INVANARENS_ATTRIBUT = ['sub', 'jti'];
+const AMR_INVANARE = { 3: ['swk', 'pin'], 2: ['pwd'] };
+export function autentiseraInvanare(inv, { nu = Date.now(), niva = 3 } = {}) {
+  if (niva !== 3 && niva !== 2) throw new Fel(400, 'I demon loggar invånaren in med e-legitimation (tillitsnivå 3) eller med en lägre tillitsnivå (2).', 'ogiltig', { falt: ['tillitsniva'] });
+  const iat = Math.floor(nu / 1000);
+  return utfarda({ iss: UTFARDARE, aud: MOTTAGARE_MIN_JOURNAL, sub: inv.id, acr: niva === 3 ? TILLITSNIVA : TILLITSNIVA_2, amr: AMR_INVANARE[niva],
+    auth_time: iat, iat, exp: iat + GILTIG_SEKUNDER, jti: randomUUID() });
+}
+
 // Utfärdarens signering av attributen. Bara servern når den. Testerna använder den för biljetter med fel attribut men
 // rätt signatur, för att visa att attributen prövas för sig.
 export const utfarda = (pastaende) => signera({ alg: ALG, typ: 'JWT', kid: nyckel.kid }, pastaende, nyckel.privateKey);
@@ -128,7 +143,7 @@ function las(del) { try { return JSON.parse(Buffer.from(del, 'base64url').toStri
 // Verifierar biljetten och ger dess attribut. Kastar Fel med orsaken på vanlig svenska. forbruka: false prövar bara.
 // Runda 15, r1: lagsta 2 godtar också tillitsnivå 2, bara för demons inloggning utan kort, där biljetten skapas och prövas
 // i samma anrop. En biljett utifrån (/api/login/biljett) ska ha tillitsnivå 3.
-export function verifiera(biljett, { nu = Date.now(), forbruka = true, lagsta = 3 } = {}) {
+export function verifiera(biljett, { nu = Date.now(), forbruka = true, lagsta = 3, mottagare = MOTTAGARE, attribut = PERSONALENS_ATTRIBUT } = {}) {
   if (typeof biljett !== 'string' || biljett.length > 8000) avvisa('den saknas eller är för lång.');
   const delar = biljett.split('.');
   if (delar.length !== 3) avvisa('den är inte en signerad JWT.');
@@ -145,13 +160,13 @@ export function verifiera(biljett, { nu = Date.now(), forbruka = true, lagsta = 
   const ok = sig.length === 64 && verify('sha256', Buffer.from(`${delar[0]}.${delar[1]}`), { key: nyck, dsaEncoding: 'ieee-p1363' }, sig);
   if (!ok) avvisa('signaturen stämmer inte.');
   const aud = Array.isArray(p.aud) ? p.aud : [p.aud];
-  if (!aud.includes(MOTTAGARE)) avvisa('den är utfärdad till en annan tjänst.');
+  if (!aud.includes(mottagare)) avvisa('den är utfärdad till en annan tjänst.');
   const s = Math.floor(nu / 1000);
   if (typeof p.exp !== 'number' || p.exp <= s) avvisa('den har gått ut.');
   if (typeof p.iat !== 'number' || p.iat > s + KLOCKMARGINAL_S) avvisa('den är utfärdad i framtiden.');
   if (typeof p.nbf === 'number' && p.nbf > s + KLOCKMARGINAL_S) avvisa('den gäller inte ännu.');
   if (p.acr !== TILLITSNIVA && !(lagsta <= 2 && p.acr === TILLITSNIVA_2)) avvisa('tillitsnivån räcker inte.');
-  for (const f of ['employeeHsaId', 'commissionHsaId', 'commissionPurpose', 'healthCareUnitHsaId', 'professionCode', 'jti']) {
+  for (const f of attribut) {
     if (typeof p[f] !== 'string' || !p[f]) avvisa(`attributet ${f} saknas.`);
   }
   stadaAnvanda(nu);

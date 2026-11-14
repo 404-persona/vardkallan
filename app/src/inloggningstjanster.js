@@ -226,6 +226,8 @@ export function prova(db, konf, ctx) {
   // Runda 15, r1: lägsta tillitsnivå. En konfiguration från före runda 15 saknar fältet och har nivå 3, som förut.
   k.lagstaTillitsniva = tillit.lagstaNiva(konf.lagstaTillitsniva);
   if (k.lagstaTillitsniva === null) throw new Fel(400, 'Välj lägsta tillitsnivå 1, 2, 3 eller 4.', 'ogiltig', { falt: ['lagstaTillitsniva'] });
+  // Tjänstens tillitsnivåer ur metadata (acr_values_supported), eller null när tjänsten inte anger dem.
+  k.acrStodda = Array.isArray(konf.acrStodda) ? konf.acrStodda.filter(a => typeof a === 'string' && a.length <= 200).slice(0, 30) : null;
   return k;
 }
 
@@ -242,7 +244,9 @@ function lasMetadata(m, utfardare, klientautentisering) {
   if (lista(m.token_endpoint_auth_methods_supported) && !m.token_endpoint_auth_methods_supported.includes(klientautentisering)) {
     throw new Fel(400, `Tjänsten stödjer inte ${KLIENTAUTENTISERING[klientautentisering] ?? klientautentisering}. Välj ett annat sätt att autentisera Vårdkällan.`, 'ogiltig', { falt: ['klientautentisering'] });
   }
-  return { authorizationEndpoint: m.authorization_endpoint, tokenEndpoint: m.token_endpoint, jwksUri: m.jwks_uri ?? null };
+  // Runda 15, r1: tjänstens tillitsnivåer, så att Vårdkällan begär en nivå som tjänsten stödjer.
+  const acr = lista(m.acr_values_supported) ? m.acr_values_supported.filter(a => typeof a === 'string' && a.length <= 200).slice(0, 30) : null;
+  return { authorizationEndpoint: m.authorization_endpoint, tokenEndpoint: m.token_endpoint, jwksUri: m.jwks_uri ?? null, acrStodda: acr };
 }
 
 // Hämtar metadata och nycklar: för övningstjänsten direkt, annars från en godkänd adress. Det som systemförvaltaren har
@@ -341,6 +345,10 @@ function varningar(konf) {
   const v = [];
   if (konf.klientautentisering === 'client_secret_basic' && !process.env[konf.hemlighetMiljo]) {
     v.push(`Hemligheten finns inte i serverns miljö (${konf.hemlighetMiljo}). Inloggningen fungerar först när driften har lagt in den.`);
+  }
+  // Runda 15, r1: tjänsten anger tillitsnivåer, men ingen som räcker för den lägsta nivån.
+  if (konf.acrStodda?.length && konf.lagstaTillitsniva > 1 && !tillit.begardaNivaer(konf.lagstaTillitsniva, konf.acrStodda)) {
+    v.push(`Tjänsten anger inga tillitsnivåer som når lägsta tillitsnivå ${konf.lagstaTillitsniva}. Personalen kommer inte in genom den förrän tjänsten erbjuder en sådan nivå, till exempel SITHS eID.`);
   }
   if (konf.klientautentisering === 'private_key_jwt' && !konf.simulerad) {
     v.push(`Tjänsten behöver Vårdkällans publika nyckel för att godta klientens intyg. Nyckelns tumavtryck är ${rp.tumavtryck}, och den publiceras på /api/inloggning/rp-jwks.`);
@@ -544,6 +552,9 @@ export function borja(s, db, tjanstId, ctx, nu = Date.now()) {
   for (const [n, v] of Object.entries({ response_type: 'code', client_id: k.klientId, redirect_uri: `${ctx.bas}${REDIRECT}`, scope: k.scope, state, nonce, code_challenge: s256(verifier), code_challenge_method: 'S256' })) {
     u.searchParams.set(n, v);
   }
+  // Runda 15, r1: tjänsten ombeds själv välja en legitimation med minst den lägsta nivån. Svaret prövas ändå.
+  const acr = tillit.begardaNivaer(k.lagstaTillitsniva, k.acrStodda);
+  if (acr) u.searchParams.set('acr_values', acr.join(' '));
   return u.href;
 }
 

@@ -708,11 +708,12 @@ export async function efterExternInloggning() {
 
 // Inloggning i Min journal. En läskopia som personal har lämnat i webbläsaren raderas, eftersom invånaren aldrig får en.
 // Åtkomster från läsläget som väntar på datorn skickas först, och den förra personens reservkopia raderas.
-export async function loggaInInvanare(invanareId, knapp) {
+// Runda 15, r1: extra kan ha tillitsniva 2, demons e-legitimation med lägre tillitsnivå.
+export async function loggaInInvanare(invanareId, knapp, extra = {}) {
   avbrottslage.stoppaFornyelse();
   const forra = S.session?.personal?.id ?? null;
   const loggen = await avbrottslage.skickaLoggar().catch(() => null);
-  const s = await medAndraFaktorn(await medKnapp(knapp, () => api('/api/login/invanare', { metod: 'POST', data: { invanareId } })), forra);
+  const s = await medAndraFaktorn(await medKnapp(knapp, () => api('/api/login/invanare', { metod: 'POST', data: { invanareId, ...(extra.tillitsniva === 2 ? { tillitsniva: 2 } : {}) } })), forra);
   if (!s) return;
   nySession();
   S.session = s;

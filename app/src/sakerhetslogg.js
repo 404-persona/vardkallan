@@ -100,12 +100,12 @@ export function efterAnrop(db, { nyckel, status, kod = null, fel = null, fore = 
   // personen, eftersom ingen är inloggad före eller efter anropet.
   if (metod === 'POST' && vag === FLERFAKTOR) {
     // Runda 15, r1: personalens inloggning med metod och tillitsnivå (inloggningText från servern).
-    if (ok && (efter.personal || efter.invanare)) logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: efter.invanare ? 'Invånaren loggade in i Min journal med e-legitimation (simulerad) och flerfaktor.' : `Inloggning med ${efter.inloggningText ?? 'SITHS-kort (simulerat) och flerfaktor'}.` });
+    if (ok && (efter.personal || efter.invanare)) logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: efter.invanare ? `Invånaren loggade in i Min journal med ${efter.inloggningText ?? 'e-legitimation (simulerad) och flerfaktor'}.` : `Inloggning med ${efter.inloggningText ?? 'SITHS-kort (simulerat) och flerfaktor'}.` });
     return;
   }
   // Runda 13, r3: när vårdgivaren kräver flerfaktor slutför registreringen av den första faktorn inloggningen.
   if (metod === 'POST' && ['/api/flerfaktor/passkey', '/api/flerfaktor/totp'].includes(vag) && ok && !fore.personal && !fore.invanare && (efter.personal || efter.invanare)) {
-    logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: efter.invanare ? 'Invånaren loggade in i Min journal med e-legitimation (simulerad) och en ny faktor för flerfaktor, som vårdgivaren kräver.' : `Inloggning med ${efter.inloggningText ?? 'SITHS-kort (simulerat)'}, med en ny faktor.` });
+    logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: efter.invanare ? `Invånaren loggade in i Min journal med ${efter.inloggningText ?? 'e-legitimation (simulerad)'}, med en ny faktor.` : `Inloggning med ${efter.inloggningText ?? 'SITHS-kort (simulerat)'}, med en ny faktor.` });
     return;
   }
   // En inloggning som lyckas men väntar på den andra faktorn loggas av servern som flerfaktor, inte som inloggning.
@@ -115,7 +115,7 @@ export function efterAnrop(db, { nyckel, status, kod = null, fel = null, fore = 
     // Runda 9, r5: personalens inloggning går genom autentiseringstjänsten, och en misslyckad inloggning får orsaken.
     // Runda 15, r1: med metod och tillitsnivå.
     const personalText = vag === BILJETT ? `Inloggning med biljett från autentiseringstjänsten: ${efter.inloggningText ?? 'SITHS-kort (simulerat)'}.` : `Inloggning med ${efter.inloggningText ?? 'SITHS-kort (simulerat)'}.`;
-    if (ok) logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: invanare ? 'Invånaren loggade in i Min journal med e-legitimation (simulerad).' : personalText });
+    if (ok) logga(db, { ...bas, ...vem(efter), typ: 'inloggning', beskrivning: invanare ? `Invånaren loggade in i Min journal med ${efter.inloggningText ?? 'e-legitimation (simulerad)'}.` : personalText });
     else logga(db, { ...bas, ...vem(fore), typ: 'inloggning_misslyckad', beskrivning: invanare ? 'Inloggningen i Min journal misslyckades.' : `Inloggningen misslyckades. ${String(fel ?? 'Personen finns inte bland demorollerna.').slice(0, 300)}` });
     return;
   }

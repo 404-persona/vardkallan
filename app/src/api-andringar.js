@@ -17,7 +17,7 @@ export const ANDRINGAR = [
     text: 'Inga nya resurstyper eller skrivningar i FHIR.',
     resurser: [], skrivning: [], annat: [
       // Runda 15, r1: SITHS och tillitsnivå 3 som flerfaktor, och lägsta tillitsnivå per inloggningstjänst.
-      'Inloggningens tillitsnivå i sessionen, lägsta tillitsnivå per inloggningstjänst med fyra ögon och demons inloggning utan SITHS-kort med tillitsnivå 2 i det interna API:t. Känsliga handlingar svarar 403 med en egen felkod när inloggningen inte är flerfaktor (docs/api-avvikelser.md)',
+      'Inloggningens tillitsnivå i sessionen, lägsta tillitsnivå per inloggningstjänst med fyra ögon och demons inloggning med tillitsnivå 2 för personalen och invånaren i det interna API:t, och inloggningsbegäran till en inloggningstjänst ber om tjänstens lägsta nivå. Känsliga handlingar svarar 403 med en egen felkod när inloggningen inte är flerfaktor (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

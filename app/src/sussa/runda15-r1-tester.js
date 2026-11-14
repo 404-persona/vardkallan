@@ -15,4 +15,14 @@ export const TESTER_TILLITSNIVA_R15 = [
     'loggen: säkerhetsloggen visar metod och tillitsnivå för lyckade och misslyckade inloggningar, och sessionen visar dem',
     'känsliga handlingar: nödåtkomst, att häva en spärr och fyra ögon kräver en inloggning med flerfaktor, och en session utan nivå stoppas med förklaring',
   ].map(t => `SITHS och tillitsnivå 3 som flerfaktor > ${t}`),
+  ...[
+    'acr_values: inloggningsbegäran ber om tjänstens lägsta nivå och högre, och nivån i svaret prövas ändå',
+    'acr_values: en tjänst som anger sina nivåer får bara de nivåer den stödjer, från lägsta nivån',
+  ].map(t => `E-legitimation i Min journal och acr_values > ${t}`),
 ];
+// Invånarens e-legitimation i Min journal (L5).
+export const TESTER_E_LEGITIMATION_R15 = [
+  'e-legitimation: invånaren loggar in direkt med tillitsnivå 3, också med en faktor och med kravet på flerfaktor',
+  'e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen',
+  'e-legitimation: ombud och vårdnadshavare loggar in som förut, med tillitsnivå 3',
+].map(t => `E-legitimation i Min journal och acr_values > ${t}`);

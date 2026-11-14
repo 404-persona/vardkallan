@@ -113,7 +113,7 @@ describe('Flerfaktor som krav', () => {
     await k.logga('lak-kard');
     kravFlerfaktor(sandlada(app, k).db);
     await k.post('/api/logout');
-    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01' });
+    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.flerfaktor).toMatchObject({ kravs: true, registrera: true });
     expect((await k.get('/api/min/journal/p01')).status).toBe(401);
