@@ -186,6 +186,18 @@ function egnaIntyg(db, patientId, careUnitId, foreIso) {
   return db.query(`SELECT intyg_id, begaran, skapad FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL AND skapad <= ?`).all(patientId, foreIso)
     .filter(r => { try { const b = JSON.parse(r.begaran); return b.CareUnitId === careUnitId && (b.AssertionType ?? 'Consent') === 'Consent'; } catch { return false; } }).map(r => r.intyg_id);
 }
+// Säkerhetsgranskningen efter sammanslagningen: när en hel journal förstörs (arkiv.js) återkallas vårdgivarens egna
+// samtycken i tjänsten med intygen, utan personnummer. Intygen hämtas före raderingen och raden köas efter den.
+export function intygForRadering(db, patientId) {
+  sakra(db);
+  return db.query(`SELECT intyg_id FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL`).all(patientId).map(r => r.intyg_id);
+}
+export function koaRadering(db, patientId, ids, nu = new Date()) {
+  if (!ids.length) return false;
+  sakra(db);
+  koa(db, { patientId, handling: 'aterkalla', personalHsa: null, begaran: { CareProviderId: vardgivare(db), AssertionIds: ids, av: 'vardkallan-system' } }, nu);
+  return true;
+}
 const UTAN_INTYG = 'Samtycket kan inte återkallas i samtyckestjänsten utan patientens identitet, och Vårdkällan har inga egna intyg att återkalla. Systemförvaltaren behöver återkalla det i tjänsten.';
 function koaAterkallelse(atk, nu) {
   const db = atk.db;

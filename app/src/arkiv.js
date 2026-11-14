@@ -68,6 +68,11 @@ export const BESLUTSTYPER = {
 const LOGGHANDLING = { leverans: 'arkivera', gallring: 'gallra', radering: 'radera' };
 // Uppgifter om hanteringen, inte journalens innehåll. De finns kvar efter gallring och radering.
 const BEVARAS = new Set(['atkomstlogg', 'patienter', 'identiteter', 'utskrifter', 'utlamnanden', 'arkivbeslut', 'sammanslagningar', 'begaran', 'invanare', 'sparrar', 'listningar', 'dubblettforslag']);
+// Säkerhetsgranskningen efter sammanslagningen: det som är anmält till engagemangsindex finns kvar tills borttagningen
+// har skickats, så att posterna om en förstörd journal tas bort också nationellt. Raderna tas bort när indexet har tagit
+// emot borttagningen (engagemangsindex.js).
+BEVARAS.add('ei_poster');
+BEVARAS.add('ei_markerade');
 // Poster som kan pekas ut i ett beslut om förstöring av en del av journalen.
 const POSTTYPER = {
   anteckning: { tabell: 'anteckningar', text: 'Anteckning' },
@@ -535,7 +540,7 @@ const patientTabeller = (db) => db.query("SELECT name FROM sqlite_master WHERE t
   .filter(t => !BEVARAS.has(t) && db.query(`PRAGMA table_info(${t})`).all().some(k => k.name === 'patient_id'));
 
 // Raderar journalens innehåll för en patient, eller de utpekade posterna. Returnerar hur många rader av varje slag.
-function radera(db, pid, omfattning) {
+export function radera(db, pid, omfattning) {
   const antal = {};
   const del = (tabell, where, ...arg) => {
     const n = db.query(`SELECT count(*) AS n FROM ${tabell} WHERE ${where}`).get(...arg).n;
@@ -548,6 +553,10 @@ function radera(db, pid, omfattning) {
     del('nll_meddelanden', `ordination_id IN (${ph})`, ...ids);
   };
   if (omfattning.hela) {
+    // Säkerhetsgranskningen efter sammanslagningen: samtyckena återkallas i samtyckestjänsten och posterna tas bort ur
+    // engagemangsindex, eftersom journalen inte längre finns här.
+    const samtycke = require('./samtycke-nationellt.js');
+    const intyg = samtycke.intygForRadering(db, pid);
     const tabeller = patientTabeller(db);
     medSlapptaTriggrar(db, [...tabeller, 'ordination_historik', 'nll_meddelanden', 'vardtillfalle_handelser'], () => {
       ordBeroende(db.query('SELECT id FROM ordinationer WHERE patient_id = ?').all(pid).map(r => r.id));
@@ -556,6 +565,8 @@ function radera(db, pid, omfattning) {
       for (const t of tabeller) del(t, 'patient_id = ?', pid);
     });
     db.query('UPDATE patienter SET adress = NULL, postnr = NULL, ort = NULL, telefon = NULL, kontaktperson = NULL WHERE id = ?').run(pid);
+    samtycke.koaRadering(db, pid, intyg);
+    require('./engagemangsindex.js').markeraPatienter(db, [pid]);
     return antal;
   }
   medSlapptaTriggrar(db, ['anteckningar', 'diagnoser', 'matvarden', 'ordinationer', 'ordination_historik', 'nll_meddelanden', 'kontrasigneringar'], () => {

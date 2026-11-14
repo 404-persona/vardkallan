@@ -13,6 +13,8 @@ import * as idp from '../src/idp.js';
 import * as tillit from '../src/tillitsniva.js';
 import * as mellanarkiv from '../src/mellanarkiv.js';
 import * as sam from '../src/samtycke-nationellt.js';
+import * as eiMod from '../src/engagemangsindex.js';
+import * as arkivMod from '../src/arkiv.js';
 import * as nat from '../src/rivta/nationella.js';
 import { Atkomst as AtkomstKlass } from '../src/atkomst.js';
 import * as makuleringMod from '../src/vardkontakt-makulering.js';
@@ -377,6 +379,20 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
     expect(r.status).toBe('vantar');
     expect(r.fel).toContain('Systemförvaltaren');
     expect(sam.lageForvaltning(db).ejFramme).toBeGreaterThan(0);
+  });
+
+  test('när en hel journal förstörs återkallas samtycket i tjänsten och patienten markeras för borttagning ur engagemangsindex', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', {}, 'las_journal');
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    expect(iTjansten(db).filter(x => !x.aterkallat).length).toBe(1);
+    eiMod.sakra(db);
+    db.query("INSERT INTO ei_poster (patient_id, personid, doman, kategori, senast, skickad) VALUES ('p01', '194502024732', 'riv:clinicalprocess:healthcond:description', 'caredocumentation', '20261114000000', '2026-11-14T00:00:00.000Z')").run();
+    arkivMod.radera(db, 'p01', { hela: true });
+    expect(db.query("SELECT count(*) AS n FROM ei_poster WHERE patient_id = 'p01'").get().n).toBe(1);
+    expect(db.query("SELECT count(*) AS n FROM ei_markerade WHERE patient_id = 'p01' AND markerad IS NULL").get().n).toBeGreaterThan(0);
+    sam.skickaKo(db, { tvinga: true });
+    expect(iTjansten(db).filter(x => !x.aterkallat)).toEqual([]);
   });
 
   test('ett samtycke som registrerades före skyddet återkallas i tjänsten med vårdenhetens egna intyg, utan personnummer', () => {
