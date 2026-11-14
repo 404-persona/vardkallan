@@ -1458,7 +1458,8 @@ function skapa(BAS) {
     await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
     await page.waitForSelector('#ant-form .ant-underlag');
     await m.valj(page.locator('#ny-mall'), 'Omvårdnadsanteckning', 'mallen Omvårdnadsanteckning');
-    await m.skriv(page.locator('textarea[data-sokord="Andning/cirkulation"]'), 'Andas lugnt i vila.', 'sökordet Andning/cirkulation');
+    // Sammanslagningen av runda 15: r5:s statusområden har nya namn, och Andning och cirkulation står utfällt som förslag.
+    await m.skriv(page.locator('textarea[data-sokord="Andning och cirkulation"]'), 'Andas lugnt i vila.', 'sökordet Andning och cirkulation');
     await m.infoga(page.locator('.underlag-post[data-underlag-text^="Syremättnad"]'), 'syremättnaden i underlaget');
     await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
     await synlig(page, '.anteckning .ant-ref', 'Syremättnad');

@@ -604,7 +604,7 @@ FLODEN.push(
   {
     id: 'omvardnadsanteckning', namn: 'Skriva och signera en omvårdnadsanteckning', roll: 'ssk-kard', start: 'Patientens översikt', budget: 4,
     tecken: { hogst: 45 }, underlag: ['matvarde'],
-    motivering: 'Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning/cirkulation, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.',
+    motivering: 'Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning och cirkulation, som systemet har fällt ut som förslag, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.',
   },
   {
     id: 'senaste-bedomning', namn: 'Hitta den senaste bedömningen i en journal med 30 anteckningar', roll: 'lak-kard', start: 'Översikten för en patient med 30 anteckningar', budget: 2,
