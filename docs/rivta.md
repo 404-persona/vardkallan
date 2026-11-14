@@ -156,13 +156,14 @@ Domänen finns bara i RIVTA Basic Profile 2.0, och meddelandena är openEHR-komp
 
 Samtycket till sammanhållen journalföring registreras och prövas både i Vårdkällan och i samtyckestjänsten (`app/src/samtycke-nationellt.js`). Personalen bekräftar en gång att patienten samtycker eller återkallar, och systemet gör resten:
 
+- Samtycket gäller som förval så länge vårdrelationen pågår, eller till ett visst datum eller tills vidare enligt patientens svar. Ett visst datum skickas som EndDate, de andra två utan slutdatum, och när vårdrelationen upphör återkallas samtycket i tjänsten med sina egna intyg.
 - Ett samtycke som registreras i Vårdkällan läggs i en kö och skickas med RegisterExtendedConsent. Svarar tjänsten inte försöker systemet igen med allt längre mellan försöken (1, 2, 4, 8, 16 och sedan 30 minuter), och raderna för en patient skickas i ordning, så att en återkallelse aldrig går före registreringen.
 - Prövningen läser patientens samtycken hos vårdgivaren med GetExtendedConsentsForPatient, också de återkallade. Ett samtycke gäller när det finns i Vårdkällan för vårdenheten, eller när tjänsten har ett giltigt samtycke (Consent, inte utgånget, återkallat eller makulerat) för vårdenheten och för all personal där eller för den inloggade. Ett samtycke som patienten har gett i ett annat system hos vårdgivaren gäller alltså också här.
 - Har tjänsten återkallat samtycket som registrerades här återkallas det här också, och saknas det i tjänsten registreras det igen.
 - Svarar tjänsten inte gäller samtycket som registrerades i Vårdkällan, och ett samtycke från ett annat system kan då inte användas. Systemet säger det på vanlig svenska.
 - En återkallelse återkallar alla giltiga samtycken för vårdenheten i tjänsten som registrerades före återkallelsen, med CancelExtendedConsent. Tills tjänsten har tagit emot återkallelsen räknas inget sådant samtycke.
 - Ett intyg om nödsituation (Emergency) från ett annat system ger inget samtycke i Vårdkällan, eftersom nödåtkomst alltid prövas i den egna inloggningen. När personalen gör nödåtkomst här registreras ett personligt intyg om nödsituation i tjänsten till dagens slut, ett per person, patient och dag.
-- För en patient med skyddade personuppgifter, eller utan person- eller samordningsnummer, gäller bara samtycket i Vårdkällan, och inget skickas till eller hämtas från tjänsten med patientens identitet.
+- För en patient med skyddade personuppgifter registreras inget samtycke och inget slås upp i de nationella tjänsterna, efter Ineras villkor för NPÖ (version 1.4, avsnitt 6.2.2). Uppgifter från andra vårdgivare hämtas för en sådan patient bara vid nödåtkomst. För en patient utan person- eller samordningsnummer gäller bara samtycket i Vårdkällan.
 
 ### Engagemangsindex (riv.itintegration.engagementindex 1.0)
 

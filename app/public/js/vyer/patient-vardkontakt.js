@@ -132,10 +132,17 @@ export function sektionHtml(d, ctx) {
       ${v.avgift ? `<span class="under-text">Patientavgift ${esc(kr(v.avgift.belopp))}. ${esc(v.avgift.text)}</span>` : ''}${migreradEtikett(v)}
       ${v.besokSlut ? `<span class="under-text">Besöket slutade ${esc(tidpunkt(v.besokSlut))}.</span>` : ''}
       ${v.kanAndras && v.status !== 'avslutad' ? `<span class="knapprad tat" data-skriv><button type="button" class="knapp text liten" data-vk="andra" data-id="${v.id}">Ändra</button>${v.typ !== 'slutenvard' && !v.besokSlut ? `<button type="button" class="knapp text liten" data-vk="besok-slut" data-id="${v.id}">Besöket är slut</button>` : ''}<button type="button" class="knapp text liten" data-vk="avsluta" data-id="${v.id}">Avsluta kontakten</button></span>` : ''}
-      <span class="knapprad tat"><button type="button" class="knapp text liten" data-vk="handelser" data-id="${v.id}">Händelser och kringsystem</button></span>
+      <span class="knapprad tat"><button type="button" class="knapp text liten" data-vk="handelser" data-id="${v.id}">Händelser och kringsystem</button>${kanMakuleras(v) ? `<button type="button" class="knapp text liten" data-vk="makulera" data-id="${v.id}">Registrerad på fel patient</button>` : ''}</span>
     </li>`;
   }).join('')}</ul>` : '<p class="tom liten">Inga vårdkontakter som du kan se.</p>';
   delar.push(lista);
+  // Runda 15, r2: makulerade vårdkontakter, med vem, när och varför, och ingenting om en annan patient.
+  if (d.makuleradeVardkontakter?.length) {
+    delar.push(`<details class="vk-makulerade"><summary>Makulerade vårdkontakter (${d.makuleradeVardkontakter.length})</summary><ul class="enkel-lista">${d.makuleradeVardkontakter.map(m => `<li data-vk-makulerad="${m.id}">
+      <strong>${esc(m.orsakKontakt ?? 'Vårdkontakt')}</strong> <span class="tagg">Makulerad</span>
+      <span class="under-text">${esc(m.vardenhet?.namn ?? '')}, ${esc(datum(m.start))}. ${esc(m.text)}</span>
+      <span class="under-text">Makulerad av ${esc(m.av?.namn ?? '')} ${esc(tidpunkt(m.tid))}: ${esc(m.orsak)}</span></li>`).join('')}</ul></details>`);
+  }
   return `<section class="ov-sektion ov-vardkontakter" aria-labelledby="ov-vk"><div class="sektion-huvud"><h2 id="ov-vk">Vårdkontakter</h2></div>
     ${knappar.length ? `<div class="knapprad tat" data-skriv>${knappar.join('')}</div>` : ''}${delar.join('')}</section>`;
 }
@@ -203,6 +210,8 @@ export function koppla(el, d, ctx, ladda) {
     if (handling === 'handelser') return handelser(b.dataset.id);
     const v = d.vardkontakter.find(x => String(x.id) === b.dataset.id);
     if (handling === 'andra' && v) return andra(v, kor);
+    // Runda 15, r2: en genomförd vårdkontakt som har registrerats på fel patient.
+    if (handling === 'makulera' && v) return makulera(v, kor);
     if (handling === 'avsluta' && v) {
       // Runda 13, r3 (E1-36): en kontakt utan diagnos avslutas efter en fråga till den som får sätta diagnos.
       if (far('registrera_diagnos') && Array.isArray(v.diagnoser) && !v.diagnoser.length) {
@@ -338,6 +347,26 @@ async function skrivUt(vt, kor) {
   </form>`);
   if (!svar) return;
   await kor(() => api(`/api/vardtillfalle/${vt.id}/skriv-ut`, { metod: 'POST', data: {} }), 'Patienten är utskriven.');
+}
+
+// Runda 15, r2, andra omgången: makulering av en genomförd vårdkontakt som har registrerats på fel patient. Systemet
+// visar vad som följer med, och flyttar det till rätt patient när numret anges. Utan dokumentation kan kontakten
+// makuleras utan att flyttas.
+const kanMakuleras = (v) => far('registrera_vardkontakt') && v.kanAndras && v.typ !== 'slutenvard' && !v.vardtillfalleId && !(v.planerad && !v.ankomst);
+async function makulera(v, kor) {
+  let f;
+  try { f = await api(`/api/vardkontakt/${v.id}/makulering`); } catch (e) { felNotis(e); return; }
+  const svar = await dialog(`<form>
+    <h2 id="dlg-rubrik">Vårdkontakten är registrerad på fel patient</h2>
+    <div class="dialog-text"><p>${esc(v.orsak)}, ${esc(v.vardenhet?.namn ?? '')}, ${esc(tidpunkt(v.start))}.</p><p>${esc(f.text)}</p></div>
+    <div class="falt"><label for="mk-ratt">Personnummer eller samordningsnummer för rätt patient</label><input id="mk-ratt" name="rattPatient" maxlength="13" autocomplete="off" inputmode="numeric" aria-describedby="mk-ratt-h"><span class="hjalp" id="mk-ratt-h">${esc(f.utanPatientText)}</span></div>
+    <div class="falt"><label for="mk-orsak">Varför makuleras kontakten? <span class="obl">(obligatoriskt)</span></label><textarea id="mk-orsak" name="orsak" rows="2" maxlength="500" required aria-required="true"></textarea></div>
+    <p class="dialog-fel form-fel" role="alert" hidden></p>
+    <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Makulera</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div>
+  </form>`, { validera: (data) => (data.orsak.trim().length < 10 ? 'Skriv varför kontakten makuleras, med minst tio tecken.' : !data.rattPatient.trim() && !f.kanMakuleras ? f.utanPatientText : null) });
+  if (!svar) return;
+  const data = { orsak: svar.data.orsak.trim(), ...(svar.data.rattPatient.trim() ? { rattPatient: svar.data.rattPatient.trim() } : {}) };
+  await kor(() => api(`/api/vardkontakt/${v.id}/makulera`, { metod: 'POST', data }), (r) => r.text);
 }
 
 async function andra(v, kor) {

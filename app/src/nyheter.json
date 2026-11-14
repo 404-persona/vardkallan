@@ -14,7 +14,7 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Samtycket gäller här och i samtyckestjänsten",
-          "text": "Ett samtycke till sammanhållen journalföring som patienten har gett i ett annat system gäller också i Vårdkällan, och ett samtycke som registreras eller återkallas här registreras eller återkallas i samtyckestjänsten. Du bekräftar bara samtycket en gång. Svarar samtyckestjänsten inte gäller samtycket som registrerades här, och systemet skickar registreringen när tjänsten svarar igen. Samtyckestjänsten är simulerad i demon."
+          "text": "Ett samtycke till sammanhållen journalföring som patienten har gett i ett annat system gäller också i Vårdkällan, och ett samtycke som registreras eller återkallas här registreras eller återkallas i samtyckestjänsten. Du bekräftar bara samtycket en gång. Svarar samtyckestjänsten inte gäller samtycket som registrerades här, och systemet skickar registreringen när tjänsten svarar igen. Patienten väljer hur länge samtycket gäller: som förval så länge vårdrelationen pågår, till ett visst datum eller tills vidare. För patienter med skyddade personuppgifter hämtas uppgifter från andra vårdgivare bara vid nödåtkomst. Samtyckestjänsten är simulerad i demon."
         },
         {
           "id": "nationella-koer-1-5-0",
@@ -25,6 +25,18 @@
           "var": "#/nationella-tjanster",
           "rubrik": "Köerna till samtyckestjänsten och engagemangsindex",
           "text": "Engagemangsindex uppdateras av sig självt när journalen ändras, och registreringar av samtycken skickas till samtyckestjänsten genom en kö. På sidan Nationella tjänster ser du läget och det som inte har kommit fram, och kan skicka det som väntar direkt. Tjänsterna är simulerade i demon."
+        },
+        {
+          "id": "vardkontakt-makulering-1-5-0",
+          "roller": [
+            "vardadministrator",
+            "lakare",
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vårdkontakt på fel patient",
+          "text": "En genomförd vårdkontakt som har registrerats på fel patient makuleras med en motivering. Ange numret för rätt patient, så flyttar systemet kontakten och allt som hör till den dit, som när två journaler slås samman. På fel patient står bara att kontakten är makulerad, och ingenting om den andra patienten."
         }
       ]
     },

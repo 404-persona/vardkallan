@@ -121,6 +121,11 @@ export const OVNINGAR_V1 = [
     ['b', 'Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.'],
     ['c', 'Ber patienten återkalla samtycket i det andra systemet först.'],
   ], 'b', 'Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.', null),
+  o('vardkontakt-fel-patient', ['vardadministrator'], 'Ett besök har registrerats på fel patient, och läkaren har redan skrivit en anteckning på det. Vad gör du?', [
+    ['a', 'Ber läkaren skriva om anteckningen på rätt patient och låter besöket stå kvar.'],
+    ['b', 'Väljer Registrerad på fel patient på vårdkontakten, skriver varför och anger numret för rätt patient. Systemet flyttar besöket med anteckningen dit och lämnar bara makuleringen kvar på fel patient.'],
+    ['c', 'Raderar besöket.'],
+  ], 'b', 'Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten.', null),
   o('nationella-koer', ['systemforvaltare'], 'Samtyckestjänsten har inte svarat på en timme. Vad händer med samtyckena som registreras under tiden?', [
     ['a', 'De går förlorade och måste registreras igen.'],
     ['b', 'De gäller i Vårdkällan och ligger i kön. Systemet skickar dem när tjänsten svarar, och sidan Nationella tjänster visar det som inte har kommit fram, utan patientuppgifter.'],

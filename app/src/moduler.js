@@ -315,6 +315,11 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   n.vyer.push('nationella-tjanster.js');
   n.kod.push('src/engagemangsindex.js', 'src/samtycke-nationellt.js', 'src/r15r2-rutter.js');
   n.api.push('/api/nationella-tjanster');
+  // Andra omgången: en vårdkontakt på fel patient makuleras och flyttas till rätt patient (vardkontakt-makulering.js).
+  const v = MODULER.find(x => x.id === 'vardkontakt');
+  v.beskrivning += ' En genomförd vårdkontakt som har registrerats på fel patient makuleras med motivering, och det som hör till den flyttas till rätt patient som vid en sammanslagning.';
+  v.kod.push('src/vardkontakt-makulering.js');
+  v.api.push('/api/vardkontakt/:id/makulera');
 }
 // Runda 12, r1: journalens mallar, sökord och mätvärdestyper hör till systemförvaltningen (journalstruktur.js).
 {

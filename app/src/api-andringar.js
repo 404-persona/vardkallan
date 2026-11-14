@@ -22,6 +22,7 @@ export const ANDRINGAR = [
       // Runda 15, r2: samtycket i samtyckestjänsten och engagemangsindex (docs/rivta.md och docs/api-avvikelser.md).
       'Samtycket till sammanhållen journalföring prövas både i Vårdkällan och i samtyckestjänsten (GetExtendedConsentsForPatient 1.0), och registreringar och återkallelser skickas genom en kö. Läget för sammanhållen journalföring har samtyckeGaller, samtyckeKalla, samtyckeText och samtyckestjanst',
       'Engagemangsindex uppdateras av sig självt när journalen ändras, efter Ineras regler för Update 1.0, och nya rutter för systemförvaltarens sida Nationella tjänster (docs/api-avvikelser.md)',
+      'Samtyckets giltighet (giltighet och giltigTill), hämtning för skyddade personuppgifter bara vid nödåtkomst, och makulering av en vårdkontakt på fel patient i det interna API:t (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

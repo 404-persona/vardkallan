@@ -972,6 +972,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       remisser: rem ? rem.filter(r => r.status !== 'svar_kvitterat' && r.beslut !== 'avvisad') : null,
       tidslinje: vardkontakt.berikaTidslinje(db, tidslinje, vardstruktur, vk),
       vardkontakter: vk.map(v => vardkontakt.kontaktUt(db, v, pers)),
+      // Runda 15, r2: vårdkontakter som har makulerats på patienten, utan något om en annan patient.
+      makuleradeVardkontakter: require('./vardkontakt-makulering.js').forPatient(atk),
       vardstruktur,
       kontakt: { adress: p.skyddad ? null : p.adress, postnr: p.skyddad ? null : p.postnr, ort: p.skyddad ? null : p.ort, telefon: p.skyddad ? null : p.telefon, kontaktperson: p.skyddad ? null : p.kontaktperson },
       // Runda 7, r4: undantagna uppgifter står med antal och motivering (undantag.js).
@@ -2514,7 +2516,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
   // Runda 15, r2.
-  r15r2Rutter({ rutt, kravInloggad });
+  r15r2Rutter({ rutt, kravInloggad, medPatient });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.
