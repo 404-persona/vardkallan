@@ -183,19 +183,18 @@ describe(T, () => {
     expect(samtycke.registreraNodsituation({ db, personal: db.query("SELECT * FROM personal WHERE id = 'lak-kard'").get(), patientId: 'p01' })).toBe(false);
   });
 
-  test('skyddade personuppgifter: samtycket gäller bara här, och inget skickas till eller hämtas från samtyckestjänsten', async () => {
+  test('skyddade personuppgifter: inget samtycke registreras, och inget skickas till eller hämtas från samtyckestjänsten', async () => {
     const k = await inloggad('lak-kard');
     const db = sandlada(app, k).db;
     db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
     iAnnatSystem(db);
     const fore = anropslogg(db, { max: 500 }).filter(a => /Consent/.test(a.kontrakt ?? '')).length;
-    const d = (await hamta(k, { samtycke: true })).data;
-    expect(d).toMatchObject({ samtyckeGaller: true, samtyckeKalla: 'vardkallan', samtyckestjanst: 'ej_aktuell' });
-    expect(d.samtyckeText).toBe('Samtycket gäller här. Det registreras inte i samtyckestjänsten, eftersom patienten har skyddade personuppgifter.');
+    const r = await hamta(k, { samtycke: true });
+    expect(r.status).toBe(409);
+    expect((await k.get('/api/patient/p01/sammanhallen')).data).toMatchObject({ samtyckeGaller: false, samtyckestjanst: 'ej_aktuell', hamtningMojlig: false });
     expect(anropslogg(db, { max: 500 }).filter(a => /Consent/.test(a.kontrakt ?? '')).length).toBe(fore);
     expect(db.query("SELECT count(*) AS n FROM samtycke_utkorg WHERE patient_id = 'p01'").get().n).toBe(0);
-    await k.post('/api/patient/p01/sammanhallen/aterkalla', {});
-    expect(db.query("SELECT count(*) AS n FROM samtycke_utkorg WHERE patient_id = 'p01'").get().n).toBe(0);
+    expect(db.query("SELECT count(*) AS n FROM sammanhallen_samtycken WHERE patient_id = 'p01'").get().n).toBe(0);
   });
 
   test('fel roll och fel vårdenhet: samtycket prövas bara för den som får läsa journalen, och gäller bara på sin vårdenhet', async () => {

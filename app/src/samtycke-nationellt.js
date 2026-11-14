@@ -34,7 +34,80 @@ export function sakra(db) {
   const kol = db.query('PRAGMA table_info(sammanhallen_samtycken)').all().map(k => k.name);
   // Varifrån återkallelsen kom: vardkallan (här) eller annat_system (samtyckestjänsten sa att patienten hade återkallat).
   if (kol.length && !kol.includes('aterkallat_kalla')) db.exec('ALTER TABLE sammanhallen_samtycken ADD COLUMN aterkallat_kalla TEXT');
+  // Runda 15, r2, andra omgången: giltigheten som patienten har valt (vardrelation, tid eller tillsvidare) och det sista
+  // datumet för en viss tid. Ett samtycke från före giltigheten gäller tills vidare. Giltigheten ändras aldrig i efterhand.
+  if (kol.length && !kol.includes('giltighet')) db.exec('ALTER TABLE sammanhallen_samtycken ADD COLUMN giltighet TEXT');
+  if (kol.length && !kol.includes('giltig_till')) db.exec('ALTER TABLE sammanhallen_samtycken ADD COLUMN giltig_till TEXT');
+  if (kol.length) db.exec("CREATE TRIGGER IF NOT EXISTS sj_samtycke_giltighet_andras_ej BEFORE UPDATE OF giltighet, giltig_till ON sammanhallen_samtycken BEGIN SELECT RAISE(ABORT, 'Ett samtyckes giltighet ändras inte'); END");
   if (kol.length) sakrad.add(db);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 15, r2, andra omgången: samtyckets giltighet. Lagen (2022:913) säger inget om hur länge ett samtycke gäller, men
+// 3 kap. 1 § kräver en aktuell patientrelation för åtkomsten. Förvalet är därför att samtycket gäller så länge
+// vårdrelationen pågår, enligt systemets regel för vårdrelation. Patienten kan i stället välja en viss tid eller tills
+// vidare. Samtyckestjänstens kontrakt har bara ett slutdatum (EndDate): en viss tid skickas som slutdatum, och de andra
+// två utan slutdatum. När vårdrelationen upphör återkallar systemet samtycket i tjänsten.
+export const GILTIGHETER = [
+  { id: 'vardrelation', text: 'Så länge vårdrelationen pågår', forklaring: 'Samtycket upphör av sig självt när patienten inte längre har en vårdrelation till vårdenheten. Det är förvalet.' },
+  { id: 'tid', text: 'Till och med ett visst datum', forklaring: 'Samtycket gäller till och med den dag patienten väljer, men aldrig utan en vårdrelation.' },
+  { id: 'tillsvidare', text: 'Tills vidare', forklaring: 'Samtycket gäller tills patienten återkallar det, men aldrig utan en vårdrelation.' },
+];
+const MAX_DAGAR = 3660;
+const datumSv = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('sv-SE', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' });
+export const giltighetText = (s) => (s?.giltighet === 'vardrelation' ? 'Samtycket gäller så länge patienten har en vårdrelation till vårdenheten.'
+  : s?.giltighet === 'tid' && s.giltig_till ? `Samtycket gäller till och med den ${datumSv(s.giltig_till)}.` : 'Samtycket gäller tills patienten återkallar det.');
+// Patientens svar ur begäran. Ger { giltighet, giltigTill } eller kastar ett fel med fältet.
+export function giltighetAv(body = {}, nu = new Date()) {
+  const { Fel } = require('./db.js');
+  const g = body.giltighet ?? 'vardrelation';
+  if (typeof g !== 'string' || !GILTIGHETER.some(x => x.id === g)) throw new Fel(400, 'Välj hur länge samtycket gäller enligt patientens svar: så länge vårdrelationen pågår, till ett visst datum eller tills vidare.', 'ogiltig', { falt: ['giltighet'] });
+  if (g !== 'tid') return { giltighet: g, giltigTill: null };
+  const d = body.giltigTill;
+  const idag = nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+  const sista = new Date(nu.getTime() + MAX_DAGAR * 86400_000).toISOString().slice(0, 10);
+  if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(Date.parse(d)) || d < idag || d > sista) {
+    throw new Fel(400, 'Ange det sista datumet som patienten vill att samtycket ska gälla, i dag eller senare och högst tio år fram.', 'ogiltig', { falt: ['giltigTill'] });
+  }
+  return { giltighet: 'tid', giltigTill: d };
+}
+// Registrerar patientens samtycke på vårdenheten, med giltigheten, och skickar det till tjänsten genom kön.
+export function registrera(atk, body = {}, { nu = new Date() } = {}) {
+  const db = atk.db;
+  sakra(db);
+  const { giltighet, giltigTill } = giltighetAv(body, nu);
+  const id = Number(db.query('INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av, giltighet, giltig_till) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(atk.patientId, atk.personal.enhet_id, iso(nu), atk.personal.id, giltighet, giltigTill).lastInsertRowid);
+  koaRegistrering(atk, { samtyckeId: id, nu, slut: giltigTill ? `${giltigTill}T23:59:59` : null });
+  return id;
+}
+// Upphör ett samtycke som inte gäller längre: en viss tid som har passerat, eller en vårdrelation som har upphört.
+// Ger orsaken ('utgangen' eller 'vardrelation') eller null när samtycket gäller.
+function upphort(db, s, nu) {
+  if (s.giltighet === 'tid' && s.giltig_till && s.giltig_till < nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })) return 'utgangen';
+  if (s.giltighet === 'vardrelation' && !require('./atkomst.js').harVardrelation(db, s.patient_id, vardenhetFor(db, s.enhet_id), nu)) return 'vardrelation';
+  return null;
+}
+function lattUpphora(db, s, orsak, nu) {
+  db.query('UPDATE sammanhallen_samtycken SET aterkallat = ?, aterkallat_kalla = ? WHERE id = ? AND aterkallat IS NULL').run(iso(nu), orsak, s.id);
+  // En viss tid har redan sitt slutdatum i tjänsten. När vårdrelationen upphör återkallas samtycket där.
+  if (orsak !== 'vardrelation') return;
+  const ids = db.query("SELECT intyg_id FROM samtycke_utkorg WHERE samtycke_id = ? AND handling = 'registrera' AND status = 'skickad'").all(s.id).map(r => r.intyg_id);
+  db.query("UPDATE samtycke_utkorg SET status = 'avbruten' WHERE samtycke_id = ? AND handling = 'registrera' AND status = 'vantar'").run(s.id);
+  const pid = nationellIdentitet(db, s.patient_id);
+  if (!pid || !ids.length) return;
+  koa(db, { patientId: s.patient_id, samtyckeId: s.id, handling: 'aterkalla', personalHsa: null, begaran: { CareProviderId: vardgivare(db), PatientId: pid.id, AssertionIds: ids, av: 'vardkallan-system' } }, nu);
+}
+// Går igenom alla gällande samtycken med en giltighet som kan upphöra. Körs av timern och i prövningen.
+export function stamAvGiltighet(db, nu = new Date()) {
+  sakra(db);
+  let n = 0;
+  for (const s of db.query("SELECT * FROM sammanhallen_samtycken WHERE aterkallat IS NULL AND giltighet IN ('vardrelation', 'tid')").all()) {
+    const orsak = upphort(db, s, nu);
+    if (orsak) { lattUpphora(db, s, orsak, nu); n++; }
+  }
+  if (n) skickaKo(db, { nu });
+  return n;
 }
 
 const OID_PNR = '1.2.752.129.2.1.3.1';
@@ -57,10 +130,24 @@ function aktion(personal, nu) {
   return { RequestDate: t, RequestedBy: aktor, RegistrationDate: t, RegisteredBy: aktor };
 }
 
-// Det gällande samtycket i Vårdkällan för personens vårdenhet.
-export function lokalt(db, personal, patientId) {
+// Det gällande samtycket i Vårdkällan för personens vårdenhet. Runda 15, r2: ett samtycke som har upphört enligt sin
+// giltighet upphör här, innan något annat prövas.
+export function lokalt(db, personal, patientId, nu = new Date()) {
+  sakra(db);
   const ve = vardenhetFor(db, personal.enhet_id);
-  return db.query('SELECT * FROM sammanhallen_samtycken WHERE patient_id = ? AND aterkallat IS NULL ORDER BY id DESC').all(patientId).find(s => vardenhetFor(db, s.enhet_id) === ve) ?? null;
+  for (const s of db.query('SELECT * FROM sammanhallen_samtycken WHERE patient_id = ? AND aterkallat IS NULL ORDER BY id DESC').all(patientId)) {
+    if (vardenhetFor(db, s.enhet_id) !== ve) continue;
+    const orsak = upphort(db, s, nu);
+    if (!orsak) return s;
+    lattUpphora(db, s, orsak, nu);
+  }
+  return null;
+}
+// Hur det senaste samtycket på vårdenheten upphörde av sig självt, om det gjorde det: 'utgangen' eller 'vardrelation'.
+function senastUpphort(db, personal, patientId) {
+  const ve = vardenhetFor(db, personal.enhet_id);
+  const s = db.query('SELECT * FROM sammanhallen_samtycken WHERE patient_id = ? ORDER BY id DESC').all(patientId).find(x => vardenhetFor(db, x.enhet_id) === ve);
+  return s && ['utgangen', 'vardrelation'].includes(s.aterkallat_kalla) ? s.aterkallat_kalla : null;
 }
 const senasteAterkallande = (db, patientId, ve) => db.query('SELECT max(tid) AS t FROM samtycke_aterkallanden WHERE patient_id = ? AND enhet_id = ?').get(patientId, ve)?.t ?? null;
 
@@ -106,6 +193,14 @@ function utfor(db, r, nu) {
   if (r.handling === 'registrera') {
     const svar = n.anropa(db, 'RegisterExtendedConsent', b);
     if (!['OK', 'ALREADYEXISTS'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten registrerade inte samtycket (${svar.ResultType.ResultCode}).`);
+    return;
+  }
+  // Runda 15, r2: ett samtycke vars vårdrelation har upphört återkallas med sina egna intyg.
+  if (Array.isArray(b.AssertionIds)) {
+    for (const id of b.AssertionIds) {
+      const svar = n.anropa(db, 'CancelExtendedConsent', { AssertionId: id, CancellationAction: aktion({ hsa_id: b.av }, nu) });
+      if (!['OK', 'NOTFOUND'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten återkallade inte samtycket (${svar.ResultType.ResultCode}).`);
+    }
     return;
   }
   const lista = hamtaLista(db, b.CareProviderId, b.PatientId, false);
@@ -154,9 +249,12 @@ export function skickaKo(db, { nu = new Date(), patientId = null, tvinga = false
   return { skickade, fel };
 }
 
+const stamdes = new WeakMap();
 export function efterTid(db, nu = new Date()) {
   try {
     sakra(db);
+    // Runda 15, r2: giltigheten stäms av var tionde minut.
+    if (!stamdes.has(db) || nu.getTime() - stamdes.get(db) > 10 * 60_000) { stamdes.set(db, nu.getTime()); stamAvGiltighet(db, nu); }
     if (!db.query("SELECT 1 FROM samtycke_utkorg WHERE status = 'vantar' AND (nasta IS NULL OR nasta <= ?) LIMIT 1").get(iso(nu))) return null;
     return skickaKo(db, { nu });
   } catch (e) {
@@ -175,11 +273,11 @@ const slutText = (t) => (t ? new Date(`${String(t).slice(0, 10)}T12:00:00Z`).toL
 export function prova(atk, { nu = new Date() } = {}) {
   const db = atk.db;
   sakra(db);
-  let lok = lokalt(db, atk.personal, atk.patientId);
+  let lok = lokalt(db, atk.personal, atk.patientId, nu);
   const pid = nationellIdentitet(db, atk.patientId);
   if (!pid) {
     return { galler: Boolean(lok), kalla: lok ? 'vardkallan' : null, lokalt: lok, nationellt: null, tjanst: 'ej_aktuell',
-      text: lok && db.query('SELECT skyddad FROM patienter WHERE id = ?').get(atk.patientId)?.skyddad ? 'Samtycket gäller här. Det registreras inte i samtyckestjänsten, eftersom patienten har skyddade personuppgifter.' : null };
+      text: lok && db.query('SELECT skyddad FROM patienter WHERE id = ?').get(atk.patientId)?.skyddad ? 'Samtycket gäller här. Det registreras inte i samtyckestjänsten, eftersom patienten har skyddade personuppgifter.' : lok ? null : upphorText(db, atk) };
   }
   // Det som väntar i kön för patienten skickas först, så att tjänsten har det som har registrerats här.
   skickaKo(db, { nu, patientId: atk.patientId });
@@ -192,7 +290,7 @@ export function prova(atk, { nu = new Date() } = {}) {
   if (!lista) {
     return { galler: Boolean(lok), kalla: lok ? 'vardkallan' : null, lokalt: lok, nationellt: null, tjanst: 'svarar_inte',
       text: lok ? 'Samtyckestjänsten svarar inte just nu. Samtycket som registrerades här gäller, och systemet skickar det som väntar när tjänsten svarar igen.'
-        : 'Samtyckestjänsten svarar inte just nu, så ett samtycke som patienten har gett i ett annat system kan inte kontrolleras. Fråga patienten om samtycke.' };
+        : `Samtyckestjänsten svarar inte just nu, så ett samtycke som patienten har gett i ett annat system kan inte kontrolleras. ${upphorText(db, atk) ?? 'Fråga patienten om samtycke.'}` };
   }
   const ve = vardenhetFor(db, atk.personal.enhet_id);
   const minEnhet = enhetHsa(db, ve);
@@ -229,8 +327,15 @@ export function prova(atk, { nu = new Date() } = {}) {
   else if (lok) text = 'Patienten har samtyckt. Samtycket är registrerat här och i samtyckestjänsten.';
   else if (giltig) text = `Patienten har gett samtycke i ett annat system${nationellt.registrerat ? ` den ${datumText(nationellt.registrerat)}` : ''}${nationellt.gallerTill ? `, och det gäller till och med den ${slutText(nationellt.gallerTill)}` : ''}. Samtycket gäller här också.`;
   else if (aterkallatAnnat) text = 'Patienten har återkallat samtycket i ett annat system, och det är återkallat här också. Fråga patienten om samtycke igen för att hämta uppgifterna.';
+  else text = upphorText(db, atk);
   return { galler: Boolean(kalla), kalla, lokalt: lok, nationellt, tjanst: 'ok', vantar, text };
 }
+
+const UPPHORT_TEXT = {
+  vardrelation: 'Patientens samtycke upphörde när vårdrelationen upphörde. Fråga patienten om samtycke igen.',
+  utgangen: 'Patientens samtycke gällde till och med en dag som har passerat. Fråga patienten om samtycke igen.',
+};
+const upphorText = (db, atk) => UPPHORT_TEXT[senastUpphort(db, atk.personal, atk.patientId)] ?? null;
 
 // Personalens val att återkalla: samtycket här och i tjänsten för vårdenheten.
 export function aterkalla(atk, { nu = new Date() } = {}) {

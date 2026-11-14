@@ -61,6 +61,18 @@ export const POSTER = {
 const TYPTEXT = { vardkontakt: 'Vårdkontakt', anteckning: 'Anteckning', diagnos: 'Diagnos', lakemedel: 'Läkemedel' };
 export const ETIKETT = `Hämtad från ${VARDGIVARE.namn} genom sammanhållen journalföring`;
 
+// Runda 15, r2, andra omgången: patienter med skyddade personuppgifter. Ineras villkor för NPÖ (Nationell patientöversikt,
+// Beskrivning och tjänstespecifika villkor, version 1.4 2025-12-12, avsnitt 6.2.2) säger att uppgifter om patienter med
+// sekretessmarkering eller skyddad folkbokföring inte ska tillgängliggöras, och de nationella tjänsterna lämnar inte ut
+// deras uppgifter. Vårdkällan följer det: för en sådan patient hämtas inget från andra vårdgivare och inga spärrar eller
+// samtycken slås upp med patientens identitet, och patienten anmäls aldrig till engagemangsindex. Patientens skydd går
+// först, men nödåtkomst stoppas aldrig: vid nödåtkomst, när uppgifterna behövs för vård som patienten oundgängligen
+// behöver (lag 2022:913 3 kap. 3, 5 och 6 §§), hämtas uppgifterna som för andra patienter, och hämtningen loggas.
+export const SKYDDAD_TEXT = 'Patienten har skyddade personuppgifter. Uppgifter från andra vårdgivare hämtas inte, så att identiteten inte lämnas till de nationella tjänsterna i onödan. Vid nödåtkomst hämtas de som för andra patienter.';
+const skyddad = (db, pid) => Boolean(db.query('SELECT skyddad FROM patienter WHERE id = ?').get(pid)?.skyddad);
+// Om hämtning från andra vårdgivare får göras för patienten med den grund som gäller nu.
+const hamtningMojlig = (atk, grund = atk.prova('las_journal').grund) => !skyddad(atk.db, atk.patientId) || grund === 'nodatkomst';
+
 // Runda 13, r3: uppgiften att det finns spärrade uppgifter hos en annan vårdgivare, och inget mer.
 export const SPARR_TEXT = 'Det finns spärrade uppgifter om patienten hos en annan vårdgivare.';
 
@@ -187,7 +199,9 @@ function aktion(atk) {
 }
 
 const personKort = (db, id) => { const p = id && db.query('SELECT id, namn, titel FROM personal WHERE id = ?').get(id); return p ? { id: p.id, namn: p.namn, titel: p.titel } : null; };
-const samtyckeUt = (db, s) => (s ? { id: s.id, registrerat: s.registrerat, registreratAv: personKort(db, s.registrerat_av) } : null);
+const samtyckeUt = (db, s) => (s ? { id: s.id, registrerat: s.registrerat, registreratAv: personKort(db, s.registrerat_av),
+  // Runda 15, r2: giltigheten och vad den betyder.
+  giltighet: s.giltighet ?? 'tillsvidare', giltigTill: s.giltig_till ?? null, giltighetText: samtycke().giltighetText(s) } : null);
 // Säkerhetsgranskningen av runda 10 (beslut 2026-11-08): valet ligger i sessionens aktiva val för patienten (s.val), så
 // att det rensas överallt där de aktiva valen rensas (inloggning, utloggning, inaktivitet, ogiltigt uppdrag, invånare och
 // återställning). Det är dessutom bundet till personen och vårdenheten som gjorde det, och gäller bara när båda stämmer.
@@ -217,21 +231,27 @@ export function lage(atk, sess, fraga = {}) {
   const sp = samtycke().prova(atk);
   const lokaltSamtycke = sp.lokalt;
   // Ett aktivt val som bygger på samtycke upphör när samtycket återkallas.
-  const giltigt = val && (val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : sp.galler);
+  const grundNu = atk.prova('las_journal').grund;
+  // Runda 15, r2: för skyddade personuppgifter bara vid nödåtkomst.
+  const mojlig = hamtningMojlig(atk, grundNu);
+  const giltigt = mojlig && val && (val.grund === 'nodatkomst' ? grundNu === 'nodatkomst' : sp.galler);
   const hamtat = giltigt ? tjanst(atk) : { poster: [], fel: null };
   const poster = urval(hamtat.poster, fraga);
   if (giltigt && !hamtat.fel) loggaHamtning(atk, val);
-  const sparrade = harSparrade(atk);
+  const sparrade = mojlig ? harSparrade(atk) : null;
   return {
+    hamtningMojlig: mojlig, grundNu,
     vardgivare: [VARDGIVARE], hamtad: Boolean(giltigt), grund: giltigt ? val.grund : null, samtycke: samtyckeUt(db, lokaltSamtycke), poster,
     // Runda 15, r2: om ett samtycke gäller, varifrån det kommer och vad som gäller, på vanlig svenska.
     samtyckeGaller: sp.galler, samtyckeKalla: sp.kalla, samtyckeText: sp.text, samtyckestjanst: sp.tjanst,
+    // Runda 15, r2: valen av giltighet, med en förklaring på vanlig svenska.
+    giltigheter: samtycke().GILTIGHETER,
     // Runda 13, r3 (HSLF-FS 2016:40 4 kap. 7 §): före och efter hämtningen.
     sparradeHosAnnan: sparrade === true, sparrText: sparrade ? SPARR_TEXT : null,
     // Runda 14, r2: när de nationella tjänsterna inte svarar visas ingenting, och texten säger varför.
     ...(hamtat.fel ? { fel: hamtat.fel } : {}),
     typer: TYPTEXT, simulerad: 'Den andra vårdgivaren och dess uppgifter är simulerade i demon.',
-    text: hamtat.fel ? hamtat.fel : giltigt ? `${poster.length} uppgifter från ${VARDGIVARE.namn}.` : sp.galler ? 'Patienten har samtyckt. Gör ett aktivt val för att hämta uppgifterna från den andra vårdgivaren.' : 'Patienten kan ha uppgifter hos en annan vårdgivare. Fråga om samtycke för att hämta dem.',
+    text: !mojlig ? SKYDDAD_TEXT : hamtat.fel ? hamtat.fel : giltigt ? `${poster.length} uppgifter från ${VARDGIVARE.namn}.` : sp.galler ? 'Patienten har samtyckt. Gör ett aktivt val för att hämta uppgifterna från den andra vårdgivaren.' : 'Patienten kan ha uppgifter hos en annan vårdgivare. Fråga om samtycke för att hämta dem.',
   };
 }
 
@@ -246,12 +266,14 @@ export function hamta(atk, sess, body = {}) {
   const db = atk.db;
   const syfte = typeof body.syfte === 'string' ? body.syfte.trim().slice(0, 300) : '';
   if (syfte.length < 3) throw new Fel(400, 'Ange syftet med att hämta uppgifterna från den andra vårdgivaren.', 'ogiltig', { falt: ['syfte'] });
+  // Runda 15, r2, andra omgången: skyddade personuppgifter bara vid nödåtkomst. Inget samtycke registreras.
+  if (!hamtningMojlig(atk, grund)) throw new Fel(409, SKYDDAD_TEXT, 'ogiltig');
   // Runda 15, r2: ett samtycke som gäller här eller i samtyckestjänsten räcker. Annars registreras samtycket här och i
   // tjänsten (genom kön), och vid nödåtkomst registreras ett intyg om nödsituation i tjänsten.
   if (grund !== 'nodatkomst' && !samtycke().prova(atk).galler) {
     if (body.samtycke !== true) throw new Fel(400, 'Uppgifter från en annan vårdgivare hämtas bara om patienten samtycker. Fråga patienten och registrera samtycket.', 'ogiltig', { falt: ['samtycke'] });
-    const id = db.query('INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av) VALUES (?, ?, ?, ?)').run(atk.patientId, atk.personal.enhet_id, iso(), atk.personal.id).lastInsertRowid;
-    samtycke().koaRegistrering(atk, { samtyckeId: Number(id) });
+    // Runda 15, r2, andra omgången: med giltigheten som patienten har valt (förvalet är så länge vårdrelationen pågår).
+    samtycke().registrera(atk, body);
   }
   if (grund === 'nodatkomst') samtycke().registreraNodsituation(atk);
   sess.val ??= {};
@@ -336,6 +358,8 @@ export const harSamtycke = (db, personal, patientId) => samtycke().prova({ db, p
 export function giltigtVal(atk, sess) {
   const val = valFor(sess, atk.patientId, atk);
   if (!val || !atk.prova('las_journal').tillaten) return null;
+  // Runda 15, r2: skyddade personuppgifter bara vid nödåtkomst.
+  if (!hamtningMojlig(atk)) return null;
   const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : samtycke().prova(atk).galler;
   return giltigt ? val : null;
 }
@@ -344,6 +368,7 @@ export function giltigtVal(atk, sess) {
 export function tidslinje(atk, sess) {
   const val = valFor(sess, atk.patientId, atk);
   if (!val || !atk.prova('las_journal').tillaten) return [];
+  if (!hamtningMojlig(atk)) return [];
   const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : samtycke().prova(atk).galler;
   if (!giltigt) return [];
   const hamtat = tjanst(atk);

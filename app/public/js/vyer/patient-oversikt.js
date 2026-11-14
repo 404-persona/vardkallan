@@ -158,22 +158,44 @@ async function sammanhallenRuta(plats, ctx) {
     <p class="liten">${esc(d.text)}</p>
     ${d.sparrText ? `<p class="liten sj-sparr">${esc(d.sparrText)}</p>` : ''}
     ${d.samtyckeText ? `<p class="liten sj-samtycke" data-sj-samtycketext>${esc(d.samtyckeText)}</p>` : ''}
-    ${d.hamtad ? `<p class="liten">Hämtat från ${esc(vg)}${d.grund === 'nodatkomst' ? ' med nödåtkomst' : ' med patientens samtycke'}. Uppgifterna finns i tidslinjen.</p>${(d.samtyckeGaller ?? d.samtycke) ? '<button type="button" class="knapp liten sekundar" data-sj-aterkalla>Patienten återkallar samtycket</button>' : ''}`
+    ${d.samtycke?.giltighetText ? `<p class="liten" data-sj-giltighet>${esc(d.samtycke.giltighetText)}</p>` : ''}
+    ${d.hamtningMojlig === false ? '' : d.hamtad ? `<p class="liten">Hämtat från ${esc(vg)}${d.grund === 'nodatkomst' ? ' med nödåtkomst' : ' med patientens samtycke'}. Uppgifterna finns i tidslinjen.</p>${(d.samtyckeGaller ?? d.samtycke) ? '<button type="button" class="knapp liten sekundar" data-sj-aterkalla>Patienten återkallar samtycket</button>' : ''}`
       : `<form class="sj-form"><div class="falt"><label for="sj-syfte">Syfte</label><input id="sj-syfte" name="syfte" maxlength="300" value="Bedömning inför vården i dag" required></div>
-        ${(d.samtyckeGaller ?? d.samtycke) ? '' : '<label class="kryss"><input type="checkbox" name="samtycke" data-sj-samtycke> Patienten samtycker till att uppgifterna hämtas</label>'}
+        ${(d.samtyckeGaller ?? d.samtycke) || d.grundNu === 'nodatkomst' ? '' : `<label class="kryss"><input type="checkbox" name="samtycke" data-sj-samtycke> Patienten samtycker till att uppgifterna hämtas</label>${giltighetVal(d)}`}
         <button type="submit" class="knapp liten">Hämta uppgifter från ${esc(vg)}</button></form>`}
     <p class="demoregel">${esc(d.simulerad)}</p></section>`;
   plats.querySelector('.sj-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.currentTarget;
     try {
-      await api(`/api/patient/${encodeURIComponent(ctx.id)}/sammanhallen`, { metod: 'POST', data: { syfte: f.syfte.value, samtycke: Boolean(f.querySelector('[data-sj-samtycke]')?.checked) } });
+      const giltighet = f.querySelector('[name="sj-giltighet"]:checked')?.value;
+      await api(`/api/patient/${encodeURIComponent(ctx.id)}/sammanhallen`, { metod: 'POST', data: { syfte: f.syfte.value, samtycke: Boolean(f.querySelector('[data-sj-samtycke]')?.checked),
+        ...(giltighet ? { giltighet } : {}), ...(giltighet === 'tid' ? { giltigTill: f.querySelector('[name="sj-till"]')?.value } : {}) } });
       ctx.ladda();
     } catch (x) { felNotis(x); }
+  });
+  // Runda 15, r2: datumet visas bara när patienten vill att samtycket ska gälla till ett visst datum.
+  plats.querySelector('.sj-giltighet')?.addEventListener('change', (e) => {
+    const f = e.currentTarget;
+    const tid = f.querySelector('[name="sj-giltighet"]:checked')?.value === 'tid';
+    f.querySelector('[data-sj-till]').hidden = !tid;
+    f.querySelector('[name="sj-till"]').required = tid;
+    f.querySelector('[data-sj-forklaring]').textContent = (d.giltigheter ?? []).find(g => g.id === f.querySelector('[name="sj-giltighet"]:checked')?.value)?.forklaring ?? '';
   });
   plats.querySelector('[data-sj-aterkalla]')?.addEventListener('click', async () => {
     try { await api(`/api/patient/${encodeURIComponent(ctx.id)}/sammanhallen/aterkalla`, { metod: 'POST', data: {} }); ctx.ladda(); } catch (x) { felNotis(x); }
   });
+}
+
+// Runda 15, r2, andra omgången: hur länge samtycket gäller, enligt patientens svar. Förvalet är så länge vårdrelationen
+// pågår, och systemet förklarar varje val.
+function giltighetVal(d) {
+  const val = d.giltigheter ?? [];
+  if (!val.length) return '';
+  return `<fieldset class="kryssgrupp sj-giltighet"><legend>Hur länge gäller samtycket? Patientens svar</legend>
+    ${val.map((g, i) => `<div class="kryssfalt"><input type="radio" id="sj-g-${esc(g.id)}" name="sj-giltighet" value="${esc(g.id)}"${i === 0 ? ' checked' : ''}><label for="sj-g-${esc(g.id)}">${esc(g.text)}</label></div>`).join('')}
+    <div class="falt" data-sj-till hidden><label for="sj-till">Sista dagen</label><input type="date" id="sj-till" name="sj-till"></div>
+    <p class="hjalp" data-sj-forklaring>${esc(val[0].forklaring)}</p></fieldset>`;
 }
 
 function tidslinjeRad(t, ctx) {
