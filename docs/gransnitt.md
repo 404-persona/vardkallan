@@ -226,7 +226,7 @@ Dokumentation: `docs/earkiv-validering.md`.
 
 ## Överföring till mellanarkiv och åtkomst från journalen
 
-Arkivarien registrerar ett beslut om överföring, och systemet tar fram de äldre handlingarna, bygger ett paket per journal och låter mellanarkivet göra samma mottagningskontroll som e-arkivet innan något förs över. Anteckningarnas kategori och mätvärdenas typ följer med som taggar i FHIR-resurserna. Journalen visar handlingarna bland de andra, och varje handling kontrolleras mot sin SHA-256 när den läses.
+Arkivarien registrerar ett beslut om överföring, och systemet tar fram de äldre handlingarna, bygger ett paket per journal och låter mellanarkivet göra samma mottagningskontroll som e-arkivet innan något förs över. Sedan version 1.5 förs också avslutade ordinationer över, hela med historik och alla administreringar, men aldrig något som pågår eller gäller. Anteckningarnas kategori, mätvärdenas typ och läkemedlens vårdenheter följer med som taggar i FHIR-resurserna. Journalen och läkemedelslistan visar handlingarna bland de andra, och varje handling kontrolleras mot sin SHA-256 när den läses. FHIR-API:t lämnar ut dem som Composition, Observation, MedicationRequest och MedicationAdministration med id ma-<nummer>, koden mellanarkiv i meta.tag (Vårdkällans kodsystem lagring) och paketet i meta.source, och exporten till e-arkivet tar med dem.
 
 Standard: Riksarkivets FGS Paketstruktur 2.0 som exporten till e-arkivet, med journalhandlingarna i HL7 FHIR R4.
 
@@ -234,7 +234,7 @@ Riktning: Vårdkällan för över paket till mellanarkivet, och journalen läser
 
 Adresser: `/api/arkiv/beslut/:id/overfor`, `/api/patient/:id/mellanarkiv`, `/api/mellanarkiv/:id`.
 
-Behörighet och loggning: Överföringen bara av arkivarien med ett registrerat beslut. Läsningen med samma behörighet som journalen, prövad på vårdenheten där handlingen skrevs, och varje läsning loggas.
+Behörighet och loggning: Överföringen bara av arkivarien med ett registrerat beslut. Läsningen, också genom FHIR, med samma behörighet som journalen och läkemedelslistan, prövad på vårdenheten där handlingen skrevs och för en administrering också på vårdenheten som ordinerade, och varje läsning loggas.
 
 Simulerat: Mellanarkivet är lokalt och simulerat i demon.
 

@@ -1,6 +1,6 @@
 # Återställning efter haveri
 
-Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning och förslag till återställningstid och högsta dataförlust.
+Plan, process och verktyg för att återställa systemet efter ett haveri, med säkerhetskopiering, provåterläsning, reservservern och förslag till återställningstid och högsta dataförlust.
 
 Dokumentet är ett underlag som den som driver Vårdkällan tar över, anpassar och fyller i. Ett dokument gör inte att ett åtagande är uppfyllt: åtagandet kräver en driftansvarig organisation som arbetar efter dokumentet och kan visa det för beställaren. Platshållare står inom hakparentes och börjar med fyll i.
 
@@ -11,6 +11,8 @@ Dokumentet är ett underlag som den som driver Vårdkällan tar över, anpassar 
 | 5.3.1.16 | Återställning efter systemhaveri | Skallkrav vid leverans |
 | KD1.1.3.1 | Krav på datalagring | Skallkrav vid leverans |
 | KD1.1.3.2 | Krav på datalagring | Skallkrav vid leverans |
+| KD1.1.3.3 | Krav på datalagring | Skallkrav vid leverans |
+| KD1.1.3.6 | Dataförlust | Utvärderingskriterium |
 
 ## Syfte
 
@@ -54,11 +56,24 @@ En systemförvaltare kan göra en provåterläsning i vyn Lagring: systemet tar 
 | Återställning till en tidpunkt i acceptanstestmiljön | [fyll i: förslag varje kvartal] | Systemförvaltare och driftleverantören |
 | Återuppbyggnad av hela tjänsten på en ny server | [fyll i: förslag en gång per år] | Driftleverantören |
 
+## Reservservern
+
+Medan kärnsystemet återställs kan vården läsa journalen på en reservserver på en annan plats. Reservservern läser den senaste verifierade kopian, så att återläsningen ger ett fungerande system att läsa i (KD1.1.3.3), och inget som fanns i kopian går förlorat för den som behöver det (KD1.1.3.6).
+
+1. Starta avbildningen av den version som är i drift på reservserverns plats, med kopiornas platser monterade bara för läsning och med inställningarna `RESERVSERVER=1`, `KOPIOR_KATALOG` och `KOPIOR_ANDRA` (eller kommandot `bun src/reservserver.js`). `RESERV_LOGG` är katalogen på reservserverns egen disk där loggen skrivs, och `FLERFAKTOR_NYCKEL` ska vara densamma som i kärnsystemet, så att engångskoderna fungerar.
+2. Ska reservservern visa en viss databas, och inte den senaste kopian av alla, anger driften `RESERV_SANDLADA` med nyckeln som systemförvaltaren ser på sidan Säkerhetskopior.
+3. Reservservern väljer själv den senaste kopian som är verifierad, kontrollerar den på samma sätt som vid en återställning och läser den från den andra platsen om den första är skadad. Finns ingen kopia som håller startar den inte, och säger varför.
+4. Kontrollera att `GET /api/health` har fältet reservserver med kopians tid och ålder, och logga in som en vanlig användare. Raden överst på sidan säger att det är en reservserver och hur gamla uppgifterna är.
+5. Meddela verksamheten adressen till reservservern och att den bara kan läsas.
+6. När kärnsystemet är i drift igen: stäng reservservern och läs in dess logg i kärnsystemets åtkomstlogg med `bun src/reservserver.js --las-in-logg <fil> --databas <fil>`. Varje rad läses in en gång, med sin tid och person, märkt Reservservern.
+
+Reservservern ändrar aldrig något på platserna för kopiorna, och den tar inga egna kopior. Det som registrerades efter kopian finns inte där.
+
 ## Haveri av hela servern
 
 Systemets egna kopior skyddar mot skadad databas och fel i en version. Ett haveri av hela servern eller datahallen kräver driftens egen plan:
 
-1. Bekräfta haveriet och starta processen för större incident.
+1. Bekräfta haveriet och starta processen för större incident, och starta reservservern så att vården kan läsa journalen under tiden.
 2. Starta avbildningen av den version som var i drift på en ny server. Varje version är en egen avbildning, byggd ur samma källkod, och bygget stoppas om ett test är rött ([`app/Dockerfile`](../../app/Dockerfile)).
 3. Gör kopiorna från den andra platsen och nyckeln till dem tillgängliga för den nya servern.
 4. Läs in den senaste verifierade kopian och kontrollera den med en provåterläsning.
@@ -78,6 +93,7 @@ Driftleverantören tillhandahåller lagringen: databasen, säkerhetskopiorna på
 - Provåterläsning och lagringsprognos ([`app/src/lagring.js`](../../app/src/lagring.js)).
 - Migreringar som går att backa, så att en äldre version kan starta mot databasen ([`app/src/releaser.js`](../../app/src/releaser.js)).
 - Loggarna med hashkedjor, som kontrolleras i varje kopia ([`app/src/logg.js`](../../app/src/logg.js), [`app/src/sakerhetslogg.js`](../../app/src/sakerhetslogg.js)).
+- Reservservern, som läser den senaste verifierade kopian, bara kan läsas och loggar till en egen fil som läses in efteråt ([`app/src/reservserver.js`](../../app/src/reservserver.js)).
 
 ## Att fylla i för den som driver systemet
 
@@ -89,7 +105,7 @@ Driftleverantören tillhandahåller lagringen: databasen, säkerhetskopiorna på
 | Andra platsen för kopiorna | [fyll i: volym på annan ort] |
 | Driftens egna kopior med längre lagringstid | [fyll i: hur ofta, var och hur länge] |
 | Förvaring av nyckeln till kopiorna | [fyll i: var och vem som har åtkomst] |
-| Reservserver | [fyll i: var och hur den startas] |
+| Reservserver | [fyll i: var den står, vem som startar den och hur verksamheten får adressen] |
 | Senaste övade återuppbyggnad | [fyll i: datum och resultat] |
 
 ## Förkortningar

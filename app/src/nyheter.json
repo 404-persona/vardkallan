@@ -2,6 +2,42 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.5.0",
+      "datum": "2026-11-14",
+      "nyheter": [
+        {
+          "id": "mellanarkiv-lakemedel-1-5-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Avslutade ordinationer ur mellanarkivet i läkemedelslistan",
+          "text": "Ordinationer som har förts till mellanarkivet står bland de utsatta och avslutade i läkemedelslistan, märkta Ur mellanarkivet, och öppnas med dosering, period, historik och doser. De syns med samma behörighet som läkemedelslistan i övrigt, och varje läsning loggas. Aktuella ordinationer förs aldrig dit."
+        },
+        {
+          "id": "mellanarkiv-arkivarie-1-5-0",
+          "roller": [
+            "arkivarie"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Överföringen till mellanarkivet tar med avslutade ordinationer",
+          "text": "Ett beslut om överföring till mellanarkiv tar nu också med ordinationer som avslutades före gränsen, med alla doser och historiken. Systemet låter det som fortfarande gäller stanna i journalen, till exempel det som uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Exporten till e-arkivet tar med det som finns i mellanarkivet."
+        },
+        {
+          "id": "reservserver-1-5-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Reservserver när kärnsystemet inte går att använda",
+          "text": "Vid ett längre avbrott kan driften starta en reservserver på en annan plats. Den visar journalen ur den senaste säkerhetskopian och säger överst på varje sida hur gamla uppgifterna är. Den kan bara läsas, så det som behöver registreras antecknas på papper och förs in när kärnsystemet är i drift igen. Varje läsning loggas som vanligt."
+        }
+      ]
+    },
+    {
       "version": "1.4.0",
       "datum": "2026-11-13",
       "nyheter": [

@@ -93,13 +93,16 @@ export function oppna({ katalog, andraKatalog = null, nyckel = null, loggKatalog
   return reserv;
 }
 
+// Tiden för kopian i svensk tid, som 2026-11-14 kl. 11.05.
+const svenskTid = (t) => new Date(t).toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(' ', ' kl. ').replace(/(\d{2}):(\d{2})$/, '$1.$2');
+
 // Det reservservern säger om sig själv i sessionen, hälsokontrollen och raden överst på sidan.
 export function info(reserv, nu = new Date()) {
   const minuter = Math.max(0, Math.floor((nu.getTime() - Date.parse(reserv.kopia.tid)) / 60_000));
   const alder = minuter < 60 ? `${minuter} ${minuter === 1 ? 'minut' : 'minuter'}` : minuter < 2880 ? `${Math.floor(minuter / 60)} timmar och ${minuter % 60} minuter` : `${Math.floor(minuter / 1440)} dygn`;
   return {
     kopia: reserv.kopia.tid, alderMinuter: minuter, plats: reserv.kopia.plats, startad: reserv.startad,
-    text: `Reservserver. Uppgifterna kommer från säkerhetskopian från ${reserv.kopia.tid.slice(0, 16).replace('T', ' kl. ')} (UTC) och är ${alder} gamla. Det som har registrerats efter det finns inte här.`,
+    text: `Reservserver. Uppgifterna kommer från säkerhetskopian som togs ${svenskTid(reserv.kopia.tid)} och är ${alder} gamla. Det som har registrerats efter det finns inte här.`,
     gor: 'Du kan läsa journalen men inte registrera något. Anteckna på papper och för in uppgifterna i journalen när kärnsystemet är i drift igen. Varje läsning loggas som vanligt.',
   };
 }
@@ -107,7 +110,7 @@ export function info(reserv, nu = new Date()) {
 // Svaret på ett anrop som skulle ändra något.
 export function skrivningNekad(reserv) {
   const i = info(reserv);
-  return new Fel(423, `${TEXT} Den visar journalen som den var i säkerhetskopian från ${i.kopia.slice(0, 16).replace('T', ' kl. ')} (UTC). Anteckna på papper och för in uppgifterna i journalen när kärnsystemet är i drift igen.`, 'reservserver', { reservserver: i });
+  return new Fel(423, `${TEXT} Den visar journalen som den var i säkerhetskopian som togs ${svenskTid(i.kopia)}. Anteckna på papper och för in uppgifterna i journalen när kärnsystemet är i drift igen.`, 'reservserver', { reservserver: i });
 }
 
 // Skriver loggraderna som har tillkommit sedan förra gången till reservserverns loggfil, en rad per åtkomst.

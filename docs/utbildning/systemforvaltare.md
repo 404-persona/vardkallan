@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.
+Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen ser du till att reservserverns logg läses in. Du läser inte journalerna.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -114,5 +114,6 @@ Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag 
 - Förbereda ett namnbyte för en enhet.
 - Registrera en extern tillämpning på sidan Öppet API.
 - Kontrollera att säkerhetskopian går att läsa tillbaka.
+- Veta när reservservern används, vad den visar och hur dess logg förs in i kärnsystemet.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
 - Svara rätt på alla 3 övningar och få intyget.

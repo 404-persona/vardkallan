@@ -2997,7 +2997,7 @@ Kravet är att kärnsystemet ska ge integrerad åtkomst till uppgifter om en pat
 
 **Klickbudget.** Två nya flöden: läsa en äldre anteckning ur mellanarkivet (budget 2) och föra över äldre journalhandlingar till mellanarkivet (5).
 
-**Det som är simulerat eller saknas.** Mellanarkivet är lokalt och simulerat, och ingen koppling till ett verkligt mellanarkiv är gjord. Regeln är en regel i koden. Ordinationer, diagnoser och vårdkontakter stannar i den aktiva journalen, eftersom läkemedelslistan, basfakta och ekonomin använder dem. Ett beslut om förstöring av enskilda poster kan inte peka ut en handling i mellanarkivet. FHIR-API:t och läskopian vid avbrott lämnar inte ut handlingar ur mellanarkivet.
+**Det som är simulerat eller saknas.** Mellanarkivet är lokalt och simulerat, och ingen koppling till ett verkligt mellanarkiv är gjord. Regeln är en regel i koden. Diagnoser och vårdkontakter stannar i den aktiva journalen, eftersom läkemedelslistan, basfakta och ekonomin använder dem. Ett beslut om förstöring av enskilda poster kan inte peka ut en handling i mellanarkivet. Läskopian vid avbrott lämnar inte ut handlingar ur mellanarkivet. Sedan version 1.5 förs också avslutade ordinationer över och FHIR-API:t lämnar ut handlingarna, se avsnittet om runda 15, r3.
 
 ### Reservdatorn för läkemedel, den andra källan (Sussa 11.2.1.8)
 
@@ -3068,3 +3068,33 @@ Kravet: åtkomsten ska beviljas utifrån attributen i en autentiseringsbiljett f
 **Klickbudget.** Ett nytt flöde: logga in genom vårdgivarens inloggningstjänst (budget 2).
 
 **Det som är simulerat eller saknas.** Ingen verklig regions inloggningstjänst är inkopplad. SAML 2.0 är inte byggt, eftersom signaturkontrollen av XML kräver kanonisering och en härdad XML-tolk som inte finns utan ett granskat beroende, och Ineras IdP för medarbetare talar också OpenID Connect. Utloggning hos tjänsten, uppdragsval i Vårdkällan med `allCommissions` och attributet `commissionRight` används inte. En inloggning genom tjänsten som väntar på vårdgivarens krav på flerfaktor slutförs inte efter omdirigeringen; personen loggar då in med demorollen och bekräftar faktorn.
+
+## Mellanarkivet för läkemedel, FHIR och läskopian, och reservservern (runda 15, r3: mellanarkiv.js, reservserver.js)
+
+### Avslutade ordinationer och administreringar i mellanarkivet (Sussa 5.4.2.2)
+
+Mellanarkivet tar sedan version 1.5 också emot avslutade ordinationer och administreringar. En ordination förs över när den sattes ut eller när kurens slutdatum var före gränsen (fem år), och den förs över hela: ordinationen som MedicationRequest med sin historik och sina meddelanden till Nationella läkemedelslistan som noter, och varje administrering som MedicationAdministration med kontrollen av patientens identitet, skanningen av etikett och armband och kollegakontrollen som noter. En administrering finns därför aldrig utan sin ordination, i den aktiva journalen eller i mellanarkivet, och mellanarkivet avvisar ett paket med en administrering vars ordination inte är med. Administreringar utan ordination förs över för sig.
+
+Det som pågår eller gäller stannar alltid i den aktiva journalen, hur gammalt det än är: aktuella ordinationer, en ordination som uppmärksamhetsinformationen pekar på, en som ingår i patientens senaste vidimering av läkemedelslistan, en med ett meddelande till NLL som inte är kvitterat, en med en plan för återinsättning eller något annat som pekar på den (systemet läser själv vilka tabeller som har kolumnen ordination_id), och en med en dos som är iordningsställd men inte registrerad eller en kollegakontroll som inte är gjord. Det senaste mätvärdet av varje typ stannar också, eftersom det är patientens aktuella värde och behövs i översikten och i läskopian.
+
+Ordinationerna står i läkemedelslistan bland de utsatta och avslutade, märkta Ur mellanarkivet, i översiktens tidslinje och i journalens sökfält, med samma prövning som läkemedelslistan: listan är gemensam för vårdgivaren och döljer det som ligger på en spärrad vårdenhet, och en administrering prövas också på vårdenheten som ordinerade läkemedlet. Ordinationen öppnas i journalens läsruta med dosering, period, historik och de doser som användaren får se. Varje läsning loggas.
+
+Tabellen mellanarkiv_handlingar har två nya slag och kolumnerna ordination_enhet_id och sista. En sandlåda från version 1.4 får tabellen ombyggd med samma rader och id när den läses in, och triggrarna läggs tillbaka. sista är den sista tidpunkten i handlingen, för en ordination när den sattes ut eller slutade, så att gallringsregeln räknar den sista uppgiften rätt också när den finns i mellanarkivet. Exporten till e-arkivet och återföringen av all data tar med handlingarna i mellanarkivet, med en post i indexet för varje och taggarna med vårdenheterna, så att en spärr gäller också hos mottagaren.
+
+### FHIR ur mellanarkivet
+
+Sökningen på patient för Composition, Observation, MedicationRequest och MedicationAdministration tar med handlingarna i mellanarkivet som anroparen får se, och de läses på id:t ma-<nummer>, som aldrig krockar med ett id i den aktiva journalen. Behörigheten, filtreringen, undantagen från FHIR och loggningen är desamma som för den aktiva journalen, också i Patient/$everything och för producenten av tjänstekontrakt. FHIR R4 har inget element för var en uppgift lagras, och HL7 Swedens basprofiler säger inget om det. Resursen bär därför koden mellanarkiv i meta.tag i Vårdkällans kodsystem lagring (publicerat under /fhir/CodeSystem/lagring), på samma sätt som källan i kodsystemet kalla, och meta.source pekar på paketet den kom i. Referensen till patienten pekar på den gällande journalen och referensen från en administrering på ordinationen i mellanarkivet.
+
+### Läskopian vid avbrott (Sussa 11.2.1.8)
+
+Läskopian har det som behövs vid ett avbrott oavsett ålder, eftersom det aldrig förs till mellanarkivet: uppmärksamhetsinformationen, de aktuella läkemedlen och det senaste mätvärdet av varje typ. Översikten i läskopian har inte handlingarna ur mellanarkivet, och läkemedelslistan i läskopian och på reservdatorn har inte de avslutade ordinationerna därifrån. Testerna prövar att läskopian ryms inom 128 kB per patient och 1 MB totalt för demorollerna, och att den inte blir större när något förs till mellanarkivet.
+
+### Reservservern
+
+Reservservern är samma program som kärnsystemet, startat med inställningen RESERVSERVER=1 eller kommandot bun src/reservserver.js på en annan plats. Den läser den senaste verifierade säkerhetskopian på kopiornas platser (eller kopian för den sandlåda som RESERV_SANDLADA anger), kontrollerar den som vid en återställning och läser den från den andra platsen om den första är skadad. Alla som loggar in delar reservserverns databas. Den tar inga egna kopior, sparar inga sandlådor och skriver aldrig på kopiornas platser.
+
+Reservservern kan bara läsas, i två lager: servern nekar varje anrop som skulle ändra något med status 423 och en förklaring på vanlig svenska, utom inloggningen, ett aktivt val och loggen från läsläget, och journalens tabeller har triggrar som stoppar en ändring i databasen. Läsningar som håller härledda uppgifter aktuella får skriva i andra tabeller. Raden överst på varje sida, svaret om sessionen och hälsokontrollen säger att det är en reservserver, när kopian togs och hur gamla uppgifterna är. Varje läsning loggas i åtkomstloggen, vars hashkedja fortsätter från kopian, och skrivs efter varje anrop till en fil på reservserverns egen disk (RESERV_LOGG). När kärnsystemet är i drift igen läses filen in i kärnsystemets logg, en gång per rad och märkt Reservservern, med kommandot bun src/reservserver.js --las-in-logg <fil> --databas <fil>.
+
+**Klickbudget.** Ett nytt flöde: läsa en utsatt ordination ur mellanarkivet (budget 2).
+
+**Det som är simulerat eller saknas.** Mellanarkivet är lokalt och simulerat. Diagnoser, vårdkontakter och remisser förs inte över, och en ordination med uppgifter i tabeller som inte följer med (till exempel en trappning, en spädning eller en infusion i intensivvården) stannar i den aktiva journalen. Min journal visar inte handlingarna i mellanarkivet. Reservservern är byggd och prövad lokalt mot kopior som testerna skriver, och den publika demons drift är inte ändrad. Den visar journalen som den var i kopian, och inloggningen genom en extern tjänst och flerfaktorns engångskoder kräver att reservservern har samma inställningar och nyckel som kärnsystemet. Inläsningen av reservserverns logg är ett kommando för en databas i en fil och har ingen vy.

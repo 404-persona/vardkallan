@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som arkivarie registrerar du beslut om gallring och bevarande och tar fram exportpaket till e-arkivet. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.
+Som arkivarie registrerar du beslut om gallring och bevarande, tar fram exportpaket till e-arkivet och för över äldre journalhandlingar till mellanarkivet. Systemet räknar själv fram vad som förs över: avslutade ordinationer med alla doser, äldre anteckningar och mätvärden, men aldrig något som pågår eller gäller, som aktuella läkemedel, det som uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Gallring görs bara efter ett registrerat beslut, och åtkomstloggen ändras aldrig. Du läser inte journalerna.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -61,5 +61,6 @@ Pröva i demon: logga in som Ingela Nord och öppna [samma ställe i demon](http
 - Registrera ett beslut om gallring.
 - Ta fram ett exportpaket till e-arkivet.
 - Veta vad som aldrig gallras.
+- Föra över äldre journalhandlingar till mellanarkivet och veta vad som stannar i journalen.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
 - Svara rätt på alla 3 övningar och få intyget.

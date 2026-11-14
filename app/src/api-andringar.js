@@ -11,6 +11,17 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.5.0', datum: '2026-11-14',
+    text: 'Inga nya resurstyper eller skrivningar i FHIR.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 15, r3: mellanarkivet i FHIR, i läkemedelslistan och reservservern (docs/api-avvikelser.md).
+      'Composition, Observation, MedicationRequest och MedicationAdministration tar med handlingar ur mellanarkivet, med id ma-<nummer>, koden mellanarkiv i meta.tag (kodsystemet lagring) och paketet i meta.source',
+      'Läkemedelslistan i det interna API:t har fältet mellanarkiv med avslutade ordinationer ur mellanarkivet, och en handling ur mellanarkivet kan vara en ordination eller en administrering (docs/api-avvikelser.md)',
+      'Reservservern svarar 423 med koden reservserver på varje anrop som skulle ändra något, och hälsokontrollen och sessionen har fältet reservserver med kopians tid och ålder',
+    ],
+  },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.4.0', datum: '2026-11-13',

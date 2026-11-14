@@ -385,6 +385,12 @@ Börjar i: Patientens översikt. Klickbudget: högst 2 steg. I demon gör Sara L
 
 Sussa 5.4.2.2. Ett klick på fliken Journal och ett på anteckningen, som står bland de andra märkt Ur mellanarkivet. Ingen behöver veta att mellanarkivet finns eller söka där: systemet hämtar handlingen, prövar behörigheten och säger att innehållet är oförändrat.
 
+### Läsa en utsatt ordination ur mellanarkivet
+
+Börjar i: Patientens översikt. Klickbudget: högst 2 steg. I demon gör Sara Lindqvist flödet.
+
+Sussa 5.4.2.2. Ett klick på fliken Läkemedel och ett på Öppna vid ordinationen, som står bland de utsatta och avslutade märkt Ur mellanarkivet. Ordinationen öppnas med dosering, period, historik och doser, och systemet säger att innehållet är oförändrat.
+
 ### Logga in genom vårdgivarens inloggningstjänst
 
 Börjar i: Inloggningssidan med en inkopplad inloggningstjänst. Klickbudget: högst 2 steg. I demon gör Sara Lindqvist flödet.

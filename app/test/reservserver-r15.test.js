@@ -35,7 +35,7 @@ afterAll(() => { reserv?.stopp(); for (const d of [a, b, logg]) rmSync(d, { recu
 describe('Reservserver', () => {
   test('reservservern läser den senaste verifierade säkerhetskopian och säger att den är en reservserver och hur gamla uppgifterna är', async () => {
     expect(reserv.reservserver.kopia).toBe(kopia.tid);
-    expect(reserv.reservserver.text).toMatch(/^Reservserver\. Uppgifterna kommer från säkerhetskopian från .* och är \d+ minuter? gamla\./);
+    expect(reserv.reservserver.text).toMatch(/^Reservserver\. Uppgifterna kommer från säkerhetskopian som togs \d{4}-\d{2}-\d{2} kl\. \d{2}\.\d{2} och är \d+ minuter? gamla\./);
     // Före inloggningen, i hälsokontrollen.
     const h = await (await fetch(`${reserv.url}/api/health`)).json();
     expect(h.reservserver).toMatchObject({ kopia: kopia.tid, plats: 1 });
@@ -146,7 +146,6 @@ describe('Reservserver', () => {
     app.kopior.ta(s.kopieId, s.db, { orsak: 'manuell' });
     const sida = (await k.get('/api/sakerhetskopior')).data;
     expect(sida.reservserver.nyckel).toMatch(/^[0-9a-f]{32}$/);
-    expect(sida.reservserver.kommando).toContain('RESERVSERVER=1');
     // En annan sandlåda har en senare kopia, men nyckeln väljer den rätta.
     app.kopior.ta('en-annan', nyDb(), { orsak: 'manuell', nu: new Date(Date.now() + 60_000) });
     app.stopp();

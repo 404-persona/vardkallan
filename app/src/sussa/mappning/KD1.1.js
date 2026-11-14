@@ -126,7 +126,9 @@ const R12R3 = {
 };
 // Runda 14, r5: leverantörens åtaganden, servicenivåerna, utbildningsmaterialet och innovationsrummet (sussa/runda14-r5.js).
 import { medR14r5 } from '../runda14-r5.js';
+// Runda 15, r3: mellanarkivet för läkemedel, FHIR, läskopian och reservservern (sussa/runda15-r3.js).
+import { medR15r3 } from '../runda15-r3.js';
 
 const R14_FORE = medR13r2(medR12r2(medR9r5(medR7r2(AVSNITT)))).map(x => (R12R3[x.id] ? { ...x, ...R12R3[x.id], tester: [...new Set([...(x.tester ?? []), ...R12R3[x.id].tester])] } : x));
 // Runda 12, r2: säkerhetskopior på två platser och återställning till en tidpunkt (sussa/runda12-r2.js), med medR12r2 ovan.
-export default medR14r5(R14_FORE);
+export default medR15r3(medR14r5(R14_FORE));

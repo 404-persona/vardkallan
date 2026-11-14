@@ -1,6 +1,6 @@
 # Kontinuitetsplan
 
-Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar.
+Hur tillgången till informationen säkras för vården vid avbrott: läsläget, skrivkön, säkerhetskopiorna, reservservern och systemets beteende när integrerade system inte svarar, med riskanalys, scenarier, roller och övningar.
 
 Dokumentet är ett underlag som den som driver Vårdkällan tar över, anpassar och fyller i. Ett dokument gör inte att ett åtagande är uppfyllt: åtagandet kräver en driftansvarig organisation som arbetar efter dokumentet och kan visa det för beställaren. Platshållare står inom hakparentes och börjar med fyll i.
 
@@ -10,6 +10,8 @@ Dokumentet är ett underlag som den som driver Vårdkällan tar över, anpassar 
 | --- | --- | --- |
 | 5.3.1.15 | Kontinuitetsplanering | Skallkrav vid leverans |
 | KD1.1.1.11 | Kärnsystemets autonomitet | Utvärderingskriterium |
+| 11.2.1.8 | Reservlösning för läkemedelsinformation | Skallkrav vid anbud |
+| KD1.2.1.4 | Krav på tillgänglighet och servicenivå | Skallkrav vid leverans |
 
 ## Syfte
 
@@ -25,7 +27,11 @@ Kontinuitetsplanen ska säkerställa att vården har tillgång till informatione
 
 **Säkerhetskopiorna.** Systemet tar en kopia av databasen var femtonde minut när något har ändrats och skriver den på två platser, där den verifieras. Se Återställning efter haveri.
 
-Begränsningar: läskopian innehåller inte hela journalen, under avbrottet går bara doser och mätvärden att registrera, och läsläget förutsätter att personen var inloggad på datorn innan avbrottet. Läsläget ersätter inte en reservrutin på papper för längre avbrott.
+**Vad läskopian har med.** Det som behövs vid ett avbrott finns i läskopian hur gammalt det än är: uppmärksamhetsinformationen, de aktuella läkemedlen och det senaste mätvärdet av varje typ. De förs aldrig till mellanarkivet. Det som har förts till mellanarkivet tas inte med, och läskopians storlek har ett tak per patient och totalt som prövas i testerna (11.2.1.8).
+
+**Reservservern.** Vid ett längre avbrott, eller när den som behöver journalen inte var inloggad när avbrottet började, startar driften en reservserver på en annan plats. Den är samma program som kärnsystemet, startat med inställningen `RESERVSERVER=1` eller kommandot `bun src/reservserver.js`, och läser den senaste verifierade säkerhetskopian från den andra platsen för kopiorna. Den kontrollerar kopian som vid en återställning och ändrar aldrig något där. Reservservern kan bara läsas: varje registrering nekas med en förklaring, och journalens tabeller har triggrar som stoppar en ändring. Den säger överst på varje sida och i varje svar att den är en reservserver och hur gamla uppgifterna är. Inloggning, aktivt val och nödåtkomst fungerar som vanligt, och varje läsning loggas i åtkomstloggen och i en fil på reservserverns egen disk, som läses in i kärnsystemets logg när det är i drift igen. Reservservern är en redundans för läsning (KD1.2.1.4), inte för registrering. Hur den startas står i Återställning efter haveri ([`app/src/reservserver.js`](../../app/src/reservserver.js)).
+
+Begränsningar: läskopian innehåller inte hela journalen, under avbrottet går bara doser och mätvärden att registrera, och läsläget förutsätter att personen var inloggad på datorn innan avbrottet. Reservservern visar journalen som den var i kopian, högst femton minuter före avbrottet, och inget kan registreras där. Läsläget och reservservern ersätter inte en reservrutin på papper för längre avbrott.
 
 ## Systemet när integrerade system inte svarar
 
@@ -58,10 +64,10 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Scenario | Verksamheten | Driftleverantören |
 | --- | --- | --- |
 | Avbrott under 30 minuter | Fortsätter i läsläget. Ger doser och registrerar mätvärden i skrivkön. | Incident prioritet 1, åtgärd, rapport till beställaren. |
-| Avbrott 30 minuter till 4 timmar | Läsläget och skrivkön. Nya anteckningar, ordinationer och remisser på papper enligt reservrutinen. | Större incident, lägesrapporter, beslut om återställning. |
-| Avbrott längre än 4 timmar | Reservrutin på papper, utskrifter av läkemedelslistor från läsläget innan kopian blir för gammal. | Återställning efter haveri, se det dokumentet. |
+| Avbrott 30 minuter till 4 timmar | Läsläget och skrivkön. Reservservern för den som inte har en läskopia. Nya anteckningar, ordinationer och remisser på papper enligt reservrutinen. | Större incident, lägesrapporter, beslut om att starta reservservern och om återställning. |
+| Avbrott längre än 4 timmar | Läser journalen på reservservern. Reservrutin på papper, utskrifter av läkemedelslistor från läsläget innan kopian blir för gammal. | Reservservern i drift, återställning efter haveri, se det dokumentet. |
 | Avbrott hos integrerat system | Arbetar som vanligt i Vårdkällan, följer avstämningen mot NLL. | Incident hos rätt part, uppföljning av avstämning. |
-| Efter avbrottet | Skrivkön skickas, konflikter löses. Papper förs in i journalen. | Kontroll att loggarna från läsläget har förts över, uppföljningsmöte. |
+| Efter avbrottet | Skrivkön skickas, konflikter löses. Papper förs in i journalen. | Kontroll att loggarna från läsläget och reservservern har förts över, reservservern stängs, uppföljningsmöte. |
 
 ## Roller
 
@@ -70,14 +76,15 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Driftleverantörens kontinuitetsansvarig | Äger planen, leder övningarna och håller planen aktuell. |
 | Beställarens kontinuitetsansvarig | Äger verksamhetens reservrutiner och beslutar om övergång till papper. |
 | Incidentansvarig | Leder vid avbrottet enligt processhandboken. |
-| Systemförvaltare | Följer skrivkön och avstämningen efter avbrottet. |
+| Systemförvaltare | Ger driften nyckeln från sidan Säkerhetskopior när reservservern ska visa en viss databas, följer skrivkön och avstämningen efter avbrottet och ser till att reservserverns logg läses in. |
 
 ## Övning av planen
 
 1. Läsläget övas på varje enhet [fyll i: hur ofta, förslag två gånger per år], med knappen som simulerar avbrott i en flik, också reservinloggningen.
 2. En återställning från säkerhetskopiorna övas i acceptanstestmiljön [fyll i: hur ofta, förslag varje kvartal], se Återställning efter haveri.
 3. Ett avbrott hos ett integrerat system övas tillsammans med systemets ägare en gång per år.
-4. Varje övning dokumenteras med vad som fungerade och vad som ändras i planen.
+4. Reservservern startas på sin plats och prövas med en inloggning, en läsning och en inläsning av loggen [fyll i: hur ofta, förslag två gånger per år].
+5. Varje övning dokumenteras med vad som fungerade och vad som ändras i planen.
 
 ## Det systemet redan har som stöd
 
@@ -86,6 +93,7 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 - Säkerhetskopior på två platser med verifiering och återställning till en tidpunkt ([`app/src/sakerhetskopior.js`](../../app/src/sakerhetskopior.js)).
 - Felhanteringen mot NLL, prenumerationerna, laboratoriernas system och masterdata ([`app/src/lakemedel.js`](../../app/src/lakemedel.js), [`app/src/prenumeration.js`](../../app/src/prenumeration.js), [`app/src/produktionssystem.js`](../../app/src/produktionssystem.js), [`app/src/masterdata.js`](../../app/src/masterdata.js)).
 - Återgång till förra versionen ([`app/src/releaser.js`](../../app/src/releaser.js)).
+- Reservservern, som läser den senaste verifierade kopian och bara kan läsas ([`app/src/reservserver.js`](../../app/src/reservserver.js)).
 
 ## Att fylla i för den som driver systemet
 
@@ -96,6 +104,7 @@ I demon är överföringarna till NLL och prenumerationerna simulerade. Felhante
 | Verksamhetens reservrutin på papper | [fyll i: hänvisning till beställarens rutin] |
 | Reservväg för inloggning | [fyll i: lösning när den nationella inloggningstjänsten inte svarar] |
 | Andra server och växling | [fyll i: hur och var] |
+| Plats för reservservern | [fyll i: datahall, ström och nät, och vem som startar den] |
 | Sannolikhet och konsekvens i riskanalysen | [fyll i: bedömning per risk] |
 | Övningsplan | [fyll i: datum för nästa övningar] |
 | Planen senast granskad | [fyll i: datum] |

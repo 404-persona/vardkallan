@@ -1363,6 +1363,14 @@ function skapa(BAS) {
     await m.klicka(kort.locator('[data-overfor]'), 'För över till mellanarkivet');
     await synlig(page, '.notis', 'överförda till mellanarkivet');
   };
+  // Runda 15, r3: en utsatt ordination ur mellanarkivet öppnas från läkemedelslistan.
+  GOR['las-mellanarkiv-ordination'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Läkemedel' }).first(), 'fliken Läkemedel');
+    const rad = page.locator('[data-lm-utsatta] tr[data-mellanarkiv] a', { hasText: 'Öppna' }).first();
+    await rad.waitFor();
+    await m.klicka(rad, 'Öppna vid ordinationen Ur mellanarkivet');
+    await synlig(page, '[data-mellanarkiv-kontroll]', 'Kontrollsumman visar');
+  };
   GOR['oppna-reservdator'] = async (m, page) => {
     await m.klicka(page.locator('.meny a[href="#/administrering"]'), 'Läkemedel att ge i menyn');
     await m.klicka(page.locator('[data-reservdator-lank] a'), 'Reservdator för läkemedel');
