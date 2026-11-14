@@ -342,6 +342,7 @@ describe('Säkerhetsgranskningen efter runda 15: omvårdnadsprocessen och unders
 
 describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade identiteten', () => {
   const pers = (db, id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
+  const giltiga = (db, typ) => { try { return db.query("SELECT intyg_id FROM rivta_sim_samtycken WHERE patient_id = 'p01' AND aterkallat IS NULL AND typ = ?").all(typ); } catch { return []; } };
   const iTjansten = (db) => { try { return db.query("SELECT intyg_id, aterkallat FROM rivta_sim_samtycken WHERE patient_id = 'p01'").all(); } catch { return []; } };
   test('en köad registrering skickas inte till samtyckestjänsten när patienten har fått skyddad identitet', () => {
     const db = nyDb();
@@ -354,7 +355,6 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
     expect(iTjansten(db)).toEqual([]);
     expect(db.query("SELECT status FROM samtycke_utkorg").get().status).toBe('avbruten');
   });
-  const giltiga = (db, typ) => { try { return db.query("SELECT intyg_id FROM rivta_sim_samtycken WHERE patient_id = 'p01' AND aterkallat IS NULL AND typ = ?").all(typ); } catch { return []; } };
   test('en registrering som försöktes utan svar men kom fram återkallas också, och ett intyg om nödsituation överlever återkallelsen av samtycket', () => {
     const db = nyDb();
     const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', { nodatkomst: { syfte: 'Akut' } }, 'las_journal');
@@ -388,11 +388,30 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
     expect(iTjansten(db).filter(x => !x.aterkallat).length).toBe(1);
     eiMod.sakra(db);
     db.query("INSERT INTO ei_poster (patient_id, personid, doman, kategori, senast, skickad) VALUES ('p01', '194502024732', 'riv:clinicalprocess:healthcond:description', 'caredocumentation', '20261114000000', '2026-11-14T00:00:00.000Z')").run();
+    sam.registreraNodsituation(new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', { nodatkomst: { syfte: 'Akut' } }, 'las_journal'));
+    expect(giltiga(db, 'Emergency').length).toBe(1);
     arkivMod.radera(db, 'p01', { hela: true });
     expect(db.query("SELECT count(*) AS n FROM ei_poster WHERE patient_id = 'p01'").get().n).toBe(1);
     expect(db.query("SELECT count(*) AS n FROM ei_markerade WHERE patient_id = 'p01' AND markerad IS NULL").get().n).toBeGreaterThan(0);
     sam.skickaKo(db, { tvinga: true });
+    // När patientens uppgifter tas bort ur tjänsten tas alla intyg bort, också intyget om nödsituation.
     expect(iTjansten(db).filter(x => !x.aterkallat)).toEqual([]);
+  });
+
+  test('när patienten får skyddad identitet tas alla intyg som Vårdkällan har registrerat bort ur tjänsten, också om nödsituation och försökta', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', { nodatkomst: { syfte: 'Akut' } }, 'las_journal');
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    sam.registreraNodsituation(a);
+    db.query("UPDATE samtycke_utkorg SET status = 'vantar', forsok = 1 WHERE handling = 'registrera' AND typ = 'Consent'").run();
+    expect(giltiga(db, 'Consent').length + giltiga(db, 'Emergency').length).toBe(2);
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    sam.efterTid(db);
+    sam.skickaKo(db, { tvinga: true });
+    expect(giltiga(db, 'Consent')).toEqual([]);
+    expect(giltiga(db, 'Emergency')).toEqual([]);
+    const sista = db.query("SELECT begaran FROM samtycke_utkorg WHERE handling = 'aterkalla' ORDER BY id DESC").get().begaran;
+    expect(sista).not.toContain('194502024732');
   });
 
   test('ett samtycke som registrerades före skyddet återkallas i tjänsten med vårdenhetens egna intyg, utan personnummer', () => {

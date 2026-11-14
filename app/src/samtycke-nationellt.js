@@ -186,17 +186,35 @@ function egnaIntyg(db, patientId, careUnitId, foreIso) {
   return db.query(`SELECT intyg_id, begaran, skapad FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL AND skapad <= ?`).all(patientId, foreIso)
     .filter(r => { try { const b = JSON.parse(r.begaran); return b.CareUnitId === careUnitId && (b.AssertionType ?? 'Consent') === 'Consent'; } catch { return false; } }).map(r => r.intyg_id);
 }
-// Säkerhetsgranskningen efter sammanslagningen: när en hel journal förstörs (arkiv.js) återkallas vårdgivarens egna
-// samtycken i tjänsten med intygen, utan personnummer. Intygen hämtas före raderingen och raden köas efter den.
-export function intygForRadering(db, patientId) {
-  sakra(db);
-  return db.query(`SELECT intyg_id FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL`).all(patientId).map(r => r.intyg_id);
+// Säkerhetsgranskningen efter sammanslagningen: två fall med var sin funktion.
+//   (a) Patienten återkallar sitt samtycke, eller samtycket upphör: bara samtycken (egnaIntyg och lattUpphora).
+//   (b) Patientens uppgifter tas bort ur tjänsten: alla intyg som Vårdkällan har registrerat för patienten, också intyg
+//       om nödsituation, inklusive väntande och försökta registreringar (allaIntyg och taBortUrTjansten). Anropas när
+//       en hel journal förstörs (arkiv.js radera, vid gallring och radering), när patienten har fått skyddad identitet
+//       (efterTid) och när journalen slås samman med en annan (identitet.js slaSamman).
+export function allaIntyg(db, patientId) {
+  // Utan kö finns inga intyg. Funktionen ändrar ingenting i databasen, så att den kan anropas mitt i en sammanslagning.
+  if (!db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'samtycke_utkorg'").get()) return [];
+  const borttagna = new Set(db.query("SELECT begaran FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'aterkalla' AND status IN ('vantar', 'skickad')").all(patientId)
+    .flatMap(r => { try { return JSON.parse(r.begaran).AssertionIds ?? []; } catch { return []; } }));
+  return db.query("SELECT intyg_id FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND intyg_id IS NOT NULL AND (status = 'skickad' OR status = 'vantar' OR forsok > 0)").all(patientId)
+    .map(r => r.intyg_id).filter(id => !borttagna.has(id));
 }
-export function koaRadering(db, patientId, ids, nu = new Date()) {
-  if (!ids.length) return false;
+// Köar borttagningen. ids hämtas före en radering (allaIntyg), eftersom raderingen tar bort köns rader.
+export function taBortUrTjansten(db, patientId, ids = allaIntyg(db, patientId), nu = new Date()) {
   sakra(db);
-  koa(db, { patientId, handling: 'aterkalla', personalHsa: null, begaran: { CareProviderId: vardgivare(db), AssertionIds: ids, av: 'vardkallan-system' } }, nu);
+  if (!ids.length) return false;
+  const ph = ids.map(() => '?').join(', ');
+  db.query(`UPDATE samtycke_utkorg SET status = 'avbruten' WHERE patient_id = ? AND handling = 'registrera' AND status = 'vantar' AND intyg_id IN (${ph})`).run(patientId, ...ids);
+  koa(db, { patientId, handling: 'aterkalla', personalHsa: null, begaran: { CareProviderId: vardgivare(db), AssertionIds: ids, av: 'vardkallan-system', borttagning: true } }, nu);
   return true;
+}
+// Patienter med skyddad identitet som har intyg kvar i tjänsten. Körs av timern.
+function skyddadeUrTjansten(db, nu) {
+  const pids = db.query("SELECT DISTINCT u.patient_id AS id FROM samtycke_utkorg u JOIN patienter p ON p.id = u.patient_id WHERE p.skyddad = 1 AND u.handling = 'registrera' AND (u.status = 'skickad' OR u.status = 'vantar' OR u.forsok > 0)").all().map(r => r.id);
+  let n = 0;
+  for (const pid of pids) if (taBortUrTjansten(db, pid, allaIntyg(db, pid), nu)) n++;
+  return n;
 }
 const UTAN_INTYG = 'Samtycket kan inte återkallas i samtyckestjänsten utan patientens identitet, och Vårdkällan har inga egna intyg att återkalla. Systemförvaltaren behöver återkalla det i tjänsten.';
 function koaAterkallelse(atk, nu) {
@@ -313,7 +331,7 @@ export function efterTid(db, nu = new Date()) {
   try {
     sakra(db);
     // Runda 15, r2: giltigheten stäms av var tionde minut.
-    if (!stamdes.has(db) || nu.getTime() - stamdes.get(db) > 10 * 60_000) { stamdes.set(db, nu.getTime()); stamAvGiltighet(db, nu); }
+    if (!stamdes.has(db) || nu.getTime() - stamdes.get(db) > 10 * 60_000) { stamdes.set(db, nu.getTime()); stamAvGiltighet(db, nu); skyddadeUrTjansten(db, nu); }
     if (!db.query("SELECT 1 FROM samtycke_utkorg WHERE status = 'vantar' AND (nasta IS NULL OR nasta <= ?) LIMIT 1").get(iso(nu))) return null;
     return skickaKo(db, { nu });
   } catch (e) {

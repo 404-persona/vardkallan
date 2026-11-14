@@ -428,6 +428,9 @@ export function slaSamman(db, { fran, till, personal, grund, tid = new Date().to
   if (!a || !b) throw new Fel(404, 'Patienten finns inte.', 'saknas');
   if (a.sammanslagen_till || b.sammanslagen_till) throw new Fel(409, 'Journalen är redan sammanslagen.', 'ogiltig');
   const flyttade = {};
+  // Säkerhetsgranskningen efter sammanslagningen: intygen som registrerades i samtyckestjänsten för den journal som slås
+  // samman tas bort ur tjänsten (samtycke-nationellt.js, fall b).
+  const intyg = (() => { try { return require('./samtycke-nationellt.js').allaIntyg(db, fran); } catch { return []; } })();
   db.transaction(() => {
     db.query("INSERT OR REPLACE INTO installningar VALUES ('sammanslagning_pagar', ?)").run(`${fran}>${till}`);
     for (const t of patientTabeller(db)) {
@@ -473,6 +476,7 @@ export function slaSamman(db, { fran, till, personal, grund, tid = new Date().to
     }
     db.query("DELETE FROM installningar WHERE nyckel = 'sammanslagning_pagar'").run();
   })();
+  if (intyg.length) require('./samtycke-nationellt.js').taBortUrTjansten(db, till, intyg);
   const antal = Object.entries(flyttade).filter(([k]) => k !== 'listningar_ersatta').reduce((s, [, v]) => s + v.length, 0);
   return { fran, till, antal, flyttade };
 }

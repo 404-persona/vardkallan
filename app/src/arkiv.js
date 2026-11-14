@@ -537,7 +537,9 @@ function medSlapptaTriggrar(db, tabeller, fn) {
 }
 
 const patientTabeller = (db) => db.query("SELECT name FROM sqlite_master WHERE type = 'table'").all().map(t => t.name)
-  .filter(t => !BEVARAS.has(t) && db.query(`PRAGMA table_info(${t})`).all().some(k => k.name === 'patient_id'));
+  // Säkerhetsgranskningen efter sammanslagningen: de simulerade nationella tjänsterna (rivta_sim_*) står för system utanför
+  // Vårdkällan och raderas inte med journalen; det som ska bort där skickas dit.
+  .filter(t => !BEVARAS.has(t) && !t.startsWith('rivta_sim_') && db.query(`PRAGMA table_info(${t})`).all().some(k => k.name === 'patient_id'));
 
 // Raderar journalens innehåll för en patient, eller de utpekade posterna. Returnerar hur många rader av varje slag.
 export function radera(db, pid, omfattning) {
@@ -556,7 +558,7 @@ export function radera(db, pid, omfattning) {
     // Säkerhetsgranskningen efter sammanslagningen: samtyckena återkallas i samtyckestjänsten och posterna tas bort ur
     // engagemangsindex, eftersom journalen inte längre finns här.
     const samtycke = require('./samtycke-nationellt.js');
-    const intyg = samtycke.intygForRadering(db, pid);
+    const intyg = samtycke.allaIntyg(db, pid);
     const tabeller = patientTabeller(db);
     medSlapptaTriggrar(db, [...tabeller, 'ordination_historik', 'nll_meddelanden', 'vardtillfalle_handelser'], () => {
       ordBeroende(db.query('SELECT id FROM ordinationer WHERE patient_id = ?').all(pid).map(r => r.id));
@@ -565,7 +567,7 @@ export function radera(db, pid, omfattning) {
       for (const t of tabeller) del(t, 'patient_id = ?', pid);
     });
     db.query('UPDATE patienter SET adress = NULL, postnr = NULL, ort = NULL, telefon = NULL, kontaktperson = NULL WHERE id = ?').run(pid);
-    samtycke.koaRadering(db, pid, intyg);
+    samtycke.taBortUrTjansten(db, pid, intyg);
     require('./engagemangsindex.js').markeraPatienter(db, [pid]);
     return antal;
   }
