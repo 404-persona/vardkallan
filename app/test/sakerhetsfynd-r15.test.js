@@ -223,3 +223,19 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
     expect(() => reservserver.lasInFil(d, personal(d, 'sysf'), { minne, nyckel, fil: namn })).toThrow('hänger inte ihop');
   });
 });
+
+describe('Säkerhetsgranskningen efter runda 15: omvårdnadsprocessen och undersköterskan', () => {
+  const sokordAv = (o) => Object.entries(o).map(([sokord, text]) => ({ sokord, text }));
+  test('ett mål som tas bort efter att utkastet sparades får inget resultat när anteckningen signeras', () => {
+    const d = nyDb();
+    const ssk = atk(d, 'ssk-kard', 'p04', {}, 'skriv_omvardnad');
+    const plan = d.query("SELECT * FROM vardplaner WHERE patient_id = 'p04' AND mall = 'fall'").get();
+    const mal = d.query('SELECT * FROM vardplan_mal WHERE plan_id = ? AND borttagen IS NULL ORDER BY id').get(plan.id);
+    const a = journal.skapaAnteckning(ssk, { typ: 'Omvårdnadsanteckning', sokord: sokordAv({ Resultat: 'Har inte fallit.' }), process: { resultat: [{ malId: mal.id, status: 'uppnatt' }] } });
+    d.query('UPDATE vardplan_mal SET borttagen = ? WHERE id = ?').run('2026-11-14T10:00:00.000Z', mal.id);
+    const fore = d.query("SELECT count(*) AS n FROM vardplan_historik WHERE typ = 'resultat'").get().n;
+    journal.signera(ssk, journal.hamtaAnteckningRad(d, a.id));
+    expect(d.query("SELECT count(*) AS n FROM vardplan_historik WHERE typ = 'resultat'").get().n).toBe(fore);
+  });
+});
+

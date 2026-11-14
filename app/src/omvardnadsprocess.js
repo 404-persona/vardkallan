@@ -319,8 +319,17 @@ export function ut(db, anteckningId) {
 export function vidSignering(atk, a) {
   const r = lasRad(atk.db, a.id);
   if (!r?.resultat.length) return;
+  // Säkerhetsgranskningen efter runda 15: behörigheten prövas igen när resultatet förs in, med samma regel som när det
+  // angavs, eftersom vårdrelationen kan ha upphört sedan utkastet sparades. Ett mål som har tagits bort får inget resultat.
+  if (!kanRoll(atk.personal, 'vardplan')) throw new Fel(403, 'Din yrkesroll bedömer inte vårdplanens mål. Ta bort resultatet mot målen innan du signerar.', 'nekad');
+  const g = atk.krav('vardplan', { beskrivning: 'vardplan' });
+  if (g.grund === 'nodatkomst') throw new Fel(403, 'Att bedöma vårdplanens mål kräver vårdrelation till patienten på din vårdenhet. Nödåtkomst ger bara läsning. Ta bort resultatet mot målen innan du signerar.', 'nekad');
   const per = new Map();
-  for (const x of r.resultat) { if (!per.has(x.planId)) per.set(x.planId, []); per.get(x.planId).push(x); }
+  for (const x of r.resultat) {
+    if (!atk.db.query('SELECT 1 FROM vardplan_mal WHERE id = ? AND plan_id = ? AND borttagen IS NULL').get(x.malId, x.planId)) continue;
+    if (!per.has(x.planId)) per.set(x.planId, []);
+    per.get(x.planId).push(x);
+  }
   for (const [planId, lista] of per) {
     const plan = atk.db.query("SELECT * FROM vardplaner WHERE id = ? AND status = 'aktiv'").get(planId);
     if (!plan || !egen(atk, plan.enhet_id)) continue;
