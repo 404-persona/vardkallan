@@ -43,7 +43,9 @@ SAMMANSLAGNING.push(
   // Säkerhetsgranskningen av andra omgången.
   'Makulering av vårdkontakt på fel patient > målpatienten prövas i behörighetsmotorn, och varje nummer som inte kan användas ger exakt samma svar utan att något ändras',
   'Makulering av vårdkontakt på fel patient > flytten skapar ingen vårdrelation hos rätt patient',
-  'Makulering av vårdkontakt på fel patient > försöken med nummer som inte kan användas har ett tak per person');
+  'Makulering av vårdkontakt på fel patient > försöken med nummer som inte kan användas har ett tak per person',
+  'Makulering av vårdkontakt på fel patient > en annan persons misslyckade försök och försök äldre än ett dygn stoppar inte flytten',
+  'Makulering av vårdkontakt på fel patient > det som flyttas ger aldrig rätt patient en ny vårdrelation: en remiss eller en operationsanmälan till en annan vårdenhet stoppar flytten');
 
 const ANM_TYPER = 'Simulerat i demon: reservnumret har ett påhittat format (VK, födelsedatum, löpnummer och kontrollsiffra) under OID-roten 1.3.6.1.4.1.32473.1, som är IANA:s nummer för dokumentation (RFC 5612) och inte tillhör någon region. Personnummer och samordningsnummer går bara att använda om de är Skatteverkets testpersonnummer och testsamordningsnummer. Det finns ingen koppling till folkbokföringen (PU-tjänsten), så namnet skrivs in för hand och ett samordningsnummers giltighet kontrolleras inte hos Skatteverket. Nationellt reservnummer och regionernas egna reservnummerformat stöds inte, men ett reservnummer från en annan vårdgivare kan registreras som en identitet med sin OID.';
 const ANM_SAMMAN = 'En sammanslagning går inte att ångra i demon. Att dela upp två journaler som slogs samman av misstag är inte byggt. Spärrar och vårdrelationer följer med, men Min journal-inloggningen följer bara med när den gamla journalen hade en invånare kopplad.';

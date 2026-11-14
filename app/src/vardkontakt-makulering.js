@@ -127,17 +127,20 @@ function flytta(db, tabell, ids, fran, till) {
 // handling för sammanslagning (sla_samman), och personen ska få registrera en vårdkontakt på rätt patient vid kontaktens
 // vårdenhet, med samma prövning som för en ny kontakt. Flytten skapar aldrig en vårdrelation: den flyttade kontakten ger
 // ingen vårdrelation hos rätt patient, så att en registrering aldrig ger åtkomst.
+// Andra säkerhetsgranskningen: taket gäller per person i ett glidande fönster på ett dygn, så att en person aldrig kan
+// låsa ute någon annan.
 export const MAX_FORSOK = 10;
-export const MAX_FORSOK_SANDLADA = 30;
+export const FORSOK_FONSTER_MS = 24 * 3600_000;
 export const EJ_ANVANDBAR = 'Vårdkontakten kan inte flyttas till den journalen. Kontrollera numret, eller registrera patienten och vårdrelationen först.';
 const NEKAD_RESURS = 'makulering:vardkontakt:nekad';
 function rattPatient(atk, nummer, v, valFor) {
   const db = atk.db;
   const { kanRoll, Atkomst } = require('./atkomst.js');
   if (!kanRoll(atk.personal, 'sla_samman')) throw new Fel(403, 'Bara vårdadministratören flyttar en vårdkontakt till en annan patient, som när två journaler slås samman.', 'nekad');
-  const misslyckade = (villkor, ...arg) => db.query(`SELECT count(*) AS n FROM atkomstlogg WHERE resurs = ? AND resultat = 'nekad' ${villkor}`).get(NEKAD_RESURS, ...arg).n;
-  if (misslyckade('AND personal_id = ?', atk.personal.id) >= MAX_FORSOK || misslyckade('') >= MAX_FORSOK_SANDLADA) {
-    throw new Fel(429, 'Du har gjort många försök att flytta vårdkontakter till nummer som inte kan användas. Fler försök stoppas. Kontakta systemförvaltaren.', 'for_manga');
+  const fran = new Date(Date.now() - FORSOK_FONSTER_MS).toISOString();
+  const misslyckade = db.query("SELECT count(*) AS n FROM atkomstlogg WHERE resurs = ? AND resultat = 'nekad' AND personal_id = ? AND tid >= ?").get(NEKAD_RESURS, atk.personal.id, fran).n;
+  if (misslyckade >= MAX_FORSOK) {
+    throw new Fel(429, 'Du har gjort många försök att flytta vårdkontakter till nummer som inte kan användas. Fler försök stoppas i ett dygn.', 'for_manga');
   }
   const fel = () => {
     loggaRad(db, { personal_id: atk.personal.id, enhet_id: atk.personal.enhet_id, patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: NEKAD_RESURS, grund: 'nekad', resultat: 'nekad' });
@@ -160,6 +163,30 @@ function rattPatient(atk, nummer, v, valFor) {
   return till;
 }
 
+export const NY_RELATION = 'Vårdkontakten har uppgifter, till exempel en remiss eller en operationsanmälan, som skulle ge rätt patient en vårdrelation till en vårdenhet som patienten inte har i dag. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
+export const ANNAN_ENHET = 'Vårdkontakten har uppgifter som hör till en annan vårdenhet än din, och du får inte registrera dem på rätt patient. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
+// Vårdenheterna som patienten har vårdrelation till, enligt behörighetsmotorns regel.
+function relationer(db, patientId, nu) {
+  const { harVardrelation } = require('./atkomst.js');
+  return new Set(db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(r => r.id).filter(e => harVardrelation(db, patientId, e, nu)));
+}
+// Varje vårdenhet som de flyttade raderna hör till (kolumner som slutar på enhet_id) prövas för rätt patient.
+function provaEnheter(atk, till, v, foljer, valFor) {
+  const db = atk.db;
+  const { Atkomst } = require('./atkomst.js');
+  const enheter = new Set([vardenhetFor(db, v.enhet_id)]);
+  for (const [tabell, ids] of foljer) {
+    const kol = kolumner(db, tabell).filter(k => k.endsWith('enhet_id'));
+    if (!kol.length) continue;
+    const har = kolumner(db, tabell).includes('id') ? 'id' : 'rowid';
+    for (const r of db.query(`SELECT ${kol.join(', ')} FROM ${tabell} WHERE ${har} IN (${ids.map(() => '?').join(', ')})`).all(...ids)) {
+      for (const k of kol) if (r[k] && r[k] !== 'extern') enheter.add(vardenhetFor(db, r[k]) ?? r[k]);
+    }
+  }
+  const a = new Atkomst(db, atk.personal, till, valFor(till) ?? {}, 'registrera_vardkontakt');
+  for (const e of enheter) if (!a.prova('registrera_vardkontakt', { enhet_id: e }).tillaten) throw new Fel(409, ANNAN_ENHET, 'ogiltig');
+}
+
 // POST: makulerar kontakten med motivering, och flyttar det som hör till den när rätt patient anges.
 // body: { orsak, rattPatient? }
 export function makulera(atk, v, body = {}, { nu = new Date(), valFor = () => ({}) } = {}) {
@@ -174,8 +201,13 @@ export function makulera(atk, v, body = {}, { nu = new Date(), valFor = () => ({
   if (!till && db.query("SELECT 1 FROM sqlite_master WHERE name = 'betalningar'").get() && (foljer.get('bokningar') ?? []).some(b => db.query('SELECT 1 FROM betalningar WHERE bokning_id = ?').get(b))) {
     throw new Fel(409, 'Besöket är betalt. Återbetala avgiften i kassan först, sedan kan vårdkontakten makuleras.', 'ogiltig');
   }
+  // Andra säkerhetsgranskningen: allt som flyttas prövas i behörighetsmotorn för rätt patient vid varje vårdenhet som
+  // raderna hör till, och flytten får aldrig ge rätt patient en vårdrelation som inte fanns före flytten, från någon av
+  // de källor som behörighetsmotorn läser (vårdkontakter, remisser, operationsanmälningar och listning).
+  if (till) provaEnheter(atk, till, v, foljer, valFor);
   const fran = v.patient_id;
   const t = iso(nu);
+  const relationFore = till ? relationer(db, till, nu) : null;
   let id;
   db.transaction(() => {
     id = Number(db.query('INSERT INTO vardkontakt_makuleringar (vardkontakt_id, patient_id, enhet_id, typ, start, orsak_kontakt, atgard, tid, av, orsak, foljde) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
@@ -188,6 +220,8 @@ export function makulera(atk, v, body = {}, { nu = new Date(), valFor = () => ({
       // vårdrelation hos rätt patient.
       db.query('UPDATE vardkontakter SET halsoarende_id = NULL, foregaende_id = NULL, ger_vardrelation = 0 WHERE id = ?').run(v.id);
       db.query("DELETE FROM installningar WHERE nyckel = 'sammanslagning_pagar'").run();
+      const ny = [...relationer(db, till, nu)].filter(e => !relationFore.has(e));
+      if (ny.length) throw new Fel(409, NY_RELATION, 'ogiltig');
     } else {
       // En bokning för kontakten pekar inte längre på den. Kontakten själv tas bort ur vårdkontakterna och finns kvar som
       // makulerad, så att den aldrig ger vårdrelation eller avgift.

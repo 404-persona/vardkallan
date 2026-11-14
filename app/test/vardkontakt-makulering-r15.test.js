@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { testserver, klient, sandlada, somPerson } from './hjalp.js';
 import { harVardrelation, prova } from '../src/atkomst.js';
+import { loggaRad } from '../src/logg.js';
 
 // Runda 15, r2, andra omgången (beslut 2026-11-14): makulering av en genomförd vårdkontakt som har registrerats på fel
 // patient. Uppgifterna flyttas till rätt patient som vid en sammanslagning, eller makuleras med kontakten när ingen
@@ -166,5 +167,48 @@ describe(T, () => {
     const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak, rattPatient: RATT.pnr });
     expect(r.status).toBe(429);
     expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+  });
+
+  // Andra säkerhetsgranskningen.
+  test('en annan persons misslyckade försök och försök äldre än ett dygn stoppar inte flytten', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const gammal = new Date(Date.now() - 25 * 3600_000).toISOString();
+    for (let i = 0; i < 12; i++) {
+      loggaRad(db, { personal_id: 'lak-kard', enhet_id: 'uso-kard', patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: 'makulering:vardkontakt:nekad', grund: 'nekad', resultat: 'nekad' });
+      loggaRad(db, { tid: gammal, personal_id: 'adm-kard', enhet_id: 'uso-kard', patient_id: v.patient_id, handling: 'registrera_vardkontakt', resurs: 'makulering:vardkontakt:nekad', grund: 'nekad', resultat: 'nekad' });
+    }
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+  });
+
+  test('det som flyttas ger aldrig rätt patient en ny vårdrelation: en remiss eller en operationsanmälan till en annan vårdenhet stoppar flytten', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = medDokumentation(db);
+    const kopiera = (tabell, andra) => {
+      const r = { ...db.query(`SELECT * FROM ${tabell} ORDER BY id LIMIT 1`).get(), ...andra };
+      delete r.id;
+      const k2 = Object.keys(r);
+      return Number(db.query(`INSERT INTO ${tabell} (${k2.join(', ')}) VALUES (${k2.map(() => '?').join(', ')})`).run(...k2.map(x => r[x])).lastInsertRowid);
+    };
+    const fall = [
+      ['remisser', { patient_id: v.patient_id, vardkontakt_id: v.id, fran_enhet_id: 'uso-kard', till_enhet_id: 'vc-tybble', status: 'skickad', beslut: null, svar_kvitterat_tid: null, kalla: 'vardkallan' }, 'vc-tybble'],
+      ['op_anmalningar', { patient_id: v.patient_id, vardkontakt_id: v.id, enhet_id: 'uso-ort', status: 'vantar', mal_datum: new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10) }, 'uso-ane'],
+    ];
+    for (const [tabell, andra, enhet] of fall) {
+      const id = kopiera(tabell, andra);
+      expect(harVardrelation(db, RATT.id, enhet)).toBe(false);
+      const r = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr });
+      expect(r.status).toBe(409);
+      expect(harVardrelation(db, RATT.id, enhet)).toBe(false);
+      expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+      expect(db.query(`SELECT patient_id FROM ${tabell} WHERE id = ?`).get(id).patient_id).toBe(v.patient_id);
+      db.query(`UPDATE ${tabell} SET vardkontakt_id = NULL WHERE id = ?`).run(id);
+    }
+    // Listningen följer aldrig med en vårdkontakt, och utan de raderna går flytten igenom utan nya vårdrelationer.
+    const fore = db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(e => e.id).filter(e => harVardrelation(db, RATT.id, e));
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: RATT.pnr })).status).toBe(200);
+    expect(db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(e => e.id).filter(e => harVardrelation(db, RATT.id, e))).toEqual(fore);
   });
 });
