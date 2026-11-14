@@ -359,13 +359,14 @@ async function makulera(v, kor) {
   const svar = await dialog(`<form>
     <h2 id="dlg-rubrik">Vårdkontakten är registrerad på fel patient</h2>
     <div class="dialog-text"><p>${esc(v.orsak)}, ${esc(v.vardenhet?.namn ?? '')}, ${esc(tidpunkt(v.start))}.</p><p>${esc(f.text)}</p></div>
-    <div class="falt"><label for="mk-ratt">Personnummer eller samordningsnummer för rätt patient</label><input id="mk-ratt" name="rattPatient" maxlength="13" autocomplete="off" inputmode="numeric" aria-describedby="mk-ratt-h"><span class="hjalp" id="mk-ratt-h">${esc(f.utanPatientText)}</span></div>
+    ${far('sla_samman') ? `<div class="falt"><label for="mk-ratt">Personnummer eller samordningsnummer för rätt patient</label><input id="mk-ratt" name="rattPatient" maxlength="13" autocomplete="off" inputmode="numeric" aria-describedby="mk-ratt-h"><span class="hjalp" id="mk-ratt-h">${esc(f.utanPatientText)}</span></div>` : `<p class="hjalp">${esc(f.kanMakuleras ? f.utanPatientText : 'Vårdkontakten har dokumentation. Vårdadministratören flyttar den till rätt patient.')}</p>`}
     <div class="falt"><label for="mk-orsak">Varför makuleras kontakten? <span class="obl">(obligatoriskt)</span></label><textarea id="mk-orsak" name="orsak" rows="2" maxlength="500" required aria-required="true"></textarea></div>
     <p class="dialog-fel form-fel" role="alert" hidden></p>
     <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Makulera</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div>
-  </form>`, { validera: (data) => (data.orsak.trim().length < 10 ? 'Skriv varför kontakten makuleras, med minst tio tecken.' : !data.rattPatient.trim() && !f.kanMakuleras ? f.utanPatientText : null) });
+  </form>`, { validera: (data) => (data.orsak.trim().length < 10 ? 'Skriv varför kontakten makuleras, med minst tio tecken.' : !(data.rattPatient ?? '').trim() && !f.kanMakuleras ? f.utanPatientText : null) });
   if (!svar) return;
-  const data = { orsak: svar.data.orsak.trim(), ...(svar.data.rattPatient.trim() ? { rattPatient: svar.data.rattPatient.trim() } : {}) };
+  const ratt = (svar.data.rattPatient ?? '').trim();
+  const data = { orsak: svar.data.orsak.trim(), ...(ratt ? { rattPatient: ratt } : {}) };
   await kor(() => api(`/api/vardkontakt/${v.id}/makulera`, { metod: 'POST', data }), (r) => r.text);
 }
 

@@ -29,9 +29,7 @@
         {
           "id": "vardkontakt-makulering-1-5-0",
           "roller": [
-            "vardadministrator",
-            "lakare",
-            "sjukskoterska"
+            "vardadministrator"
           ],
           "omfattning": "liten",
           "var": null,
