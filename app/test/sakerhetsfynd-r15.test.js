@@ -1,6 +1,7 @@
 // Säkerhetsgranskningen efter sammanslagningen av runda 15 (r3, r5, r4 och r1). Varje test prövar ett fynd och skrevs
 // rött innan felet rättades.
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { datumAv } from '../src/db.js';
 import { join } from 'node:path';
 import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { testserver, klient, sandlada, nyDb, atk } from './hjalp.js';
@@ -75,7 +76,8 @@ describe('Säkerhetsgranskningen efter runda 15: anteckningsvyn', () => {
     const s = { sokord: 'Status', text: 'x', referenser: [{ typ: 'matvarde', id: m.id, text: 'x' }] };
     expect(underlag.fhirEntries(a, s).map(e => e.reference)).toEqual([`Observation/${m.id}`]);
     const nu = new Date();
-    const giltig = nu.toISOString().slice(0, 10);
+    // Svenskt datum, som i undantag-r12.test.js, så att testet håller också mellan 00 och 01.
+    const giltig = datumAv(nu);
     const { andring } = undantagMod.foresla(d, personal(d, 'sysf'), { omfang: 'matvarde', varde: m.typ, kanaler: ['fhir'], giltigFran: giltig, motivering: 'Prov efter granskningen.' }, nu);
     undantagMod.godkann(d, personal(d, 'sysf-2'), andring.id, {}, nu);
     expect(underlag.fhirEntries(atk(d, 'lak-kard', 'p01'), s)).toEqual([]);
