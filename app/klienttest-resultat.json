@@ -1,9 +1,113 @@
 {
-  "tid": "2026-11-14T14:32:58.993Z",
+  "tid": "2026-11-14T16:32:27.299Z",
   "bas": "http://127.0.0.1:18151",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "132dcd3ab3e86303588a803aa85f9f3bb9b3425beb4d3dcdacd065f4744f8d58",
+  "gransnittHash": "c1301bb04bfc4b743184fb40e6c6df1a3fb1a493686d0f4c46ad0c7541d2de10",
   "tester": [
+    {
+      "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > appen startar utan nät från service workern och visar läsläget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > skrivande är avstängt i läsläget med en förklaring",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > åtkomster i läsläget når åtkomstloggen när servern svarar igen",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > simulerat avbrott ger läsläge medan servern svarar andra besökare",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > läskopian rensas vid utloggning",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > utloggning under avbrott loggar ut sessionen på servern, även om fliken stängs",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > läskopian används inte efter 8 timmar",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > läskopian förnyas av sig själv medan personen är inloggad",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > läsläget visar hur gammal läkemedelsinformationen är per patient och varnar efter 10 minuter",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > reservkoden väljs när webbläsaren är uppkopplad och bara den inslagna nyckeln sparas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > efter omstart av webbläsaren utan nät visas vilka som har en reservkopia på datorn och när den går ut",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > fel reservkod ger väntetid och rätt reservkod öppnar läsläget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > åtkomster med reservkod loggas krypterat och överlever att fliken stängs",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > när servern svarar igen mitt i läsläget med reservkod når åtkomsterna åtkomstloggen",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > utloggning raderar reservkopian, den inslagna nyckeln och loggen efter att loggen förts över",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > utloggning i en flik avslutar läsläget i webbläsarens andra flikar",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > en navigering direkt till en fil ersätter inte appen i service workerns cache",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > fem fel reservkoder raderar reservkopian och flikar kan inte pröva samtidigt",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > två personer på samma dator har var sin reservkopia som bara öppnas med egen kod",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > simulerat avbrott visar reservinloggningen när fliken stängs i demon",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > en dos och ett mätvärde som registreras under avbrottet märks som inte sparade och sparas när förbindelsen är tillbaka",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > en dos som någon annan gav under avbrottet blir en konflikt som sjuksköterskan avgör, och dosen sparas inte två gånger",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > flerfaktor: en passkey i Chromes virtuella autentiserare slår på flerfaktor, bekräftar nästa inloggning, och läsläget vid avbrott fungerar efter den andra faktorn",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > tillitsnivå: med SITHS-kortet och PIN-koden loggar personen med passkey in utan dialog, och sidan Flerfaktor säger varför",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Avbrott > flerfaktor: invånaren slår på en app för engångskoder i Min journal och loggar sedan in med en kod från appen",
+      "status": "grön"
+    },
     {
       "namn": "Gränssnitt > Användartest > testläget räknar klick, fältbyten och tangenter som klickbudgetskriptet för samma flöden",
       "status": "grön"
@@ -238,110 +342,6 @@
     },
     {
       "namn": "Gränssnitt > Uppmärksamhet > läkaren registrerar en överkänslighet med ämnet och reaktionen, och den syns i patienthuvudet med graden",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > appen startar utan nät från service workern och visar läsläget",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > skrivande är avstängt i läsläget med en förklaring",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > åtkomster i läsläget når åtkomstloggen när servern svarar igen",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > simulerat avbrott ger läsläge medan servern svarar andra besökare",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > läskopian rensas vid utloggning",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > utloggning under avbrott loggar ut sessionen på servern, även om fliken stängs",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > läskopian används inte efter 8 timmar",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > läskopian förnyas av sig själv medan personen är inloggad",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > läsläget visar hur gammal läkemedelsinformationen är per patient och varnar efter 10 minuter",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > reservkoden väljs när webbläsaren är uppkopplad och bara den inslagna nyckeln sparas",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > efter omstart av webbläsaren utan nät visas vilka som har en reservkopia på datorn och när den går ut",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > fel reservkod ger väntetid och rätt reservkod öppnar läsläget",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > åtkomster med reservkod loggas krypterat och överlever att fliken stängs",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > när servern svarar igen mitt i läsläget med reservkod når åtkomsterna åtkomstloggen",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > utloggning raderar reservkopian, den inslagna nyckeln och loggen efter att loggen förts över",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > utloggning i en flik avslutar läsläget i webbläsarens andra flikar",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > en navigering direkt till en fil ersätter inte appen i service workerns cache",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > fem fel reservkoder raderar reservkopian och flikar kan inte pröva samtidigt",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > två personer på samma dator har var sin reservkopia som bara öppnas med egen kod",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > simulerat avbrott visar reservinloggningen när fliken stängs i demon",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > en dos och ett mätvärde som registreras under avbrottet märks som inte sparade och sparas när förbindelsen är tillbaka",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > en dos som någon annan gav under avbrottet blir en konflikt som sjuksköterskan avgör, och dosen sparas inte två gånger",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > flerfaktor: en passkey i Chromes virtuella autentiserare slår på flerfaktor, bekräftar nästa inloggning, och läsläget vid avbrott fungerar efter den andra faktorn",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > tillitsnivå: med SITHS-kortet och PIN-koden loggar personen med passkey in utan dialog, och sidan Flerfaktor säger varför",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Avbrott > flerfaktor: invånaren slår på en app för engångskoder i Min journal och loggar sedan in med en kod från appen",
       "status": "grön"
     }
   ]
