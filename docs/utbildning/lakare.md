@@ -501,6 +501,14 @@ Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](h
 
 ### Övning 8
 
+Patienten berättar att samtycket till sammanhållen journalföring redan är givet i ett annat system hos vårdgivaren. Vad gör du?
+
+Rätt svar: Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.
+
+Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.
+
+### Övning 9
+
 Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
 
 Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
@@ -509,7 +517,7 @@ Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteck
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
-### Övning 9
+### Övning 10
 
 Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
 
@@ -519,7 +527,7 @@ Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
-### Övning 10
+### Övning 11
 
 Vad får en egen fras innehålla?
 
@@ -655,4 +663,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 10 övningar och få intyget.
+- Svara rätt på alla 11 övningar och få intyget.

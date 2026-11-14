@@ -52,7 +52,7 @@ Så begränsas risken: Ser kontaktuppgifter, vårdkontakter och remissernas stat
 
 Får inte: `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_diagnoser`, `ordinera`.
 
-Handlingar i koden (37): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `godkanna_flytt`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`.
+Handlingar i koden (38): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `godkanna_flytt`, `las_flytt`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`.
 
 ## Logggranskare (logggranskare)
 
@@ -124,7 +124,7 @@ Så begränsas risken: Läser inte journalen. Uppgifterna gäller den egna vård
 
 Får inte: `las_journal`, `las_oversikt`, `ordinera`.
 
-Handlingar i koden (8): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `godkanna_flytt`, `vyforval`.
+Handlingar i koden (9): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `godkanna_flytt`, `las_flytt`, `vyforval`.
 
 ## Ekonom (ekonom)
 
