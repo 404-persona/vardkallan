@@ -1,5 +1,5 @@
 {
-  "tid": "2026-11-14T12:53:22.569Z",
+  "tid": "2026-11-14T16:19:12.314Z",
   "bas": "http://127.0.0.1:18155",
   "webblasare": "Chromium 147.0.7727.15",
   "gransnittHash": "8a53c5c47c495d119b4188d35cded59a96e65ed9df8aaab88576e797fe20bf36",
@@ -129,6 +129,106 @@
       "status": "grön"
     },
     {
+      "namn": "Gränssnitt > Mobil > Öppna patient från arbetslistan går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Läsa senaste anteckning går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Registrera blodtryck går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Kvittera remissvar går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Ge en dos går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Ge en dos med delegering går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Patienten bokar om sin tid i Min journal går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Söka i journalen och öppna träffen går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Registrera en NEWS2-kontroll går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Registrera en dos i efterhand går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Överblicka dagens händelser på avdelningen går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Registrera längd, vikt, blodtryck och puls går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Registrera provtagning går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Diktera och signera en daganteckning går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > Dokumentera ett sår med kroppsbilden går i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > varje roll har sin startsida och menyn i 360 px utan sidledsrullning och med knappar på minst 40 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > patienten läser sin journal, sina tider och vem som läst journalen i Min journal i 360 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > vid sängen identifierar armbandet patienten i Läkemedel att ge, och bara patientens doser visas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > förbindelsen bryts och kommer tillbaka från en annan adress utan att inloggningen tappas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > varje vy i menyn för varje roll och varje flik i journalen går att öppna i 360 px utan sidledsrullning och med knappar på minst 40 px",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Mobil > i hemsjukvården utan uppkoppling registreras ett mätvärde i 360 px, märks som inte sparat och sparas när förbindelsen är tillbaka",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Öppet API > ändringsloggen visar versionen, och läkaren skickar ett ärende om en saknad informationsmängd",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Öppet API > systemförvaltaren registrerar en tillämpning, ser vad den får och kan återkalla den",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Öppet API > systemförvaltaren registrerar ett systemkonto för vårddatalagret, ser vad det får och kan återkalla det",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Uppmärksamhet > läkaren registrerar en överkänslighet med ämnet och reaktionen, och den syns i patienthuvudet med graden",
+      "status": "grön"
+    },
+    {
       "namn": "Gränssnitt > Tillgänglighet > röstinmatningen frågar i en dialog innan ljudet går till webbläsarens tjänst när igenkänning på enheten saknas, valet sparas per användare, och med igenkänning på enheten kommer ingen fråga",
       "status": "grön"
     },
@@ -238,106 +338,6 @@
     },
     {
       "namn": "Gränssnitt > Utbildning > utbildaren skapar ett praktiskt prov, läkaren gör det i övningsjournalen och systemet kontrollerar resultatet",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Öppna patient från arbetslistan går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Läsa senaste anteckning går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Registrera blodtryck går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Kvittera remissvar går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Ge en dos går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Ge en dos med delegering går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Patienten bokar om sin tid i Min journal går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Söka i journalen och öppna träffen går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Registrera en NEWS2-kontroll går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Registrera en dos i efterhand går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Överblicka dagens händelser på avdelningen går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Registrera längd, vikt, blodtryck och puls går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Registrera provtagning går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Diktera och signera en daganteckning går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > Dokumentera ett sår med kroppsbilden går i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > varje roll har sin startsida och menyn i 360 px utan sidledsrullning och med knappar på minst 40 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > patienten läser sin journal, sina tider och vem som läst journalen i Min journal i 360 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > vid sängen identifierar armbandet patienten i Läkemedel att ge, och bara patientens doser visas",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > förbindelsen bryts och kommer tillbaka från en annan adress utan att inloggningen tappas",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > varje vy i menyn för varje roll och varje flik i journalen går att öppna i 360 px utan sidledsrullning och med knappar på minst 40 px",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Mobil > i hemsjukvården utan uppkoppling registreras ett mätvärde i 360 px, märks som inte sparat och sparas när förbindelsen är tillbaka",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Öppet API > ändringsloggen visar versionen, och läkaren skickar ett ärende om en saknad informationsmängd",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Öppet API > systemförvaltaren registrerar en tillämpning, ser vad den får och kan återkalla den",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Öppet API > systemförvaltaren registrerar ett systemkonto för vårddatalagret, ser vad det får och kan återkalla det",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Uppmärksamhet > läkaren registrerar en överkänslighet med ämnet och reaktionen, och den syns i patienthuvudet med graden",
       "status": "grön"
     }
   ]
