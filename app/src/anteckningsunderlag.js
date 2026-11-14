@@ -19,6 +19,7 @@
 import { Fel } from './db.js';
 import { kanRoll } from './atkomst.js';
 import * as journal from './journal.js';
+import * as undantag from './undantag.js';
 import * as lakemedel from './lakemedel.js';
 import * as vardkontakt from './vardkontakt.js';
 
@@ -288,11 +289,17 @@ const FHIR_TABELL = { matvarde: ['matvarden', 'las_matvarden', false], ordinatio
 export function fhirEntries(atk, s) {
   if (!atk || !Array.isArray(s.referenser)) return [];
   const ut = [];
+  // Säkerhetsgranskningen efter runda 15: en referens följer också undantagen från FHIR och från visning, som resursen
+  // den pekar på, så att ett undantaget mätvärde inte syns som en referens.
+  const fhir = undantag.provare(atk.db, 'fhir');
+  const visning = undantag.provare(atk.db, 'visning');
   for (const r of s.referenser) {
     if (!Object.hasOwn(FHIR_TYP, r.typ)) continue;
     const [tabell, handling, gemensam] = FHIR_TABELL[r.typ];
-    const rad = atk.db.query(`SELECT id, enhet_id, patient_id FROM ${tabell} WHERE id = ?`).get(r.id);
+    const rad = atk.db.query(`SELECT * FROM ${tabell} WHERE id = ?`).get(r.id);
     if (!rad || rad.patient_id !== atk.patientId || !kanRoll(atk.personal, handling) || !atk.prova(handling, { enhet_id: rad.enhet_id, gemensam }).tillaten) continue;
+    const sort = r.typ === 'matvarde' ? 'matvarde' : null;
+    if (fhir(rad, sort) || visning(rad, sort)) continue;
     ut.push({ reference: `${FHIR_TYP[r.typ]}/${rad.id}`, display: r.text });
   }
   return ut;

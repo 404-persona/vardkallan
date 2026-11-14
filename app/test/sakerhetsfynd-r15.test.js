@@ -6,6 +6,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { testserver, klient, sandlada, nyDb, atk } from './hjalp.js';
 import * as underlag from '../src/anteckningsunderlag.js';
 import * as journal from '../src/journal.js';
+import * as undantagMod from '../src/undantag.js';
 import * as ff from '../src/flerfaktor.js';
 import * as idp from '../src/idp.js';
 import * as tillit from '../src/tillitsniva.js';
@@ -65,6 +66,19 @@ describe('Säkerhetsgranskningen efter runda 15: anteckningsvyn', () => {
     for (const pnr of ['19121212 1212', '121212 1212', '121212\u20131212', '19121212-1212']) {
       expect([pnr, (await k.post('/api/egna-fraser', { kort: 'prov', text: `Patienten ${pnr} mår bra.` })).status]).toEqual([pnr, 400]);
     }
+  });
+
+  test('en referens i FHIR följer undantagen från FHIR för resursen den pekar på', () => {
+    const d = nyDb();
+    const a = atk(d, 'lak-kard', 'p01');
+    const m = journal.synligaMatvarden(a)[0];
+    const s = { sokord: 'Status', text: 'x', referenser: [{ typ: 'matvarde', id: m.id, text: 'x' }] };
+    expect(underlag.fhirEntries(a, s).map(e => e.reference)).toEqual([`Observation/${m.id}`]);
+    const nu = new Date();
+    const giltig = nu.toISOString().slice(0, 10);
+    const { andring } = undantagMod.foresla(d, personal(d, 'sysf'), { omfang: 'matvarde', varde: m.typ, kanaler: ['fhir'], giltigFran: giltig, motivering: 'Prov efter granskningen.' }, nu);
+    undantagMod.godkann(d, personal(d, 'sysf-2'), andring.id, {}, nu);
+    expect(underlag.fhirEntries(atk(d, 'lak-kard', 'p01'), s)).toEqual([]);
   });
 
   test('referensprövningen räknar de synliga raderna en gång per anrop, och tar högst ett tak av referenser per anteckning', () => {
