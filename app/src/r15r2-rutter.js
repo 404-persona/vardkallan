@@ -37,7 +37,9 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
     rutt('POST', `${bas}/makulera`, (c, id) => medObjekt(c, slag, id, (atk, o) => makulering.makulera(atk, o, c.body, { valFor: (pid) => valFor(c.s, pid) })));
   }
   rutt('GET', '/api/flyttar', (c) => makulering.forslagFor(c.db, kravInloggad(c)));
-  rutt('POST', '/api/flyttar/:id/godkann', (c, id) => makulering.godkann(c.db, kravInloggad(c), id));
+  // Säkerhetsgranskningen efter sammanslagningen: förslaget öppnas för sig, prövat på patienten och loggat.
+  rutt('GET', '/api/flyttar/:id', (c, id) => makulering.forslagDetalj(c.db, kravInloggad(c), id, { valFor: (pid) => valFor(c.s, pid) }));
+  rutt('POST', '/api/flyttar/:id/godkann', (c, id) => makulering.godkann(c.db, kravInloggad(c), id, { valFor: (pid) => valFor(c.s, pid) }));
   rutt('POST', '/api/flyttar/:id/avsluta', (c, id) => makulering.avsluta(c.db, kravInloggad(c), id, c.body));
   rutt('GET', '/api/nationella-tjanster', (c) => { kravForvaltare(c, kravInloggad); return lage(c.db); });
   // Skickar allt som väntar nu, utan att vänta på nästa försök.

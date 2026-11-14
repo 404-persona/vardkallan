@@ -2777,6 +2777,9 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await loggaIn(page, 'vch-kard');
       await gaTill(page, '#/flyttar');
       await forvanta(page, '#fl [data-flytt]', 'Vårdtillfälle på fel patient');
+      // Säkerhetsgranskningen efter sammanslagningen: förslaget öppnas för sig, prövat och loggat på patienten.
+      await page.locator('#fl [data-fl-oppna]').first().click();
+      await page.locator('#fl [data-fl-avsla]').first().waitFor();
       const t = await page.locator('#fl [data-flytt]').first().textContent();
       for (const x of ['Oskar', 'Ekström']) if (t.includes(x)) throw new Error(`förslaget röjer rätt patient: ${x}`);
       await page.locator('#fl [data-fl-avsla]').first().click();

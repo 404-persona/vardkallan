@@ -81,10 +81,17 @@ describe(T, () => {
     const vch = await egenInloggning(k, 'vch-kard');
     const lista = (await vch.get('/api/flyttar')).data.attGodkanna;
     expect(lista.map(x => x.id)).toEqual([f.id]);
-    expect(lista[0]).toMatchObject({ rattNummer: expect.any(String), orsak: ORSAK, foreslagenAv: { id: 'adm-kard' }, kanGodkanna: true });
+    // Säkerhetsgranskningen efter sammanslagningen: listan har bara vårdenhet, tid och status, och patienten, kontakten,
+    // numret och motiveringen syns först när förslaget öppnas, prövat och loggat på patienten.
+    expect(lista[0]).toMatchObject({ foreslagenAv: { id: 'adm-kard' }, kanGodkanna: true, vardenhet: { id: expect.any(String) } });
+    const fel = db.query('SELECT * FROM patienter WHERE id = ?').get(v.patient_id);
+    for (const x of [v.patient_id, fel.fornamn, fel.efternamn, fel.personnummer, ORSAK]) expect(JSON.stringify(lista)).not.toContain(x);
+    const oppnad = (await vch.get(`/api/flyttar/${f.id}`)).data;
+    expect(oppnad).toMatchObject({ rattNummer: expect.any(String), orsak: ORSAK, felPatient: { id: v.patient_id } });
+    expect(db.query("SELECT count(*) AS n FROM atkomstlogg WHERE personal_id = 'vch-kard' AND patient_id = ? AND resurs = ?").get(v.patient_id, `makulering:forslag:${f.id}`).n).toBeGreaterThan(0);
     // Förslaget visar numret som det skrevs men ingenting om patienten som numret leder till.
     const p12 = db.query('SELECT * FROM patienter WHERE id = ?').get(UTAN.id);
-    for (const x of [UTAN.id, p12.fornamn, p12.efternamn]) expect(JSON.stringify(lista)).not.toContain(x);
+    for (const x of [UTAN.id, p12.fornamn, p12.efternamn]) expect(JSON.stringify([lista, oppnad])).not.toContain(x);
     const r = await vch.post(`/api/flyttar/${f.id}/godkann`, {});
     expect(r.status).toBe(200);
     expect(r.data.atgard).toBe('flyttad');
@@ -99,6 +106,61 @@ describe(T, () => {
     const ov = (await k.get(`/api/patient/${v.patient_id}/oversikt`)).data;
     expect(ov.makuleradeVardkontakter[0]).toMatchObject({ atgard: 'flyttad', godkandAv: { id: 'vch-kard' } });
     expect(JSON.stringify(ov.makuleradeVardkontakter)).not.toContain(UTAN.id);
+  });
+
+  // Säkerhetsgranskningen efter sammanslagningen: godkännandet gäller förslagets vårdenhet.
+  test('har kontakten bytt vårdenhet sedan förslaget genomförs flytten inte, och förslaget avslutas som ej genomfört', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = kontakt(db);
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: ORSAK, rattPatient: nummer(db, UTAN.id) })).status).toBe(202);
+    const [f] = await mina(k);
+    // En omorganisation flyttar kontakten till en annan vårdenhet.
+    db.query("UPDATE vardkontakter SET enhet_id = 'uso-med' WHERE id = ?").run(v.id);
+    const vch = await egenInloggning(k, 'vch-kard');
+    expect((await vch.get('/api/flyttar')).data.attGodkanna.find(x => x.id === f.id)).toMatchObject({ bytt: true, kanGodkanna: false });
+    const r = await vch.post(`/api/flyttar/${f.id}/godkann`, {});
+    expect(r.status).toBe(409);
+    expect(r.data.fel).toContain('bytt vårdenhet');
+    expect(db.query('SELECT status FROM makulering_forslag WHERE id = ?').get(f.id).status).toBe('ej_genomford');
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+    expect(harVardrelation(db, UTAN.id, 'uso-med')).toBe(false);
+    // Samma kontroll när ett förslag avslås.
+    db.query("UPDATE vardkontakter SET enhet_id = ? WHERE id = ?").run(v.enhet_id, v.id);
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: ORSAK, rattPatient: nummer(db, UTAN.id) })).status).toBe(202);
+    const [g] = await mina(k);
+    db.query("UPDATE vardkontakter SET enhet_id = 'uso-med' WHERE id = ?").run(v.id);
+    const a = await vch.post(`/api/flyttar/${g.id}/avsluta`, { kommentar: 'Kontrollera numret.' });
+    expect(a.status).toBe(200);
+    expect(a.data.forslag.status).toBe('ej_genomford');
+  });
+
+  test('en felaktig flytt rättas med en ny flytt tillbaka med samma fyra ögon, och ingen vårdrelation blir kvar hos fel patient', async () => {
+    const k = await inloggad('adm-kard');
+    const db = sandlada(app, k).db;
+    const v = kontakt(db);
+    const forst = v.patient_id;
+    const relationFore = vardenheter(db, UTAN.id);
+    expect((await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: ORSAK, rattPatient: nummer(db, UTAN.id) })).status).toBe(202);
+    const vch = await egenInloggning(k, 'vch-kard');
+    let [f] = await mina(k);
+    expect((await vch.post(`/api/flyttar/${f.id}/godkann`, {})).status).toBe(200);
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(UTAN.id);
+    expect(harVardrelation(db, UTAN.id, 'uso-kard')).toBe(true);
+    // Flytten var fel. Den rättas med en ny flytt tillbaka, som också kräver fyra ögon när den ursprungliga patienten
+    // inte längre har vårdrelation till vårdenheten genom kontakten.
+    const tillbaka = await k.post(`/api/vardkontakt/${v.id}/makulera`, { orsak: 'Flytten gjordes till fel patient.', rattPatient: nummer(db, forst) });
+    expect([200, 202]).toContain(tillbaka.status);
+    if (tillbaka.status === 202) {
+      [f] = await mina(k);
+      expect((await k.post(`/api/flyttar/${f.id}/godkann`, {})).status).toBe(403);
+      expect((await vch.post(`/api/flyttar/${f.id}/godkann`, {})).status).toBe(200);
+    }
+    expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(forst);
+    expect(db.query('SELECT count(*) AS n FROM anteckningar WHERE vardkontakt_id = ? AND patient_id <> ?').get(v.id, forst).n).toBe(0);
+    // Ingen vårdrelation blir kvar hos patienten som flytten först gick till.
+    expect(vardenheter(db, UTAN.id)).toEqual(relationFore);
+    expect(harVardrelation(db, UTAN.id, 'uso-kard')).toBe(false);
   });
 
   test('förslaget kan avslås med en kommentar, och då flyttas inget', async () => {

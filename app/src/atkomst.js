@@ -640,6 +640,11 @@ HANDLINGAR.godkanna_flytt = 'godkänna att uppgifter som har registrerats på fe
 ROLLER.verksamhetschef.push('godkanna_flytt');
 ROLLER.vardadministrator.push('godkanna_flytt');
 UTAN_PATIENT.add('godkanna_flytt');
+// Säkerhetsgranskningen efter sammanslagningen: att öppna ett förslag och se patienten och kontakten prövas på patienten,
+// som annan administrativ läsning, med spärr och skyddad identitet (vardkontakt-makulering.js forslagDetalj).
+HANDLINGAR.las_flytt = 'öppna ett förslag om att flytta uppgifter till rätt patient och se patienten och kontakten';
+ROLLER.verksamhetschef.push('las_flytt');
+ROLLER.vardadministrator.push('las_flytt');
 
 // Runda 10, r2: basfakta (overkanslighet.js, Sussa 3.1.6.2). Läkare och sjuksköterskor registrerar, ändrar och avslutar
 // överkänslighet på sin egen vårdenhet med vårdrelation till patienten.

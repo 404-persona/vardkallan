@@ -25,7 +25,7 @@
 //   - Engagemangsindex rättas av sig självt för båda patienterna.
 import { Fel, iso } from './db.js';
 import { loggaRad } from './logg.js';
-import { vardenhetFor, kanRoll, visningsnamn, visningsPnr } from './atkomst.js';
+import { vardenhetFor, kanRoll, visningsnamn, visningsPnr, Atkomst } from './atkomst.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS vardkontakt_makuleringar (
@@ -396,7 +396,7 @@ function stang(db, f, personal, status, kommentar, nu) {
 // och skyddad identitet flyttas aldrig genom ett förslag. Kan flytten inte göras är svaret detsamma för alla orsaker,
 // förslaget avslutas och försöket räknas mot taket. Allt som flyttas ska höra till vårdenheten, så att godkännandet
 // aldrig ger rätt patient en vårdrelation till en annan vårdenhet.
-export function godkann(db, personal, forslagId, { nu = new Date() } = {}) {
+export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () => ({}) } = {}) {
   const f = hamtaForslag(db, forslagId);
   if (f.status !== 'vantar') throw new Fel(409, 'Förslaget är redan beslutat.', 'ogiltig');
   if (f.foreslagen_av === personal.id) throw new Fel(403, 'Fyra ögon: en annan behörig person än den som föreslog flytten godkänner den, i sin egen inloggning.', 'nekad');
@@ -410,6 +410,14 @@ export function godkann(db, personal, forslagId, { nu = new Date() } = {}) {
     stang(db, f, personal, 'ej_genomford', 'Uppgifterna hade redan rättats.', nu);
     throw new Fel(409, 'Uppgifterna har redan rättats eller tagits bort. Förslaget är avslutat.', 'ogiltig');
   }
+  // Säkerhetsgranskningen efter sammanslagningen: behörigheten prövades mot förslagets vårdenhet. Har kontakten eller
+  // vårdtillfället bytt vårdenhet sedan dess genomförs flytten inte.
+  if (bytt(db, f, o)) {
+    stang(db, f, personal, 'ej_genomford', BYTT_TEXT, nu);
+    throw new Fel(409, `${BYTT_TEXT} Förslaget är avslutat.`, 'ogiltig');
+  }
+  // Godkännaren ser patienten och kontakten, så godkännandet prövas och loggas som när förslaget öppnas.
+  oppnaPatient(db, personal, f, valFor);
   const t = require('./identitet.js').tolka(f.nummer);
   const till = t?.ok ? losUpp(db, t, o) : null;
   if (!till || db.query('SELECT skyddad FROM patienter WHERE id = ?').get(till)?.skyddad) {
@@ -437,6 +445,13 @@ export function avsluta(db, personal, forslagId, { kommentar } = {}, { nu = new 
   if (f.status !== 'vantar') throw new Fel(409, 'Förslaget är redan beslutat.', 'ogiltig');
   const egen = f.foreslagen_av === personal.id;
   if (!egen && !behorig(db, personal, f.enhet_id)) throw new Fel(403, 'Bara vårdenhetens verksamhetschef eller en annan vårdadministratör på vårdenheten avslår flytten.', 'nekad');
+  // Säkerhetsgranskningen efter sammanslagningen: har objektet bytt vårdenhet avslutas förslaget som ej genomfört.
+  let ob = null;
+  try { ob = objekt(db, f.slag, f.objekt_id); } catch { ob = null; }
+  if (ob && bytt(db, f, ob)) {
+    stang(db, f, personal, 'ej_genomford', BYTT_TEXT, nu);
+    return { forslag: forslagUt(db, hamtaForslag(db, f.id), personal), text: `${BYTT_TEXT} Förslaget är avslutat, och inget har flyttats.` };
+  }
   const k = typeof kommentar === 'string' ? kommentar.trim().slice(0, 500) : '';
   if (!egen && k.length < 3) throw new Fel(400, 'Skriv varför flytten avslås, så att den som föreslog den vet vad som behöver göras.', 'ogiltig', { falt: ['kommentar'] });
   stang(db, f, personal, egen ? 'aterkallad' : 'avslagen', k || null, nu);
@@ -445,21 +460,53 @@ export function avsluta(db, personal, forslagId, { kommentar } = {}, { nu = new 
 
 // Ett förslag för den som föreslog det och för den som kan godkänna det. Numret visas som det skrevs, men ingenting om
 // patienten som numret leder till förrän flytten är godkänd. Fel patient visas med skyddad identitet maskerad.
+// Säkerhetsgranskningen efter sammanslagningen: i listan och inkorgen bara en ogenomskinlig referens (vårdenhet, tid och
+// status). Patienten, kontakten, numret och motiveringen visas först när förslaget öppnas (forslagDetalj), prövat på
+// patienten och loggat.
 export function forslagUt(db, f, personal) {
   let o = null;
   try { o = objekt(db, f.slag, f.objekt_id); } catch { o = null; }
-  const p = db.query('SELECT * FROM patienter WHERE id = ?').get(f.patient_id);
-  const t = require('./identitet.js').tolka(f.nummer);
-  const foljer = o && f.status === 'vantar' && o.patientId === f.patient_id ? tillhor(db, o) : null;
+  const flyttad = Boolean(o && bytt(db, f, o));
   return {
     id: f.id, slag: f.slag, rubrik: f.slag === 'vardkontakt' ? 'Vårdkontakt på fel patient' : 'Vårdtillfälle på fel patient',
-    objekt: o ? { id: o.id, start: o.start, orsak: o.orsak, vardenhet: db.query('SELECT id, namn FROM enheter WHERE id = ?').get(vardenhetFor(db, o.enhetId)) ?? null } : null,
-    felPatient: p ? { id: p.id, namn: visningsnamn(p), personnummer: visningsPnr(p) } : null,
+    vardenhet: db.query('SELECT id, namn FROM enheter WHERE id = ?').get(vardenhetFor(db, f.enhet_id)) ?? null,
+    foreslagenAv: personKort(db, f.foreslagen_av), foreslagen: f.foreslagen,
+    status: f.status, statusText: STATUS[f.status], beslutadAv: personKort(db, f.beslutad_av), beslutad: f.beslutad,
+    ...(flyttad && f.status === 'vantar' ? { bytt: true, byttText: BYTT_TEXT } : {}),
+    // Kommentaren till ett beslut, för den som föreslog och den som beslutade.
+    ...(f.kommentar && personal && [f.foreslagen_av, f.beslutad_av].includes(personal.id) ? { kommentar: f.kommentar } : {}),
+    egen: f.foreslagen_av === personal?.id, kanGodkanna: f.status === 'vantar' && !flyttad && f.foreslagen_av !== personal?.id && behorig(db, personal, f.enhet_id),
+  };
+}
+const BYTT_TEXT = 'Kontakten eller vårdtillfället har bytt vårdenhet sedan flytten föreslogs, så godkännandet gäller inte längre.';
+const bytt = (db, f, o) => vardenhetFor(db, o.enhetId) !== vardenhetFor(db, f.enhet_id);
+// Prövar att personen får se patienten i förslaget, som annan administrativ läsning, och loggar det.
+function oppnaPatient(db, personal, f, valFor) {
+  const atk = new Atkomst(db, personal, f.patient_id, valFor(f.patient_id), 'las_flytt');
+  const beskrivning = `makulering:forslag:${f.id}`;
+  atk.krav('las_flytt', { resurs: { enhet_id: f.enhet_id }, beskrivning });
+  atk.logga('las_flytt', atk.grund(), beskrivning);
+  return atk;
+}
+// Ett öppnat förslag: för den som föreslog det och för den som kan godkänna det. Numret visas som det skrevs, men inget om
+// patienten som numret leder till förrän flytten är godkänd. Fel patient visas med skyddad identitet maskerad.
+export function forslagDetalj(db, personal, forslagId, { valFor = () => ({}) } = {}) {
+  const f = hamtaForslag(db, forslagId);
+  if (f.foreslagen_av !== personal.id && !behorig(db, personal, f.enhet_id)) throw new Fel(404, 'Förslaget finns inte.', 'saknas');
+  oppnaPatient(db, personal, f, valFor);
+  let o = null;
+  try { o = objekt(db, f.slag, f.objekt_id); } catch { o = null; }
+  const p = db.query('SELECT * FROM patienter WHERE id = ?').get(f.patient_id);
+  const visa = Boolean(valFor(f.patient_id)?.visa_identitet);
+  const t = require('./identitet.js').tolka(f.nummer);
+  const foljer = o && f.status === 'vantar' && o.patientId === f.patient_id && !bytt(db, f, o) ? tillhor(db, o) : null;
+  return {
+    ...forslagUt(db, f, personal),
+    objekt: o && !bytt(db, f, o) ? { id: o.id, start: o.start, orsak: o.orsak, vardenhet: db.query('SELECT id, namn FROM enheter WHERE id = ?').get(vardenhetFor(db, o.enhetId)) ?? null } : null,
+    felPatient: p ? { id: p.id, namn: visningsnamn(p, visa), personnummer: visningsPnr(p, visa) } : null,
     rattNummer: t?.ok ? t.visning : f.nummer,
     foljer: foljer ? (sammanfattning(foljer) || 'inga andra uppgifter') : null,
-    orsak: f.orsak, foreslagenAv: personKort(db, f.foreslagen_av), foreslagen: f.foreslagen,
-    status: f.status, statusText: STATUS[f.status], beslutadAv: personKort(db, f.beslutad_av), beslutad: f.beslutad, kommentar: f.kommentar,
-    egen: f.foreslagen_av === personal?.id, kanGodkanna: f.status === 'vantar' && f.foreslagen_av !== personal?.id && behorig(db, personal, f.enhet_id),
+    orsak: f.orsak, kommentar: f.kommentar,
   };
 }
 

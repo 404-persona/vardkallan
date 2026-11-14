@@ -8,6 +8,16 @@ import { uppdateraInkorg } from '../app.js';
 export const namn = 'flyttar';
 
 const datum = (t) => (t ? tidpunkt(t) : '');
+// Säkerhetsgranskningen efter sammanslagningen: listan visar bara vårdenhet, tid och status. Patienten, kontakten, numret
+// och motiveringen hämtas när förslaget öppnas, prövat och loggat på patienten.
+function kortHtml(f) {
+  return `<li class="ruta flytt-forslag" data-flytt="${f.id}">
+    <p><strong>${esc(f.rubrik)}</strong> <span class="tagg">${esc(f.statusText)}</span></p>
+    <p class="liten">${esc(f.vardenhet?.namn ?? '')}, föreslagen ${esc(datum(f.foreslagen))}${f.foreslagenAv ? ` av ${esc(f.foreslagenAv.namn)}` : ''}${f.beslutadAv ? `. Beslutad ${esc(datum(f.beslutad))} av ${esc(f.beslutadAv.namn)}` : ''}</p>
+    ${f.bytt ? `<p class="ruta ruta-varning liten">${esc(f.byttText)}</p>` : ''}
+    <div class="knapprad"><button type="button" class="knapp sekundar" data-fl-oppna="${f.id}">Öppna förslaget</button></div>
+  </li>`;
+}
 function forslagHtml(f, { knappar }) {
   return `<li class="ruta flytt-forslag" data-flytt="${f.id}">
     <p><strong>${esc(f.rubrik)}</strong> <span class="tagg">${esc(f.statusText)}</span></p>
@@ -30,16 +40,28 @@ export async function visa(main) {
     const d = await api('/api/flyttar');
     const el = main.querySelector('#fl');
     if (!el) return;
-    const lista = (rader, tom, knappar) => (rader.length ? `<ul class="enkel-lista">${rader.map(f => forslagHtml(f, { knappar: knappar(f) })).join('')}</ul>` : `<p class="tom liten">${esc(tom)}</p>`);
+    knapparFor = (f) => (f.kanGodkanna ? `<button type="button" class="knapp" data-fl-godkann="${f.id}">Godkänn flytten</button><button type="button" class="knapp sekundar" data-fl-avsla="${f.id}">Avslå</button>`
+      : f.egen && f.status === 'vantar' ? `<button type="button" class="knapp sekundar" data-fl-aterkalla="${f.id}">Återkalla</button>` : '');
+    const lista = (rader, tom) => (rader.length ? `<ul class="enkel-lista">${rader.map(kortHtml).join('')}</ul>` : `<p class="tom liten">${esc(tom)}</p>`);
     el.innerHTML = `<p class="liten dampad">${esc(d.text)} Kontrollera numret mot underlaget, till exempel remissen eller id-handlingen, innan du godkänner. Rätt patient får då den vårdrelation som kontakten hade gett om den hade registrerats rätt från början.</p>
       <section class="lm-sektion" aria-labelledby="fl-godkanna"><h2 id="fl-godkanna">Att godkänna <span class="antal${d.attGodkanna.length ? ' antal-aktiv' : ''}">${d.attGodkanna.length}</span></h2>
-        ${lista(d.attGodkanna, 'Inga flyttar väntar på ditt godkännande.', (f) => `<button type="button" class="knapp" data-fl-godkann="${f.id}">Godkänn flytten</button><button type="button" class="knapp sekundar" data-fl-avsla="${f.id}">Avslå</button>`)}</section>
+        ${lista(d.attGodkanna, 'Inga flyttar väntar på ditt godkännande.')}</section>
       <section class="lm-sektion" aria-labelledby="fl-mina"><h2 id="fl-mina">Mina förslag som väntar</h2>
-        ${lista(d.mina, 'Du har inga förslag som väntar.', (f) => `<button type="button" class="knapp sekundar" data-fl-aterkalla="${f.id}">Återkalla</button>`)}</section>
-      ${d.beslutade.length ? `<section class="lm-sektion" aria-labelledby="fl-beslutade"><h2 id="fl-beslutade">Beslutade</h2>${lista(d.beslutade, '', () => '')}</section>` : ''}`;
+        ${lista(d.mina, 'Du har inga förslag som väntar.')}</section>
+      ${d.beslutade.length ? `<section class="lm-sektion" aria-labelledby="fl-beslutade"><h2 id="fl-beslutade">Beslutade</h2>${lista(d.beslutade, '')}</section>` : ''}`;
   };
+  let knapparFor = () => '';
   await ladda();
   main.querySelector('#fl').addEventListener('click', async (e) => {
+    const o = e.target.closest('[data-fl-oppna]');
+    if (o) {
+      try {
+        const f = await medKnapp(o, () => api(`/api/flyttar/${o.dataset.flOppna}`));
+        const li = o.closest('[data-flytt]');
+        if (li) { li.outerHTML = forslagHtml(f, { knappar: knapparFor(f) }); main.querySelector(`[data-flytt="${f.id}"] button`)?.focus(); }
+      } catch { /* felet visas som notis */ }
+      return;
+    }
     const g = e.target.closest('[data-fl-godkann]');
     const a = e.target.closest('[data-fl-avsla]');
     const t = e.target.closest('[data-fl-aterkalla]');

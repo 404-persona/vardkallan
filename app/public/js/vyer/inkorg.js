@@ -57,8 +57,9 @@ export async function visa(main) {
 
   // Runda 15, r2, tredje omgången: flyttar till rätt patient som väntar på godkännande, utan något om patienten som
   // numret leder till.
-  const flytt = (d.flyttarAttGodkanna ?? []).map(f => rad('#/flyttar', `${esc(f.rubrik)}, ${esc(f.felPatient?.namn ?? '')}`,
-    `Föreslagen ${esc(tidpunkt(f.foreslagen))} av ${esc(f.foreslagenAv?.namn ?? '')}. Kontrollera numret och godkänn eller avslå flytten.`, 'ik-flytt'));
+  // Säkerhetsgranskningen efter sammanslagningen: bara vårdenhet och tid. Patienten syns när förslaget öppnas.
+  const flytt = (d.flyttarAttGodkanna ?? []).map(f => rad('#/flyttar', `${esc(f.rubrik)}, ${esc(f.vardenhet?.namn ?? '')}`,
+    `Föreslagen ${esc(tidpunkt(f.foreslagen))} av ${esc(f.foreslagenAv?.namn ?? '')}. Öppna förslaget, kontrollera numret och godkänn eller avslå flytten.`, 'ik-flytt'));
   const dubb = (d.dubbletter ?? []).map(x => rad(pat(x.patientId, 'identitet'),
     `Trolig dubblett, ${esc(pnamn(x.patient))}${sym(x.patient)}`, `<span class="pnr">${esc(x.patient.personnummer)}</span>. Systemet har hittat ${x.antal === 1 ? 'en annan journal' : `${x.antal} andra journaler`} som troligen gäller samma person. Bekräfta sammanslagningen.`, 'ik-dubblett'));
 
