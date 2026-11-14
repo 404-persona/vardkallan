@@ -59,11 +59,12 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   });
 }
 
-// Körs vid varje anrop med en sandlåda, som räknar om högst fem patienter, och av en timer varje minut, som också gör
-// grundladdningen och den dagliga avstämningen av engagemangsindex.
+// Körs vid varje anrop med en sandlåda, som bara skickar det som väntar till samtyckestjänsten, och av en timer varje
+// minut, som också skickar till engagemangsindex och gör grundladdningen och den dagliga avstämningen. Engagemangsindex
+// räknas aldrig om i en användares anrop, så att arbetet aldrig syns i svarstiden eller i sandlådans tidsbudget.
 export function efterTid(db, nu = new Date(), { anrop = true } = {}) {
   samtycke.efterTid(db, nu);
-  ei.efterTid(db, nu, anrop ? { maxPatienter: 5 } : { avstamning: true });
+  if (!anrop) ei.efterTid(db, nu, { avstamning: true });
 }
 
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.

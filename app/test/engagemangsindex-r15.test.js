@@ -59,12 +59,16 @@ describe(T, () => {
     expect(r.status).toBe(201);
     expect((await k.post(`/api/anteckning/${r.data.id}/signera`)).status).toBe(200);
     expect(db.query('SELECT count(*) AS n FROM ei_markerade WHERE patient_id = ?').get(id).n).toBeGreaterThan(0);
-    // Före fördröjningen skickas inget. Efter den skickar nästa anrop i sandlådan omgången av sig självt.
+    // Före fördröjningen skickas inget. Efter den skickar timern omgången av sig själv, utan att någon gör något.
+    const { efterTid } = await import('../src/r15r2-rutter.js');
     stallKlockan(new Date());
-    await k.get('/api/session');
+    efterTid(db, new Date(), { anrop: false });
     expect(kategorier(db, '189001029819')).toEqual(['vko']);
     stallKlockan(new Date(Date.now() + 2 * 60_000));
+    // Ett anrop från en användare räknar aldrig om engagemangsindex.
     await k.get('/api/session');
+    expect(kategorier(db, '189001029819')).toEqual(['vko']);
+    efterTid(db, new Date(), { anrop: false });
     expect(kategorier(db, '189001029819')).toEqual(['vko', 'voo']);
     expect(db.query('SELECT count(*) AS n FROM ei_markerade WHERE patient_id = ?').get(id).n).toBe(0);
   });
