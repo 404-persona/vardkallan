@@ -352,6 +352,33 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
     expect(iTjansten(db)).toEqual([]);
     expect(db.query("SELECT status FROM samtycke_utkorg").get().status).toBe('avbruten');
   });
+  const giltiga = (db, typ) => { try { return db.query("SELECT intyg_id FROM rivta_sim_samtycken WHERE patient_id = 'p01' AND aterkallat IS NULL AND typ = ?").all(typ); } catch { return []; } };
+  test('en registrering som försöktes utan svar men kom fram återkallas också, och ett intyg om nödsituation överlever återkallelsen av samtycket', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', { nodatkomst: { syfte: 'Akut' } }, 'las_journal');
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    // Svaret gick förlorat: registreringen kom fram men står som försökt och väntande.
+    db.query("UPDATE samtycke_utkorg SET status = 'vantar', forsok = 1 WHERE handling = 'registrera' AND typ = 'Consent'").run();
+    const nod = sam.registreraNodsituation(new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', { nodatkomst: { syfte: 'Akut' } }, 'las_journal'));
+    expect(giltiga(db, 'Consent').length).toBe(1);
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    sam.aterkalla(a);
+    expect(giltiga(db, 'Consent')).toEqual([]);
+    if (nod) expect(giltiga(db, 'Emergency').length).toBeGreaterThan(0);
+  });
+
+  test('en återkallelse utan några egna intyg markeras aldrig som skickad, utan står kvar för systemförvaltaren', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', {}, 'las_journal');
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    sam.aterkalla(a);
+    const r = db.query("SELECT status, fel FROM samtycke_utkorg WHERE handling = 'aterkalla' ORDER BY id DESC").get();
+    expect(r).toBeTruthy();
+    expect(r.status).toBe('vantar');
+    expect(r.fel).toContain('Systemförvaltaren');
+    expect(sam.lageForvaltning(db).ejFramme).toBeGreaterThan(0);
+  });
+
   test('ett samtycke som registrerades före skyddet återkallas i tjänsten med vårdenhetens egna intyg, utan personnummer', () => {
     const db = nyDb();
     const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', {}, 'las_journal');

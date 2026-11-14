@@ -92,7 +92,8 @@ function lattUpphora(db, s, orsak, nu) {
   db.query('UPDATE sammanhallen_samtycken SET aterkallat = ?, aterkallat_kalla = ? WHERE id = ? AND aterkallat IS NULL').run(iso(nu), orsak, s.id);
   // En viss tid har redan sitt slutdatum i tjänsten. När vårdrelationen upphör återkallas samtycket där.
   if (orsak !== 'vardrelation') return;
-  const ids = db.query("SELECT intyg_id FROM samtycke_utkorg WHERE samtycke_id = ? AND handling = 'registrera' AND status = 'skickad'").all(s.id).map(r => r.intyg_id);
+  // Säkerhetsgranskningen efter sammanslagningen: också registreringar som har försökts, eftersom de kan ha kommit fram.
+  const ids = db.query(`SELECT intyg_id FROM samtycke_utkorg WHERE samtycke_id = ? AND handling = 'registrera' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL`).all(s.id).map(r => r.intyg_id);
   db.query("UPDATE samtycke_utkorg SET status = 'avbruten' WHERE samtycke_id = ? AND handling = 'registrera' AND status = 'vantar'").run(s.id);
   const pid = nationellIdentitet(db, s.patient_id);
   if (!ids.length) return;
@@ -177,11 +178,15 @@ export function koaRegistrering(atk, { samtyckeId = null, typ = 'Consent', nu = 
 }
 
 // Återkallar på vårdenheten: alla giltiga samtycken i tjänsten för vårdenheten som registrerades före återkallelsen.
-// Säkerhetsgranskningen efter sammanslagningen: intygen som vårdenheten har registrerat i tjänsten för patienten.
-function egnaIntyg(db, patientId, careUnitId) {
-  return db.query("SELECT intyg_id, begaran FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND status = 'skickad' AND intyg_id IS NOT NULL").all(patientId)
-    .filter(r => { try { return JSON.parse(r.begaran).CareUnitId === careUnitId; } catch { return false; } }).map(r => r.intyg_id);
+// Säkerhetsgranskningen efter sammanslagningen: vårdenhetens samtycken (inte intyg om nödsituation) för patienten som kan
+// finnas i tjänsten och registrerades före återkallelsen: de som har skickats, och de som har försökts men inte fått svar,
+// eftersom de kan ha kommit fram. Ett intyg som aldrig kom fram ger bara NOTFOUND vid återkallelsen.
+const KAN_FINNAS = "(status = 'skickad' OR forsok > 0)";
+function egnaIntyg(db, patientId, careUnitId, foreIso) {
+  return db.query(`SELECT intyg_id, begaran, skapad FROM samtycke_utkorg WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND ${KAN_FINNAS} AND intyg_id IS NOT NULL AND skapad <= ?`).all(patientId, foreIso)
+    .filter(r => { try { const b = JSON.parse(r.begaran); return b.CareUnitId === careUnitId && (b.AssertionType ?? 'Consent') === 'Consent'; } catch { return false; } }).map(r => r.intyg_id);
 }
+const UTAN_INTYG = 'Samtycket kan inte återkallas i samtyckestjänsten utan patientens identitet, och Vårdkällan har inga egna intyg att återkalla. Systemförvaltaren behöver återkalla det i tjänsten.';
 function koaAterkallelse(atk, nu) {
   const db = atk.db;
   const pid = nationellIdentitet(db, atk.patientId);
@@ -189,9 +194,9 @@ function koaAterkallelse(atk, nu) {
   // Säkerhetsgranskningen efter sammanslagningen: med skyddad identitet återkallas vårdenhetens egna intyg, utan
   // personnummer, så att ett samtycke som registrerades före skyddet inte blir kvar som gällande i tjänsten.
   if (!pid) {
-    const ids = egnaIntyg(db, atk.patientId, enhetHsa(db, ve));
-    db.query("UPDATE samtycke_utkorg SET status = 'avbruten' WHERE patient_id = ? AND handling = 'registrera' AND status = 'vantar'").run(atk.patientId);
-    if (!ids.length) return false;
+    const ids = egnaIntyg(db, atk.patientId, enhetHsa(db, ve), iso(nu));
+    db.query("UPDATE samtycke_utkorg SET status = 'avbruten' WHERE patient_id = ? AND handling = 'registrera' AND typ = 'Consent' AND status = 'vantar'").run(atk.patientId);
+    // En tom lista skickas aldrig som klar: raden står kvar för systemförvaltaren (skickaKo).
     koa(db, { patientId: atk.patientId, handling: 'aterkalla', personalHsa: anstallningsId(atk.personal), begaran: { CareProviderId: vardgivare(db), AssertionIds: ids, av: anstallningsId(atk.personal) } }, nu);
     skickaKo(db, { nu, patientId: atk.patientId });
     return true;
@@ -256,13 +261,23 @@ export function skickaKo(db, { nu = new Date(), patientId = null, tvinga = false
       try { b = JSON.parse(r.begaran); } catch { b = null; }
       if (r.handling === 'registrera' || !b) { db.query("UPDATE samtycke_utkorg SET status = 'avbruten', fel = ? WHERE id = ?").run('Patienten har skyddad identitet, så inget skickas till samtyckestjänsten.', r.id); continue; }
       if (!Array.isArray(b.AssertionIds)) {
-        const ids = egnaIntyg(db, r.patient_id, b.CareUnitId);
+        const ids = egnaIntyg(db, r.patient_id, b.CareUnitId, r.skapad);
         db.query('UPDATE samtycke_utkorg SET begaran = ? WHERE id = ?').run(JSON.stringify({ CareProviderId: b.CareProviderId, AssertionIds: ids, av: b.av }), r.id);
         r.begaran = JSON.stringify({ CareProviderId: b.CareProviderId, AssertionIds: ids, av: b.av });
       } else if (b.PatientId) {
         const utan = { ...b }; delete utan.PatientId;
         db.query('UPDATE samtycke_utkorg SET begaran = ? WHERE id = ?').run(JSON.stringify(utan), r.id);
         r.begaran = JSON.stringify(utan);
+      }
+    }
+    // En återkallelse med en tom lista med intyg markeras aldrig som skickad. Den står kvar för systemförvaltaren.
+    if (r.handling === 'aterkalla') {
+      let b = null;
+      try { b = JSON.parse(r.begaran); } catch { b = null; }
+      if (Array.isArray(b?.AssertionIds) && !b.AssertionIds.length) {
+        db.query("UPDATE samtycke_utkorg SET forsok = max(forsok, 3), nasta = '9999-12-31T00:00:00.000Z', senaste_forsok = ?, fel = ? WHERE id = ?").run(t, UTAN_INTYG, r.id);
+        fel = UTAN_INTYG;
+        continue;
       }
     }
     try {
