@@ -275,14 +275,14 @@ const tillfalligaDiagnoserParameter = () => ({
   effekt: (db, nytt, forra, nu = new Date()) => {
     const m = require('./mellanarkiv.js');
     const fore = new Date(nu.getTime() - 5 * 365.25 * DAG).toISOString().slice(0, 10);
-    const r = (lista) => m.paverkadeDiagnoser(db, lista, fore);
-    const n = r(nytt);
-    const f = r(forra);
     // Säkerhetsgranskningen efter runda 15: systemförvaltaren läser inte journaler, och antalet räknas över alla journaler,
-    // också spärrade och skyddade. Små tal visas därför inte, och större avrundas till tiotal, så att två förhandsvisningar
-    // med olika listor inte ger ett litet tal som skillnad.
-    const ungefar = (x) => (x === 0 ? 'inga diagnoser' : x < 10 ? 'färre än 10 diagnoser' : `omkring ${Math.round(x / 10) * 10} diagnoser`);
-    return [`Med listan räknas ${ungefar(n.tillfalliga)} från före ${fore} som tillfälliga, mot ${ungefar(f.tillfalliga)} med den nuvarande. ${ungefar(n.beslutsstod).replace(/^./, c => c.toUpperCase())} i listan stannar ändå, eftersom ett beslutsstöd läser dem. Om en diagnos förs över avgör systemet vid nästa beslut om överföring, med sin vårdkontakt.`];
+    // också spärrade och skyddade. Därför räknas bara per kapitel i ICD-10-SE, små tal visas inte (samma text för 0 som
+    // för färre än 10) och större avrundas till tiotal, så att två förhandsvisningar inte ger ett litet tal som skillnad.
+    const ungefar = (x) => (x < 10 ? 'färre än 10 diagnoser' : `omkring ${Math.round(x / 10) * 10} diagnoser`);
+    const kn = m.kapitelFor(nytt);
+    const kf = m.kapitelFor(forra);
+    const kap = (k) => (k.length ? `kapitel ${k.join(', ')}` : 'inga kapitel');
+    return [`Listan berör ${kap(kn)} i ICD-10-SE. Där finns ${ungefar(m.diagnoserIKapitel(db, kn, fore))} från före ${fore} med koder som kan vara tillfälliga, mot ${ungefar(m.diagnoserIKapitel(db, kf, fore))} i ${kap(kf)} med den nuvarande listan. Talen räknas per kapitel, inte per kod, eftersom systemförvaltaren inte läser journaler. En kronisk diagnos och en diagnos som ett beslutsstöd läser stannar alltid. Om en diagnos förs över avgör systemet vid nästa beslut om överföring, med sin vårdkontakt.`];
   },
 });
 

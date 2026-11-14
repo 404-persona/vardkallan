@@ -249,6 +249,14 @@ export function tillfalligDiagnos(db, kod, nu = new Date(), lista = null) {
 }
 // Förhandsvisningen av parametern: hur många diagnoser från före gränsen som listan räknar som tillfälliga, och hur många
 // i listan som stannar för att ett beslutsstöd läser dem.
+// Säkerhetsgranskningen efter sammanslagningen av runda 15: förhandsvisningen för systemförvaltaren, som inte läser
+// journaler, räknar bara per kapitel i ICD-10-SE (kodens bokstav), så att två listor som skiljer sig med en kod i ett
+// kapitel som redan är med ger samma svar och ingen differens kan pröva om en ovanlig diagnos finns.
+export function kapitelFor(lista) { return [...new Set(lista.map(p => String(p).trim().charAt(0).toUpperCase()).filter(k => /^[A-Z]$/.test(k)))].sort(); }
+export function diagnoserIKapitel(db, kapitel, fore) {
+  if (!kapitel.length) return 0;
+  return db.query('SELECT kod FROM diagnoser WHERE datum < ?').all(fore).map(r => String(r.kod)).filter(k => MOJLIGA_TILLFALLIGA.test(k) && kapitel.includes(k.charAt(0))).length;
+}
 export function paverkadeDiagnoser(db, lista, fore) {
   const rader = db.query('SELECT kod FROM diagnoser WHERE datum < ?').all(fore).map(r => String(r.kod));
   const iLista = rader.filter(k => MOJLIGA_TILLFALLIGA.test(k) && lista.some(p => k.startsWith(p)));

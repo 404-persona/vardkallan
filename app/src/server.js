@@ -362,12 +362,16 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // RESERV_SANDLADA och RESERV_LOGG). Inställningen RESERVSERVER=1 gör samma sak.
   reservserver = process.env.RESERVSERVER === '1' ? {} : null,
   // Beslut 2026-11-14: katalogen där driften gör reservserverns loggfiler tillgängliga för kärnsystemet.
-  reservloggKatalog = process.env.RESERV_LOGG || null } = {}) {
+  reservloggKatalog = process.env.RESERV_LOGG || null,
+  // Säkerhetsgranskningen efter runda 15: nyckeln som loggen från reservservern är signerad med (RESERV_LOGG_NYCKEL).
+  reservloggNyckel = null } = {}) {
   if (maxSessioner) maxSandlador = maxSessioner;
   // Runda 15, r3: reservservern har en databas för alla som loggar in, ur kopian, och tar inga egna kopior, sparar inga
   // sandlådor och flyttar inget till disk. Den läser platserna men skriver aldrig där.
   const reserv = reservserver ? reservserverMod.oppna({ katalog: reservserver.katalog ?? kopieKatalog, andraKatalog: reservserver.andraKatalog ?? kopieAndra,
-    nyckel: reservserver.nyckel ?? (process.env.RESERV_SANDLADA || null), loggKatalog: reservserver.loggKatalog ?? (process.env.RESERV_LOGG || null) }) : null;
+    nyckel: reservserver.nyckel ?? (process.env.RESERV_SANDLADA || null), loggKatalog: reservserver.loggKatalog ?? (process.env.RESERV_LOGG || null),
+    // Säkerhetsgranskningen efter runda 15: nyckeln som signerar loggen, delad med kärnsystemet.
+    ...(reservserver.loggNyckel ? { loggNyckel: reservserver.loggNyckel } : {}) }) : null;
   if (reserv) { kopieKatalog = null; kopieAndra = null; kopieMinuter = 0; sessionFil = ''; vilaKatalog = null; }
   const sessioner = new Map();
   // Runda 12, r3: nyckeln som krypterar nycklarna för engångskoder, bredvid sessionsfilen så att den följer med en omstart.
@@ -2602,7 +2606,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   };
   r12r2Rutter({ rutt, kravInloggad, testresultat, kopior, migrera, loggaUtAlla });
   // Beslut 2026-11-14: loggen från reservservern på sidan Lagring (reservlogg-rutter.js). Inte på reservservern själv.
-  if (!reserv) reservloggRutter({ rutt, kravInloggad, kopior, reservloggKatalog });
+  if (!reserv) reservloggRutter({ rutt, kravInloggad, kopior, reservloggKatalog, reservloggNyckel });
   // Runda 14, r5 (servicenivaer-rutter.js): svarstiderna med målet och säkerhetskopiornas lager till månadsrapporten.
   r14r5Rutter({ rutt, kravInloggad, kopior, matning: () => medMal(serverMatning.sammanstall()), malP95: MAL_P95 });
   // Runda 14, r1 (inloggningstjanster-rutter.js).

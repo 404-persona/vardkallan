@@ -63,6 +63,13 @@ function plats(katalog) {
 }
 
 // Kontrollen av en kopia: kontrollsumman, och att databasen läst från kopian är hel och har loggar som håller.
+function sistaLoggId(db) {
+  try {
+    if (!(db instanceof Uint8Array)) return db.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m;
+    const d = Database.deserialize(db);
+    try { return d.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m; } finally { d.close(); }
+  } catch { return null; }
+}
 export function verifieraKopia(data, forvantad) {
   const kontroller = [];
   const summa = data ? sha256(data) : null;
@@ -139,7 +146,10 @@ export function skapaKopielager({ katalog = null, andraKatalog = null, hemlighet
         return { plats: i + 1, ok, kontroller: [{ id: 'summa', text: 'Kontrollsumman är densamma som för ögonblicksbilden', ok }, ...forsta.kontroller.filter(x => x.id !== 'summa')] };
       } catch (e) { return { plats: i + 1, ok: false, kontroller: [{ id: 'skriv', text: 'Kopian kunde inte skrivas', ok: false }] }; }
     });
-    const post = { id, fil, tid: iso(nu), orsak, av, byte: data.byteLength, lagrat, sha256: summa, platser: per.map(({ plats: pl, ok }) => ({ plats: pl, ok })), verifierad: per.every(x => x.ok), kontroller: per[0].kontroller };
+    const post = { id, fil, tid: iso(nu), orsak, av, byte: data.byteLength, lagrat, sha256: summa, platser: per.map(({ plats: pl, ok }) => ({ plats: pl, ok })), verifierad: per.every(x => x.ok), kontroller: per[0].kontroller,
+      // Säkerhetsgranskningen efter runda 15: den sista raden i åtkomstloggen i kopian, så att loggen från en
+      // reservserver som läste kopian måste börja direkt efter den (reservserver.js).
+      loggId: sistaLoggId(db) };
     const lista = lasIndex(k);
     lista.unshift(post);
     // De äldsta kopiorna tas bort.

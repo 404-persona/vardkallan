@@ -19,6 +19,7 @@
 import { Database } from 'bun:sqlite';
 import { existsSync, readFileSync, readdirSync, appendFileSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { Fel, iso } from './db.js';
 import * as sakerhetslogg from './sakerhetslogg.js';
 import { verifieraKopia } from './sakerhetskopior.js';
@@ -81,12 +82,27 @@ export function lasEndast(db) {
   }
 }
 
+// Säkerhetsgranskningen efter sammanslagningen av runda 15: loggen från reservservern signeras rad för rad med en
+// nyckel som kärnsystemet och reservservern delar (RESERV_LOGG_NYCKEL, minst 32 tecken, i driftens hemligheter och
+// aldrig i databasen, som andra signeringsnycklar). Signaturen täcker radens hash, som täcker raden och kedjan bakåt,
+// och vilken kopia reservservern läste med dess sista rad i åtkomstloggen, så att kärnsystemet kan kräva att loggen
+// börjar direkt efter kopian. De simulerade loggarna i demon signeras med en nyckel som bara finns i processens minne.
+export const loggNyckelUrMiljo = () => { const v = process.env.RESERV_LOGG_NYCKEL; return typeof v === 'string' && v.length >= 32 ? Buffer.from(v) : null; };
+const DEMO_NYCKEL = randomBytes(32);
+export const loggMac = (nyckel, r, m) => createHmac('sha256', nyckel).update(JSON.stringify([r.id, r.hash, m.kopia ?? null, m.kopiaSha256 ?? null, m.kopiaLoggId ?? null, m.nyckel ?? null])).digest('hex');
+function macOk(nyckel, r) {
+  const m = r?.reservserver;
+  if (!nyckel || !m || typeof m.mac !== 'string' || !/^[0-9a-f]{64}$/.test(m.mac)) return false;
+  return timingSafeEqual(Buffer.from(m.mac, 'hex'), Buffer.from(loggMac(nyckel, r, m), 'hex'));
+}
 // Öppnar reservserverns databas ur den senaste verifierade kopian.
-export function oppna({ katalog, andraKatalog = null, nyckel = null, loggKatalog = null, nu = new Date() } = {}) {
+export function oppna({ katalog, andraKatalog = null, nyckel = null, loggKatalog = null, loggNyckel = loggNyckelUrMiljo(), nu = new Date() } = {}) {
+  if (loggKatalog && !loggNyckel) throw new Fel(500, 'Reservservern skriver en logg men saknar nyckeln som den delar med kärnsystemet. Ange RESERV_LOGG_NYCKEL, samma som i kärnsystemet, med minst 32 tecken.', 'fel');
   const k = senasteKopia({ katalog, andraKatalog, nyckel });
   const db = Database.deserialize(k.data);
   lasEndast(db);
-  const reserv = { db, kopia: k.kopia, nyckel: k.nyckel, startad: iso(nu), loggKatalog, loggFil: null, sistaLoggId: db.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m };
+  const sista = db.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m;
+  const reserv = { db, kopia: k.kopia, nyckel: k.nyckel, startad: iso(nu), loggKatalog, loggFil: null, loggNyckel, kopiaLoggId: sista, sistaLoggId: sista };
   if (loggKatalog) {
     mkdirSync(loggKatalog, { recursive: true, mode: 0o700 });
     reserv.loggFil = join(loggKatalog, `reservserver-logg-${reserv.startad.replace(/[:.]/g, '-')}.ndjson`);
@@ -119,7 +135,8 @@ export function sparaLogg(reserv) {
   if (!reserv.loggFil) return 0;
   const rader = reserv.db.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(reserv.sistaLoggId);
   if (!rader.length) return 0;
-  appendFileSync(reserv.loggFil, rader.map(r => `${JSON.stringify({ ...r, reservserver: { kopia: reserv.kopia.id, kopiaTid: reserv.kopia.tid, nyckel: reserv.nyckel } })}\n`).join(''), { mode: 0o600 });
+  const meta = { kopia: reserv.kopia.id, kopiaTid: reserv.kopia.tid, kopiaSha256: reserv.kopia.sha256, kopiaLoggId: reserv.kopiaLoggId, nyckel: reserv.nyckel };
+  appendFileSync(reserv.loggFil, rader.map(r => `${JSON.stringify({ ...r, reservserver: { ...meta, mac: loggMac(reserv.loggNyckel, r, meta) } })}\n`).join(''), { mode: 0o600 });
   reserv.sistaLoggId = rader.at(-1).id;
   return rader.length;
 }
@@ -179,6 +196,23 @@ function filerFor({ katalog, minne, nyckel }) {
   // någon. Driften har originalet på reservserverns disk.
   return ur.map(f => ({ ...f, rader: (f.rader ?? []).filter(r => r?.reservserver?.nyckel === nyckel) })).filter(f => f.rader.length);
 }
+// Prövar en logg innan den läses in: kedjan i filen, signaturen på varje rad, att alla rader kommer från samma kopia,
+// att kopian är en av den här sandlådans kopior och att loggen börjar direkt efter kopians sista rad i åtkomstloggen.
+// Ger null eller förklaringen till varför loggen inte läses in.
+function provaLogg(db, f, { loggNyckel = loggNyckelUrMiljo(), kopior = null } = {}) {
+  const r0 = f.rader[0];
+  const m = r0?.reservserver ?? {};
+  if (!kontrolleraLogg(f.rader).hel) return 'Loggen från reservservern hänger inte ihop: en rad saknas eller har ändrats. Den läses inte in. Kontakta driften, som har originalet på reservserverns disk.';
+  const nyckel = f.simulerad ? DEMO_NYCKEL : loggNyckel;
+  if (!nyckel) return 'Kärnsystemet saknar nyckeln som det delar med reservservern (RESERV_LOGG_NYCKEL), så loggens signatur kan inte prövas. Den läses inte in.';
+  if (!f.rader.every(r => macOk(nyckel, r))) return 'Loggen från reservservern är inte signerad med nyckeln som kärnsystemet och reservservern delar. Den läses inte in.';
+  if (!f.rader.every(r => r.reservserver.kopia === m.kopia && r.reservserver.kopiaLoggId === m.kopiaLoggId && r.reservserver.kopiaSha256 === m.kopiaSha256)) return 'Loggen från reservservern blandar rader från flera kopior. Den läses inte in.';
+  if (!Number.isInteger(m.kopiaLoggId) || r0.id !== m.kopiaLoggId + 1 || !fortsatterKedjan(db, f.rader)) return 'Loggen från reservservern hänger inte ihop med den här sandlådans åtkomstlogg: den börjar inte direkt efter kopian som reservservern läste. Den läses inte in.';
+  const post = f.simulerad ? null : (kopior ?? []).find(p => p.id === m.kopia && p.sha256 === m.kopiaSha256);
+  if (!f.simulerad && !post) return 'Kopian som reservservern läste är inte en av den här sandlådans säkerhetskopior. Loggen läses inte in.';
+  if (post && post.loggId !== m.kopiaLoggId) return 'Loggen från reservservern hänger inte ihop med den här sandlådans åtkomstlogg: den börjar inte direkt efter kopian som reservservern läste. Den läses inte in.';
+  return null;
+}
 // Säkerhetsgranskningen efter runda 15: den första raden i filen ska fortsätta kedjan i den här sandlådans åtkomstlogg,
 // från den sista raden i kopian som reservservern läste. Annars hör loggen inte hit, eller har ändrats.
 function fortsatterKedjan(db, rader) {
@@ -186,14 +220,14 @@ function fortsatterKedjan(db, rader) {
   const forra = db.query('SELECT hash FROM atkomstlogg WHERE id = ?').get(Number(rader[0].id) - 1);
   return Boolean(forra) && forra.hash === rader[0].prev_hash;
 }
-export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } = {}) {
+export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel, loggNyckel = loggNyckelUrMiljo(), kopior = null } = {}) {
   const inlasta = new Set(db.query("SELECT tid, personal_id, patient_id, handling, resurs FROM atkomstlogg WHERE syfte LIKE 'Reservservern:%'").all().map(inlastNyckel));
   const filer = filerFor({ katalog, minne, nyckel }).map(f => {
     const tider = f.rader.map(r => r.tid).sort();
     const kvar = f.rader.filter(r => !inlasta.has(inlastNyckel(r))).length;
     const k = kontrolleraLogg(f.rader);
     return { fil: f.fil, simulerad: f.simulerad, rader: f.rader.length, kvar, inlast: kvar === 0, fran: tider[0] ?? null, till: tider.at(-1) ?? null,
-      kopia: f.rader[0]?.reservserver ? { id: f.rader[0].reservserver.kopia, tid: f.rader[0].reservserver.kopiaTid } : null, kedjaHel: k.hel && fortsatterKedjan(db, f.rader) };
+      kopia: f.rader[0]?.reservserver ? { id: f.rader[0].reservserver.kopia, tid: f.rader[0].reservserver.kopiaTid } : null, kedjaHel: k.hel && !provaLogg(db, f, { loggNyckel, kopior }) };
   }).sort((a, b) => String(b.till).localeCompare(String(a.till)));
   const vantar = filer.filter(f => !f.inlast);
   return {
@@ -203,14 +237,15 @@ export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } =
     kommando: 'Loggen kan också läsas in med kommandot bun src/reservserver.js --las-in-logg <fil> --databas <fil>.',
   };
 }
-export function lasInFil(db, personal, { katalog = null, minne = new Map(), nyckel, fil } = {}) {
+export function lasInFil(db, personal, { katalog = null, minne = new Map(), nyckel, fil, loggNyckel = loggNyckelUrMiljo(), kopior = null } = {}) {
   const f = typeof fil === 'string' ? filerFor({ katalog, minne, nyckel }).find(x => x.fil === fil) : null;
   if (!f) throw new Fel(404, 'Loggen finns inte.', 'saknas');
-  if (!kontrolleraLogg(f.rader).hel || !fortsatterKedjan(db, f.rader)) throw new Fel(409, 'Loggen från reservservern hänger inte ihop: en rad saknas eller har ändrats. Den läses inte in. Kontakta driften, som har originalet på reservserverns disk.', 'ogiltig');
+  const varfor = provaLogg(db, f, { loggNyckel, kopior });
+  if (varfor) throw new Fel(409, varfor, 'ogiltig');
   const n = lasInLogg(db, f.rader);
   sakerhetslogg.logga(db, { typ: 'andrad_installning', personal_id: personal.id, enhet_id: personal.enhet_id,
     beskrivning: `Läste in ${n} ${n === 1 ? 'rad' : 'rader'} från reservserverns logg ${f.fil} i åtkomstloggen.` });
-  return { inlasta: n, ...loggOversikt(db, { katalog, minne, nyckel }) };
+  return { inlasta: n, ...loggOversikt(db, { katalog, minne, nyckel, loggNyckel, kopior }) };
 }
 // Demon: tre läsningar på en reservserver för den här sandlådan, en kvart efter en kopia av läget nu. Raderna skrivs i en
 // kopia av databasen, så att kedjan fortsätter från kopian som i en riktig reservserver, och märks som simulerade.
@@ -224,7 +259,8 @@ export function simuleraLogg(db, { minne, nyckel, nu = new Date() }) {
     pat.forEach((pid, i) => loggaRad(kopia, { tid: new Date(nu.getTime() - (20 - i * 5) * 60_000).toISOString(), personal_id: p.id, enhet_id: p.enhet_id, patient_id: pid,
       handling: 'las_oversikt', resurs: 'oversikt', grund: 'vardrelation', syfte: 'Läsning på reservservern (simulerad i demon)' }));
     const id = `demo-${iso(nu).replace(/[:.]/g, '-')}`;
-    const rader = kopia.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(sista).map(r => ({ ...r, reservserver: { kopia: id, kopiaTid, nyckel, simulerad: true } }));
+    const meta = { kopia: id, kopiaTid, kopiaSha256: null, kopiaLoggId: sista, nyckel, simulerad: true };
+    const rader = kopia.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(sista).map(r => ({ ...r, reservserver: { ...meta, mac: loggMac(DEMO_NYCKEL, r, meta) } }));
     if (!minne.has(nyckel)) minne.set(nyckel, new Map());
     const fil = `reservserver-logg-${iso(nu).replace(/[:.]/g, '-')}.ndjson`;
     minne.get(nyckel).set(fil, rader);
@@ -257,6 +293,9 @@ if (import.meta.main) {
     if (!dbFil) { console.error('Ange databasen med --databas <fil>.'); process.exit(2); }
     const rader = readFileSync(fil, 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x));
     const db = new Database(dbFil);
+    // Säkerhetsgranskningen efter runda 15: kommandot prövar kedjan, signaturen och början av loggen som vyn gör.
+    const varfor = provaLogg(db, { rader, simulerad: false }, { kopior: [{ id: rader[0]?.reservserver?.kopia, sha256: rader[0]?.reservserver?.kopiaSha256, loggId: rader[0]?.reservserver?.kopiaLoggId }] });
+    if (varfor) { console.error(varfor); db.close(); process.exit(1); }
     const n = lasInLogg(db, rader);
     db.close();
     console.log(`Läste in ${n} rader från reservserverns logg i ${dbFil}.`);

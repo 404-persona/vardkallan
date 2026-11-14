@@ -1,6 +1,8 @@
 // Säkerhetsgranskningen efter sammanslagningen av runda 15 (r3, r5, r4 och r1). Varje test prövar ett fynd och skrevs
 // rött innan felet rättades.
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { join } from 'node:path';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { testserver, klient, sandlada, nyDb, atk } from './hjalp.js';
 import * as underlag from '../src/anteckningsunderlag.js';
 import * as journal from '../src/journal.js';
@@ -188,39 +190,71 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
     expect(JSON.stringify(ur)).not.toContain('Händelse');
   });
 
-  test('förhandsvisningen av tillfälliga diagnoser ger inga små tal till systemförvaltaren, som inte läser journaler', () => {
+  test('förhandsvisningen av tillfälliga diagnoser räknar per kapitel utan små tal, så att en differens mellan två listor inte röjer en diagnos', () => {
     const d = nyDb();
+    const text = (varde) => konfiguration.forhandsvisa(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde }).effekt[0];
+    const fore = text(['R', 'T74']);
     d.query("INSERT INTO diagnoser (patient_id, enhet_id, kod, text, typ, datum) VALUES ('p02', 'vc-tybble', 'T74.1', 'Fysisk misshandel', 'huvud', '2012-02-01')").run();
-    const f = konfiguration.forhandsvisa(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: ['R', 'T74'] });
-    const text = JSON.stringify(f);
-    expect(text).not.toMatch(/räknas 1 diagnos/);
-    expect(text).toMatch(/räknas (inga|färre än 10|omkring \d+0) diagnoser från före/);
+    // Två listor som skiljer sig med en kod i ett kapitel som redan är med ger samma text.
+    expect(text(['R', 'T74'])).toBe(text(['R', 'T7']));
+    expect(text(['R', 'T74'])).toBe(text(['R', 'T70', 'T71']));
+    expect(text(['R', 'T74'])).not.toMatch(/räknas 1 diagnos/);
+    expect(text(['R', 'T74'])).toMatch(/kapitel R, T i ICD-10-SE\. Där finns (färre än 10|omkring \d+0) diagnoser/);
+    // Samma text för 0 som för färre än tio.
+    expect(fore).toMatch(/färre än 10 diagnoser|omkring \d+0 diagnoser/);
+    expect(text(['N30'])).toMatch(/kapitel N i ICD-10-SE\. Där finns färre än 10 diagnoser/);
   });
 
-  test('en logg från reservservern läses in bara när den fortsätter sandlådans egen kedja, också när filen hänger ihop i sig', () => {
+  test('en logg från reservservern läses in bara när den är signerad med den delade nyckeln, kommer från en av sandlådans kopior och börjar direkt efter kopian', () => {
     const d = nyDb();
-    const minne = new Map();
-    const nyckel = 'r15-granskning';
-    // Den simulerade loggen fortsätter kedjan och läses in.
-    const { fil } = reservserver.simuleraLogg(d, { minne, nyckel });
-    expect(reservserver.lasInFil(d, personal(d, 'sysf'), { minne, nyckel, fil }).inlasta).toBe(3);
-    // En förfalskad logg som hänger ihop i sig men börjar på en annan kedja läses inte in.
-    const sista = d.query('SELECT max(id) AS m FROM atkomstlogg').get().m;
-    let prev = 'a'.repeat(64);
-    const rader = [0, 1].map(i => {
-      const rad = { id: sista + 1 + i, tid: new Date(Date.now() - (10 - i) * 60_000).toISOString(), personal_id: 'ssk-kard', enhet_id: 'uso-kard', patient_id: 'p02',
-        handling: 'las_oversikt', resurs: 'oversikt', grund: 'vardrelation', syfte: 'Förfalskad', resultat: 'tillaten', invanare_id: null };
-      const hash = hashFor(prev, rad);
-      const ut = { ...rad, prev_hash: prev, hash, reservserver: { kopia: 'x', kopiaTid: rad.tid, nyckel } };
-      prev = hash;
-      return ut;
-    });
-    expect(reservserver.kontrolleraLogg(rader).hel).toBe(true);
-    const namn = 'reservserver-logg-2026-11-14T10-00-00Z.ndjson';
-    minne.get(nyckel).set(namn, rader);
-    const o = reservserver.loggOversikt(d, { minne, nyckel }).filer.find(x => x.fil === namn);
-    expect(o.kedjaHel).toBe(false);
-    expect(() => reservserver.lasInFil(d, personal(d, 'sysf'), { minne, nyckel, fil: namn })).toThrow('hänger inte ihop');
+    const dir = mkdtempSync(join(import.meta.dir, '..', '.testtmp-reservlogg-r15-'));
+    try {
+      const nyckel = 'r15granskning';
+      const loggNyckel = Buffer.from('en-delad-nyckel-for-reservserverns-logg-r15');
+      const sista = d.query('SELECT max(id) AS m FROM atkomstlogg').get().m;
+      const kopior = [{ id: 'kopia-1', sha256: 'c'.repeat(64), loggId: sista }];
+      const hashAv = (id) => d.query('SELECT hash FROM atkomstlogg WHERE id = ?').get(id).hash;
+      const bygg = ({ start = sista + 1, prev = hashAv(sista), kopiaLoggId = sista, kopia = 'kopia-1', nyckelFor = loggNyckel } = {}) => {
+        const meta = { kopia, kopiaTid: '2026-11-14T09:00:00.000Z', kopiaSha256: 'c'.repeat(64), kopiaLoggId, nyckel };
+        let p = prev;
+        return [0, 1].map(i => {
+          const rad = { id: start + i, tid: new Date(Date.now() - (10 - i) * 60_000).toISOString(), personal_id: 'ssk-kard', enhet_id: 'uso-kard', patient_id: 'p02',
+            handling: 'las_oversikt', resurs: 'oversikt', grund: 'vardrelation', syfte: 'Läsning på reservservern', resultat: 'tillaten', invanare_id: null };
+          const hash = hashFor(p, rad);
+          p = hash;
+          return { ...rad, hash };
+        }).map((r, i, alla) => {
+          const ut = { ...r, prev_hash: i === 0 ? prev : alla[i - 1].hash };
+          return { ...ut, reservserver: { ...meta, mac: reservserver.loggMac(nyckelFor, ut, meta) } };
+        });
+      };
+      let n = 0;
+      const prova = (rader) => {
+        const fil = `reservserver-logg-2026-11-14T10-00-0${n++}Z.ndjson`;
+        writeFileSync(join(dir, fil), rader.map(r => JSON.stringify(r)).join('\n') + '\n');
+        try { return reservserver.lasInFil(d, personal(d, 'sysf'), { katalog: dir, nyckel, fil, loggNyckel, kopior }).inlasta; } catch (e) { return e.message; }
+      };
+      // En logg som börjar på fel ställe: efter en äldre rad i kedjan, eller med en annan början än kopian säger.
+      expect(prova(bygg({ start: sista, prev: hashAv(sista - 1), kopiaLoggId: sista - 1 }))).toContain('börjar inte direkt efter kopian');
+      expect(prova(bygg({ start: sista + 1, prev: 'a'.repeat(64), kopiaLoggId: sista }))).toContain('börjar inte direkt efter kopian');
+      // En ändrad rad.
+      const andrad = bygg();
+      andrad[1] = { ...andrad[1], patient_id: 'p03' };
+      expect(prova(andrad)).toContain('hänger inte ihop');
+      // Utan giltig signatur, och med en annan nyckel.
+      const utan = bygg();
+      utan[0] = { ...utan[0], reservserver: { ...utan[0].reservserver, mac: '0'.repeat(64) } };
+      expect(prova(utan)).toContain('inte signerad');
+      expect(prova(bygg({ nyckelFor: Buffer.from('en-annan-nyckel-som-inte-ar-den-delade-r15') }))).toContain('inte signerad');
+      // En kopia som inte är sandlådans.
+      expect(prova(bygg({ kopia: 'kopia-annan' }))).toContain('inte en av den här sandlådans');
+      // Utan nyckel i kärnsystemet läses ingen logg in.
+      const fil = 'reservserver-logg-2026-11-14T10-00-09Z.ndjson';
+      writeFileSync(join(dir, fil), bygg().map(r => JSON.stringify(r)).join('\n') + '\n');
+      expect(() => reservserver.lasInFil(d, personal(d, 'sysf'), { katalog: dir, nyckel, fil, loggNyckel: null, kopior })).toThrow('saknar nyckeln');
+      // Den riktiga loggen läses in.
+      expect(prova(bygg())).toBe(2);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });
 

@@ -11,6 +11,8 @@ const inloggad = async (app, roll) => { const k = klient(app); await k.logga(rol
 // Alla filer på en plats med storlek och tid, för att visa att reservservern inte skriver där.
 const innehall = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true }).sort().map(f => { const s = statSync(join(dir, f)); return `${f}:${s.size}:${s.mtimeMs}`; }) : []);
 
+// Säkerhetsgranskningen efter runda 15: nyckeln som kärnsystemet och reservservern delar för loggens signatur.
+const LOGGNYCKEL = Buffer.from('nyckel-for-reservserverns-logg-i-testerna-r15');
 let a; let b; let logg; let karna; let sid; let kopia; let reserv;
 const VIKT_FORE = '81.4';
 const VIKT_EFTER = '79.3';
@@ -28,7 +30,7 @@ beforeAll(async () => {
   kopia = karna.kopior.ta(sid, s.db, { orsak: 'manuell' });
   ny(VIKT_EFTER);
   karna.stopp();
-  reserv = testserver({ reservserver: { katalog: a, andraKatalog: b, loggKatalog: logg } });
+  reserv = testserver({ reservserver: { katalog: a, andraKatalog: b, loggKatalog: logg, loggNyckel: LOGGNYCKEL } });
 });
 afterAll(() => { reserv?.stopp(); for (const d of [a, b, logg]) rmSync(d, { recursive: true, force: true }); });
 
@@ -170,12 +172,12 @@ describe('Loggen från reservservern', () => {
     const x = tmp(); const y = tmp(); const l = tmp();
     try {
       // Kärnsystemet med en sandlåda, en kopia av den och en reservserver som läser kopian och loggar till l.
-      const karna = testserver({ kopieKatalog: x, kopieAndra: y, kopieMinuter: 0, reservloggKatalog: l });
+      const karna = testserver({ kopieKatalog: x, kopieAndra: y, kopieMinuter: 0, reservloggKatalog: l, reservloggNyckel: LOGGNYCKEL });
       const sf2 = await inloggad(karna, 'sysf');
       const s = sandlada(karna, sf2);
       const kopia = karna.kopior.ta(s.kopieId, s.db, { orsak: 'manuell' });
       expect((await sf2.get('/api/reservlogg')).data).toMatchObject({ vantar: 0, filer: [] });
-      const r = testserver({ reservserver: { katalog: x, andraKatalog: y, loggKatalog: l } });
+      const r = testserver({ reservserver: { katalog: x, andraKatalog: y, loggKatalog: l, loggNyckel: LOGGNYCKEL } });
       const k = await inloggad(r, 'lak-kard');
       await k.get('/api/patient/p01/oversikt');
       await k.get('/api/patient/p02/oversikt');
