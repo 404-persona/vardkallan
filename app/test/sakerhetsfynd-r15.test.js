@@ -549,3 +549,24 @@ describe('Säkerhetsgranskningen efter runda 15: FHIR Consent', () => {
   });
 });
 
+describe('Sammanslagning av journaler och samtyckestjänsten (beslut 2026-11-14)', () => {
+  test('det lokala samtycket registreras om i tjänsten på journalen som finns kvar, och intygen för den gamla tas bort', async () => {
+    const { slaSamman } = await import('../src/identitet.js');
+    const db = nyDb();
+    const pers = (id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
+    const a = new AtkomstKlass(db, pers('lak-kard'), 'p17', {}, 'las_journal');
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    const sim = (pid) => { try { return db.query('SELECT intyg_id, aterkallat FROM rivta_sim_samtycken WHERE patient_id = ?').all(pid); } catch { return []; } };
+    // p17 har ett reservnummer, så samtycket finns bara lokalt.
+    expect(sim('p17')).toEqual([]);
+    slaSamman(db, { fran: 'p17', till: 'p16', personal: pers('adm-kard'), grund: 'samma_namn_fodd' });
+    sam.skickaKo(db, { tvinga: true });
+    // Efter sammanslagningen med journalen med personnummer registreras samtycket i tjänsten på den journal som finns kvar.
+    expect(sim('p16').filter(x => !x.aterkallat).length).toBe(1);
+    const lokalt = db.query("SELECT patient_id, aterkallat FROM sammanhallen_samtycken ORDER BY id DESC").get();
+    expect(lokalt).toEqual({ patient_id: 'p16', aterkallat: null });
+    const nytt = db.query("SELECT patient_id, status FROM samtycke_utkorg WHERE handling = 'registrera' ORDER BY id DESC").get();
+    expect(nytt).toEqual({ patient_id: 'p16', status: 'skickad' });
+  });
+});
+

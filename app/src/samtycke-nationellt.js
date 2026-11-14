@@ -210,6 +210,32 @@ export function taBortUrTjansten(db, patientId, ids = allaIntyg(db, patientId), 
   koa(db, { patientId, handling: 'aterkalla', personalHsa: null, begaran: { CareProviderId: vardgivare(db), AssertionIds: ids, av: 'vardkallan-system', borttagning: true } }, nu);
   return true;
 }
+// Beslut från Jonas 2026-11-14: när journaler slås samman registreras de lokala samtycken som följde med om i tjänsten på
+// den journal som finns kvar, med kön som vanligt, så att lokalt och nationellt stämmer. Intygen för den gamla journalen
+// tas bort med taBortUrTjansten.
+export function samtyckenAttFlytta(db, patientId) {
+  if (!db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sammanhallen_samtycken'").get()) return [];
+  return db.query('SELECT id FROM sammanhallen_samtycken WHERE patient_id = ? AND aterkallat IS NULL').all(patientId).map(r => r.id);
+}
+export function registreraOm(db, patientId, samtyckeIds, nu = new Date()) {
+  if (!samtyckeIds.length) return 0;
+  sakra(db);
+  const pid = nationellIdentitet(db, patientId);
+  if (!pid) return 0;
+  let n = 0;
+  for (const id of samtyckeIds) {
+    const s = db.query('SELECT * FROM sammanhallen_samtycken WHERE id = ? AND patient_id = ? AND aterkallat IS NULL').get(id, patientId);
+    if (!s || upphort(db, s, nu)) continue;
+    const personal = db.query('SELECT * FROM personal WHERE id = ?').get(s.registrerat_av) ?? { id: 'vardkallan-system', hsa_id: 'vardkallan-system' };
+    const intygId = `vk-${s.id}-${randomUUID().slice(0, 18)}`;
+    const slut = s.giltighet === 'tid' && s.giltig_till ? `${s.giltig_till}T23:59:59` : null;
+    const begaran = { AssertionId: intygId, AssertionType: 'Consent', Scope: 'NationalLevel', PatientId: pid.id, CareProviderId: vardgivare(db), CareUnitId: enhetHsa(db, vardenhetFor(db, s.enhet_id)),
+      ...(slut ? { EndDate: slut } : {}), RegistrationAction: aktion(personal, nu) };
+    koa(db, { patientId, samtyckeId: s.id, handling: 'registrera', typ: 'Consent', intygId, personalHsa: anstallningsId(personal), begaran }, nu);
+    n++;
+  }
+  return n;
+}
 // Patienter med skyddad identitet som har intyg kvar i tjänsten. Körs av timern.
 function skyddadeUrTjansten(db, nu) {
   const pids = db.query("SELECT DISTINCT u.patient_id AS id FROM samtycke_utkorg u JOIN patienter p ON p.id = u.patient_id WHERE p.skyddad = 1 AND u.handling = 'registrera' AND (u.status = 'skickad' OR u.status = 'vantar' OR u.forsok > 0)").all().map(r => r.id);

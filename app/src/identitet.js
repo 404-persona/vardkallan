@@ -431,6 +431,7 @@ export function slaSamman(db, { fran, till, personal, grund, tid = new Date().to
   // Säkerhetsgranskningen efter sammanslagningen: intygen som registrerades i samtyckestjänsten för den journal som slås
   // samman tas bort ur tjänsten (samtycke-nationellt.js, fall b).
   const intyg = (() => { try { return require('./samtycke-nationellt.js').allaIntyg(db, fran); } catch { return []; } })();
+  const samtycken = (() => { try { return require('./samtycke-nationellt.js').samtyckenAttFlytta(db, fran); } catch { return []; } })();
   db.transaction(() => {
     db.query("INSERT OR REPLACE INTO installningar VALUES ('sammanslagning_pagar', ?)").run(`${fran}>${till}`);
     for (const t of patientTabeller(db)) {
@@ -477,6 +478,8 @@ export function slaSamman(db, { fran, till, personal, grund, tid = new Date().to
     db.query("DELETE FROM installningar WHERE nyckel = 'sammanslagning_pagar'").run();
   })();
   if (intyg.length) require('./samtycke-nationellt.js').taBortUrTjansten(db, till, intyg);
+  // Beslut från Jonas 2026-11-14: de lokala samtycken som följde med registreras om på den journal som finns kvar.
+  if (samtycken.length) require('./samtycke-nationellt.js').registreraOm(db, till, samtycken);
   const antal = Object.entries(flyttade).filter(([k]) => k !== 'listningar_ersatta').reduce((s, [, v]) => s + v.length, 0);
   return { fran, till, antal, flyttade };
 }
