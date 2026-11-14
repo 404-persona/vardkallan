@@ -83,6 +83,21 @@ describe('Säkerhetsgranskningen efter runda 15: anteckningsvyn', () => {
     expect(underlag.fhirEntries(atk(d, 'lak-kard', 'p01'), s)).toEqual([]);
   });
 
+  test('en kontakt som systemet skapade för ett utkast ger ingen vårdrelation, och den tas bort med utkastet', async () => {
+    const k = await inloggad('lak-kard');
+    const db = sandlada(app, k).db;
+    // Ett telefonsamtal som ny kontakt: systemet skapar en automatisk kontakt för utkastet.
+    const fore = db.query('SELECT coalesce(max(id), 0) AS m FROM vardkontakter').get().m;
+    const r = await k.put('/api/patient/p01/anteckningsutkast', { typ: 'Daganteckning', sokord: [{ sokord: 'Aktuellt', text: 'Prov av utkast.' }], nyKontakt: { kontaktsatt: 'telefon' } });
+    expect(r.status).toBe(200);
+    const kontakt = db.query('SELECT vardkontakt_id AS v FROM anteckningar WHERE id = ?').get(r.data.id).v;
+    expect(kontakt).toBeGreaterThan(fore);
+    const hittad = { pid: 'p01', id: r.data.id, kontakt };
+    expect(db.query('SELECT automatisk, ger_vardrelation FROM vardkontakter WHERE id = ?').get(hittad.kontakt)).toEqual({ automatisk: 1, ger_vardrelation: 0 });
+    expect((await k.raw('DELETE', `/api/patient/${hittad.pid}/anteckningsutkast/${hittad.id}`)).status).toBe(200);
+    expect(db.query('SELECT 1 FROM vardkontakter WHERE id = ?').get(hittad.kontakt)).toBeNull();
+  });
+
   test('referensprövningen räknar de synliga raderna en gång per anrop, och tar högst ett tak av referenser per anteckning', () => {
     const db = nyDb();
     const a = atk(db, 'lak-kard', 'p01');

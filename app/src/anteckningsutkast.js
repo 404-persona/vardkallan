@@ -50,7 +50,20 @@ export function spara(atk, body = {}) {
   if (['Tobaksvanor', 'Levnadsvanor'].includes(typ)) throw new Fel(400, 'Den här mallen sparas med svaren och knappen Spara utkast.', 'ogiltig', { falt: ['typ'] });
   if (!harText(sokord)) return { tomt: true };
   const ut = vardkontakt.knyt(atk, 'anteckningar', journal.skapaAnteckning(atk, { typ, sokord: sokord.filter(s => typeof s?.text === 'string' && s.text.trim()) }), body);
+  // Säkerhetsgranskningen efter sammanslagningen av runda 15: en kontakt som systemet skapade för ett utkast som sparades
+  // av sig självt ger aldrig vårdrelation, eftersom en registrering aldrig ger åtkomst, och den tas bort med utkastet.
+  if (ut.vardkontakt?.ny) atk.db.query('UPDATE vardkontakter SET ger_vardrelation = 0 WHERE id = ? AND automatisk = 1').run(ut.vardkontakt.id);
   return svar(ut);
+}
+function taBortTomKontakt(db, id, personalId) {
+  const v = db.query("SELECT * FROM vardkontakter WHERE id = ? AND automatisk = 1 AND skapad_av = ? AND coalesce(ger_vardrelation, 1) = 0").get(id, personalId);
+  if (!v) return;
+  // Systemet läser vilka tabeller som har en kolumn som pekar på kontakten, som i mellanarkivet.
+  for (const t of db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all().map(r => r.name)) {
+    const kol = db.query(`PRAGMA table_info("${t}")`).all().map(k => k.name).filter(k => k === 'vardkontakt_id' || k === 'foregaende_id');
+    for (const k of kol) if (db.query(`SELECT 1 FROM "${t}" WHERE "${k}" = ? LIMIT 1`).get(id)) return;
+  }
+  db.query('DELETE FROM vardkontakter WHERE id = ?').run(id);
 }
 const svar = (a) => ({ id: a.id, typ: a.typ, status: a.status, skapad: a.skapad, andrad: a.andrad ?? a.skapad, vardkontaktId: a.vardkontaktId ?? null, sparad: new Date().toISOString() });
 
@@ -61,5 +74,8 @@ export function taBort(atk, id) {
   atk.krav(journal.skrivHandling(a.kategori, atk.personal));
   if (['Tobaksvanor', 'Levnadsvanor'].includes(a.typ) || formularFor(atk.db, a.id)) throw new Fel(400, 'Utkastet har svar i en mall och tas inte bort här.', 'ogiltig');
   atk.db.query("DELETE FROM anteckningar WHERE id = ? AND status = 'utkast' AND forfattare_id = ?").run(a.id, atk.personal.id);
+  // Säkerhetsgranskningen efter sammanslagningen av runda 15: en automatisk kontakt som personen skapade och som inget
+  // annat pekar på längre tas bort med utkastet, så att den inte ligger kvar i journalen eller räknas för vårdrelationen.
+  if (a.vardkontakt_id) taBortTomKontakt(atk.db, a.vardkontakt_id, atk.personal.id);
   return { borttaget: a.id };
 }
