@@ -176,47 +176,17 @@ function harSparrade(atk) {
   }
 }
 
-// Samtycket i samtyckestjänsten (Sussa 2.2.1.4). Ett samtycke som registreras i Vårdkällan registreras samtidigt i
-// tjänsten, med samma id, och ett återkallat samtycke återkallas där. Har tjänsten inget samtycke som Vårdkällan har,
-// registreras det i tjänsten igen, eftersom Vårdkällans register är där samtycket gavs. Ett samtycke som bara finns i
-// tjänsten räknas inte förrän det är registrerat i Vårdkällan, så att det strängaste gäller.
-// Samtyckets id i tjänsten sparas i rivta_samtycke_intyg, så att det kan återkallas där. Ett samtycke som registreras
-// igen får ett nytt id.
-const sakraIntyg = (db) => db.exec('CREATE TABLE IF NOT EXISTS rivta_samtycke_intyg (intyg_id TEXT PRIMARY KEY, samtycke_id INTEGER NOT NULL, patient_id TEXT NOT NULL, registrerat TEXT NOT NULL)');
+// Samtycket i samtyckestjänsten (Sussa 2.2.1.4). Runda 15, r2: samtycket registreras och prövas både här och i
+// samtyckestjänsten, med en kö när tjänsten inte svarar (samtycke-nationellt.js). Ett samtycke som patienten har gett i
+// ett annat system gäller också här, och ett återkallat samtycke återkallas på båda ställen.
+const samtycke = () => require('./samtycke-nationellt.js');
 function aktion(atk) {
   const nu = isoUtanZ(new Date().toISOString());
   const aktor = { EmployeeId: atk.personal.hsa_id ?? atk.personal.id };
   return { RequestDate: nu, RequestedBy: aktor, RegistrationDate: nu, RegisteredBy: aktor };
 }
-function synkaSamtycke(atk, s) {
-  const db = atk.db;
-  const n = nationella();
-  const pid = patientIdFor(db, atk.patientId);
-  if (!pid || !s) return;
-  try {
-    const a = aktorFor(atk);
-    if (!n.anropa(db, 'CheckConsent', { AccessingActor: a, PatientId: pid.id }).CheckResultType.HasConsent) {
-      sakraIntyg(db);
-      const id = `vk-${s.id}-${n.nyttId().slice(0, 18)}`;
-      const r = n.anropa(db, 'RegisterExtendedConsent', { AssertionId: id, AssertionType: 'Consent', Scope: 'NationalLevel', PatientId: pid.id,
-        CareProviderId: a.CareProviderId, CareUnitId: a.CareUnitId, RegistrationAction: aktion(atk) });
-      if (r.ResultType.ResultCode === 'OK') db.query('INSERT INTO rivta_samtycke_intyg (intyg_id, samtycke_id, patient_id, registrerat) VALUES (?, ?, ?, ?)').run(id, s.id, atk.patientId, iso());
-    }
-  } catch (e) { if (!e?.kod) throw e; }
-}
-function aterkallaNationellt(atk, s) {
-  const db = atk.db;
-  sakraIntyg(db);
-  for (const { intyg_id: id } of db.query('SELECT intyg_id FROM rivta_samtycke_intyg WHERE samtycke_id = ?').all(s.id)) {
-    try { nationella().anropa(db, 'CancelExtendedConsent', { AssertionId: id, CancellationAction: aktion(atk) }); } catch (e) { if (!e?.kod) throw e; }
-  }
-}
 
 const personKort = (db, id) => { const p = id && db.query('SELECT id, namn, titel FROM personal WHERE id = ?').get(id); return p ? { id: p.id, namn: p.namn, titel: p.titel } : null; };
-function samtyckeFor(db, personal, patientId) {
-  const ve = vardenhetFor(db, personal.enhet_id);
-  return db.query('SELECT * FROM sammanhallen_samtycken WHERE patient_id = ? AND aterkallat IS NULL ORDER BY id DESC').all(patientId).find(s => vardenhetFor(db, s.enhet_id) === ve) ?? null;
-}
 const samtyckeUt = (db, s) => (s ? { id: s.id, registrerat: s.registrerat, registreratAv: personKort(db, s.registrerat_av) } : null);
 // Säkerhetsgranskningen av runda 10 (beslut 2026-11-08): valet ligger i sessionens aktiva val för patienten (s.val), så
 // att det rensas överallt där de aktiva valen rensas (inloggning, utloggning, inaktivitet, ogiltigt uppdrag, invånare och
@@ -243,22 +213,25 @@ export function lage(atk, sess, fraga = {}) {
   atk.krav('las_journal');
   const db = atk.db;
   const val = valFor(sess, atk.patientId, atk);
-  const samtycke = samtyckeFor(db, atk.personal, atk.patientId);
+  // Runda 15, r2: samtycket prövas här och i samtyckestjänsten.
+  const sp = samtycke().prova(atk);
+  const lokaltSamtycke = sp.lokalt;
   // Ett aktivt val som bygger på samtycke upphör när samtycket återkallas.
-  const giltigt = val && (val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : Boolean(samtycke));
-  if (giltigt && samtycke) synkaSamtycke(atk, samtycke);
+  const giltigt = val && (val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : sp.galler);
   const hamtat = giltigt ? tjanst(atk) : { poster: [], fel: null };
   const poster = urval(hamtat.poster, fraga);
   if (giltigt && !hamtat.fel) loggaHamtning(atk, val);
   const sparrade = harSparrade(atk);
   return {
-    vardgivare: [VARDGIVARE], hamtad: Boolean(giltigt), grund: giltigt ? val.grund : null, samtycke: samtyckeUt(db, samtycke), poster,
+    vardgivare: [VARDGIVARE], hamtad: Boolean(giltigt), grund: giltigt ? val.grund : null, samtycke: samtyckeUt(db, lokaltSamtycke), poster,
+    // Runda 15, r2: om ett samtycke gäller, varifrån det kommer och vad som gäller, på vanlig svenska.
+    samtyckeGaller: sp.galler, samtyckeKalla: sp.kalla, samtyckeText: sp.text, samtyckestjanst: sp.tjanst,
     // Runda 13, r3 (HSLF-FS 2016:40 4 kap. 7 §): före och efter hämtningen.
     sparradeHosAnnan: sparrade === true, sparrText: sparrade ? SPARR_TEXT : null,
     // Runda 14, r2: när de nationella tjänsterna inte svarar visas ingenting, och texten säger varför.
     ...(hamtat.fel ? { fel: hamtat.fel } : {}),
     typer: TYPTEXT, simulerad: 'Den andra vårdgivaren och dess uppgifter är simulerade i demon.',
-    text: hamtat.fel ? hamtat.fel : giltigt ? `${poster.length} uppgifter från ${VARDGIVARE.namn}.` : samtycke ? 'Patienten har samtyckt. Gör ett aktivt val för att hämta uppgifterna från den andra vårdgivaren.' : 'Patienten kan ha uppgifter hos en annan vårdgivare. Fråga om samtycke för att hämta dem.',
+    text: hamtat.fel ? hamtat.fel : giltigt ? `${poster.length} uppgifter från ${VARDGIVARE.namn}.` : sp.galler ? 'Patienten har samtyckt. Gör ett aktivt val för att hämta uppgifterna från den andra vårdgivaren.' : 'Patienten kan ha uppgifter hos en annan vårdgivare. Fråga om samtycke för att hämta dem.',
   };
 }
 
@@ -273,12 +246,14 @@ export function hamta(atk, sess, body = {}) {
   const db = atk.db;
   const syfte = typeof body.syfte === 'string' ? body.syfte.trim().slice(0, 300) : '';
   if (syfte.length < 3) throw new Fel(400, 'Ange syftet med att hämta uppgifterna från den andra vårdgivaren.', 'ogiltig', { falt: ['syfte'] });
-  if (grund !== 'nodatkomst' && !samtyckeFor(db, atk.personal, atk.patientId)) {
+  // Runda 15, r2: ett samtycke som gäller här eller i samtyckestjänsten räcker. Annars registreras samtycket här och i
+  // tjänsten (genom kön), och vid nödåtkomst registreras ett intyg om nödsituation i tjänsten.
+  if (grund !== 'nodatkomst' && !samtycke().prova(atk).galler) {
     if (body.samtycke !== true) throw new Fel(400, 'Uppgifter från en annan vårdgivare hämtas bara om patienten samtycker. Fråga patienten och registrera samtycket.', 'ogiltig', { falt: ['samtycke'] });
-    db.query('INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av) VALUES (?, ?, ?, ?)').run(atk.patientId, atk.personal.enhet_id, iso(), atk.personal.id);
-    // Runda 14, r2: samtycket registreras också i samtyckestjänsten.
-    synkaSamtycke(atk, samtyckeFor(db, atk.personal, atk.patientId));
+    const id = db.query('INSERT INTO sammanhallen_samtycken (patient_id, enhet_id, registrerat, registrerat_av) VALUES (?, ?, ?, ?)').run(atk.patientId, atk.personal.enhet_id, iso(), atk.personal.id).lastInsertRowid;
+    samtycke().koaRegistrering(atk, { samtyckeId: Number(id) });
   }
+  if (grund === 'nodatkomst') samtycke().registreraNodsituation(atk);
   sess.val ??= {};
   sess.val[atk.patientId] = { ...(sess.val[atk.patientId] ?? {}), sammanhallen: { grund, syfte, tid: iso(), personalId: atk.personal.id, vardenhet: vardenhetFor(db, atk.personal.enhet_id) } };
   atk.loggad = true;
@@ -288,11 +263,8 @@ export function hamta(atk, sess, body = {}) {
 // POST: återkallar samtycket på vårdenheten och tar bort det aktiva valet.
 export function aterkalla(atk, sess) {
   atk.krav('las_journal');
-  const db = atk.db;
-  const s = samtyckeFor(db, atk.personal, atk.patientId);
-  if (s) db.query('UPDATE sammanhallen_samtycken SET aterkallat = ?, aterkallat_av = ? WHERE id = ?').run(iso(), atk.personal.id, s.id);
-  // Runda 14, r2: och i samtyckestjänsten.
-  if (s) aterkallaNationellt(atk, s);
+  // Runda 15, r2: återkallat här och i samtyckestjänsten, också samtycken som har getts i andra system för vårdenheten.
+  samtycke().aterkalla(atk);
   if (sess.val?.[atk.patientId]) delete sess.val[atk.patientId].sammanhallen;
   atk.logga('las_journal', atk.grund(), 'sammanhallen:samtycke:aterkallat');
   return lage(atk, sess, {});
@@ -359,11 +331,12 @@ export function jamforSparrar(atk) {
 // Runda 11, r5: bilder hos den andra vårdgivaren hämtas på samma samtycke och efter samma regel (bildmedia.js).
 // Valet görs med hamta (syfte, och samtycket om det saknas), och giltigtVal ger det aktiva valet när det gäller: bundet
 // till sessionen, patienten, personen och vårdenheten, och till ett samtycke som inte är återkallat eller till nödåtkomst.
-export const harSamtycke = (db, personal, patientId) => Boolean(samtyckeFor(db, personal, patientId));
+// Runda 15, r2: samtycket prövas här och i samtyckestjänsten.
+export const harSamtycke = (db, personal, patientId) => samtycke().prova({ db, personal, patientId }).galler;
 export function giltigtVal(atk, sess) {
   const val = valFor(sess, atk.patientId, atk);
   if (!val || !atk.prova('las_journal').tillaten) return null;
-  const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : Boolean(samtyckeFor(atk.db, atk.personal, atk.patientId));
+  const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : samtycke().prova(atk).galler;
   return giltigt ? val : null;
 }
 
@@ -371,7 +344,7 @@ export function giltigtVal(atk, sess) {
 export function tidslinje(atk, sess) {
   const val = valFor(sess, atk.patientId, atk);
   if (!val || !atk.prova('las_journal').tillaten) return [];
-  const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : Boolean(samtyckeFor(atk.db, atk.personal, atk.patientId));
+  const giltigt = val.grund === 'nodatkomst' ? atk.prova('las_journal').grund === 'nodatkomst' : samtycke().prova(atk).galler;
   if (!giltigt) return [];
   const hamtat = tjanst(atk);
   if (hamtat.fel) return [];

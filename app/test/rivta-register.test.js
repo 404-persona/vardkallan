@@ -91,7 +91,9 @@ describe('Tjänstekontrakt i RIVTA, HSA, PU-tjänsten och engagemangsindex', () 
     expect(vanlig.Personpost).toMatchObject({ PersonId: '194502024732', Folkbokforingsadress: { PostNr: '70227', Postort: 'Örebro' } });
   });
 
-  test('engagemangsindex får en post per vårdenhet och informationsmängd, aldrig för skyddade personuppgifter eller spärrade uppgifter', async () => {
+  // Runda 15, r2: en post per informationsmängd med Vårdkällan som källsystem och logisk adress, enligt Ineras regler
+  // (engagemangsindex.js). Indexet uppdateras av sig självt (engagemangsindex-r15.test.js).
+  test('engagemangsindex får en post per informationsmängd med Vårdkällan som källsystem, aldrig för skyddade personuppgifter eller spärrade uppgifter', async () => {
     const k = await inloggad('sysf');
     const db = sandlada(app, k).db;
     const r = await k.post('/api/rivta/engagemangsindex/p01', {});
@@ -99,11 +101,11 @@ describe('Tjänstekontrakt i RIVTA, HSA, PU-tjänsten och engagemangsindex', () 
     // Runda 14, sammanslagningen: svaret har inget antal (sakerhet-r14-sammanslagning.test.js). Raderna räknas i indexet.
     const rader = db.query("SELECT * FROM rivta_sim_engagemang WHERE patient_id = 'p01'").all();
     expect(rader.length).toBeGreaterThan(0);
-    expect(new Set(rader.map(x => x.kategori))).toEqual(new Set(['voo', 'dia']));
+    expect(new Set(rader.map(x => x.kategori))).toEqual(new Set(['voo', 'dia', 'upp', 'vko']));
+    expect(new Set(rader.map(x => x.vardenhet_hsa))).toEqual(new Set(['SE2321000164-VK0000']));
+    expect(new Set(rader.map(x => x.agare))).toEqual(new Set([rivta.nationella.NATIONELL]));
     expect((await k.post('/api/rivta/engagemangsindex/p03', {})).status).toBe(200);
     expect(db.query("SELECT count(*) AS n FROM rivta_sim_engagemang WHERE patient_id = 'p03'").get().n).toBe(0);
-    await k.post('/api/rivta/engagemangsindex/p04', {});
-    expect(db.query("SELECT count(*) AS n FROM rivta_sim_engagemang WHERE patient_id = 'p04' AND vardenhet_hsa = 'SE2321000164-VK0160'").get().n).toBe(0);
     expect((await (await inloggad('lak-kard')).post('/api/rivta/engagemangsindex/p01', {})).status).toBe(403);
   });
 });

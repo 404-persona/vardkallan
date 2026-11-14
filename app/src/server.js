@@ -161,6 +161,8 @@ import { MIGRERINGAR as r12r2Migreringar } from './releaser.js';
 import { registreraRutter as r13r1Rutter } from './r13r1-rutter.js';
 // Runda 14, r3: intyg genom intygsapplikationen och e-remiss (r14r3-rutter.js).
 import { registreraRutter as r14r3Rutter } from './r14r3-rutter.js';
+// Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex, som systemet skickar själv.
+import { registreraRutter as r15r2Rutter, efterTid as r15r2EfterTid, inkorg as r15r2Inkorg } from './r15r2-rutter.js';
 // Runda 14, r5: incidentregistret, servicenivårapporten och incidentrapporten till beställaren (servicenivaer-rutter.js).
 import { registreraRutter as r14r5Rutter } from './servicenivaer-rutter.js';
 // Runda 14, r1: inloggning genom beställarens inloggningstjänst (inloggningstjanster-rutter.js, Sussa 5.2.1.1).
@@ -703,6 +705,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 13, r2: sandlådor som inte har använts på vilaMinuter flyttas till disk varje minut.
   const vilaTimer = setInterval(() => { try { vilaStadning(); } catch (e) { console.error('Vilan:', e.message); } }, 60_000);
   vilaTimer.unref?.();
+  // Runda 15, r2: köerna till de nationella tjänsterna skickas också när ingen gör något, i de sandlådor som är vakna.
+  const nationellaTimer = setInterval(() => { for (const x of [...vakna]) { try { if (x.dbOmVaken) r15r2EfterTid(x.dbOmVaken); } catch (e) { console.error('De nationella köerna:', e.message); } } }, 60_000);
+  nationellaTimer.unref?.();
 
   function lasSparade() {
     if (!sessionFil || !existsSync(sessionFil)) return;
@@ -2071,6 +2076,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       ...r4Inkorg(c),
       // Runda 7, r4: patienter som kan tillfrågas om en spärr efter en omorganisation, för vårdadministratören.
       ...systemforvaltningInkorg(c),
+      // Runda 15, r2: ändringar som inte har kommit fram till de nationella tjänsterna, för systemförvaltaren.
+      ...r15r2Inkorg(c),
       // Runda 7, r5: fel i rapporterna till myndigheter och register som den inloggade kan rätta.
       ...r7r5Inkorg(c, patientKort, patientRad, valFor),
       // Runda 7, r6: avvikande tillväxt, mätningar hemma att bekräfta och hälsobesök att boka i barnhälsovården.
@@ -2506,6 +2513,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r12r1Rutter({ rutt, kravInloggad });
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // Runda 15, r2.
+  r15r2Rutter({ rutt, kravInloggad });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.
@@ -2588,6 +2597,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (sess) mtEfterTid(sess.s.db);
     // Runda 9, r4: masterdatan läses in från källorna efter schemat.
     if (sess) masterdataEfterTid(sess.s.db);
+    // Runda 15, r2: samtyckestjänsten och engagemangsindex får det som väntar, när det är dags.
+    if (sess) r15r2EfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, sid: sess.sid, ny: sess.ny, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare && url.pathname.startsWith('/api/min/')) avvisaFranAnnanWebbplats(req);
     c.body = metod === 'GET' ? {} : await lasKropp(req);
@@ -2758,7 +2769,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     kopior, stadaKopior,
     // Runda 13, r1.
     synpunkter,
-    stopp() { clearInterval(stadningsTimer); clearInterval(vilaTimer); if (kopieSchema) clearInterval(kopieSchema); server.stop(true); for (const s of sessioner.values()) { s.dbOmVaken?.close(); s.db = null; } sessioner.clear(); anvandartestDb.close(); synpunkter.stopp(); },
+    stopp() { clearInterval(stadningsTimer); clearInterval(vilaTimer); clearInterval(nationellaTimer); if (kopieSchema) clearInterval(kopieSchema); server.stop(true); for (const s of sessioner.values()) { s.dbOmVaken?.close(); s.db = null; } sessioner.clear(); anvandartestDb.close(); synpunkter.stopp(); },
     // Runda 13, r2: vilan och städningen med en vald tid, för testerna och lasttestet.
     vilolager, vila: (s) => vilaSandlada(s, { tvinga: true }), vilaStadning, stadning, kapacitet, glomKalenderlankar: () => kalender.lankar.clear(),
   };
