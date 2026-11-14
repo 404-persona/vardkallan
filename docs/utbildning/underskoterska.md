@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som undersköterska registrerar du mätvärden och vätskebalans, tar prover och ger doser när du har en giltig delegering. Systemet prövar delegeringen för varje dos och visar knappen Ge bara när delegeringen gäller.
+Som undersköterska registrerar du mätvärden och vätskebalans, tar prover och ger doser när du har en giltig delegering. Systemet prövar delegeringen för varje dos och visar knappen Ge bara när delegeringen gäller. Du dokumenterar dina observationer och det du har gjort i en kort observationsanteckning, som sjuksköterskan ser i sitt underlag.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -104,6 +104,14 @@ Delegeringen registreras av en sjuksköterska eller läkare enligt HSLF-FS 2017:
 
 Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/delegeringar).
 
+### Övning 8
+
+Du har hjälpt patienten till toaletten och sett att hon är ostadig. Hur dokumenterar du det?
+
+Rätt svar: Du skriver en observationsanteckning med det du har sett och det du har gjort. Systemet väljer mallen, och sjuksköterskan ser anteckningen i sitt underlag.
+
+Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Observation och Utförd åtgärd. Vårdgivaren bestämmer vilka mallar yrket skriver med.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -149,5 +157,6 @@ Du arbetar som Amira Haddad, undersköterska på avdelning 72, som motsvarar Sus
 - Registrera mätvärden och vätskebalans.
 - Ge en dos med en giltig delegering.
 - Veta vad systemet gör när en delegering saknas eller har gått ut.
+- Skriva och signera en observationsanteckning.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 7 övningar och få intyget.
+- Svara rätt på alla 8 övningar och få intyget.

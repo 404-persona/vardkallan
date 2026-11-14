@@ -2,6 +2,8 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 // Runda 10, r5: processtöd, kunskapsstöd, vårdprocesser, högflödesmottagning, läkemedel och vaccination (sussa/runda10-r5.js).
 import { medR10r5 } from '../runda10-r5.js';
+// Runda 15, r5: mallarnas innehåll, omvårdnadsprocessen, formulärens förifyllnad och fackspråket (sussa/runda15-r5.js).
+import { medR15r5 } from '../runda15-r5.js';
 import { TEST, klickbudgetTest } from '../../krav.js';
 import { FLODEN } from '../../klickbudget.js';
 
@@ -50,4 +52,4 @@ const POSTERNA = [
     anmarkning: 'Information som skapas utanför Vårdkällan, hos andra vårdgivare eller i kringsystem, hämtas inte. Migreringen gäller seedens poster.',
   },
 ];
-export default medR10r5(POSTERNA);
+export default medR15r5(medR10r5(POSTERNA));

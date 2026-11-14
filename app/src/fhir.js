@@ -33,6 +33,8 @@ import { tolkaGcs } from './skalor.js';
 import { sokordKod as snomedForSokord } from './fackssprak.js';
 // Runda 12, r1: mallarna och mätvärdestyperna som systemförvaltningen skapar.
 import * as struktur from './journalstruktur.js';
+// Runda 15, r5: omvårdnadsproblemen och resultaten mot vårdplanens mål i omvårdnadsanteckningen.
+import * as omvardnadsprocess from './omvardnadsprocess.js';
 // Runda 9, r4: en migrerad anteckning har författaren i källsystemet som text, aldrig en referens till en nuvarande personal.
 const migreradForfattare = (db, a) => (String(a.forfattare_id).startsWith('migrering:') ? { display: anteckningUt(db, a, { full: false }).forfattare.namn } : null);
 // Runda 12, r1: eller ett sökord som systemförvaltningen har lagt till i en godkänd mall (journalstruktur.js).
@@ -492,7 +494,7 @@ export function composition(db, a) {
     ...(a.ersatter_id ? [{ code: 'replaces', targetReference: ref('Composition', a.ersatter_id) }] : []),
     ...(ersatt ? [{ code: 'transforms', targetReference: ref('Composition', ersatt.id) }] : []),
   ];
-  return {
+  const ut = {
     resourceType: 'Composition', id: String(a.id), meta: kallaMeta(a.kalla),
     status: a.status === 'utkast' ? 'preliminary' : a.ersatter_id ? 'amended' : 'final',
     type: { ...(struktur.typkod(db, a.typ) ? { coding: [struktur.typkod(db, a.typ)] } : {}), text: a.typ }, subject: ref('Patient', a.patient_id), encounter: a.vardkontakt_id ? ref('Encounter', a.vardkontakt_id) : undefined,
@@ -502,6 +504,24 @@ export function composition(db, a) {
     ...kontrasignerad(db, a),
     ...(sokord.length ? { section: sokord.map(s => ({ title: s.sokord, ...sokordKod(s.sokord, db), text: { status: 'generated', div: `<div xmlns="http://www.w3.org/1999/xhtml">${escape(s.text)}</div>` } })) } : {}),
   };
+  return medOmvardnadsprocess(db, a, ut);
+}
+
+// Runda 15, r5: omvårdnadsproblemen (Condition med kod i Snomed CT) och resultaten mot vårdplanens mål (Goal med
+// achievementStatus) följer med i anteckningen som resurser i Composition.contained, med en referens från avsnittet.
+function medOmvardnadsprocess(db, a, ut) {
+  const p = omvardnadsprocess.fhirInnehall(db, a, ref('Patient', a.patient_id));
+  if (!p) return ut;
+  const sektioner = [...(ut.section ?? [])];
+  const avsnitt = (titel, entry) => {
+    if (!entry.length) return;
+    let s = sektioner.find(x => x.title === titel);
+    if (!s) { s = { title: titel, ...sokordKod(titel, db), text: { status: 'generated', div: `<div xmlns="http://www.w3.org/1999/xhtml">${escape(entry.map(e => e.display).join('. '))}</div>` } }; sektioner.push(s); }
+    s.entry = entry;
+  };
+  avsnitt('Omvårdnadsproblem', p.problem);
+  avsnitt('Resultat', p.resultat);
+  return { ...ut, contained: p.contained, section: sektioner };
 }
 
 export function organization(db, e) {

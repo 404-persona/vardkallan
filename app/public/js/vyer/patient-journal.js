@@ -17,6 +17,8 @@ import * as levnadsvanor from './patient-levnadsvanor.js';
 import * as formular from './patient-formular.js';
 import * as diktat from '../rostinmatning.js';
 import * as stavning from '../stavning-ui.js';
+// Runda 15, r5: omvårdnadsprocessen i omvårdnadsanteckningen (omvardnadsprocess.js).
+import * as omvardnadsprocess from '../omvardnadsprocess.js';
 // Ett formulär har sin definition med i mallen eller i anteckningen (a.formular), så att ett utkast och en rättelse fylls
 // i med den version som anteckningen skrevs med.
 const strukturerad = (typ, a = null) => {
@@ -269,8 +271,19 @@ async function nyForm(las, ctx, egnaMallar, { typ = null, varden = {}, info = nu
   if (dok) kopplaDokumenteras(form.querySelector('#ny-kontakt'), dok, kontakt, ritaKontakt);
   const mall = () => egnaMallar.find(x => x.typ === form.typ.value);
   const kopplaMall = () => {
-    if (mall().strukturerad) strukturerad(mall().typ).modul.koppla(form, { alder: ctx.patient?.alder ?? null, patientId: ctx.id });
+    // Runda 15, r5: formulären får patienten med sig för dikteringen i fritextfrågorna.
+    if (mall().strukturerad) strukturerad(mall().typ).modul.koppla(form, { alder: ctx.patient?.alder ?? null, patientId: ctx.id, patient: { id: ctx.id, namn: ctx.patient?.namn ?? 'patienten', personnummer: ctx.patient?.personnummer ?? null } });
     else kopplaSokord(form, ctx);
+    // Runda 15, r5: omvårdnadsprocessen under sökorden, med systemets förslag.
+    if (mall().process) {
+      const m = mall();
+      omvardnadsprocess.fallIhop(form, m);
+      omvardnadsprocess.hamta(ctx.id).then((d) => {
+        if (!d || !form.isConnected || mall() !== m) return;
+        form.querySelector('#ny-innehall').insertAdjacentHTML('beforeend', omvardnadsprocess.html(d));
+        omvardnadsprocess.koppla(form, d);
+      });
+    }
   };
   form.typ.addEventListener('change', () => {
     form.querySelector('#ny-innehall').innerHTML = innehall(mall());
@@ -285,6 +298,8 @@ async function nyForm(las, ctx, egnaMallar, { typ = null, varden = {}, info = nu
     try {
       const ny = await medKnapp(knapp, async () => {
         const innehallet = arStrukturerad ? { [strukturerad(mall().typ).nyckel]: strukturerad(mall().typ).modul.las(form) } : { sokord };
+        // Runda 15, r5: omvårdnadsproblemen och resultaten mot vårdplanens mål.
+        if (mall().process) { const pr = omvardnadsprocess.las(form); if (pr) innehallet.process = pr; }
         const x = await api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningar`, { metod: 'POST', data: { typ: form.typ.value, ...innehallet, ...nyKontaktData(kontakt) } });
         if (signera) await api(`/api/anteckning/${x.id}/signera`, { metod: 'POST', data: {} });
         return x;

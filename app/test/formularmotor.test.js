@@ -297,8 +297,9 @@ describe(P.slice(0, -3), () => {
     expect(fel(() => journal.skapaAnteckning(atk(db, 'ssk-kard', 'p01'), { typ: 'Nutritionskontroll', formular: { aptit: 'god' } }))).toMatchObject({ status: 403 });
     // Ett formulär för läkarnas dokumentation fylls bara i av läkare.
     expect(fm.forhandsvisa(db, personal(db, 'sysf'), { definition: ENKEL({ kategori: 'lakare', roller: ['sjukskoterska'] }) }).varfor).toContain('bara i av läkare');
-    // Ett yrke som inte skriver anteckningar i kategorin kan inte väljas, och systemet säger varför.
-    expect(fm.forhandsvisa(db, personal(db, 'sysf'), { definition: ENKEL({ roller: ['underskoterska'] }) }).varfor).toContain('Undersköterska skriver inte omvårdnadsanteckningar');
+    // Ett yrke som inte skriver anteckningar i kategorin kan inte väljas, och systemet säger varför. Runda 15, r5:
+    // undersköterskan skriver omvårdnadsanteckningar, så ett omvårdnadsformulär kan göras för henne.
+    expect(fm.forhandsvisa(db, personal(db, 'sysf'), { definition: ENKEL({ roller: ['underskoterska'] }) }).ok).toBe(true);
   });
 
   test('svaren i en signerad anteckning ändras aldrig, och en rättelse blir en ny version med egna svar', () => {

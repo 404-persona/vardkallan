@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon.
+Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon. Omvårdnadsanteckningen följer omvårdnadsprocessen: systemet föreslår de statusområden och omvårdnadsproblem som berör patienten i dag och visar undersköterskans observationer, och du bedömer resultatet mot vårdplanens mål.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -291,6 +291,14 @@ Rätt svar: Räknar NEWS2, skriver vad som ska göras och när nästa kontroll s
 
 NEWS2 räknas ur vitalparametrarna. En summa som kräver åtgärd larmar i inkorgen. Reglerna är demoregler.
 
+### Övning 9
+
+Du skriver en omvårdnadsanteckning för en patient med vårdplanen Förebyggande av fall. Vad gör systemet?
+
+Rätt svar: Föreslår de områden och omvårdnadsproblem som berör patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.
+
+Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten på din vårdenhet. Reglerna är demoregler.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -381,5 +389,6 @@ Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har 
 - Skriva in, flytta och skriva ut en patient.
 - Registrera en delegering för en undersköterska.
 - Skriva och signera en omvårdnadsanteckning.
+- Bedöma resultatet mot vårdplanens mål i omvårdnadsanteckningen och se varför systemet föreslår ett område.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 8 övningar och få intyget.
+- Svara rätt på alla 9 övningar och få intyget.

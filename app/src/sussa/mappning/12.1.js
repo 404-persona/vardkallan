@@ -3,6 +3,8 @@
 // Runda 7, r4: systemförvaltningen (konfiguration.js, omorganisation.js, undantag.js och systemforvaltning-rutter.js).
 // Runda 13, r4 (sussa/runda13-r4.js).
 import { medR13r4 } from '../runda13-r4.js';
+// Runda 15, r5: mallarnas innehåll, omvårdnadsprocessen, formulärens förifyllnad och fackspråket (sussa/runda15-r5.js).
+import { medR15r5 } from '../runda15-r5.js';
 import { TEST } from '../../krav.js';
 // Runda 8, r5: tilläggen för tobaksvanor, epikrisen, mätvärdena, övningarna och parametrarna (sussa/runda8-r5.js).
 import { medR8r5 } from '../runda8-r5.js';
@@ -146,4 +148,4 @@ const POSTERNA = [
 import { medR14r5 } from '../runda14-r5.js';
 
 const R14_FORE = medR13r4(medR8r5(POSTERNA));
-export default medR14r5(R14_FORE);
+export default medR15r5(medR14r5(R14_FORE));

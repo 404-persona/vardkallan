@@ -58,8 +58,8 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 | Roll | Arbetsflöden | Filmer | Övningar | Uppdrag |
 | --- | --- | --- | --- | --- |
 | [Läkare](lakare.md) | 61 | 4 | 7 | 22 |
-| [Sjuksköterska](sjukskoterska.md) | 29 | 2 | 8 | 19 |
-| [Undersköterska](underskoterska.md) | 1 | 1 | 7 | 7 |
+| [Sjuksköterska](sjukskoterska.md) | 29 | 2 | 9 | 19 |
+| [Undersköterska](underskoterska.md) | 1 | 1 | 8 | 7 |
 | [Vårdadministratör](vardadministrator.md) | 19 | 1 | 7 | 12 |
 | [Logggranskare](logggranskare.md) | 0 | 0 | 3 | 0 |
 | [Arkivarie](arkivarie.md) | 1 | 0 | 3 | 0 |

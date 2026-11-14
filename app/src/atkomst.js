@@ -675,3 +675,9 @@ for (const h of ['kassa', 'kapacitet']) UTAN_PATIENT.add(h);
 Object.assign(HANDLINGAR, { las_intyg: 'se patientens intyg och deras status', skriv_intyg: 'skapa, skriva och signera intyg' });
 ROLLER.lakare.push('las_intyg', 'skriv_intyg');
 ROLLER.sjukskoterska.push('las_intyg');
+
+// Runda 15, r5 (F3, Sussa 3.1.3.5): undersköterskan dokumenterar sina observationer och utförda åtgärder i en
+// omvårdnadsanteckning ("annan personal som vårdar en patient kan föra patientjournal", Socialstyrelsen; patientdatalagen
+// 3 kap.). Vilka mallar yrket skriver med bestämmer vårdgivaren (mallar-yrken.js), och i förvalet är det bara
+// observationsanteckningen. Undersköterskan läser inte läkarnas anteckningar.
+ROLLER.underskoterska.push('skriv_omvardnad');

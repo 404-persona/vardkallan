@@ -129,8 +129,12 @@ export function planUt(atk, plan, nu = Date.now()) {
   const mal = db.query('SELECT * FROM vardplan_mal WHERE plan_id = ? AND borttagen IS NULL ORDER BY id').all(plan.id);
   const atg = db.query('SELECT * FROM vardplan_atgarder WHERE plan_id = ? AND borttagen IS NULL ORDER BY id').all(plan.id);
   const hist = db.query('SELECT * FROM vardplan_historik WHERE plan_id = ? ORDER BY tid DESC, id DESC').all(plan.id);
-  const uppf = hist.find(h => h.typ === 'uppfoljning');
-  const senaste = uppf ? JSON.parse(uppf.detalj ?? '{}').mal ?? {} : {};
+  // Runda 15, r5: den senaste bedömningen av varje mål, ur uppföljningen eller ur resultatet i en omvårdnadsanteckning
+  // (omvardnadsprocess.js).
+  const senaste = {};
+  for (const h of hist.filter(x => x.typ === 'uppfoljning' || x.typ === 'resultat')) {
+    for (const [id, s] of Object.entries(JSON.parse(h.detalj ?? '{}').mal ?? {})) if (!Object.hasOwn(senaste, id)) senaste[id] = s;
+  }
   const atgarder = atg.map(x => atgardUt(db, plan, x, nu));
   const egen = vardenhetFor(db, atk.personal.enhet_id) === vardenhetFor(db, plan.enhet_id);
   const avvikelser = [];

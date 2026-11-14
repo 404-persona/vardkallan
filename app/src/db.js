@@ -489,6 +489,9 @@ export function byggSeed(bas = nu()) {
   // Runda 10, r3: formulärmotorns tabeller och formulär, den personliga ordlistan och en ifylld fallriskbedömning
   // (formularmotor.js). Före runda 9, r7, så att anteckningen får sin signatur med de andra.
   require('./formularmotor.js').seeda(db, bas, { anteckning: true });
+  // Runda 15, r5: omvårdnadsprocessen och exempel med de nya mallarna för undersköterskan, sjuksköterskan och
+  // fysioterapeuten (omvardnadsprocess.js). Efter vårdplanerna och före signaturerna.
+  require('./omvardnadsprocess.js').seeda(db, bas);
   // Runda 9, r7: skanning, analys, folkhälsa, spårbarhet, forskningsuttag, in- och utfarter, restjournaler och
   // signering (schema-runda9-r7.js). Sist, eftersom seeden läser vårdkontakterna, anteckningarna och proverna.
   require('./schema-runda9-r7.js').sakraR9r7(db, bas);
@@ -661,6 +664,8 @@ export function migrera(db) {
   require('./schema-runda10-r5.js').sakraR10r5(db, nu());
   // Runda 10, r3: formulärmotorns tabeller och formulär i en sandlåda från före runda 10. Inga anteckningar läggs in.
   require('./formularmotor.js').seeda(db, nu());
+  // Runda 15, r5: omvårdnadsprocessens tabell i en sandlåda från före runda 15. Inga anteckningar läggs in i efterhand.
+  require('./omvardnadsprocess.js').sakra(db);
   // Runda 10, r4: samma tabeller och seed för en sandlåda från före runda 10.
   require('./runda10-r4-rutter.js').sakra(db, nu());
   // Runda 10, r7: ombud, meddelanden, kassan och kontorsstödet, med seeden när den saknas.

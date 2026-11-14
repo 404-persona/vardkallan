@@ -2,6 +2,64 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.5.0",
+      "datum": "2026-11-14",
+      "nyheter": [
+        {
+          "id": "observation-1-5-0",
+          "roller": [
+            "underskoterska"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Du dokumenterar dina observationer i journalen",
+          "text": "Undersköterskan skriver en kort observationsanteckning med det som har observerats och det som har gjorts. Systemet väljer mallen åt dig. Sjuksköterskan ser anteckningen i sitt underlag när hon skriver nästa omvårdnadsanteckning, så att inget behöver föras vidare muntligt."
+        },
+        {
+          "id": "omvardnadsprocess-1-5-0",
+          "roller": [
+            "sjukskoterska",
+            "lakare"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Omvårdnadsanteckningen följer omvårdnadsprocessen",
+          "text": "Omvårdnadsanteckningen har omvårdnadsproblem, mål, åtgärd och resultat, och statusområdena fälls ut när de behövs. Systemet föreslår de områden och omvårdnadsproblem som berör patienten i dag ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten, och säger varför. Resultatet bedöms mot vårdplanens mål och står sedan i vårdplanen. Statusområdena har nya namn."
+        },
+        {
+          "id": "fysioterapi-1-5-0",
+          "roller": [
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "En egen mall för fysioterapeuten",
+          "text": "Fysioterapianteckningen har funktion, aktivitet, mål, åtgärd och resultat i stället för sjuksköterskans omvårdnadsanteckning. Systemet väljer den åt dig."
+        },
+        {
+          "id": "formular-1-5-0",
+          "roller": [
+            "sjukskoterska",
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Fallriskbedömningen räknar läkemedlen åt dig",
+          "text": "Systemet räknar läkemedlen som ökar risken för fall ur läkemedelslistan enligt Socialstyrelsens lista, och fyller i svar som sällan ändras från förra bedömningen. Under svaret står varifrån det kommer, och du kan ändra det. Fritextfrågorna i formulären kan dikteras."
+        },
+        {
+          "id": "yrkesmallar-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vilka yrken som skriver med vilka mallar",
+          "text": "Under Regler och parametrar bestämmer vårdgivaren vilka mallar varje yrke skriver med, med fyra ögon och giltighetsdatum. En mall kan bara ges till ett yrke som har behörighet att skriva i mallens kategori. Sökorden Status och Planering har fått rätt koder i Snomed CT, och bygget stoppar två sökord med samma kod."
+        }
+      ]
+    },
+    {
       "version": "1.4.0",
       "datum": "2026-11-13",
       "nyheter": [

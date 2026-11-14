@@ -161,6 +161,9 @@ import { MIGRERINGAR as r12r2Migreringar } from './releaser.js';
 import { registreraRutter as r13r1Rutter } from './r13r1-rutter.js';
 // Runda 14, r3: intyg genom intygsapplikationen och e-remiss (r14r3-rutter.js).
 import { registreraRutter as r14r3Rutter } from './r14r3-rutter.js';
+// Runda 15, r5: omvårdnadsprocessen (r15r5-rutter.js) och mallarna per yrke (mallar-yrken.js).
+import { registreraRutter as r15r5Rutter } from './r15r5-rutter.js';
+import { mallarForPerson as yrkesMallar } from './mallar-yrken.js';
 // Runda 14, r5: incidentregistret, servicenivårapporten och incidentrapporten till beställaren (servicenivaer-rutter.js).
 import { registreraRutter as r14r5Rutter } from './servicenivaer-rutter.js';
 // Runda 14, r1: inloggning genom beställarens inloggningstjänst (inloggningstjanster-rutter.js, Sussa 5.2.1.1).
@@ -1155,7 +1158,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const ut = {
       kopiaId: s.lasnyckel.id, skapad: new Date().toISOString(), giltigTill: s.lasnyckel.giltigTill, session,
       fornyas: { intervallMs: LASKOPIA_FORNYA_MS, lakemedelMaxMs: LASKOPIA_LAKEMEDEL_MAX_MS },
-      enheter: alla.filter(e => !e.forald_id).map(nod), mallar: journal.MALLAR, arbetslista: [], patienter: {},
+      // Runda 15, r5: läskopians mallar är de som personens yrke skriver med.
+      enheter: alla.filter(e => !e.forald_id).map(nod), mallar: yrkesMallar(db, pers, journal.MALLAR), arbetslista: [], patienter: {},
     };
     if (pers.yrke === 'logggranskare') return ut;
     ut.arbetslista = arbetslista(c);
@@ -1758,7 +1762,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 7, r4: mallarnas sökord kan ändras av systemförvaltningen (konfiguration.js).
   // Runda 10, r3: och de formulär som den inloggade får fylla i (formularmotor.js).
   // Runda 12, r1: de mallar som systemförvaltningen har skapat och vårdenhetens lokala anpassningar (journalstruktur.js).
-  rutt('GET', '/api/mallar', (c) => [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)]);
+  // Runda 15, r5: bara de mallar som personens yrke skriver med, yrkets egna först (mallar-yrken.js).
+  rutt('GET', '/api/mallar', (c) => yrkesMallar(c.db, c.personal, [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)]));
 
   rutt('GET', '/api/patient/:id/lakemedel', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_lakemedel', (atk) => lakemedel.lista(atk)); });
   rutt('GET', '/api/lakemedel/katalog', (c) => { kravInloggad(c); return lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? ''); });
@@ -2506,6 +2511,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r12r1Rutter({ rutt, kravInloggad });
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // Runda 15, r5 (r15r5-rutter.js).
+  r15r5Rutter({ rutt, kravInloggad, medPatient });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.

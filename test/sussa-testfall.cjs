@@ -268,6 +268,8 @@ function floden(D) {
       await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
       await page.waitForSelector('#ant-form');
       await m.valj(page.locator('#ny-mall'), 'Omvårdnadsanteckning', 'mallen Omvårdnadsanteckning');
+      // Runda 15, r5: statusområdena som systemet inte föreslår är ihopfällda, och Elimination fälls ut med ett klick.
+      await m.klicka(page.locator('[data-op-fler]'), 'Fler områden');
       await m.skriv(page.locator('textarea[data-sokord="Elimination"]'), 'Kräktes upp premedicineringen, Stesolid 10 mg, strax efter att den gavs.', 'sökordet Elimination');
       await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
       await synlig(page, '.anteckning', 'Kräktes upp premedicineringen');

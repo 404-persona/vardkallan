@@ -15,6 +15,23 @@ import { FYND, ROR } from './labb-katalog.js';
 import { BEGREPP } from './informationsmodell.js';
 
 export const SNOMED = SYSTEM.snomed;
+
+// Runda 15, r5: sökorden i omvårdnadsprocessen, de nya statusområdena och yrkesmallarna.
+const SOKORD_R15R5 = {
+  'Omvårdnadsproblem': { code: '1269502008', display: 'Diagnosis section' },
+  'Mål': { ingen: 'Snomed CT har mål bara som kvalifikator (Goal) och inget avsnittsbegrepp för mål i en anteckning. Målet följs i stället upp mot vårdplanens mål, där det har ett eget id.' },
+  'Resultat': { ingen: 'Snomed CT har inget avsnittsbegrepp för utvärderingen av ett mål. Results section gäller provsvar och Evaluation procedure en åtgärd, så sökordet får ingen kod hellre än en som är fel.' },
+  'Medvetande': { code: '6942003', display: 'Level of consciousness' },
+  'Psykiskt mående': { code: '36456004', display: 'Mental state finding' },
+  'Andning och cirkulation': { ingen: 'Sökordet täcker två områden. Snomed CT har ett begrepp för vart och ett men inget för båda, så sökordet får ingen kod.' },
+  'Hud och sår': { ingen: 'Snomed CT har kroppsstrukturen hud och fyndet sår men inget begrepp för området hud och sår, så sökordet får ingen kod.' },
+  'Rörlighet': { code: '301438001', display: 'Ability to mobilize' },
+  'Personlig vård': { code: '284773001', display: 'Ability to perform personal care activity' },
+  'Sociala förhållanden': { code: '108329005', display: 'Social context finding' },
+  'Observation': { ingen: 'Undersköterskans observation är fri text om det som har setts och hörts. Vital sign document section gäller bara vitalparametrar, så sökordet får ingen kod.' },
+  'Utförd åtgärd': { code: '1269501001', display: 'Procedure section' },
+  'Funktion': { code: '1184588000', display: 'Functional status document section' },
+};
 // Den svenska utgåvans modul i Snomed CT och versionen som delmängden är kontrollerad mot.
 export const SVENSK_UTGAVA = `${SNOMED}/45991000052106`;
 export const KONTROLLERAD_MOT = `${SNOMED}/900000000000207008/version/20250201`;
@@ -25,7 +42,8 @@ export const SOKORD = {
   'Kontaktorsak': { code: '1269489004', display: 'Chief complaint' },
   'Anamnes': { code: '422625006', display: 'History of present illness section' },
   'Aktuellt': { code: '1184595009', display: 'Present problem document section' },
-  'Status': { code: '5880005', display: 'Physical examination' },
+  // Runda 15, r5 (F8): Status är avsnittet med undersökningsfynd, inte undersökningen som åtgärd (5880005).
+  'Status': { code: '425044008', display: 'Physical exam section' },
   'Bedömning': { code: '424836000', display: 'Assessment section' },
   'Åtgärd': { code: '1184587005', display: 'Plan of care document section' },
   'Prioritet': { code: '225390008', display: 'Triage' },
@@ -36,11 +54,14 @@ export const SOKORD = {
   'Kommunikation': { code: '263536004', display: 'Communication' },
   'Nutrition': { code: '384759009', display: 'Nutrition' },
   'Elimination': { code: '106019003', display: 'Elimination pattern' },
-  'Aktivitet': { code: '68130003', display: 'Physical activity' },
+  // Runda 15, r5 (F8): Physical activity hör till sökordet Fysisk aktivitet i levnadsvanorna. Två sökord med samma kod går
+  // inte att skilja åt i FHIR eller i ett uttag.
+  'Aktivitet': { ingen: 'Aktivitet i ICF:s mening, att utföra en uppgift eller handling, har inget eget avsnittsbegrepp i Snomed CT, och begreppet Physical activity hör till sökordet Fysisk aktivitet. Sökordet får därför ingen kod.' },
   'Sömn': { code: '258158006', display: 'Sleep' },
   'Smärta': { code: '22253000', display: 'Pain' },
   'Psykosocialt': { code: '87996002', display: 'Psychosocial status' },
-  'Planering': { code: '1184587005', display: 'Plan of care document section' },
+  // Runda 15, r5 (F8): Planering hade samma kod som Åtgärd. Plan section är ett eget begrepp i Snomed CT.
+  'Planering': { code: '423134005', display: 'Plan section' },
   // Runda 8, r5: mallen för tobaksvanor.
   'Tobak och nikotin': { code: '229819007', display: 'Tobacco use and exposure' },
   // Runda 9: sökorden i mallen för levnadsvanor (levnadsvanor.js).
@@ -53,6 +74,9 @@ export const SOKORD = {
   'Hud/vävnad': { ingen: 'Snomed CT har kroppsstrukturen hud men inget begrepp för omvårdnadsområdet hud och vävnad, så sökordet får ingen kod.' },
   // Runda 10, r4: donationsanteckningen (donation.js).
   'Närstående': { ingen: 'Sökordet samlar vad de närstående har fått veta och vad de har sagt om den avlidnes inställning. Snomed CT har begrepp för närstående som person men inget för det innehållet, så sökordet får ingen kod.' },
+  // Runda 15, r5: omvårdnadsprocessen, statusområdena med egna namn och yrkesmallarna (omvardnadsprocess.js och
+  // mallar-yrken.js). Kontrollerade mot SNOMED CT International Edition 20250201 på tx.fhir.org 2026-11-14.
+  ...SOKORD_R15R5,
 };
 
 // Åtgärderna med KVÅ och samma åtgärd i Snomed CT. Åtgärder utan exakt motsvarighet har ingen Snomed-kod.
@@ -106,6 +130,14 @@ export function provaBegrepp(id) {
   if (partition === '00') return { ok: true, utgava: 'internationell' };
   if (partition === '10') return { ok: true, utgava: 'nationell', namnrymd: t.slice(-10, -3) };
   return { ok: false, varfor: `${t} är inte ett begrepp i Snomed CT utan en annan sorts identitet (partition ${partition}).` };
+}
+
+// Runda 15, r5 (F8): kontrollen i bygget. Två sökord med samma kod går inte att skilja åt i FHIR eller i ett uttag, så
+// varje kod får bara finnas för ett sökord. Ger listan med dubbletter, tom när allt är rätt.
+export function dubblettkoder(sokord = SOKORD) {
+  const per = new Map();
+  for (const [namn, k] of Object.entries(sokord)) if (k.code) per.set(k.code, [...(per.get(k.code) ?? []), namn]);
+  return [...per].filter(([, namn]) => namn.length > 1).map(([code, namn]) => ({ code, sokord: namn }));
 }
 
 // Koden för ett sökord, i den form FHIR använder, eller null.

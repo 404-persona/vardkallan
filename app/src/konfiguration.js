@@ -18,6 +18,8 @@ import * as sakerhetslogg from './sakerhetslogg.js';
 import { ATC, INTERAKTIONER_STANDARD, MAXDOSER_STANDARD } from './kodverk.js';
 // Runda 13, r3: lagens tak för patientavgifterna räknas ur prisbasbeloppet för det år ändringen gäller.
 import { hogkostnadstak, slutenvardstak, LAGRUM as AVGIFT_LAGRUM, AVGIFTSFRI_ALDER_LAG } from './prisbasbelopp.js';
+// Runda 15, r5: vilka yrken som skriver med vilka mallar (mallar-yrken.js, Sussa 12.1.1.7).
+import { yrkesparameter, yrkenMedParameter, parameterNyckel as yrkesNyckel } from './mallar-yrken.js';
 
 export const OMRADEN = {
   administration: { rubrik: 'Administration', sussa: '12.1.1.6' },
@@ -475,6 +477,8 @@ export function parametrar() {
     Object.assign(alla, labbR11Parametrar());
     // Runda 12, r1: läkemedelsvarningarnas interaktioner och maxdoser (Sussa 12.1.1.8).
     Object.assign(alla, lakemedelR12Parametrar());
+    // Runda 15, r5: mallarna som varje yrke skriver med (Sussa 12.1.1.7).
+    for (const y of yrkenMedParameter()) alla[yrkesNyckel(y)] = yrkesparameter(y);
   }
   return alla;
 }

@@ -11,6 +11,19 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.5.0', datum: '2026-11-14',
+    text: 'Inga nya resurstyper eller skrivningar i FHIR.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 15, r5: mallarna per yrke, omvårdnadsprocessen och formulärens förifyllnad (docs/api-avvikelser.md).
+      'Omvårdnadsanteckningen har omvårdnadsproblem och resultat mot vårdplanens mål (process i POST /api/patient/:id/anteckningar), och Composition har dem som Condition och Goal i contained',
+      'Nytt: GET /api/patient/:id/omvardnadsprocess med vårdplanens mål, föreslagna omvårdnadsproblem och statusområden, undersköterskans observationer och formulär att fylla i',
+      'GET /api/mallar ger bara de mallar som personens yrke skriver med, yrkets huvudmall först (huvudmall), och de nya mallarna Observationsanteckning, Fysioterapianteckning, Arbetsterapianteckning, Kuratorsanteckning och Dietistanteckning',
+      'Formulärens förifyllnad har läkemedel som ökar risken för fall, NEWS2 och förra svaret, och ett svarsalternativ kan ha ett antal',
+      'Sökorden Status och Planering har nya koder i Snomed CT, och Aktivitet har ingen kod',
+    ],
+  },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.4.0', datum: '2026-11-13',
