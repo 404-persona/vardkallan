@@ -3,6 +3,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { testserver, klient, sandlada, nyDb, atk, personal } from './hjalp.js';
 import * as mellanarkiv from '../src/mellanarkiv.js';
+import * as konfiguration from '../src/konfiguration.js';
 import { Atkomst, harVardrelation } from '../src/atkomst.js';
 
 let app;
@@ -191,4 +192,35 @@ describe('Mellanarkiv för vårdkontakter, remisser och diagnoser', () => {
     expect((await k.get(`/fhir/Encounter/${e.id}`)).status).toBe(200);
     expect(d.query('SELECT 1 FROM atkomstlogg WHERE resurs = ?').get(`fhir/Encounter/${e.id}`)).toBeTruthy();
   }, 30_000);
+
+  test('vilka diagnoser som är tillfälliga är vårdgivarens parameter med fyra ögon och förhandsvisning, och kroniska diagnoser och det som ett beslutsstöd läser stannar alltid', () => {
+    const d = nyDb();
+    // Grundinställningen är försiktig: en akut övre luftvägsinfektion är tillfällig, en fraktur är det inte.
+    const ovre = gammalKontakt(d, { remiss: false });
+    const fraktur = gammalKontakt(d, { kod: 'S52.5', text: 'Fraktur på nedre delen av radius', remiss: false });
+    const umi = gammalKontakt(d, { kod: 'T78.3', text: 'Angioneurotiskt ödem', remiss: false });
+    const dia = () => mellanarkiv.kandidater(d, FORE).get('p01').diagnoser.map(x => x.id);
+    expect(dia()).toContain(ovre.dia);
+    expect(dia()).not.toContain(fraktur.dia);
+    expect(konfiguration.varde(d, 'arkiv.tillfalliga_diagnoser')).toEqual(['R', 'J00', 'J01', 'J02', 'J03', 'J04', 'J06']);
+    expect(konfiguration.parametrar()['arkiv.tillfalliga_diagnoser'].beskrivning).toContain('demoregel som en läkare ska granska');
+    // En kronisk diagnos kan inte läggas till.
+    expect(konfiguration.prova('arkiv.tillfalliga_diagnoser', ['R', 'E11']).ok).toBe(false);
+    expect(konfiguration.prova('arkiv.tillfalliga_diagnoser', ['R', 'I10']).varfor).toContain('kroniska tillstånd');
+    // Förhandsvisningen säger hur många diagnoser som påverkas, och en annan systemförvaltare godkänner.
+    const nytt = ['R', 'J06', 'S52', 'T78'];
+    const f = konfiguration.forhandsvisa(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: nytt });
+    expect(JSON.stringify(f)).toMatch(/räknas \d+ diagnos(er)? från före/);
+    expect(JSON.stringify(f)).toMatch(/stannar ändå, eftersom ett beslutsstöd läser dem/);
+    const { andring: a } = konfiguration.foresla(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: nytt, giltigFran: '2026-01-01', motivering: 'Frakturer räknas också som tillfälliga.' }, new Date('2025-12-30T10:00:00.000Z'));
+    expect(() => konfiguration.godkann(d, personal(d, 'sysf'), a.id, {}, new Date('2025-12-31T10:00:00.000Z'))).toThrow();
+    konfiguration.godkann(d, personal(d, 'sysf-2'), a.id, {}, new Date('2025-12-31T10:00:00.000Z'));
+    expect(dia()).toContain(fraktur.dia);
+    // Angioneurotiskt ödem står i uppmärksamhetsinformationens kodverkslista och stannar, och en riskgrupp i
+    // vaccinationsprogrammen stannar också.
+    expect(dia()).not.toContain(umi.dia);
+    expect(mellanarkiv.lasesAvBeslutsstod(d, 'T78.3')).toBe(true);
+    expect(mellanarkiv.lasesAvBeslutsstod(d, 'J45.9')).toBe(true);
+    expect(mellanarkiv.tillfalligDiagnos(d, 'J45.9', new Date(), ['J'])).toBe(false);
+  });
 });

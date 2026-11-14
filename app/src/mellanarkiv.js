@@ -22,6 +22,9 @@ import { Fel, iso, addDagar, idag } from './db.js';
 import { kanRoll, vardenhetFor, visningsnamn, visningsPnr, Atkomst, aktivaSparrar } from './atkomst.js';
 // Runda 15, r3: undantagen från FHIR och från publicering till nationella tjänster.
 import * as undantag from './undantag.js';
+// Beslut 2026-11-14: parametern för tillfälliga diagnoser och uppmärksamhetsinformationens kodverkslista.
+import * as konfiguration from './konfiguration.js';
+import { forDiagnoser as umiForDiagnoser } from './umi-kodverk.js';
 import { loggaRad } from './logg.js';
 import { packaUpp } from './zip.js';
 import * as fhir from './fhir.js';
@@ -175,7 +178,35 @@ export function kandidater(db, fore) {
 // Vårdrelationen påverkas inte: den kommer av pågående kontakter och kontakter som avslutades de senaste 90 dagarna, av
 // listningen, av pågående remisser och av remisser vars svar kvitterades de senaste 90 dagarna (atkomst.js,
 // harVardrelation), och inget av det förs någonsin över.
-export const TILLFALLIGA_DIAGNOSER = /^(R\d|S\d|T(?!86)\d|Z0\d|Z1[0-3]|Z2\d|Z3[0-9]|J0[0-6]|J09|J1[0-8]|J2[0-2]|A0\d|H6[56]|N30)/;
+// Beslut 2026-11-14: vilka diagnoser som räknas som tillfälliga är vårdgivarens parameter (konfiguration.js,
+// arkiv.tillfalliga_diagnoser, med fyra ögon), med en försiktig grundinställning. MOJLIGA_TILLFALLIGA är ramen: bara
+// koder i de kapitel som kan vara tillfälliga kan väljas. En diagnos som ett beslutsstöd läser stannar alltid:
+// vaccinationsprogrammens riskgrupper (parametern som gäller), uppmärksamhetsinformationens kodverkslista,
+// förbrukningsartiklarna, intensivvården och mödrahälsovården.
+export const MOJLIGA_TILLFALLIGA = /^(R\d|S\d|T(?!86)\d|Z0\d|Z1[0-3]|Z2\d|Z3[0-9]|J0[0-6]|J09|J1[0-8]|J2[0-2]|A0\d|H6[56]|N30)/;
+export const TILLFALLIGA_DIAGNOSER = MOJLIGA_TILLFALLIGA;
+const BESLUTSSTOD_MONSTER = [/^E1[0-4]/, /^Z93/, /^(I50|N18\.[45]|I21|J96|K72)/, /^I2[0-5]/, /^(I6\d|G45)/, /^E1[01]/, /^I1[0-5]/];
+export function lasesAvBeslutsstod(db, kod, nu = new Date()) {
+  const k = String(kod ?? '');
+  if (BESLUTSSTOD_MONSTER.some(m => m.test(k))) return true;
+  let risk = [];
+  try { risk = konfiguration.varde(db, 'vaccination.riskgrupper', nu); } catch { risk = []; }
+  if (risk.some(p => k.startsWith(p))) return true;
+  return umiForDiagnoser([k]).length > 0;
+}
+export function tillfalligDiagnos(db, kod, nu = new Date(), lista = null) {
+  const k = String(kod ?? '');
+  const valda = lista ?? konfiguration.varde(db, 'arkiv.tillfalliga_diagnoser', nu);
+  return MOJLIGA_TILLFALLIGA.test(k) && valda.some(p => k.startsWith(p)) && !lasesAvBeslutsstod(db, k, nu);
+}
+// Förhandsvisningen av parametern: hur många diagnoser från före gränsen som listan räknar som tillfälliga, och hur många
+// i listan som stannar för att ett beslutsstöd läser dem.
+export function paverkadeDiagnoser(db, lista, fore) {
+  const rader = db.query('SELECT kod FROM diagnoser WHERE datum < ?').all(fore).map(r => String(r.kod));
+  const iLista = rader.filter(k => MOJLIGA_TILLFALLIGA.test(k) && lista.some(p => k.startsWith(p)));
+  const stod = iLista.filter(k => lasesAvBeslutsstod(db, k));
+  return { tillfalliga: iLista.length - stod.length, beslutsstod: stod.length };
+}
 const radId = (r) => Number(r.id);
 // Tabeller med en kolumn som pekar på raden, och rader i dem som inte förs över samtidigt.
 function pekarPa(db, kolumn, id, flyttas) {
@@ -205,7 +236,7 @@ function strukturKandidater(db, fore, aktiv, ut, lagg) {
   }
   // Diagnoserna som är tillfälliga och som inget pekar på. Om de förs över avgörs efter vårdkontakterna.
   const diagnoser = db.query(`SELECT d.* FROM diagnoser d JOIN patienter p ON p.id = d.patient_id WHERE ${aktiv} AND d.datum < ? ORDER BY d.patient_id, d.id`).all(fore)
-    .filter(d => TILLFALLIGA_DIAGNOSER.test(String(d.kod)) && !pekarPa(db, 'diagnos_id', d.id, new Map()) && !kallaFor(db, 'diagnos', d.id));
+    .filter(d => tillfalligDiagnos(db, d.kod) && !pekarPa(db, 'diagnos_id', d.id, new Map()) && !kallaFor(db, 'diagnos', d.id));
   const flyttas = new Map([['anteckningar', idn('anteckningar')], ['matvarden', idn('matvarden')], ['ordinationer', idn('ordinationer')], ['remisser', idn('remisser')],
     ['administreringar', new Set([...idn('administreringar'), ...[...ut.values()].flatMap(v => v.ordinationer.flatMap(o => o.administreringar.map(radId)))])],
     ['diagnoser', new Set(diagnoser.map(radId))]]);
