@@ -61,7 +61,16 @@ const { synlig, gaTill, loggaIn, startI, GOR } = skapa(BAS);
       await GOR[f.id](m, page);
       await m.kontrollera();
       Object.assign(r, { klick: m.klick, faltbyten: m.faltbyten, tangenter: m.tangenter, uppmatt: m.uppmatt, steg: m.steg });
-      r.inomBudget = r.uppmatt <= r.budget;
+      // Runda 15, r4: tecknen. Ett flöde med tecken.hogst får inte skriva fler, och ett flöde med underlag ska föra in
+      // värdena av de slagen ur underlaget och inte skriva något för hand som systemet redan visste.
+      Object.assign(r, { teckenSkrivna: m.tecken, teckenSystemet: m.teckenSystemet, teckenKundeSystemet: m.teckenKunde, underlagInfort: m.underlag });
+      const teckenFel = [
+        f.tecken?.hogst != null && m.tecken > f.tecken.hogst ? `${m.tecken} skrivna tecken, högst ${f.tecken.hogst}` : null,
+        ...(f.underlag ?? []).filter(u => !m.underlag.includes(u)).map(u => `inget värde av slaget ${u} ur underlaget`),
+        f.underlag && m.teckenKunde > 0 ? `${m.teckenKunde} tecken skrevs för hand fast systemet visste dem` : null,
+      ].filter(Boolean);
+      if (teckenFel.length) fel.push(`${f.namn}: ${teckenFel.join(', ')}`);
+      r.inomBudget = r.uppmatt <= r.budget && !teckenFel.length;
       console.log(`${r.inomBudget ? 'ok ' : 'ÖVER'} ${f.namn}: ${r.uppmatt} (budget ${r.budget}). ${m.steg.join('; ')}`);
       if (!r.inomBudget) fel.push(`${f.namn}: ${r.uppmatt} steg, budget ${r.budget}`);
     } catch (e) {
@@ -75,7 +84,9 @@ const { synlig, gaTill, loggaIn, startI, GOR } = skapa(BAS);
 
   const ut = {
     tid: new Date().toISOString(), bas: BAS, webblasare: `Chromium ${browser.version()}`, gransnittHash: gransnittHash(join(APP, 'public')), regler: REGLER,
-    floden: resultat.map(({ id, namn, roll: rl, start, budget, motivering, klick, faltbyten, tangenter, uppmatt, inomBudget, steg }) => ({ id, namn, roll: rl, start, budget, motivering, klick, faltbyten, tangenter, uppmatt, inomBudget, steg })),
+    floden: resultat.map(({ id, namn, roll: rl, start, budget, motivering, klick, faltbyten, tangenter, uppmatt, inomBudget, steg, tecken, underlag, teckenSkrivna, teckenSystemet, teckenKundeSystemet }) => ({ id, namn, roll: rl, start, budget, motivering, klick, faltbyten, tangenter, uppmatt, inomBudget, steg,
+      // Runda 15, r4: tecknen i flödet.
+      ...(tecken ? { teckenBudget: tecken.hogst } : {}), ...(underlag ? { kravUnderlag: underlag } : {}), teckenSkrivna, teckenSystemet, teckenKundeSystemet })),
     tester: resultat.map(r => ({ namn: klickbudgetTest(r), status: !r.fel && r.inomBudget ? 'grön' : 'röd' })),
   };
   writeFileSync(join(APP, resultatfil('klickbudget.json')), `${JSON.stringify(ut, null, 2)}\n`);

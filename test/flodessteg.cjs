@@ -10,7 +10,7 @@ async function idDialog(page, klicka = (l) => l.click()) {
 }
 class Matare {
   constructor(page) { this.page = page; this.nollstall(); }
-  nollstall() { this.klick = 0; this.faltbyten = 0; this.tangenter = 0; this.listval = 0; this.implicita = 0; this.steg = []; }
+  nollstall() { this.klick = 0; this.faltbyten = 0; this.tangenter = 0; this.listval = 0; this.implicita = 0; this.steg = []; this.tecken = 0; this.teckenSystemet = 0; this.teckenKunde = 0; this.underlag = []; }
   async borja() { this.nollstall(); await this.page.evaluate(() => { window.__klick = 0; window.__tangent = 0; }); }
   // Ett musklick på ett element.
   async klicka(loc, text) {
@@ -34,6 +34,19 @@ class Matare {
     const harFokus = await loc.evaluate(el => el === document.activeElement);
     if (!harFokus) { await loc.click(); this.faltbyten++; this.steg.push(`fältbyte: ${text}`); } else this.steg.push(`har redan fokus: ${text}`);
     await this.page.keyboard.type(varde);
+    // Runda 15, r4: tecknen som skrivs, och de som systemet redan visste (ett tal ur underlaget som skrivs för hand).
+    this.tecken += varde.length;
+    const kanda = await this.page.$$eval('[data-underlag-text]', l => l.map(e => e.dataset.underlagText)).catch(() => []);
+    const tal = new Set(kanda.flatMap(t => t.replace(/\(\d{1,2} \S+ \d{2}\.\d{2}\)/g, '').match(/\d+(?:[,./]\d+)+|\d{2,}/g) ?? []));
+    for (const t of tal) if (varde.includes(t)) this.teckenKunde += t.length;
+  }
+  // Runda 15, r4: ett klick på ett värde i underlaget, som systemet för in i texten med datum.
+  async infoga(loc, text) {
+    await loc.waitFor({ state: 'visible' });
+    const ref = JSON.parse(await loc.getAttribute('data-infoga'));
+    await this.klicka(loc, text);
+    this.teckenSystemet += ref.text.length;
+    this.underlag.push(ref.typ);
   }
   async tangent(namn, text) {
     // Enter i ett formulär med en skicka-knapp gör att webbläsaren själv klickar på knappen. Det är samma tangenttryck,
@@ -227,14 +240,18 @@ function skapa(BAS) {
       await synlig(page, '.anteckning .ant-huvud h2', typ);
       await synlig(page, '.anteckning .ant-fakta', 'Signerad');
     },
+    // Runda 15, r4 (F6): en daganteckning av demons medianlängd, där blodtrycket och läkemedelsändringen kommer ur underlaget.
     daganteckning: async (m, page) => {
       await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
-      await page.waitForSelector('#ant-form');
+      await page.waitForSelector('#ant-form .ant-underlag');
       await m.valj(page.locator('#ny-mall'), 'Daganteckning', 'mallen Daganteckning');
       await m.skriv(page.locator('textarea[data-sokord="Aktuellt"]'), 'Pigg, äter bra. Inga bröstsmärtor.', 'sökordet Aktuellt');
+      await m.infoga(page.locator('.underlag-post[data-underlag-text^="Blodtryck"]'), 'blodtrycket i underlaget');
       await m.skriv(page.locator('textarea[data-sokord="Bedömning"]'), 'Stabil, fortsatt plan.', 'sökordet Bedömning');
+      await m.infoga(page.locator('.underlag-post[data-underlag-text^="Metoprolol"]'), 'ändringen av metoprolol i underlaget');
       await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
       await synlig(page, '.anteckning', 'Pigg, äter bra. Inga bröstsmärtor.');
+      await synlig(page, '.anteckning .ant-ref', 'Blodtryck');
       await synlig(page, '.anteckning .ant-fakta', 'Signerad');
     },
     ordinera: async (m, page) => {
@@ -1040,7 +1057,8 @@ function skapa(BAS) {
     await synlig(page, '.akut-tavla', 'Bröstsmärta');
   };
   // Runda 10, r3: röstinmatningen med en simulerad taligenkänning, som ger det som sägs som slutliga resultat. Inget
-  // sparas förrän läkaren signerar: skriptet kontrollerar att ingen anteckning skickas till servern under dikteringen.
+  // sparas medan läkaren dikterar: skriptet kontrollerar att ingen anteckning skickas till servern under dikteringen.
+  // Runda 15, r4: utkastet sparas av sig självt först när dikteringen är slut.
   GOR.diktera = async (m, page) => {
     await page.evaluate((fraser) => {
       // Igenkänningen görs på enheten (processLocally), så ingen fråga om webbläsarens tjänst kommer.
@@ -1060,7 +1078,7 @@ function skapa(BAS) {
       };
     }, ['pigg och äter bra punkt inga bröstsmärtor punkt', 'gå till bedömning stabil kommatecken fortsatt plan punkt', 'sluta diktera']);
     const skickat = [];
-    const lyssna = (r) => { if (r.method() !== 'GET' && /\/api\/(patient\/[^/]+\/anteckningar|anteckning\/)/.test(r.url())) skickat.push(r.url()); };
+    const lyssna = (r) => { if (r.method() !== 'GET' && /\/api\/(patient\/[^/]+\/(anteckningar|anteckningsutkast)|anteckning\/)/.test(r.url())) skickat.push(r.url()); };
     page.on('request', lyssna);
     try {
       await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
@@ -1414,6 +1432,62 @@ function skapa(BAS) {
     await synlig(page, '.vem', 'Sara Lindqvist');
     await page.waitForLoadState('networkidle');
     await page.evaluate((n) => { window.__klick = n; }, m.klick);
+  };
+  // Runda 15, r4 (F6): sjuksköterskans anteckning och läsflödet i en journal med 30 anteckningar.
+  GOR.omvardnadsanteckning = async (m, page) => {
+    await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
+    await page.waitForSelector('#ant-form .ant-underlag');
+    await m.valj(page.locator('#ny-mall'), 'Omvårdnadsanteckning', 'mallen Omvårdnadsanteckning');
+    await m.skriv(page.locator('textarea[data-sokord="Andning/cirkulation"]'), 'Andas lugnt i vila.', 'sökordet Andning/cirkulation');
+    await m.infoga(page.locator('.underlag-post[data-underlag-text^="Syremättnad"]'), 'syremättnaden i underlaget');
+    await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
+    await synlig(page, '.anteckning .ant-ref', 'Syremättnad');
+    await synlig(page, '.anteckning .ant-fakta', 'Signerad');
+  };
+  startI['Översikten för en patient med 30 anteckningar'] = async (page) => {
+    await gaTill(page, '#/arbetslista');
+    const ok = await page.evaluate(async () => {
+      const j = (v, data, metod = 'POST') => fetch(v, { method: metod, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json());
+      await fetch('/api/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text());
+      const antal = async () => (await fetch('/api/patient/p01/anteckningar').then(r => r.json())).anteckningar.length;
+      let n = await antal();
+      let i = 0;
+      while (n < 27) {
+        i += 1;
+        const a = await j('/api/patient/p01/anteckningar', { typ: 'Daganteckning', sokord: [{ sokord: 'Aktuellt', text: `Rond dag ${i}.` }, { sokord: 'Bedömning', text: `Bedömning nummer ${i}, stabil.` }] });
+        await j(`/api/anteckning/${a.id}/signera`, {});
+        n = await antal();
+      }
+      while (n < 30) {
+        const a = await j('/api/patient/p01/anteckningar', { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: `Sov gott, natt ${n}.` }] });
+        await j(`/api/anteckning/${a.id}/signera`, {});
+        n = await antal();
+      }
+      return i;
+    });
+    await page.evaluate((i) => { window.__senasteBedomning = `Bedömning nummer ${i}, stabil.`; }, ok);
+    await gaTill(page, '#/patient/p01');
+    await page.waitForSelector('.tidslinje');
+  };
+  GOR['senaste-bedomning'] = async (m, page) => {
+    const vantad = await page.evaluate(() => window.__senasteBedomning);
+    await m.klicka(page.locator('.flikar a', { hasText: 'Journal' }).first(), 'fliken Journal');
+    await page.locator('[data-senaste-bedomning]').waitFor();
+    if (await page.locator('#j-poster li').count() < 30) throw new Error('journalen har färre än 30 anteckningar');
+    await m.klicka(page.locator('[data-senaste-bedomning]'), 'Senaste bedömning');
+    await synlig(page, '.anteckning .sokord', vantad);
+    const forsta = (await page.locator('.anteckning [data-ordning="apso"] .sokord dt').first().textContent()).trim();
+    if (forsta !== 'Bedömning') throw new Error(`bedömningen står inte först utan ${forsta}`);
+  };
+  // Runda 15, r4: undersköterskans anteckning, när undersköterskan får skriva (del r5). Se klickbudget.js.
+  GOR['usk-anteckning'] = async (m, page) => {
+    await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
+    await page.waitForSelector('#ant-form .ant-underlag');
+    const falt = page.locator('#ny-sokord textarea').first();
+    await m.skriv(falt, 'Pigg, har ätit frukost och gått i korridoren.', 'första sökordet');
+    await m.infoga(page.locator('.underlag-post[data-infoga*="matvarde"]').first(), 'det senaste mätvärdet i underlaget');
+    await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
+    await synlig(page, '.anteckning .ant-fakta', 'Signerad');
   };
   return { synlig, gaTill, loggaIn, startI, GOR };
 }
