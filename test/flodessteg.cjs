@@ -10,7 +10,7 @@ async function idDialog(page, klicka = (l) => l.click()) {
 }
 class Matare {
   constructor(page) { this.page = page; this.nollstall(); }
-  nollstall() { this.klick = 0; this.faltbyten = 0; this.tangenter = 0; this.listval = 0; this.implicita = 0; this.steg = []; this.tecken = 0; this.teckenSystemet = 0; this.teckenKunde = 0; this.underlag = []; }
+  nollstall() { this.klick = 0; this.faltbyten = 0; this.tangenter = 0; this.listval = 0; this.implicita = 0; this.steg = []; this.teckenSkrivna = 0; this.teckenSystemet = 0; this.teckenKunde = 0; this.underlag = []; }
   async borja() { this.nollstall(); await this.page.evaluate(() => { window.__klick = 0; window.__tangent = 0; }); }
   // Ett musklick på ett element.
   async klicka(loc, text) {
@@ -35,7 +35,7 @@ class Matare {
     if (!harFokus) { await loc.click(); this.faltbyten++; this.steg.push(`fältbyte: ${text}`); } else this.steg.push(`har redan fokus: ${text}`);
     await this.page.keyboard.type(varde);
     // Runda 15, r4: tecknen som skrivs, och de som systemet redan visste (ett tal ur underlaget som skrivs för hand).
-    this.tecken += varde.length;
+    this.teckenSkrivna += varde.length;
     const kanda = await this.page.$$eval('[data-underlag-text]', l => l.map(e => e.dataset.underlagText)).catch(() => []);
     const tal = new Set(kanda.flatMap(t => t.replace(/\(\d{1,2} \S+ \d{2}\.\d{2}\)/g, '').match(/\d+(?:[,./]\d+)+|\d{2,}/g) ?? []));
     for (const t of tal) if (varde.includes(t)) this.teckenKunde += t.length;

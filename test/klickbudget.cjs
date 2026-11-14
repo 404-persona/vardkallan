@@ -63,9 +63,9 @@ const { synlig, gaTill, loggaIn, startI, GOR } = skapa(BAS);
       Object.assign(r, { klick: m.klick, faltbyten: m.faltbyten, tangenter: m.tangenter, uppmatt: m.uppmatt, steg: m.steg });
       // Runda 15, r4: tecknen. Ett flöde med tecken.hogst får inte skriva fler, och ett flöde med underlag ska föra in
       // värdena av de slagen ur underlaget och inte skriva något för hand som systemet redan visste.
-      Object.assign(r, { teckenSkrivna: m.tecken, teckenSystemet: m.teckenSystemet, teckenKundeSystemet: m.teckenKunde, underlagInfort: m.underlag });
+      Object.assign(r, { teckenSkrivna: m.teckenSkrivna, teckenSystemet: m.teckenSystemet, teckenKundeSystemet: m.teckenKunde, underlagInfort: m.underlag });
       const teckenFel = [
-        f.tecken?.hogst != null && m.tecken > f.tecken.hogst ? `${m.tecken} skrivna tecken, högst ${f.tecken.hogst}` : null,
+        f.tecken?.hogst != null && m.teckenSkrivna > f.tecken.hogst ? `${m.teckenSkrivna} skrivna tecken, högst ${f.tecken.hogst}` : null,
         ...(f.underlag ?? []).filter(u => !m.underlag.includes(u)).map(u => `inget värde av slaget ${u} ur underlaget`),
         f.underlag && m.teckenKunde > 0 ? `${m.teckenKunde} tecken skrevs för hand fast systemet visste dem` : null,
       ].filter(Boolean);
