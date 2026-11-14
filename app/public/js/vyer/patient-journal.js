@@ -92,7 +92,6 @@ export async function visa(el, ctx) {
     const lank = e.target.closest('a[data-ant-id], a[data-senaste-bedomning]');
     if (!lank || !las.querySelector('form[data-skrivruta]')) return;
     const aid = lank.dataset.antId ?? lank.dataset.senasteBedomning;
-    if (String(aid).startsWith('ma-')) return;
     e.preventDefault();
     visaLasruta(las, aid).catch(felNotis);
   });
@@ -253,7 +252,9 @@ const senasteBedomning = (b, ctx) => (b ? `<p class="senaste-bedomning"><a href=
 async function visaLasruta(las, id) {
   let ruta = las.querySelector('#j-lasruta');
   if (!ruta) { ruta = document.createElement('section'); ruta.id = 'j-lasruta'; las.prepend(ruta); }
-  const a = await api(`/api/anteckning/${encodeURIComponent(id)}`);
+  // En handling ur mellanarkivet läses i läsrutan på samma sätt, med samma behörighet.
+  const ma = String(id).startsWith('ma-') ? await api(`/api/mellanarkiv/${encodeURIComponent(String(id).slice(3))}`) : null;
+  const a = ma ? { typ: ma.typ, signerad: { tid: ma.datum }, forfattare: ma.forfattare, enhet: ma.enhet, sokord: ma.sokord ?? [{ sokord: 'Värde', text: String(ma.varde ?? '') }] } : await api(`/api/anteckning/${encodeURIComponent(id)}`);
   const v = a.versioner?.at(-1) ?? a;
   ruta.className = 'lasruta';
   ruta.setAttribute('aria-labelledby', 'lr-rubrik');
@@ -377,18 +378,23 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
     if (d) new MutationObserver(() => { if (!diktatAktiv() && ctrl) ctrl.schemalagg(); }).observe(d, { attributes: true, attributeFilter: ['aria-pressed'] });
   };
   form.typ?.addEventListener('change', async () => {
+    // Samma mall igen ändrar ingenting.
+    const ny = mall();
+    if (ny.typ === form.dataset.mall) return;
+    form.dataset.mall = ny.typ;
+    const nyttStod = ny.strukturerad ? null : await stod.hamtaStod(ctx, ny.typ);
+    if (!form.isConnected || mall() !== ny) return;
     // Texten följer med till den nya mallen. Ett utkast som redan är sparat i den förra mallen tas bort, och ett nytt
     // sparas i den nya mallen när man skriver.
     const forra = falt ? falt.las().filter(x => x.text) : [];
-    const gammaltId = ctrl?.anteckningId();
+    const gammaltId = ctrl ? await ctrl.spara().catch(() => ctrl?.anteckningId()) : null;
     ctrl?.stopp();
     ctrl = null;
     if (gammaltId) { try { await api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast/${gammaltId}`, { metod: 'DELETE' }); } catch { /* notis visad */ } }
-    const ny = mall();
-    s = ny.strukturerad ? null : await stod.hamtaStod(ctx, ny.typ);
-    if (!form.isConnected) return;
+    s = nyttStod;
     form.querySelector('#ny-innehall').innerHTML = innehall(ny, Object.fromEntries(forra.map(x => [x.sokord, x.text])), s);
     kopplaMall(forra);
+    fokusForsta(form);
   });
   kopplaMall();
   const spara = async (knapp, signera) => {
@@ -403,7 +409,7 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
           x = await api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningar`, { metod: 'POST', data: { typ: form.typ.value, [strukturerad(mall().typ).nyckel]: strukturerad(mall().typ).modul.las(form), ...nyKontaktData(kontakt) } });
         } else {
           // Utkastet sparas först med den senaste texten, så att det är samma anteckning som signeras.
-          const id = await ctrl.spara();
+          const id = ctrl ? await ctrl.spara() : null;
           x = id ? { id } : await api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningar`, { metod: 'POST', data: { typ: mall().typ, sokord, ...nyKontaktData(kontakt) } });
         }
         if (signera) await api(`/api/anteckning/${x.id}/signera`, { metod: 'POST', data: {} });
@@ -413,8 +419,8 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
       notis(signera ? 'Anteckningen är signerad.' : 'Utkastet är sparat. Det syns bara för dig tills du signerar.');
       kontaktNotis(ny);
       await uppdateraInkorg();
-      location.hash = ctx.href('journal', ny.id);
-      if (utkast && !signera) ctx.ladda();
+      const dit = ctx.href('journal', ny.id);
+      if (location.hash === dit) ctx.ladda(); else location.hash = dit;
     } catch { /* felet visas i formuläret */ }
   };
   form.querySelector('[data-spara]').addEventListener('click', e => spara(e.currentTarget, false));

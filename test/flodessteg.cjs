@@ -1446,26 +1446,12 @@ function skapa(BAS) {
   };
   startI['Översikten för en patient med 30 anteckningar'] = async (page) => {
     await gaTill(page, '#/arbetslista');
-    const ok = await page.evaluate(async () => {
-      const j = (v, data, metod = 'POST') => fetch(v, { method: metod, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(r => r.json());
+    const svar = await page.evaluate(async () => {
       await fetch('/api/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text());
-      const antal = async () => (await fetch('/api/patient/p01/anteckningar').then(r => r.json())).anteckningar.length;
-      let n = await antal();
-      let i = 0;
-      while (n < 27) {
-        i += 1;
-        const a = await j('/api/patient/p01/anteckningar', { typ: 'Daganteckning', sokord: [{ sokord: 'Aktuellt', text: `Rond dag ${i}.` }, { sokord: 'Bedömning', text: `Bedömning nummer ${i}, stabil.` }] });
-        await j(`/api/anteckning/${a.id}/signera`, {});
-        n = await antal();
-      }
-      while (n < 30) {
-        const a = await j('/api/patient/p01/anteckningar', { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: `Sov gott, natt ${n}.` }] });
-        await j(`/api/anteckning/${a.id}/signera`, {});
-        n = await antal();
-      }
-      return i;
+      return fetch('/api/demo/journal-30', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.json());
     });
-    await page.evaluate((i) => { window.__senasteBedomning = `Bedömning nummer ${i}, stabil.`; }, ok);
+    if (svar.antal < 30 || !svar.senasteBedomning) throw new Error('journalen kunde inte fyllas till 30 anteckningar');
+    await page.evaluate((t) => { window.__senasteBedomning = t; }, svar.senasteBedomning);
     await gaTill(page, '#/patient/p01');
     await page.waitForSelector('.tidslinje');
   };

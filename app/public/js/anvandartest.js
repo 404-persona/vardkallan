@@ -133,6 +133,8 @@ const FORBERED = {
   obstetrik: async () => { await aterstallDemo(); await api('/api/demo/obstetrik', { metod: 'POST', data: {} }); },
   // Runda 11, r4: Annika Holmgrens kur är godkänd, så att beredningsenheten har en kur att bereda.
   'cytostatika-kur': async () => { await aterstallDemo(); await api('/api/demo/cytostatika-kur', { metod: 'POST', data: {} }); },
+  // Runda 15, r4: Gunnar Åkessons journal har 30 anteckningar, där de senaste inte har någon bedömning.
+  'journal-30': async () => { await aterstallDemo(); await api('/api/demo/journal-30', { metod: 'POST', data: {} }); },
   // Runda 14, r1: övningstjänsten kopplas in av de två systemförvaltarna, och sedan loggas personen ut, så att uppgiften
   // börjar på inloggningssidan.
   inloggningstjanst: async () => {

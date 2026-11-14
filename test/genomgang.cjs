@@ -553,6 +553,43 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await page.click('.ant-form [data-signera]');
       await forvanta(page, '.anteckning', 'Inga nya besvär. Sover gott.');
     });
+    // Runda 15, r4: underlaget bredvid sökorden, läsrutan, utkastet som sparas av sig självt, de egna fraserna och
+    // läsvyn med bedömning och åtgärd först.
+    await s('Sara: för in läkemedelsändringen ur underlaget, läser förra anteckningen i läsrutan och utkastet sparas av sig självt', async () => {
+      await page.click('a:has-text("Ny anteckning")');
+      await forvanta(page, '.ant-form .ant-underlag', 'Underlag');
+      await forvanta(page, '.ant-underlag', 'Läkemedel');
+      await page.fill('textarea[data-sokord="Aktuellt"]', 'Mår bra.');
+      await page.locator('textarea[data-sokord="Aktuellt"]').focus();
+      await page.locator('.underlag-post[data-underlag-text^="Metoprolol"]').click();
+      if (!/^Mår bra\. Metoprolol .* ändrad /.test(await page.locator('textarea[data-sokord="Aktuellt"]').inputValue())) throw new Error('läkemedelsändringen fördes inte in i Aktuellt');
+      await forvanta(page, '[data-sparstatus]', 'Utkastet sparades');
+      await bild(page, '07b-anteckning-underlag', true);
+      await page.locator('#j-poster a[data-ant-id]').nth(1).click();
+      await forvanta(page, '#j-lasruta', 'Din text i skrivrutan nedanför står kvar');
+      if (!(await page.locator('textarea[data-sokord="Aktuellt"]').inputValue()).startsWith('Mår bra.')) throw new Error('texten i skrivrutan försvann');
+      await bild(page, '07c-anteckning-lasruta', true);
+      await page.click('[data-stang-lasruta]');
+      await page.click('[data-fraser]');
+      await page.click('[data-hantera-fraser]');
+      await page.fill('#fd-kort', 'ub');
+      await page.fill('#fd-text', 'Inga bröstsmärtor, ingen andnöd.');
+      await page.click('[data-ny-fras] button[type="submit"]');
+      await forvanta(page, '.fras-tabell', 'Inga bröstsmärtor, ingen andnöd.');
+      await bild(page, '07d-egna-fraser');
+      await page.click('.fraser-dialog [data-stang]');
+      await page.locator('textarea[data-sokord="Bedömning"]').click();
+      await page.keyboard.type('Stabil. .ub');
+      await page.keyboard.press('Tab');
+      if (await page.locator('textarea[data-sokord="Bedömning"]').inputValue() !== 'Stabil. Inga bröstsmärtor, ingen andnöd.') throw new Error('frasen skrevs inte in');
+      await page.click('.ant-form [data-signera]');
+      await forvanta(page, '.anteckning .ant-ref', 'Metoprolol');
+      await forvanta(page, '.anteckning [data-lasordning]', 'Bedömning och åtgärd visas först');
+      const forsta = (await page.locator('.anteckning [data-ordning="apso"] .sokord dt').first().textContent()).trim();
+      if (forsta !== 'Bedömning') throw new Error(`läsvyn börjar med ${forsta}`);
+      await bild(page, '07e-anteckning-apso', true);
+      await page.waitForLoadState('networkidle');
+    });
     await s('Sara: ordinerar Ibuprofen, varningen warfarin och NSAID måste kvitteras med motivering', async () => {
       await gaTill(page, '#/patient/p01/lakemedel');
       await page.click('[data-ny]');
@@ -1149,7 +1186,9 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       const mallar = await page.locator('select[name="typ"] option').allTextContents();
       // Runda 8, r5: sjuksköterskan skriver också tobaksvanor, som har kategorin omvårdnad.
       // Runda 10, r3: och formulären Fallriskbedömning och Sårdokumentation, som sjuksköterskan får fylla i.
-      if (JSON.stringify(mallar) !== JSON.stringify(['Omvårdnadsanteckning', 'Tobaksvanor', 'Levnadsvanor', 'Fallriskbedömning', 'Sårdokumentation'])) throw new Error(`mallar ${mallar}`);
+      // Runda 15, r4: förslagen för situationen står först och resten under Fler mallar.
+      if (JSON.stringify([...mallar].sort()) !== JSON.stringify(['Fallriskbedömning', 'Levnadsvanor', 'Omvårdnadsanteckning', 'Sårdokumentation', 'Tobaksvanor'])) throw new Error(`mallar ${mallar}`);
+      if (mallar[0] !== 'Omvårdnadsanteckning') throw new Error(`första mallen ${mallar[0]}`);
       await page.fill('textarea[data-sokord="Sömn"]', 'Sov hela natten.');
       await page.click('.ant-form [data-signera]');
       await forvanta(page, '.anteckning', 'Sov hela natten.');
@@ -2752,7 +2791,9 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
         // Runda 14, r5: incidenten på sidan Servicenivåer och incidenter.
         'registrera-incident',
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.
-        'inloggning-extern']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'inloggning-extern',
+        // Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen.
+        'omvardnadsanteckning', 'senaste-bedomning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

@@ -46,6 +46,27 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
     return fraser.sattOrdning(c.db, p, mall, c.body?.ordning ?? null);
   });
 
+  // Demo (klickbudgeten och användartestet): Gunnar Åkessons journal fylls till 30 anteckningar som den inloggade får se,
+  // där de tre senaste är omvårdnadsanteckningar utan bedömning. Bara i den egna sandlådan, och med den inloggades
+  // behörighet, så att inget skrivs som personen inte själv får skriva.
+  rutt('POST', '/api/demo/journal-30', (c) => {
+    kravInloggad(c);
+    return medPatient(c, 'p01', 'skriv_journal', (atk) => {
+      const antal = () => journal.listaAnteckningar(atk).anteckningar.length;
+      let i = 0;
+      while (antal() < 27 && i < 40) {
+        i += 1;
+        const a = journal.skapaAnteckning(atk, { typ: 'Daganteckning', sokord: [{ sokord: 'Aktuellt', text: `Rond dag ${i}.` }, { sokord: 'Bedömning', text: `Bedömning nummer ${i}, stabil.` }] });
+        journal.signera(atk, journal.hamtaAnteckningRad(atk.db, a.id));
+      }
+      for (let n = antal(), k = 0; n < 30 && k < 10; n = antal(), k++) {
+        const a = journal.skapaAnteckning(atk, { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: `Sov gott, natt ${n}.` }] });
+        journal.signera(atk, journal.hamtaAnteckningRad(atk.db, a.id));
+      }
+      return { antal: antal(), senasteBedomning: journal.listaAnteckningar(atk).senasteBedomning?.text ?? null };
+    });
+  });
+
   // Bara den som skriver i journalen har fraser och egen ordning.
   function kravPersonal(c) {
     const p = kravInloggad(c);
