@@ -167,6 +167,10 @@ export function aterstallOversiktsvy(db, personal, situation) {
 // översikten per situation och Dagens arbete. Förvalet ändrar bara vad som visas och i vilken ordning, aldrig vad någon
 // får se, och därför krävs inte fyra ögon som för reglerna i konfiguration.js.
 export const FORVALSVYER = { ...Object.fromEntries(Object.keys(SITUATIONER).map(s => [vyNyckel(s), `Översikten vid ${SITUATIONER[s].text.toLowerCase()}`])), idag: 'Dagens arbete' };
+// Runda 15, r4: skrivordningen i läkarnas anteckningsmallar är vårdenhetens val (mallvarianter.js). Läsvyn visar alltid
+// bedömning och åtgärd först.
+FORVALSVYER.anteckning = 'Skrivordningen i anteckningarna';
+const SKRIVORDNING_VAL = ['mall', 'apso'];
 const IDAG_SEKTIONER = ['dagens', 'remisser', 'vantelista', 'kallelser', 'bevakningar'];
 function kravForval(db, personal, vardenhetId = null) {
   if (!kanRoll(personal, 'vyforval')) throw new Fel(403, 'Bara systemförvaltningen och verksamhetschefen sätter vårdenhetens förval.', 'nekad');
@@ -188,7 +192,11 @@ export function sattForval(db, personal, { vardenhetId, vy, installning } = {}) 
   const ve = kravForval(db, personal, vardenhetId);
   if (!Object.hasOwn(FORVALSVYER, vy ?? '')) throw new Fel(400, 'Välj vyn som förvalet gäller.', 'ogiltig', { falt: ['vy'] });
   let inst;
-  if (vy === 'idag') {
+  // Runda 15, r4: skrivordningen i anteckningarna.
+  if (vy === 'anteckning') {
+    if (!SKRIVORDNING_VAL.includes(installning?.skrivordning)) throw new Fel(400, 'Välj mallens ordning eller bedömning och åtgärd först.', 'ogiltig', { falt: ['skrivordning'] });
+    inst = { skrivordning: installning.skrivordning };
+  } else if (vy === 'idag') {
     const s = installning?.sektioner;
     if (!Array.isArray(s) || !s.length || s.some(x => !IDAG_SEKTIONER.includes(x)) || new Set(s).size !== s.length) throw new Fel(400, 'Välj minst en av delarna i Dagens arbete.', 'ogiltig', { falt: ['sektioner'] });
     inst = { sektioner: IDAG_SEKTIONER.filter(x => s.includes(x)) };

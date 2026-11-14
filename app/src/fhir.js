@@ -57,6 +57,8 @@ const MILJO = new Set(['latex', 'nickel', 'bi- och getingstick', 'plåster och t
 import { termFor, svensktBegrepp } from './umi-kodverk.js';
 // Runda 11, r5: Media och ImagingStudy (bildmedia.js).
 import * as bildmedia from './bildmedia.js';
+// Runda 15, r4: referenserna från underlaget i en anteckning (anteckningsunderlag.js), som läses när de behövs.
+const underlagEntries = (atk, s) => (atk && Array.isArray(s.referenser) ? require('./anteckningsunderlag.js').fhirEntries(atk, s) : []);
 
 export const SYSTEM = {
   personnummer: 'http://electronichealth.se/identifier/personnummer',
@@ -485,7 +487,9 @@ function kontrasignerad(db, a) {
   return ks.length ? { attester: ks.map(k => ({ mode: 'professional', time: k.kontrasignerad, party: ref('Practitioner', k.mottagare_id, personNamn(db, k.mottagare_id)) })) } : {};
 }
 
-export function composition(db, a) {
+// Runda 15, r4: med atk får ett sökord med referenser till underlaget (anteckningsunderlag.js) section.entry, bara
+// till de resurser som läsaren får se. Utan atk (e-arkivet, mellanarkivet) lämnas inga referenser.
+export function composition(db, a, atk = null) {
   const ersatt = db.query('SELECT id FROM anteckningar WHERE ersatter_id = ?').get(a.id);
   const sokord = JSON.parse(a.sokord);
   const relatesTo = [
@@ -500,7 +504,7 @@ export function composition(db, a) {
     custodian: ref('Organization', a.enhet_id, enhetsnamn(db, a.enhet_id)),
     ...(relatesTo.length ? { relatesTo } : {}),
     ...kontrasignerad(db, a),
-    ...(sokord.length ? { section: sokord.map(s => ({ title: s.sokord, ...sokordKod(s.sokord, db), text: { status: 'generated', div: `<div xmlns="http://www.w3.org/1999/xhtml">${escape(s.text)}</div>` } })) } : {}),
+    ...(sokord.length ? { section: sokord.map(s => { const entry = underlagEntries(atk, s); return { title: s.sokord, ...sokordKod(s.sokord, db), text: { status: 'generated', div: `<div xmlns="http://www.w3.org/1999/xhtml">${escape(s.text)}</div>` }, ...(entry.length ? { entry } : {}) }; }) } : {}),
   };
 }
 
@@ -818,7 +822,7 @@ export function hantera(ctx) {
     // behörigheten, så att svaret för den som inte har åtkomst är detsamma som förut.
     if (undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') })(rad)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
     atk.logga(handling, atk.grund(), `fhir/${typ}/${id}`);
-    return { status: 200, body: typ === 'ServiceRequest' ? serviceRequest(db, rad, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, rad, forstaSynliga(atk, rad)) : mappa(db, rad) };
+    return { status: 200, body: typ === 'ServiceRequest' ? serviceRequest(db, rad, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, rad, forstaSynliga(atk, rad)) : typ === 'Composition' ? composition(db, rad, atk) : mappa(db, rad) };
   }
   const pid = (url.searchParams.get('patient') ?? url.searchParams.get('subject') ?? '').replace(/^Patient\//, '');
   if (!pid) throw new Fel(400, 'Sökparametern patient krävs.', 'ogiltig');
@@ -852,7 +856,7 @@ export function hantera(ctx) {
   // Runda 12, r1: producenten för tjänstekontrakt (_kontrakt) prövar också undantagen från publicering till nationella tjänster.
   { const undantagen = undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') }); rader = rader.filter(r => !undantagen(r)); }
   atk.logga(handling, atk.grund(), `fhir/${typ}${url.search}`);
-  const resurser = rader.map(r => (typ === 'ServiceRequest' ? serviceRequest(db, r, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, r, forstaSynliga(atk, r)) : mappa(db, r)));
+  const resurser = rader.map(r => (typ === 'ServiceRequest' ? serviceRequest(db, r, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, r, forstaSynliga(atk, r)) : typ === 'Composition' ? composition(db, r, atk) : mappa(db, r)));
   // Runda 8, r1: labbeställningarna står med bland patientens ServiceRequest.
   if (typ === 'ServiceRequest') resurser.push(...labbFhir.serviceRequestsFor(db, personal, pid, ctx.valFor(pid)));
   // Runda 6, r1: NEWS2 räknat ur de synliga mätvärdena.

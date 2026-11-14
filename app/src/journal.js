@@ -91,7 +91,9 @@ export function anteckningUt(db, a, { full = true } = {}) {
     ut.signerad = a.signerad_tid ? { tid: a.signerad_tid, av: vem, iKallan: true } : null;
     ut.kallaUppgifter = k;
   }
-  if (full) ut.sokord = sokord;
+  // Runda 15, r4: referenserna till underlaget (anteckningsunderlag.js) lämnas ut med text och källa, utan id, utom i
+  // ett utkast, som bara författaren ser och som skickas tillbaka med referenserna när det sparas igen.
+  if (full) ut.sokord = a.status === 'utkast' ? sokord : underlagRef().referenserUt(sokord);
   // Runda 8, r5: svaren i mallen för tobaksvanor lämnas ut tillsammans med anteckningen.
   if (full && a.typ === tobak.TYP) ut.tobak = tobak.ut(db, a.id);
   // Runda 9, r7.
@@ -103,7 +105,8 @@ export function anteckningUt(db, a, { full = true } = {}) {
 }
 
 // Anteckningar som får visas: utkast bara för författaren, rätt kategori för rollen och rätt enhet.
-function synligaAnteckningar(atk, { baraAktuella = true } = {}) {
+// Runda 15, r4: exporteras för underlaget (anteckningsunderlag.js), som räknar på samma rader som journalen visar.
+export function synligaAnteckningar(atk, { baraAktuella = true } = {}) {
   const db = atk.db;
   let rader = db.query('SELECT * FROM anteckningar WHERE patient_id = ? ORDER BY skapad DESC, id DESC').all(atk.patientId);
   rader = rader.filter(a => a.status === 'signerad' || a.forfattare_id === atk.personal.id);
@@ -118,7 +121,19 @@ export function listaAnteckningar(atk) {
   return {
     anteckningar: rader.map(a => anteckningUt(atk.db, a, { full: false })),
     dolda: { kraverVal: atk.doldaVal, sparrade: atk.doldaSparr, undantagna: undantagnaUt(atk) },
+    // Runda 15, r4 (F6): den senaste bedömningen bland anteckningarna som syns, så att läsaren hittar den direkt.
+    senasteBedomning: senasteBedomning(atk.db, rader),
   };
+}
+
+// Runda 15, r4: den senast signerade anteckningen med text under Bedömning, bland raderna som redan är prövade.
+function senasteBedomning(db, rader) {
+  for (const a of rader) {
+    if (a.status !== 'signerad') continue;
+    const b = JSON.parse(a.sokord).find(s => s.sokord === 'Bedömning' && s.text);
+    if (b) return { id: a.id, typ: a.typ, tid: a.signerad_tid ?? a.skapad, forfattare: personalKort(db, a.forfattare_id)?.namn ?? null, text: b.text.slice(0, 160) };
+  }
+  return null;
 }
 
 // Hela versionskedjan för en anteckning. Äldre versioner visas överstrukna men läsbara.
@@ -163,7 +178,9 @@ function valideraSokord(sokord) {
     if (!sk || sk.length > 80) throw new Fel(400, `Sökord ${i + 1} saknar namn.`, 'ogiltig', { falt: ['sokord'] });
     if (text.length > 8000) throw new Fel(400, `Texten under ${sk} är för lång.`, 'ogiltig', { falt: ['sokord'] });
     // Runda 10, r3: text som har dikterats märks, så att det syns i anteckningen hur den kom in.
-    return s?.inmatning === 'rost' && text ? { sokord: sk, text, inmatning: 'rost' } : { sokord: sk, text };
+    // Runda 15, r4: referenserna till underlaget följer med och prövas av provaReferenser innan något sparas.
+    const ref = Array.isArray(s?.referenser) && text ? { referenser: s.referenser } : {};
+    return s?.inmatning === 'rost' && text ? { sokord: sk, text, inmatning: 'rost', ...ref } : { sokord: sk, text, ...ref };
   });
 }
 
@@ -184,7 +201,8 @@ export function skapaAnteckning(atk, { typ, vardkontaktId, sokord, tobak: tobakS
   const t = typ === tobak.TYP ? tobak.forbered(atk, tobakSvar) : null;
   // Runda 9, r7: i mallen för levnadsvanor skriver systemet sökorden ur svaren.
   const lv = typ === levnadsvanor.TYP ? levnadsvanor.forbered(atk, lvSvar) : null;
-  const s = fo ? fo.sokord : t ? t.sokord : lv ? lv.sokord : valideraSokord(sokord);
+  // Runda 15, r4: referenserna till underlaget prövas med den skrivandes behörighet.
+  const s = fo ? fo.sokord : t ? t.sokord : lv ? lv.sokord : underlagRef().provaReferenser(atk, valideraSokord(sokord));
   const vk = valideraVardkontakt(atk.db, atk.patientId, vardkontaktId);
   const r = atk.db.query(`INSERT INTO anteckningar (patient_id, enhet_id, vardkontakt_id, typ, kategori, sokord, forfattare_id, skapad, status)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'utkast')`).run(atk.patientId, atk.personal.enhet_id, vk, typ, mall.kategori, JSON.stringify(s), atk.personal.id, iso());
@@ -211,7 +229,8 @@ export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, l
   if (ff && sokord !== undefined) throw new Fel(400, `Texten i ${a.typ.toLowerCase()} skrivs av systemet ur svaren. Ändra svaren i stället.`, 'ogiltig', { falt: ['sokord'] });
   const fo = ff && formularSvar !== undefined ? formular.forbered(atk, ff.formular, formularSvar) : null;
   if (fo) formular.spara(atk.db, a.id, fo);
-  const s = fo ? fo.sokord : t ? t.sokord : lv ? lv.sokord : sokord === undefined ? JSON.parse(a.sokord) : valideraSokord(sokord);
+  // Runda 15, r4: referenserna prövas som när utkastet skapades.
+  const s = fo ? fo.sokord : t ? t.sokord : lv ? lv.sokord : sokord === undefined ? JSON.parse(a.sokord) : underlagRef().provaReferenser(atk, valideraSokord(sokord));
   const vk = vardkontaktId === undefined ? a.vardkontakt_id : valideraVardkontakt(atk.db, atk.patientId, vardkontaktId);
   atk.db.query('UPDATE anteckningar SET sokord = ?, vardkontakt_id = ?, andrad = ? WHERE id = ?').run(JSON.stringify(s), vk, iso(), a.id);
   return anteckningUt(atk.db, hamtaAnteckningRad(atk.db, a.id));
@@ -258,7 +277,8 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   // Runda 10, r3: en rättelse av ett formulär görs med svaren och samma version av formuläret.
   const ff = formular.formularFor(atk.db, a.id);
   const fo = ff ? formular.forbered(atk, ff.formular, formularSvar, { forra: ff }) : null;
-  const s = fo ? fo.sokord : tb ? tb.sokord : lv ? lv.sokord : valideraSokord(sokord);
+  // Runda 15, r4: en referens i den rättade versionen följer med när dess text står kvar i samma sökord.
+  const s = fo ? fo.sokord : tb ? tb.sokord : lv ? lv.sokord : underlagRef().provaReferenser(atk, medForraReferenser(valideraSokord(sokord), JSON.parse(a.sokord)));
   const t = iso();
   const r = atk.db.query(`INSERT INTO anteckningar (patient_id, enhet_id, vardkontakt_id, typ, kategori, sokord, forfattare_id, skapad, status,
     signerad_tid, signerad_av, ersatter_id, rattelse_orsak, version, kalla) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'signerad', ?, ?, ?, ?, ?, 'vardkallan')`)
@@ -273,6 +293,14 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   ut.versioner = versionskedja(atk.db, ny.id).map(v => anteckningUt(atk.db, v));
   return ut;
 }
+
+// Runda 15, r4: referenserna i underlaget (anteckningsunderlag.js) läses när de behövs, eftersom modulen importerar journal.js.
+const underlagRef = () => require('./anteckningsunderlag.js');
+const medForraReferenser = (nya, forra) => nya.map(s => {
+  const f = forra.find(x => x.sokord === s.sokord);
+  const ref = [...(Array.isArray(s.referenser) ? s.referenser : []), ...(f?.referenser ?? []).filter(r => s.text.includes(r.text))];
+  return ref.length ? { ...s, referenser: ref } : s;
+});
 
 export function osigneradeFor(db, personalId) {
   return db.query("SELECT * FROM anteckningar WHERE forfattare_id = ? AND status = 'utkast' ORDER BY skapad DESC").all(personalId)

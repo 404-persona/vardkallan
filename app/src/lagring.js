@@ -91,6 +91,9 @@ const UTTRYCKLIGA = {
   cyto_kontrollmatningar: { typ: 'via', kolumn: 'dos_id', tabell: 'cyto_doser' },
   blod_ordinationer: { typ: 'via', kolumn: 'bestallning_id', tabell: 'blod_bestallningar' },
   blod_administreringar: { typ: 'via', kolumn: 'blodenhet_id', tabell: 'blod_enheter' },
+  // Runda 15, r4: personens egna fraser och ordning på sökorden följer personen, aldrig en patient (egna-fraser.js).
+  egna_fraser: { typ: 'via', kolumn: 'personal_id', tabell: 'personal' },
+  egen_sokordsordning: { typ: 'via', kolumn: 'personal_id', tabell: 'personal' },
 };
 
 // Vad den som lägger till en tabell gör när den inte går att knyta till en huvudman, på sidan Lagring. Testet av

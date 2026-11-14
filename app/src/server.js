@@ -172,6 +172,8 @@ import { Database } from 'bun:sqlite';
 import * as vila from './sandlada-vila.js';
 // Runda 14, r4: testprotokollet med spårbarhet till kraven (testprotokoll.js, Sussa 11.2.1.7).
 import * as testprotokoll from './testprotokoll.js';
+// Runda 15, r4: anteckningsvyn med underlag, utkast som sparas av sig självt och egna fraser (r15r4-rutter.js).
+import { registreraRutter as r15r4Rutter } from './r15r4-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -2506,6 +2508,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r12r1Rutter({ rutt, kravInloggad });
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // Runda 15, r4 (r15r4-rutter.js).
+  r15r4Rutter({ rutt, kravInloggad, medPatient });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.

@@ -20,8 +20,13 @@ import { Fel, iso } from './db.js';
 import * as journal from './journal.js';
 import * as administrering from './administrering.js';
 import * as vardkontakt from './vardkontakt.js';
+// Runda 15, r4: ett utkast till en anteckning som skrevs under avbrottet (anteckningsutkast.js).
+import * as anteckningsutkast from './anteckningsutkast.js';
 
 export const TYPER = { matvarde: 'registrera_matvarde', dos: 'ge_lakemedel' };
+// Runda 15, r4: ett utkast prövas med skrivhandlingen för anteckningens kategori, som räknas fram när raden tas emot.
+TYPER.utkast = 'skriv_journal';
+const handlingFor = (db, rad) => (rad.typ === 'utkast' ? journal.skrivHandling(anteckningsutkast.kategori(db, rad.patientId, rad.data ?? {}) ?? 'lakare') : TYPER[rad.typ]);
 export const MAX_RADER = 50;
 // Så långt bakåt en registrering i kön får vara gjord: läskopians giltighet, 8 timmar, och marginal för klockan.
 const MAX_ALDER_MS = 8 * 3600_000 + 5 * 60_000;
@@ -31,11 +36,14 @@ export function sakraSchema(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS skrivko (
     id TEXT PRIMARY KEY, kopia_id TEXT NOT NULL, personal_id TEXT NOT NULL, patient_id TEXT NOT NULL, typ TEXT NOT NULL, gjord TEXT NOT NULL,
     mottagen TEXT NOT NULL, status TEXT NOT NULL, resultat_id INTEGER)`);
+  // Runda 15, r4: utkastets id i webbläsaren, så att flera versioner av samma utkast blir ett utkast.
+  if (!db.query("SELECT 1 FROM pragma_table_info('skrivko') WHERE name = 'lokal_id'").get()) db.exec('ALTER TABLE skrivko ADD COLUMN lokal_id TEXT');
 }
 
 export const koAad = (kopiaId, personalId, id) => Buffer.from(`vardkallan-skrivko|${kopiaId}|${personalId}|${id}`);
 function dekryptera(nyckel, aad, iv, data) {
-  if (typeof iv !== 'string' || typeof data !== 'string' || iv.length > 32 || data.length > 8192) return null;
+  // Runda 15, r4: ett utkast till en anteckning får vara längre än en registrering, upp till 32 768 tecken krypterat.
+  if (typeof iv !== 'string' || typeof data !== 'string' || iv.length > 32 || data.length > 32768) return null;
   try {
     const ivB = Buffer.from(iv, 'base64url');
     const d = Buffer.from(data, 'base64url');
@@ -51,6 +59,8 @@ function dekryptera(nyckel, aad, iv, data) {
 // Vad registreringen gäller, på vanlig svenska, för den som ska avgöra en konflikt. Bara uppgifter som personen redan
 // fick se i läskopian.
 function beskrivning(db, rad) {
+  // Runda 15, r4.
+  if (rad.typ === 'utkast') return `Utkastet till ${String(rad.data?.typ ?? 'anteckningen').toLowerCase()}`;
   if (rad.typ === 'matvarde') {
     const def = journal.MATTYPER[rad.data?.typ];
     return `${def?.namn ?? 'Mätvärde'} ${typeof rad.data?.varde === 'object' ? '' : String(rad.data?.varde ?? '')}`.trim();
@@ -83,8 +93,8 @@ export function taEmot(c, medPatient, { kopiaId, rader, kvitteringar = {}, kasta
     if (finns) { resultat.push({ id, status: finns.status, resultatId: finns.resultat_id, text: finns.status === 'sparad' ? 'Registreringen var redan sparad.' : 'Registreringen var redan borttagen ur kön.' }); continue; }
     const rad = dekryptera(nyckel, koAad(kopiaId, kopia.personalId, id), r.iv, r.data);
     if (!rad || rad.id !== id) { resultat.push({ id, status: 'avvisad', text: 'Raden kunde inte verifieras med läskopians nyckel.' }); continue; }
-    const handling = Object.hasOwn(TYPER, rad.typ) ? TYPER[rad.typ] : null;
-    if (!handling) { resultat.push({ id, status: 'avvisad', text: 'Bara givna doser och mätvärden kan registreras under ett avbrott.' }); continue; }
+    const handling = Object.hasOwn(TYPER, rad.typ) ? handlingFor(db, rad) : null;
+    if (!handling) { resultat.push({ id, status: 'avvisad', text: 'Bara givna doser, mätvärden och utkast till anteckningar kan registreras under ett avbrott.' }); continue; }
     if (typeof rad.patientId !== 'string' || !kopia.patienter.has(rad.patientId)) { resultat.push({ id, status: 'avvisad', text: 'Patienten fanns inte i din läskopia.' }); continue; }
     const gjord = typeof rad.gjord === 'string' ? Date.parse(rad.gjord) : NaN;
     if (!Number.isFinite(gjord) || gjord > nu + MARGINAL_MS || gjord < nu - MAX_ALDER_MS) { resultat.push({ id, status: 'avvisad', text: 'Tidpunkten ligger utanför läskopians giltighet.' }); continue; }
@@ -103,6 +113,13 @@ export function taEmot(c, medPatient, { kopiaId, rader, kvitteringar = {}, kasta
         let svar;
         if (rad.typ === 'matvarde') {
           svar = vardkontakt.knyt(atk, 'matvarden', journal.registreraMatvarde(atk, { typ: data.typ, varde: data.varde, tid }), data);
+        } else if (rad.typ === 'utkast') {
+          // Runda 15, r4: en senare version av samma utkast i kön ändrar utkastet som den första versionen skapade.
+          const lokal = typeof data.lokalId === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(data.lokalId) ? data.lokalId : null;
+          const forra = lokal ? db.query("SELECT resultat_id FROM skrivko WHERE typ = 'utkast' AND status = 'sparad' AND lokal_id = ? AND personal_id = ? AND patient_id = ? ORDER BY mottagen DESC").get(lokal, c.personal.id, rad.patientId) : null;
+          const anteckningId = Number.isInteger(data.anteckningId) ? data.anteckningId : forra?.resultat_id ?? null;
+          svar = anteckningsutkast.spara(atk, { anteckningId, typ: data.typ, sokord: data.sokord, ...(data.nyKontakt ? { nyKontakt: data.nyKontakt } : {}) });
+          if (svar.tomt) svar = { id: anteckningId };
         } else {
           const kv = Array.isArray(kvitteringar?.[id]) ? kvitteringar[id] : [];
           svar = vardkontakt.knyt(atk, 'administreringar', administrering.spara(atk, {
@@ -118,8 +135,8 @@ export function taEmot(c, medPatient, { kopiaId, rader, kvitteringar = {}, kasta
         }
         const resultatId = Number(svar.id ?? svar.administrering?.id ?? null) || null;
         atk.logga(handling, atk.grund(), `skrivko:${rad.typ}:${resultatId ?? id}`, 'tillaten', syfte);
-        db.query("INSERT INTO skrivko (id, kopia_id, personal_id, patient_id, typ, gjord, mottagen, status, resultat_id) VALUES (?, ?, ?, ?, ?, ?, ?, 'sparad', ?)")
-          .run(id, kopiaId, c.personal.id, rad.patientId, rad.typ, tid, iso(), resultatId);
+        db.query("INSERT INTO skrivko (id, kopia_id, personal_id, patient_id, typ, gjord, mottagen, status, resultat_id, lokal_id) VALUES (?, ?, ?, ?, ?, ?, ?, 'sparad', ?, ?)")
+          .run(id, kopiaId, c.personal.id, rad.patientId, rad.typ, tid, iso(), resultatId, rad.typ === 'utkast' && typeof data.lokalId === 'string' ? data.lokalId.slice(0, 64) : null);
         return { resultatId };
       });
       resultat.push({ id, status: 'sparad', resultatId: ut.resultatId, text: `${beskrivning(db, rad)} är sparad i journalen med tiden då det gjordes.` });

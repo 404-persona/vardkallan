@@ -107,7 +107,7 @@ describe('Skrivkön efter avbrott', () => {
     const fall = [
       [{ ...andrad, data: b.toString('base64url') }, 'kunde inte verifieras'],
       [krypterad(n, m, { aadId: 'annat-id-123' }), 'kunde inte verifieras'],
-      [krypterad(n, rad('anteckning', { text: 'Prov' })), 'Bara givna doser och mätvärden'],
+      [krypterad(n, rad('anteckning', { text: 'Prov' })), 'Bara givna doser, mätvärden och utkast'],
       [krypterad(n, rad('matvarde', { typ: 'puls', varde: 70 }, { patientId: 'p12' })), 'fanns inte i din läskopia'],
       [krypterad(n, rad('matvarde', { typ: 'puls', varde: 70 }, { gjord: new Date(Date.now() + 60 * MIN).toISOString() })), 'utanför läskopians giltighet'],
       [krypterad(n, rad('matvarde', { typ: 'puls', varde: 70 }, { gjord: new Date(Date.now() - 9 * 60 * MIN).toISOString() })), 'utanför läskopians giltighet'],
