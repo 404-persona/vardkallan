@@ -10,7 +10,7 @@
 // överlämnad eller inte given ändras den inte. Bara ett iordningsställande går vidare till nästa steg.
 export const SCHEMA_LAKEMEDELSPROCESS = `
 CREATE TABLE IF NOT EXISTS administreringar (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, ordination_id INTEGER, lakemedel_id TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, ordination_id INTEGER, lakemedel_id TEXT NOT NULL,
   planerad TEXT, status TEXT NOT NULL, dos REAL, dos_enhet TEXT, antal REAL, tid TEXT, utford_av TEXT,
   registrerad TEXT NOT NULL, registrerad_av TEXT NOT NULL, efterhand INTEGER NOT NULL DEFAULT 0,
   iordningstalld_tid TEXT, iordningstalld_av TEXT, kontrollkod TEXT, orsak TEXT, kvitterade_varningar TEXT,

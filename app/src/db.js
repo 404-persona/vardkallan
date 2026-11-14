@@ -67,22 +67,22 @@ CREATE TABLE sparrar (
   id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, registrerad TEXT NOT NULL, aktiv INTEGER NOT NULL DEFAULT 1
 );
 CREATE TABLE vardkontakter (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, typ TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, typ TEXT NOT NULL,
   start TEXT NOT NULL, slut TEXT, plats TEXT, orsak TEXT, kalla TEXT NOT NULL DEFAULT 'vardkallan'
 );
 CREATE TABLE anteckningar (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, vardkontakt_id INTEGER,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, vardkontakt_id INTEGER,
   typ TEXT NOT NULL, kategori TEXT NOT NULL, sokord TEXT NOT NULL, forfattare_id TEXT NOT NULL,
   skapad TEXT NOT NULL, andrad TEXT, status TEXT NOT NULL, signerad_tid TEXT, signerad_av TEXT,
   ersatter_id INTEGER, rattelse_orsak TEXT, version INTEGER NOT NULL DEFAULT 1,
   kalla TEXT NOT NULL DEFAULT 'vardkallan'
 );
 CREATE TABLE diagnoser (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, vardkontakt_id INTEGER,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, vardkontakt_id INTEGER,
   kod TEXT NOT NULL, text TEXT NOT NULL, typ TEXT NOT NULL, datum TEXT NOT NULL, kalla TEXT NOT NULL DEFAULT 'vardkallan'
 );
 CREATE TABLE matvarden (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, typ TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, typ TEXT NOT NULL,
   varde TEXT NOT NULL, varde_num REAL, matt_enhet TEXT, tid TEXT NOT NULL, registrerad_av TEXT,
   kalla TEXT NOT NULL DEFAULT 'vardkallan', vidimerad TEXT
 );
@@ -97,7 +97,7 @@ CREATE TABLE katalog (
   id TEXT PRIMARY KEY, namn TEXT NOT NULL, substans TEXT NOT NULL, styrka TEXT, form TEXT, atc TEXT NOT NULL, npl TEXT
 );
 CREATE TABLE ordinationer (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, lakemedel_id TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, lakemedel_id TEXT NOT NULL,
   dosering TEXT NOT NULL, dos REAL, dos_enhet TEXT, tider TEXT, vid_behov INTEGER NOT NULL DEFAULT 0,
   typ TEXT NOT NULL, orsak TEXT NOT NULL, uppfoljning TEXT NOT NULL, start TEXT NOT NULL, slut TEXT,
   status TEXT NOT NULL DEFAULT 'aktiv', utsatt_tid TEXT, utsatt_av TEXT, utsatt_orsak TEXT,
@@ -114,7 +114,7 @@ CREATE TABLE nll_meddelanden (
   status TEXT NOT NULL, svar_tid TEXT, kvittens TEXT, nll_registrerad INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE remisser (
-  id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, fran_enhet_id TEXT NOT NULL, till_enhet_id TEXT NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT, patient_id TEXT NOT NULL, fran_enhet_id TEXT NOT NULL, till_enhet_id TEXT NOT NULL,
   avsandare_id TEXT NOT NULL, fragestallning TEXT NOT NULL, anamnes TEXT, prioritet TEXT NOT NULL,
   svar_senast TEXT NOT NULL, status TEXT NOT NULL, skickad_tid TEXT NOT NULL,
   mottagen_tid TEXT, mottagen_av TEXT, bedomd_tid TEXT, bedomd_av TEXT, beslut TEXT, motivering TEXT,

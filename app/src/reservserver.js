@@ -17,7 +17,7 @@
 // Reservservern säger tydligt att den är en reservserver och hur gamla uppgifterna är: i varje svar om sessionen, i
 // hälsokontrollen och i en rad överst på varje sida.
 import { Database } from 'bun:sqlite';
-import { existsSync, readFileSync, readdirSync, appendFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, appendFileSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Fel, iso } from './db.js';
 import * as sakerhetslogg from './sakerhetslogg.js';
@@ -154,18 +154,37 @@ export function lasInLogg(db, rader) {
 // period, vilken kopia reservservern läste, hur många rader som redan är inlästa och om kedjan i filen håller.
 // En fil vars kedja inte håller läses inte in, eftersom den kan ha ändrats.
 const FILNAMN = /^reservserver-logg-[0-9TZ-]{10,40}\.ndjson$/;
+// Säkerhetsgranskningen efter runda 15: tak på antal filer, filens storlek och antal rader, eftersom katalogen läses vid
+// varje anrop. En fil över taket räknas som trasig och läses inte.
+export const MAX_FILER = 50;
+export const MAX_BYTE = 8 * 1024 * 1024;
+export const MAX_RADER = 50_000;
 function lasLoggfiler(katalog) {
   if (!katalog || !existsSync(katalog)) return [];
-  return readdirSync(katalog).filter(f => FILNAMN.test(f)).map(f => {
+  return readdirSync(katalog).filter(f => FILNAMN.test(f)).sort().slice(-MAX_FILER).map(f => {
     let rader = [];
-    try { rader = readFileSync(join(katalog, f), 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x)); } catch { rader = null; }
+    try {
+      if (statSync(join(katalog, f)).size > MAX_BYTE) throw new Error('för stor');
+      rader = readFileSync(join(katalog, f), 'utf8').split('\n').filter(Boolean);
+      if (rader.length > MAX_RADER) throw new Error('för många rader');
+      rader = rader.map(x => JSON.parse(x));
+    } catch { rader = null; }
     return { fil: f, rader, simulerad: false };
   });
 }
 const inlastNyckel = (r) => JSON.stringify([r.tid, r.personal_id ?? null, r.patient_id ?? null, r.handling, r.resurs ?? null]);
 function filerFor({ katalog, minne, nyckel }) {
   const ur = [...lasLoggfiler(katalog), ...[...(minne.get(nyckel) ?? new Map())].map(([fil, rader]) => ({ fil, rader, simulerad: true }))];
-  return ur.map(f => ({ ...f, rader: (f.rader ?? []).filter(r => r?.reservserver?.nyckel === nyckel), trasig: f.rader === null })).filter(f => f.rader.length || f.trasig);
+  // Säkerhetsgranskningen efter runda 15: en trasig fil går inte att knyta till en sandlåda och visas därför inte för
+  // någon. Driften har originalet på reservserverns disk.
+  return ur.map(f => ({ ...f, rader: (f.rader ?? []).filter(r => r?.reservserver?.nyckel === nyckel) })).filter(f => f.rader.length);
+}
+// Säkerhetsgranskningen efter runda 15: den första raden i filen ska fortsätta kedjan i den här sandlådans åtkomstlogg,
+// från den sista raden i kopian som reservservern läste. Annars hör loggen inte hit, eller har ändrats.
+function fortsatterKedjan(db, rader) {
+  if (!rader.length) return false;
+  const forra = db.query('SELECT hash FROM atkomstlogg WHERE id = ?').get(Number(rader[0].id) - 1);
+  return Boolean(forra) && forra.hash === rader[0].prev_hash;
 }
 export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } = {}) {
   const inlasta = new Set(db.query("SELECT tid, personal_id, patient_id, handling, resurs FROM atkomstlogg WHERE syfte LIKE 'Reservservern:%'").all().map(inlastNyckel));
@@ -174,7 +193,7 @@ export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } =
     const kvar = f.rader.filter(r => !inlasta.has(inlastNyckel(r))).length;
     const k = kontrolleraLogg(f.rader);
     return { fil: f.fil, simulerad: f.simulerad, rader: f.rader.length, kvar, inlast: kvar === 0, fran: tider[0] ?? null, till: tider.at(-1) ?? null,
-      kopia: f.rader[0]?.reservserver ? { id: f.rader[0].reservserver.kopia, tid: f.rader[0].reservserver.kopiaTid } : null, kedjaHel: !f.trasig && k.hel };
+      kopia: f.rader[0]?.reservserver ? { id: f.rader[0].reservserver.kopia, tid: f.rader[0].reservserver.kopiaTid } : null, kedjaHel: k.hel && fortsatterKedjan(db, f.rader) };
   }).sort((a, b) => String(b.till).localeCompare(String(a.till)));
   const vantar = filer.filter(f => !f.inlast);
   return {
@@ -187,7 +206,7 @@ export function loggOversikt(db, { katalog = null, minne = new Map(), nyckel } =
 export function lasInFil(db, personal, { katalog = null, minne = new Map(), nyckel, fil } = {}) {
   const f = typeof fil === 'string' ? filerFor({ katalog, minne, nyckel }).find(x => x.fil === fil) : null;
   if (!f) throw new Fel(404, 'Loggen finns inte.', 'saknas');
-  if (f.trasig || !kontrolleraLogg(f.rader).hel) throw new Fel(409, 'Loggen från reservservern hänger inte ihop: en rad saknas eller har ändrats. Den läses inte in. Kontakta driften, som har originalet på reservserverns disk.', 'ogiltig');
+  if (!kontrolleraLogg(f.rader).hel || !fortsatterKedjan(db, f.rader)) throw new Fel(409, 'Loggen från reservservern hänger inte ihop: en rad saknas eller har ändrats. Den läses inte in. Kontakta driften, som har originalet på reservserverns disk.', 'ogiltig');
   const n = lasInLogg(db, f.rader);
   sakerhetslogg.logga(db, { typ: 'andrad_installning', personal_id: personal.id, enhet_id: personal.enhet_id,
     beskrivning: `Läste in ${n} ${n === 1 ? 'rad' : 'rader'} från reservserverns logg ${f.fil} i åtkomstloggen.` });

@@ -982,6 +982,9 @@ function arkivresursInvanare(db, typ, rad) {
     if (r.extension) r.extension = r.extension.filter(e => e.url !== `${EXT}/nll-status`);
     if (r.requester) r.requester = utanPersonalId(r.requester);
     if (r.recorder) r.recorder = utanPersonalId(r.recorder);
+    // Säkerhetsgranskningen efter runda 15: noterna har ordinationens historik med personalens namn och meddelandena till
+    // Nationella läkemedelslistan, som Min journal inte visar.
+    delete r.note;
   } else if (typ === 'ServiceRequest') {
     delete r.requester;
     const note = (r.note ?? []).filter(n => /^(Motivering|Svar): /.test(String(n.text ?? '')));

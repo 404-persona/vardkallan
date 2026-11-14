@@ -210,7 +210,8 @@ describe('Mellanarkiv för vårdkontakter, remisser och diagnoser', () => {
     // Förhandsvisningen säger hur många diagnoser som påverkas, och en annan systemförvaltare godkänner.
     const nytt = ['R', 'J06', 'S52', 'T78'];
     const f = konfiguration.forhandsvisa(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: nytt });
-    expect(JSON.stringify(f)).toMatch(/räknas \d+ diagnos(er)? från före/);
+    // Säkerhetsgranskningen efter runda 15: utan små tal och avrundat till tiotal.
+    expect(JSON.stringify(f)).toMatch(/räknas (inga|färre än 10|omkring \d+0) diagnoser från före/);
     expect(JSON.stringify(f)).toMatch(/stannar ändå, eftersom ett beslutsstöd läser dem/);
     const { andring: a } = konfiguration.foresla(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: nytt, giltigFran: '2026-01-01', motivering: 'Frakturer räknas också som tillfälliga.' }, new Date('2025-12-30T10:00:00.000Z'));
     expect(() => konfiguration.godkann(d, personal(d, 'sysf'), a.id, {}, new Date('2025-12-31T10:00:00.000Z'))).toThrow();

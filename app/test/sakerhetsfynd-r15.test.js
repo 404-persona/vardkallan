@@ -7,6 +7,11 @@ import * as journal from '../src/journal.js';
 import * as ff from '../src/flerfaktor.js';
 import * as idp from '../src/idp.js';
 import * as tillit from '../src/tillitsniva.js';
+import * as mellanarkiv from '../src/mellanarkiv.js';
+import * as konfiguration from '../src/konfiguration.js';
+import * as reservserver from '../src/reservserver.js';
+import { hashFor } from '../src/logg.js';
+import { personal } from './hjalp.js';
 
 let app;
 beforeAll(() => { app = testserver(); });
@@ -118,5 +123,103 @@ describe('Säkerhetsgranskningen efter runda 15: tillitsnivån', () => {
     const u = idp.uppdragForGammalSession(db, p);
     expect(u.personHsaId).toBe(p.hsa_id);
     expect(tillit.forUppdrag(u).flerfaktor).toBe(false);
+  });
+});
+
+describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
+  const overfor = (d) => {
+    const b = d.query(`INSERT INTO arkivbeslut (typ, beslutsfattare, diarienummer, beslutsdatum, lagrum, omfattning, registrerad, registrerad_av)
+      VALUES ('leverans', 'Vårdgivarens arkivansvarige', 'RS 2026-799', '2026-11-14', 'Arkivlagen', ?, '2026-11-14', 'ark') RETURNING id`).get(JSON.stringify({ urval: 'mellanarkiv', ar: 5, fore: '2016-01-01' })).id;
+    return mellanarkiv.overfor(d, personal(d, 'ark'), d.query('SELECT * FROM arkivbeslut WHERE id = ?').get(b)).resultat;
+  };
+  test('ett id återanvänds aldrig efter en överföring, och vyn får inga dubbla id', () => {
+    const d = nyDb();
+    // En migrerad anteckning från 2012 som läses in sist och därför har det högsta id:t.
+    const gammal = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av, version, kalla)
+      VALUES ('p02', 'vc-tybble', 'Mottagningsanteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Migrerad 2012."}]', 'lak-vc', '2012-03-01T10:00:00.000Z', 'signerad', '2012-03-01T10:00:00.000Z', 'lak-vc', 1, 'migrerad') RETURNING id`).get().id);
+    overfor(d);
+    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeNull();
+    const ny = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, version, kalla)
+      VALUES ('p03', 'uso-kard', 'Daganteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Ny."}]', 'lak-kard', '2026-11-14T10:00:00.000Z', 'utkast', 1, 'vardkallan') RETURNING id`).get().id);
+    expect(ny).toBeGreaterThan(gammal);
+    const v = mellanarkiv.vy(d, 'anteckningar');
+    expect(d.query(`SELECT id, count(*) AS n FROM ${v} GROUP BY id HAVING n > 1`).all()).toEqual([]);
+    // Räknaren hålls över det högsta id:t i mellanarkivet också när den har blivit lägre, som efter en återföring.
+    d.query("UPDATE sqlite_sequence SET seq = 1 WHERE name = 'anteckningar'").run();
+    mellanarkiv.hojIdGolv(d);
+    expect(d.query("SELECT seq FROM sqlite_sequence WHERE name = 'anteckningar'").get().seq).toBeGreaterThanOrEqual(gammal);
+  });
+
+  test('i en sandlåda med tabeller utan AUTOINCREMENT stannar raden med det högsta id:t tills en nyare finns', () => {
+    const d = nyDb();
+    // Som en sandlåda från version 1.4: tabellen byggs om utan AUTOINCREMENT.
+    const sql = d.query("SELECT sql FROM sqlite_master WHERE name = 'anteckningar'").get().sql.replace(/AUTOINCREMENT/i, '');
+    const triggrar = d.query("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'anteckningar'").all().map(x => x.sql);
+    const index = d.query("SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = 'anteckningar' AND sql IS NOT NULL").all().map(x => x.sql);
+    d.exec('PRAGMA foreign_keys = OFF');
+    d.transaction(() => {
+      d.exec('ALTER TABLE anteckningar RENAME TO anteckningar_r14');
+      d.exec(sql);
+      d.exec('INSERT INTO anteckningar SELECT * FROM anteckningar_r14');
+      d.exec('DROP TABLE anteckningar_r14');
+      for (const s of [...index, ...triggrar]) d.exec(s);
+    })();
+    const gammal = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av, version, kalla)
+      VALUES ('p02', 'vc-tybble', 'Mottagningsanteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Migrerad 2012."}]', 'lak-vc', '2012-03-01T10:00:00.000Z', 'signerad', '2012-03-01T10:00:00.000Z', 'lak-vc', 1, 'migrerad') RETURNING id`).get().id);
+    overfor(d);
+    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeTruthy();
+    const ny = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, version, kalla)
+      VALUES ('p03', 'uso-kard', 'Daganteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Ny."}]', 'lak-kard', '2026-11-14T10:00:00.000Z', 'utkast', 1, 'vardkallan') RETURNING id`).get().id);
+    expect(ny).toBeGreaterThan(gammal);
+    overfor(d);
+    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeNull();
+    const v = mellanarkiv.vy(d, 'anteckningar');
+    expect(d.query(`SELECT id, count(*) AS n FROM ${v} GROUP BY id HAVING n > 1`).all()).toEqual([]);
+  });
+
+  test('invånarens FHIR lämnar inte ut ordinationens historik och meddelanden till NLL ur mellanarkivet', async () => {
+    const k = klient(app);
+    expect((await k.post('/api/login/invanare', { invanareId: 'inv-p01' })).data.inloggad).toBe(true);
+    const r = await k.get('/fhir/MedicationRequest?patient=p01');
+    expect(r.status).toBe(200);
+    const ur = (r.data.entry ?? []).map(e => e.resource).filter(x => String(x.id).startsWith('ma-'));
+    expect(ur.length).toBeGreaterThan(0);
+    for (const x of ur) expect([x.id, x.note]).toEqual([x.id, undefined]);
+    expect(JSON.stringify(ur)).not.toContain('Händelse');
+  });
+
+  test('förhandsvisningen av tillfälliga diagnoser ger inga små tal till systemförvaltaren, som inte läser journaler', () => {
+    const d = nyDb();
+    d.query("INSERT INTO diagnoser (patient_id, enhet_id, kod, text, typ, datum) VALUES ('p02', 'vc-tybble', 'T74.1', 'Fysisk misshandel', 'huvud', '2012-02-01')").run();
+    const f = konfiguration.forhandsvisa(d, personal(d, 'sysf'), { nyckel: 'arkiv.tillfalliga_diagnoser', varde: ['R', 'T74'] });
+    const text = JSON.stringify(f);
+    expect(text).not.toMatch(/räknas 1 diagnos/);
+    expect(text).toMatch(/räknas (inga|färre än 10|omkring \d+0) diagnoser från före/);
+  });
+
+  test('en logg från reservservern läses in bara när den fortsätter sandlådans egen kedja, också när filen hänger ihop i sig', () => {
+    const d = nyDb();
+    const minne = new Map();
+    const nyckel = 'r15-granskning';
+    // Den simulerade loggen fortsätter kedjan och läses in.
+    const { fil } = reservserver.simuleraLogg(d, { minne, nyckel });
+    expect(reservserver.lasInFil(d, personal(d, 'sysf'), { minne, nyckel, fil }).inlasta).toBe(3);
+    // En förfalskad logg som hänger ihop i sig men börjar på en annan kedja läses inte in.
+    const sista = d.query('SELECT max(id) AS m FROM atkomstlogg').get().m;
+    let prev = 'a'.repeat(64);
+    const rader = [0, 1].map(i => {
+      const rad = { id: sista + 1 + i, tid: new Date(Date.now() - (10 - i) * 60_000).toISOString(), personal_id: 'ssk-kard', enhet_id: 'uso-kard', patient_id: 'p02',
+        handling: 'las_oversikt', resurs: 'oversikt', grund: 'vardrelation', syfte: 'Förfalskad', resultat: 'tillaten', invanare_id: null };
+      const hash = hashFor(prev, rad);
+      const ut = { ...rad, prev_hash: prev, hash, reservserver: { kopia: 'x', kopiaTid: rad.tid, nyckel } };
+      prev = hash;
+      return ut;
+    });
+    expect(reservserver.kontrolleraLogg(rader).hel).toBe(true);
+    const namn = 'reservserver-logg-2026-11-14T10-00-00Z.ndjson';
+    minne.get(nyckel).set(namn, rader);
+    const o = reservserver.loggOversikt(d, { minne, nyckel }).filer.find(x => x.fil === namn);
+    expect(o.kedjaHel).toBe(false);
+    expect(() => reservserver.lasInFil(d, personal(d, 'sysf'), { minne, nyckel, fil: namn })).toThrow('hänger inte ihop');
   });
 });
