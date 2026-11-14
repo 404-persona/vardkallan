@@ -23,7 +23,7 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Överföringen till mellanarkivet tar med avslutade ordinationer",
-          "text": "Ett beslut om överföring till mellanarkiv tar nu också med ordinationer som avslutades före gränsen med alla doser, avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser. Systemet låter det som fortfarande gäller stanna i journalen, till exempel kroniska diagnoser, det som en bokning eller uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Exporten till e-arkivet tar med det som finns i mellanarkivet."
+          "text": "Ett beslut om överföring till mellanarkiv tar nu också med ordinationer som avslutades före gränsen med alla doser, avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser. Systemet låter det som fortfarande gäller stanna i journalen, till exempel kroniska diagnoser, det som en bokning eller uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Exporten till e-arkivet tar med det som finns i mellanarkivet. Statistik, rapporter och datauttaget för uppföljning räknar med det som har förts över, så att resultaten inte ändras."
         },
         {
           "id": "reservserver-1-5-0",
@@ -43,7 +43,7 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Äldre uppgifter från arkivet i Min journal",
-          "text": "Uppgifter som är äldre än fem år och som vården har flyttat till sitt arkiv visas i Min journal som förut, märkta Äldre uppgift från arkivet. Samma regler gäller som för resten av din journal i Min journal."
+          "text": "Uppgifter som är äldre än fem år och som vården har flyttat till sitt arkiv visas i Min journal som förut, märkta Äldre uppgift från arkivet. Samma regler gäller som för resten av din journal i Min journal, också när du hämtar din journal med en app genom FHIR."
         },
         {
           "id": "reservlogg-1-5-0",
@@ -54,6 +54,16 @@
           "var": null,
           "rubrik": "Loggen från reservservern läses in med ett klick",
           "text": "Sidan Lagring visar när det finns en logg från reservservern som inte är inläst, med antal rader, period och vilken säkerhetskopia reservservern läste. Systemet kontrollerar kedjan i loggen, och ett klick läser in varje rad en gång."
+        },
+        {
+          "id": "tillfalliga-diagnoser-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vilka diagnoser som är tillfälliga är en parameter",
+          "text": "Under Regler och parametrar finns parametern Diagnoser som är tillfälliga och får föras till mellanarkivet. Den ändras med fyra ögon, och förhandsvisningen säger hur många diagnoser som påverkas. Grundinställningen är försiktig och är en demoregel som en läkare ska granska. Kroniska diagnoser och diagnoser som ett beslutsstöd läser stannar alltid i journalen."
         }
       ]
     },

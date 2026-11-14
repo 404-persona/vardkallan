@@ -85,7 +85,7 @@ CREATE TRIGGER IF NOT EXISTS mellanarkiv_paket_raderas_ej BEFORE DELETE ON mella
 // och triggrarna läggs tillbaka. Inget innehåll ändras.
 function uppgradera(db) {
   const sql = db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get()?.sql;
-  if (!sql || (sql.includes("'diagnos'") && sql.includes(' rad TEXT'))) return;
+  if (!sql || (sql.includes("'diagnos'") && / rad TEXT/.test(sql))) return;
   db.transaction(() => {
     db.exec('DROP TRIGGER IF EXISTS mellanarkiv_handlingar_andras_ej; DROP TRIGGER IF EXISTS mellanarkiv_handlingar_raderas_ej;');
     db.exec('ALTER TABLE mellanarkiv_handlingar RENAME TO mellanarkiv_handlingar_v14');
@@ -1063,7 +1063,8 @@ export function vy(db, tabell) {
   if (!m) { m = new Map(); vyer.set(db, m); }
   const namn = `alla_${tabell}`;
   if (m.get(tabell) !== kol.join(',')) {
-    const ut = kol.map(k => (k === 'patient_id' ? 'h.patient_id AS patient_id' : `json_extract(h.rad, '$.${k}') AS "${k}"`));
+    // Kolumnernas namn kommer från den första delen av UNION ALL.
+    const ut = kol.map(k => (k === 'patient_id' ? 'h.patient_id' : `json_extract(h.rad, '$.${k}')`));
     db.exec(`DROP VIEW IF EXISTS temp.${namn}`);
     db.exec(`CREATE TEMP VIEW ${namn} AS SELECT ${kol.map(k => `"${k}"`).join(', ')} FROM main."${tabell}"
       UNION ALL SELECT ${ut.join(', ')} FROM main.mellanarkiv_handlingar h WHERE h.slag = '${slag}' AND h.rad IS NOT NULL`);

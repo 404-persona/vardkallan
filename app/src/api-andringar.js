@@ -22,6 +22,7 @@ export const ANDRINGAR = [
       // Beslut 2026-11-14.
       'Encounter, Condition och ServiceRequest tar med avslutade vårdkontakter, tillfälliga diagnoser och avslutade remisser ur mellanarkivet, och referenserna till dem pekar på id:t ma-<nummer>',
       'Min journal visar handlingarna i mellanarkivet med id ma-<nummer> och fältet arkiv, och sidan Lagring har loggen från reservservern (docs/api-avvikelser.md)',
+      'Invånarens FHIR-API (en session från Min journal) tar med det som Min journal visar ur mellanarkivet, med samma tagg, i sökningen på patient, i $everything och på id ma-<nummer>',
       'Reservservern svarar 423 med koden reservserver på varje anrop som skulle ändra något, och hälsokontrollen och sessionen har fältet reservserver med kopians tid och ålder',
     ],
   },
