@@ -197,7 +197,8 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, 
   const grans = new Date(nu.getTime() - inst.fordrojningSekunder * 1000).toISOString();
   const urval = patientId
     ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE patient_id = ? GROUP BY patient_id').all(patientId)
-    : db.query(`SELECT patient_id, min(id) AS forsta FROM ei_markerade ${tvinga ? '' : 'WHERE markerad <= ?'} GROUP BY patient_id ORDER BY forsta LIMIT ?`).all(...(tvinga ? [] : [grans]), tvinga ? 100_000 : Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
+    : tvinga ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade GROUP BY patient_id ORDER BY forsta').all()
+      : db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE markerad <= ? GROUP BY patient_id ORDER BY forsta LIMIT ?').all(grans, Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
   if (patientId && !urval.length) urval.push({ patient_id: patientId });
   if (!urval.length) return { skickade: 0, poster: 0, fel: null };
   const vg = require('./rivta/konsumenter.js').vardgivare(db);
@@ -257,14 +258,15 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, 
   return { skickade, poster, fel };
 }
 
-// Körs vid varje anrop med en sandlåda och av en timer: grundladdning och daglig avstämning, och sändning när det är dags.
-// Ett fel stoppar aldrig anropet.
+// Körs vid varje anrop med en sandlåda och av en timer, och skickar när det är dags. Ett fel stoppar aldrig anropet.
 // maxPatienter begränsar hur mycket ett anrop från en användare får räkna, så att svarstiden inte märks.
-export function efterTid(db, nu = new Date(), { maxPatienter = null } = {}) {
+// avstamning: grundladdningen och den dagliga avstämningen, som bara timern gör, så att ett anrop från en användare
+// aldrig räknar om hela indexet.
+export function efterTid(db, nu = new Date(), { maxPatienter = null, avstamning = false } = {}) {
   try {
     sakra(db);
     const dag = iso(nu).slice(0, 10);
-    if (status(db, 'avstamd') !== dag) { markeraPatienter(db); status(db, 'avstamd', dag); }
+    if (avstamning && status(db, 'avstamd') !== dag) { markeraPatienter(db); status(db, 'avstamd', dag); }
     return skicka(db, { nu, maxPatienter });
   } catch (e) {
     console.error('Engagemangsindex:', e.message);

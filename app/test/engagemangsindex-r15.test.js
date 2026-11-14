@@ -175,7 +175,7 @@ describe(T, () => {
       businessObjectInstanceIdentifier: 'NA', clinicalProcessInterestId: 'NA', sourceSystem: VG, dataController: VG };
     const upd = (lista) => rivta.anropaSynk(rivta.register.EI, { logiskAdress: rivta.nationella.NATIONELL, begaran: { engagementTransaction: lista }, transport: rivta.nationella.transport(db) });
     expect(upd([{ deleteFlag: false, engagement: { ...e, owner: VG } }])).toMatchObject({ ResultCode: 'ERROR' });
-    expect(upd([{ deleteFlag: false, engagement: e }, { deleteFlag: false, engagement: e }]).comment).toContain('Duplicates are not allowed');
+    expect(upd([{ deleteFlag: false, engagement: e }, { deleteFlag: false, engagement: e }]).comment).toContain('Dubbletter är inte tillåtna');
     expect(upd([{ deleteFlag: true, engagement: { ...e, mostRecentContent: '20260101000000' } }])).toMatchObject({ ResultCode: 'ERROR' });
   });
 

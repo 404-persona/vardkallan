@@ -152,14 +152,14 @@ export const sakraSimuleratIndex = sakraSimEi;
 tjanst.registrera(EI, ({ db }, { begaran }) => {
   sakraSimEi(db);
   const lista = begaran.engagementTransaction ?? [];
-  if (lista.length > 1000) return { ResultCode: 'ERROR', comment: 'Update MUST NOT have more than 1000 engagementTransaction elements' };
+  if (lista.length > 1000) return { ResultCode: 'ERROR', comment: 'Begäran får ha högst 1000 engagementTransaction.' };
   const sedda = new Map();
   for (const [i, t] of lista.entries()) {
     const e = t.engagement;
-    for (const f of ['creationTime', 'updateTime', 'owner']) if (e[f] != null) return { ResultCode: 'ERROR', comment: `${f} MUST NOT be given in engagement` };
-    if (t.deleteFlag && e.mostRecentContent != null) return { ResultCode: 'ERROR', comment: 'mostRecentContent MUST NOT be given when deleteFlag=true' };
+    for (const f of ['creationTime', 'updateTime', 'owner']) if (e[f] != null) return { ResultCode: 'ERROR', comment: `Fältet ${f} sätts av indexet och får inte skickas.` };
+    if (t.deleteFlag && e.mostRecentContent != null) return { ResultCode: 'ERROR', comment: 'Fältet mostRecentContent får inte skickas när posten tas bort.' };
     const nyckel = EI_IDENTITET.map(f => e[f]).join('|');
-    if (sedda.has(nyckel)) return { ResultCode: 'ERROR', comment: `EngagementTransaction ${sedda.get(nyckel)} and ${i} have the same unique key. Duplicates are not allowed.` };
+    if (sedda.has(nyckel)) return { ResultCode: 'ERROR', comment: `Posterna ${sedda.get(nyckel)} och ${i} i begäran har samma identitet. Dubbletter är inte tillåtna.` };
     sedda.set(nyckel, i);
   }
   const nu = new Date().toISOString();
