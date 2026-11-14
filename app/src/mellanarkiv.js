@@ -99,7 +99,7 @@ function uppgradera(db) {
   })();
 }
 const har = new WeakSet();
-export function sakra(db) { if (!har.has(db)) { uppgradera(db); db.exec(SCHEMA); har.add(db); hojIdGolv(db); } }
+export function sakra(db) { if (!har.has(db)) { uppgradera(db); db.exec(SCHEMA); har.add(db); sakraIdGolv(db); } }
 export const finnsTabell = (db) => Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get());
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
@@ -161,19 +161,42 @@ export function kandidater(db, fore) {
   }
   // Beslut 2026-11-14: avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser.
   strukturKandidater(db, fore, aktiv, ut, lagg);
-  utanHogstaId(db, ut);
   return ut;
 }
 
 // Säkerhetsgranskningen efter sammanslagningen av runda 15: med INTEGER PRIMARY KEY utan AUTOINCREMENT ger SQLite nästa
 // rad det högsta id:t plus ett. Fördes raden med det högsta id:t över fick nästa nya rad samma id som handlingen i
 // mellanarkivet, och vyerna alla_* (statistiken, rapporterna och datauttaget) fick två rader med samma id från olika
-// patienter. Journalens tabeller har därför AUTOINCREMENT (db.js och lakemedelsprocess.js), och räknaren för varje tabell
-// hålls minst lika hög som det högsta id:t i mellanarkivet (hojIdGolv), också efter en återföring. En sandlåda från en
-// äldre version har tabellerna utan AUTOINCREMENT, och där stannar raden med det högsta id:t i sin tabell i den aktiva
-// journalen tills en nyare rad finns, med det som hör ihop med den: ordinationen med alla sina doser, och vårdkontakten
-// när något som pekar på den stannar (diagnoserna på en vårdkontakt som stannar stannar också).
+// patienter. Journalens tabeller har därför AUTOINCREMENT (db.js och lakemedelsprocess.js, och en sandlåda från en äldre
+// version byggs om i sakraIdGolv), och räknaren för varje tabell hålls minst lika hög som det högsta id:t i
+// mellanarkivet (hojIdGolv), också efter en återföring.
 const autoinkrement = (db, tabell) => /AUTOINCREMENT/i.test(db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(tabell)?.sql ?? '');
+// Säkerhetsgranskningen efter sammanslagningen: en sandlåda från en äldre version har journalens tabeller utan
+// AUTOINCREMENT, och där kunde ett id återanvändas när raden med det högsta id:t gallrades eller fördes över. Tabellerna
+// byggs om med AUTOINCREMENT, med samma rader, index och triggrar, och räknaren hålls över det högsta id:t i
+// mellanarkivet. Det görs innan något förs över eller gallras (sakra och arkiv.js).
+const ID_TABELLER = ['anteckningar', 'matvarden', 'ordinationer', 'administreringar', 'vardkontakter', 'remisser', 'diagnoser'];
+function medAutoinkrement(db) {
+  for (const tabell of ID_TABELLER) {
+    const sql = db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?").get(tabell)?.sql;
+    if (!sql || /AUTOINCREMENT/i.test(sql)) continue;
+    const nySql = sql.replace(/\bid\s+INTEGER\s+PRIMARY\s+KEY\b/i, 'id INTEGER PRIMARY KEY AUTOINCREMENT');
+    if (nySql === sql) continue;
+    const extra = db.query("SELECT sql FROM sqlite_master WHERE tbl_name = ? AND type IN ('index', 'trigger') AND sql IS NOT NULL").all(tabell).map(r => r.sql);
+    const fk = db.query('PRAGMA foreign_keys').get()?.foreign_keys;
+    db.exec('PRAGMA foreign_keys = OFF; PRAGMA legacy_alter_table = ON;');
+    try {
+      db.transaction(() => {
+        db.exec(`ALTER TABLE "${tabell}" RENAME TO "${tabell}_utan_autoinkrement"`);
+        db.exec(nySql);
+        db.exec(`INSERT INTO "${tabell}" SELECT * FROM "${tabell}_utan_autoinkrement"`);
+        db.exec(`DROP TABLE "${tabell}_utan_autoinkrement"`);
+        for (const s of extra) db.exec(s);
+      })();
+    } finally { db.exec(`PRAGMA legacy_alter_table = OFF; PRAGMA foreign_keys = ${fk ? 'ON' : 'OFF'};`); }
+  }
+}
+export function sakraIdGolv(db) { medAutoinkrement(db); hojIdGolv(db); }
 export function hojIdGolv(db) {
   if (!finnsT(db, 'sqlite_sequence') || !finnsTabell(db)) return;
   for (const [tabell, slag] of Object.entries(SLAG_TABELL)) {
@@ -183,30 +206,6 @@ export function hojIdGolv(db) {
     const s = db.query('SELECT seq FROM sqlite_sequence WHERE name = ?').get(tabell);
     if (!s) db.query('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)').run(tabell, m);
     else if (s.seq < m) db.query('UPDATE sqlite_sequence SET seq = ? WHERE name = ?').run(m, tabell);
-  }
-}
-function utanHogstaId(db, ut) {
-  const hogst = new Map();
-  const ar = (tabell, r) => {
-    if (!hogst.has(tabell)) hogst.set(tabell, finnsT(db, tabell) && !autoinkrement(db, tabell) ? db.query(`SELECT max(id) AS m FROM ${tabell}`).get().m : null);
-    return hogst.get(tabell) != null && r.id === hogst.get(tabell);
-  };
-  for (const [pid, v] of ut) {
-    const kontakter = new Set();
-    const hall = (r) => { if (r.vardkontakt_id != null) kontakter.add(r.vardkontakt_id); return false; };
-    for (const [slag, tabell] of [['anteckningar', 'anteckningar'], ['matvarden', 'matvarden'], ['remisser', 'remisser'], ['administreringar', 'administreringar'], ['diagnoser', 'diagnoser']]) {
-      v[slag] = v[slag].filter(r => (ar(tabell, r) ? hall(r) : true));
-    }
-    v.ordinationer = v.ordinationer.filter(o => {
-      if (!ar('ordinationer', o) && !o.administreringar.some(a => ar('administreringar', a))) return true;
-      hall(o);
-      for (const a of o.administreringar) hall(a);
-      return false;
-    });
-    v.vardkontakter = v.vardkontakter.filter(k => !ar('vardkontakter', k) && !kontakter.has(k.id));
-    const kvar = new Set(v.vardkontakter.map(k => k.id));
-    v.diagnoser = v.diagnoser.filter(d => d.vardkontakt_id == null || kvar.has(d.vardkontakt_id));
-    if (Object.values(v).every(l => !l.length)) ut.delete(pid);
   }
 }
 

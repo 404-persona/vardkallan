@@ -594,6 +594,8 @@ const RADTEXT = { anteckningar: 'anteckningar', diagnoser: 'diagnoser', matvarde
 // kallelsens språk) tas bort med släppta triggrar, och varje journal får en rad i loggen med antal per mängd, utan
 // innehåll. Ger antalet per mängd.
 function gallraDelar(db, personal, b, delar) {
+  // Säkerhetsgranskningen efter sammanslagningen: ett id återanvänds inte när raden med det högsta id:t gallras.
+  require('./mellanarkiv.js').sakraIdGolv(db);
   const per = new Map();
   const antal = {};
   const finnsT = (t) => db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(t);

@@ -183,31 +183,45 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
     expect(d.query("SELECT seq FROM sqlite_sequence WHERE name = 'anteckningar'").get().seq).toBeGreaterThanOrEqual(gammal);
   });
 
-  test('i en sandlåda med tabeller utan AUTOINCREMENT stannar raden med det högsta id:t tills en nyare finns', () => {
-    const d = nyDb();
-    // Som en sandlåda från version 1.4: tabellen byggs om utan AUTOINCREMENT.
-    const sql = d.query("SELECT sql FROM sqlite_master WHERE name = 'anteckningar'").get().sql.replace(/AUTOINCREMENT/i, '');
-    const triggrar = d.query("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'anteckningar'").all().map(x => x.sql);
-    const index = d.query("SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = 'anteckningar' AND sql IS NOT NULL").all().map(x => x.sql);
-    d.exec('PRAGMA foreign_keys = OFF');
+  // Som en sandlåda från version 1.4: tabellen byggs om utan AUTOINCREMENT.
+  const utanAutoinkrement = (d, tabell) => {
+    const sql = d.query("SELECT sql FROM sqlite_master WHERE name = ?").get(tabell).sql.replace(/AUTOINCREMENT/i, '');
+    const extra = d.query("SELECT sql FROM sqlite_master WHERE type IN ('trigger', 'index') AND tbl_name = ? AND sql IS NOT NULL").all(tabell).map(x => x.sql);
+    d.exec('PRAGMA foreign_keys = OFF; PRAGMA legacy_alter_table = ON;');
     d.transaction(() => {
-      d.exec('ALTER TABLE anteckningar RENAME TO anteckningar_r14');
+      d.exec(`ALTER TABLE ${tabell} RENAME TO ${tabell}_r14`);
       d.exec(sql);
-      d.exec('INSERT INTO anteckningar SELECT * FROM anteckningar_r14');
-      d.exec('DROP TABLE anteckningar_r14');
-      for (const s of [...index, ...triggrar]) d.exec(s);
+      d.exec(`INSERT INTO ${tabell} SELECT * FROM ${tabell}_r14`);
+      d.exec(`DROP TABLE ${tabell}_r14`);
+      for (const s of extra) d.exec(s);
     })();
+    d.exec('PRAGMA legacy_alter_table = OFF;');
+  };
+  test('en sandlåda med tabeller utan AUTOINCREMENT byggs om, så att ett id inte återanvänds efter en överföring eller en gallring', () => {
+    const d = nyDb();
+    utanAutoinkrement(d, 'anteckningar');
+    utanAutoinkrement(d, 'matvarden');
+    const raderFore = d.query('SELECT count(*) AS n FROM anteckningar').get().n;
     const gammal = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av, version, kalla)
       VALUES ('p02', 'vc-tybble', 'Mottagningsanteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Migrerad 2012."}]', 'lak-vc', '2012-03-01T10:00:00.000Z', 'signerad', '2012-03-01T10:00:00.000Z', 'lak-vc', 1, 'migrerad') RETURNING id`).get().id);
     overfor(d);
-    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeTruthy();
+    expect(d.query("SELECT sql FROM sqlite_master WHERE name = 'anteckningar'").get().sql).toMatch(/AUTOINCREMENT/);
+    expect(d.query("SELECT count(*) AS n FROM sqlite_master WHERE tbl_name = 'anteckningar' AND type = 'trigger'").get().n).toBeGreaterThan(0);
+    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeNull();
+    expect(d.query('SELECT count(*) AS n FROM anteckningar').get().n).toBeLessThanOrEqual(raderFore);
     const ny = Number(d.query(`INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, version, kalla)
       VALUES ('p03', 'uso-kard', 'Daganteckning', 'lakare', '[{"sokord":"Aktuellt","text":"Ny."}]', 'lak-kard', '2026-11-14T10:00:00.000Z', 'utkast', 1, 'vardkallan') RETURNING id`).get().id);
     expect(ny).toBeGreaterThan(gammal);
-    overfor(d);
-    expect(d.query('SELECT id FROM anteckningar WHERE id = ?').get(gammal)).toBeNull();
     const v = mellanarkiv.vy(d, 'anteckningar');
     expect(d.query(`SELECT id, count(*) AS n FROM ${v} GROUP BY id HAVING n > 1`).all()).toEqual([]);
+    // Gallringen: raden med det högsta id:t tas bort, och nästa rad får ändå ett nytt id.
+    const e = nyDb();
+    utanAutoinkrement(e, 'matvarden');
+    mellanarkiv.sakraIdGolv(e);
+    const hogst = e.query('SELECT max(id) AS m FROM matvarden').get().m;
+    e.query('DELETE FROM matvarden WHERE id = ?').run(hogst);
+    const nasta = Number(e.query("INSERT INTO matvarden (patient_id, enhet_id, typ, varde, varde_num, matt_enhet, tid, registrerad_av) VALUES ('p01', 'uso-kard', 'puls', '70', 70, '/min', '2026-11-14T10:00:00.000Z', 'ssk-kard') RETURNING id").get().id);
+    expect(nasta).toBeGreaterThan(hogst);
   });
 
   test('invånarens FHIR lämnar inte ut ordinationens historik och meddelanden till NLL ur mellanarkivet', async () => {
