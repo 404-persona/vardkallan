@@ -4,7 +4,7 @@ export const TESTER_TILLITSNIVA_R15 = [
   'Tillitsnivån tolkas ur acr > tillitsnivå: Ineras, DIGG:s och eIDAS identifierare tolkas, en självdeklarerad nivå räknas lägre och ett okänt eller saknat värde är en faktor',
   ...[
     'simulerat SITHS-kort: demorollen loggar in direkt med tillitsnivå 3, också med en registrerad faktor',
-    'simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor leds personen till att registrera en',
+    'simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor stoppas inloggningen med en förklaring',
     'biljett med nivå 3 från en godkänd inloggningstjänst räknas som flerfaktor, också med en registrerad faktor',
     'biljett med nivå 2 stoppas när tjänsten kräver nivå 3, och förklaringen säger vad som gäller och vem som kan ändra det',
     'biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod',
@@ -23,6 +23,6 @@ export const TESTER_TILLITSNIVA_R15 = [
 // Invånarens e-legitimation i Min journal (L5).
 export const TESTER_E_LEGITIMATION_R15 = [
   'e-legitimation: invånaren loggar in direkt med tillitsnivå 3, också med en faktor',
-  'e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen',
+  'e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor stoppas inloggningen med en förklaring',
   'e-legitimation: ombud och vårdnadshavare loggar in som förut, med tillitsnivå 3',
 ].map(t => `E-legitimation i Min journal och acr_values > ${t}`);

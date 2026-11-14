@@ -33,12 +33,12 @@ const TESTER_FLERFAKTOR = [
 // Runda 13, r3: flerfaktor som krav (flerfaktor-krav.test.js). Runda 15, r1: parametern är ersatt av en regel.
 TESTER_FLERFAKTOR.push(...[
   'parametern Flerfaktor krävs vid inloggning är ersatt av en regel: den går inte att föreslå, historiken finns kvar och systemförvaltningen visar varför',
-  'under tillitsnivå 3 leds den som saknar faktor till att registrera en, och får ingen behörighet eller läskopia förrän den är bekräftad',
-  'under tillitsnivå 3 ger en felaktig kod vid registreringen ingen inloggning, och för många försök avbryter',
-  'under tillitsnivå 3 leds invånaren i Min journal till att registrera en faktor innan journalen visas',
+  // Säkerhetsgranskningen efter sammanslagningen av runda 15: en faktor registreras efter en inloggning med tillitsnivå 3.
+  'under tillitsnivå 3 stoppas den som saknar faktor med en förklaring, och den som har en får ingen behörighet eller läskopia förrän den är bekräftad',
+  'under tillitsnivå 3 kan en inloggning som väntar på faktorn inte registrera en ny faktor',
+  'under tillitsnivå 3 stoppas invånaren utan faktor, och med en faktor från en inloggning med tillitsnivå 3 visas journalen först efter bekräftelsen',
   'den sista faktorn tas bort bara efter en inloggning med tillitsnivå 3, och nekas med en förklaring efter en inloggning med lägre nivå',
-  'en väntande registrering slutför inte inloggningen när kontot har fått en faktor under tiden, och tar aldrig bort faktorer',
-  'en väntande registrering kan aldrig ta bort en faktor',
+  'en inloggning som väntar på faktorn tar aldrig bort en faktor',
 ].map(t => `Flerfaktor som krav > ${t}`));
 // Runda 15, r1 (beslut från Jonas): SITHS och tillitsnivå 3 räknas som flerfaktor (tillitsniva-r15.test.js).
 import { TESTER_TILLITSNIVA_R15, TESTER_E_LEGITIMATION_R15 } from './sussa/runda15-r1-tester.js';

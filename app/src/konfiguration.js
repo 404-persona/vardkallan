@@ -282,7 +282,7 @@ const tillfalligaDiagnoserParameter = () => ({
     const kn = m.kapitelFor(nytt);
     const kf = m.kapitelFor(forra);
     const kap = (k) => (k.length ? `kapitel ${k.join(', ')}` : 'inga kapitel');
-    return [`Listan berör ${kap(kn)} i ICD-10-SE. Där finns ${ungefar(m.diagnoserIKapitel(db, kn, fore))} från före ${fore} med koder som kan vara tillfälliga, mot ${ungefar(m.diagnoserIKapitel(db, kf, fore))} i ${kap(kf)} med den nuvarande listan. Talen räknas per kapitel, inte per kod, eftersom systemförvaltaren inte läser journaler. En kronisk diagnos och en diagnos som ett beslutsstöd läser stannar alltid. Om en diagnos förs över avgör systemet vid nästa beslut om överföring, med sin vårdkontakt.`];
+    return [`Listan omfattar ${kap(kn)} i ICD-10-SE. Där finns ${ungefar(m.diagnoserIKapitel(db, kn, fore))} från före ${fore} med koder som kan vara tillfälliga, mot ${ungefar(m.diagnoserIKapitel(db, kf, fore))} i ${kap(kf)} med den nuvarande listan. Talen räknas per kapitel, inte per kod, eftersom systemförvaltaren inte läser journaler. En kronisk diagnos och en diagnos som ett beslutsstöd läser stannar alltid. Om en diagnos förs över avgör systemet vid nästa beslut om överföring, med sin vårdkontakt.`];
   },
 });
 

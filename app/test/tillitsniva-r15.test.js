@@ -128,7 +128,7 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     expect((await b.post('/api/flerfaktor/totp/borja')).status).toBe(200);
   });
 
-  test('simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor leds personen till att registrera en', async () => {
+  test('simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor stoppas inloggningen med en förklaring', async () => {
     const b = webblasare();
     const h = await totpFor(b, 'adm-kard');
     await b.post('/api/logout', {});
@@ -380,7 +380,7 @@ describe('E-legitimation i Min journal och acr_values', () => {
     expect(o.inloggning.text).toContain('redan flerfaktor');
   });
 
-  test('e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen', async () => {
+  test('e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor stoppas inloggningen med en förklaring', async () => {
     const b = webblasare();
     await b.get('/api/session');
     // Säkerhetsgranskningen efter runda 15: utan faktor stoppas invånaren med en förklaring, och appen registreras efter
