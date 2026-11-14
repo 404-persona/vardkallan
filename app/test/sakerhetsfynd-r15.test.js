@@ -2,7 +2,7 @@
 // rött innan felet rättades.
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { join } from 'node:path';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { testserver, klient, sandlada, nyDb, atk } from './hjalp.js';
 import * as underlag from '../src/anteckningsunderlag.js';
 import * as journal from '../src/journal.js';
@@ -219,6 +219,14 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
     expect(text(['N30'])).toMatch(/kapitel N i ICD-10-SE\. Där finns färre än 10 diagnoser/);
   });
 
+  test('signaturen på reservserverns logg täcker varje fält som inläsningen läser', () => {
+    const kalla = readFileSync(join(import.meta.dir, '..', 'src', 'reservserver.js'), 'utf8');
+    // Fälten som läses på en rad ur loggen (r.reservserver.x, rader[0].reservserver.x).
+    const lasta = new Set([...kalla.matchAll(/(?:\br|\])\??\.reservserver\??\.(\w+)/g)].map(x => x[1]).filter(x => x !== 'mac'));
+    expect(lasta.size).toBeGreaterThan(0);
+    for (const f of lasta) expect([f, reservserver.MAC_FALT.includes(f)]).toEqual([f, true]);
+  });
+
   test('en logg från reservservern läses in bara när den är signerad med den delade nyckeln, kommer från en av sandlådans kopior och börjar direkt efter kopian', () => {
     const d = nyDb();
     const dir = mkdtempSync(join(import.meta.dir, '..', '.testtmp-reservlogg-r15-'));
@@ -226,10 +234,10 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
       const nyckel = 'r15granskning';
       const loggNyckel = Buffer.from('en-delad-nyckel-for-reservserverns-logg-r15');
       const sista = d.query('SELECT max(id) AS m FROM atkomstlogg').get().m;
-      const kopior = [{ id: 'kopia-1', sha256: 'c'.repeat(64), loggId: sista }];
+      const kopior = [{ id: 'kopia-1', sha256: 'c'.repeat(64), loggId: sista, tid: '2026-11-14T09:00:00.000Z' }];
       const hashAv = (id) => d.query('SELECT hash FROM atkomstlogg WHERE id = ?').get(id).hash;
-      const bygg = ({ start = sista + 1, prev = hashAv(sista), kopiaLoggId = sista, kopia = 'kopia-1', nyckelFor = loggNyckel } = {}) => {
-        const meta = { kopia, kopiaTid: '2026-11-14T09:00:00.000Z', kopiaSha256: 'c'.repeat(64), kopiaLoggId, nyckel };
+      const bygg = ({ start = sista + 1, prev = hashAv(sista), kopiaLoggId = sista, kopia = 'kopia-1', nyckelFor = loggNyckel, kopiaTid = '2026-11-14T09:00:00.000Z', andraTid = null } = {}) => {
+        const metaFor = (i) => ({ kopia, kopiaTid: i === 1 && andraTid ? andraTid : kopiaTid, kopiaSha256: 'c'.repeat(64), kopiaLoggId, nyckel });
         let p = prev;
         return [0, 1].map(i => {
           const rad = { id: start + i, tid: new Date(Date.now() - (10 - i) * 60_000).toISOString(), personal_id: 'ssk-kard', enhet_id: 'uso-kard', patient_id: 'p02',
@@ -239,6 +247,7 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
           return { ...rad, hash };
         }).map((r, i, alla) => {
           const ut = { ...r, prev_hash: i === 0 ? prev : alla[i - 1].hash };
+          const meta = metaFor(i);
           return { ...ut, reservserver: { ...meta, mac: reservserver.loggMac(nyckelFor, ut, meta) } };
         });
       };
@@ -262,6 +271,13 @@ describe('Säkerhetsgranskningen efter runda 15: mellanarkivet', () => {
       expect(prova(bygg({ nyckelFor: Buffer.from('en-annan-nyckel-som-inte-ar-den-delade-r15') }))).toContain('inte signerad');
       // En kopia som inte är sandlådans.
       expect(prova(bygg({ kopia: 'kopia-annan' }))).toContain('inte en av den här sandlådans');
+      // En ändrad kopiaTid bryter signaturen, rader med olika kopior blandas inte, och en kopiaTid som inte är kopians
+      // tid i kopieindexet godtas inte.
+      const tid = bygg();
+      tid[0] = { ...tid[0], reservserver: { ...tid[0].reservserver, kopiaTid: '2026-11-14T08:00:00.000Z' } };
+      expect(prova(tid)).toContain('inte signerad');
+      expect(prova(bygg({ andraTid: '2026-11-14T08:00:00.000Z' }))).toContain('blandar rader');
+      expect(prova(bygg({ kopiaTid: '2026-11-14T08:00:00.000Z' }))).toContain('börjar inte direkt efter kopian');
       // Utan nyckel i kärnsystemet läses ingen logg in.
       const fil = 'reservserver-logg-2026-11-14T10-00-09Z.ndjson';
       writeFileSync(join(dir, fil), bygg().map(r => JSON.stringify(r)).join('\n') + '\n');
