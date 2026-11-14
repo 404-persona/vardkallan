@@ -129,8 +129,8 @@ OVNINGAR_V1.push(
     ['c', 'Du måste först trycka på Spara utkast.'],
   ], 'b', 'Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.', '#/patient/p01/journal'),
   o('egna-fraser', ['lakare', 'sjukskoterska', 'underskoterska', 'fysioterapeut'], 'Vad får en egen fras innehålla?', [
-    ['a', 'Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.'],
-    ['b', 'Värden ur journalen, till exempel ett blodtryck med datum.'],
+    ['a', 'Värden ur journalen, till exempel ett blodtryck med datum.'],
+    ['b', 'Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.'],
     ['c', 'En hel mall med många sökord.'],
-  ], 'a', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
+  ], 'b', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
 );

@@ -293,9 +293,11 @@ export function autospara(form, ctx, { typ, anteckningId = null, las, nyKontakt 
     if (json === senast) return id;
     pagar = (async () => {
       try {
+        // Sparandet räknas inte som aktivitet för utloggningen (bakgrund), precis som förut när utkastet bara sparades med
+        // knappen. Tidsgränsen sparar texten själv innan den loggar ut.
         // Ett anrop som avbryts när avbrottet börjar, eller som inte når servern, görs om, så att utkastet hamnar i
         // skrivkön i stället för att försvinna med formuläret.
-        const skicka = () => api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { metod: 'PUT', tyst: true, ko: true, data: { ...(id ? { anteckningId: id } : {}), typ, sokord, lokalId, ...nyKontakt() } });
+        const skicka = () => api(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { metod: 'PUT', tyst: true, ko: true, bakgrund: true, data: { ...(id ? { anteckningId: id } : {}), typ, sokord, lokalId, ...nyKontakt() } });
         let r;
         for (let forsok = 0; ; forsok++) {
           try { r = await skicka(); break; } catch (e) {
@@ -332,7 +334,7 @@ export function autospara(form, ctx, { typ, anteckningId = null, las, nyKontakt 
     // Texten skickas med keepalive, så att den kommer fram också när fliken stängs. Om förra försöket misslyckades
     // frågar webbläsaren först.
     try {
-      fetch(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { method: 'PUT', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...(id ? { anteckningId: id } : {}), typ, sokord: las(), lokalId }) });
+      fetch(`/api/patient/${encodeURIComponent(ctx.id)}/anteckningsutkast`, { method: 'PUT', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Vk-Bakgrund': '1' }, body: JSON.stringify({ ...(id ? { anteckningId: id } : {}), typ, sokord: las(), lokalId }) });
     } catch { /* fliken stängs */ }
     if (fel) { e.preventDefault(); e.returnValue = ''; }
   };
