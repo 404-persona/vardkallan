@@ -83,6 +83,7 @@ export function registrera(atk, body = {}, { nu = new Date() } = {}) {
 }
 // Upphör ett samtycke som inte gäller längre: en viss tid som har passerat, eller en vårdrelation som har upphört.
 // Ger orsaken ('utgangen' eller 'vardrelation') eller null när samtycket gäller.
+export function upphortNu(db, s, nu = new Date()) { return upphort(db, s, nu); }
 function upphort(db, s, nu) {
   if (s.giltighet === 'tid' && s.giltig_till && s.giltig_till < nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' })) return 'utgangen';
   if (s.giltighet === 'vardrelation' && !require('./atkomst.js').harVardrelation(db, s.patient_id, vardenhetFor(db, s.enhet_id), nu)) return 'vardrelation';

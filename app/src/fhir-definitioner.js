@@ -95,12 +95,19 @@ export const KODSYSTEM = [
 ];
 // Runda 15, r3 (Sussa 5.4.2.2): var en journalhandling finns. En resurs ur mellanarkivet har koden mellanarkiv i
 // meta.tag, så att mottagaren ser att den kommer därifrån, och meta.source pekar på paketet den kom i.
+// Säkerhetsgranskningen efter sammanslagningen av runda 15: samtyckets giltighet (Consent).
+KODSYSTEM.push(kodsystem('samtycke-giltighet', 'SamtyckeGiltighet', 'Samtyckets giltighet', 'Hur länge patientens samtycke till sammanhållen journalföring gäller.', [
+  ['vardrelation', 'Så länge vårdrelationen pågår', 'Samtycket upphör när patienten inte längre har en vårdrelation till vårdenheten.'],
+  ['tid', 'Till och med ett visst datum', 'Samtycket gäller till och med provision.period.end, men aldrig utan en vårdrelation.'],
+  ['tillsvidare', 'Tills vidare', 'Samtycket gäller tills patienten återkallar det, men aldrig utan en vårdrelation.'],
+]));
 KODSYSTEM.push(kodsystem('lagring', 'Lagring', 'Lagring', 'Var journalhandlingen finns. En handling utan kod finns i den aktiva journalen.', [
   ['mellanarkiv', 'Ur mellanarkivet', 'Journalhandlingen har förts över till mellanarkivet efter ett beslut om överföring. Den ändras inte där, och den lämnas ut med samma behörighet och loggning som den aktiva journalen.'],
 ]));
 export const VARDEMANGDER = KODSYSTEM.map(vardemangd);
 
 export const TILLAGG = [
+  tillagg('samtycke-giltighet', 'SamtyckeGiltighet', 'Samtyckets giltighet', 'Hur länge samtycket till sammanhållen journalföring gäller: så länge vårdrelationen pågår, till och med ett visst datum eller tills vidare.', 'Consent', 'code', `${VS}/samtycke-giltighet`),
   tillagg('uppfoljningsdatum', 'Uppfoljningsdatum', 'Uppföljningsdatum', 'Datum då ordinationen ska följas upp. Obligatoriskt i Vårdkällan, som i Nationella läkemedelslistan.', 'MedicationRequest', 'date'),
   tillagg('nll-status', 'NllStatus', 'NLL-status', 'Status för överföringen till Nationella läkemedelslistan (simulerad i demon).', 'MedicationRequest', 'code', `${VS}/nll-status`),
   tillagg('utsattningsorsak', 'Utsattningsorsak', 'Utsättningsorsak', 'Orsaken till att ordinationen sattes ut.', 'MedicationRequest', 'string'),

@@ -522,3 +522,30 @@ describe('Säkerhetsgranskningen efter runda 15: timern för de nationella köer
   });
 });
 
+describe('Säkerhetsgranskningen efter runda 15: FHIR Consent', () => {
+  test('slutdatumet och statusen följer de tre giltighetsvalen', async () => {
+    const fhirMod = await import('../src/fhir.js');
+    const db = nyDb();
+    const pers = (id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
+    const rad = () => db.query("SELECT * FROM sammanhallen_samtycken WHERE patient_id = 'p01' ORDER BY id DESC").get();
+    const a = new AtkomstKlass(db, pers('lak-kard'), 'p01', {}, 'las_journal');
+    const om30 = new Date(Date.now() + 30 * 86_400_000).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+    sam.registrera(a, { giltighet: 'tid', giltigTill: om30 });
+    const tid = rad();
+    expect(fhirMod.consent(db, tid).provision.period.end).toBe(om30);
+    expect(fhirMod.consent(db, tid).status).toBe('active');
+    expect(fhirMod.consent(db, tid, new Date(Date.now() + 40 * 86_400_000)).status).toBe('inactive');
+    sam.aterkalla(a);
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    const tv = rad();
+    expect(fhirMod.consent(db, tv).provision.period.end).toBeUndefined();
+    expect(fhirMod.consent(db, tv).extension[0].valueCode).toBe('tillsvidare');
+    sam.aterkalla(a);
+    sam.registrera(a, { giltighet: 'vardrelation' });
+    const vr = rad();
+    expect(fhirMod.consent(db, vr).provision.period.end).toBeUndefined();
+    expect(fhirMod.consent(db, vr).status).toBe('active');
+    expect(fhirMod.consent(db, vr).extension[0].valueCode).toBe('vardrelation');
+  });
+});
+

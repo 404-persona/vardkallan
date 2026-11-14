@@ -680,15 +680,21 @@ const MAPPA = { Immunization: immunization, CarePlan: carePlan, Encounter: encou
 TYPER.push('Consent');
 HANDLING.Consent = 'las_journal';
 TABELL.Consent = 'sammanhallen_samtycken';
-export function consent(db, s) {
+// Säkerhetsgranskningen efter sammanslagningen: giltigheten följer de tre valen. Till och med ett visst datum ger det
+// datumet som slut; så länge vårdrelationen pågår och tills vidare har inget slutdatum. Ett samtycke som har upphört nu
+// (datumet har passerat eller vårdrelationen har upphört) är inactive redan innan timern har stämt av det.
+export function consent(db, s, nu = new Date()) {
+  const upphort = !s.aterkallat ? require('./samtycke-nationellt.js').upphortNu(db, s, nu) : null;
+  const slut = s.aterkallat ?? (s.giltighet === 'tid' && s.giltig_till ? s.giltig_till : null);
   return {
-    resourceType: 'Consent', id: String(s.id), meta: kallaMeta('vardkallan'), status: s.aterkallat ? 'inactive' : 'active',
+    resourceType: 'Consent', id: String(s.id), meta: kallaMeta('vardkallan'), status: s.aterkallat || upphort ? 'inactive' : 'active',
+    extension: [{ url: `${EXT}/samtycke-giltighet`, valueCode: s.giltighet ?? 'tillsvidare' }],
     scope: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/consentscope', code: 'patient-privacy' }] },
     category: [{ coding: [{ system: 'http://loinc.org', code: '59284-0' }], text: 'Samtycke till sammanhållen journalföring' }],
     patient: ref('Patient', s.patient_id), dateTime: s.registrerat,
     organization: [ref('Organization', s.enhet_id, enhetsnamn(db, s.enhet_id))],
     policyRule: { text: 'Lag (2022:913) om sammanhållen vård- och omsorgsdokumentation, 3 kap.' },
-    provision: { type: 'permit', period: { start: s.registrerat, ...(s.aterkallat ? { end: s.aterkallat } : {}) } },
+    provision: { type: 'permit', period: { start: s.registrerat, ...(slut ? { end: slut } : {}) } },
   };
 }
 MAPPA.Consent = consent;
