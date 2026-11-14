@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen läser du in reservserverns logg med ett klick på sidan Lagring. Vilka diagnoser som är tillfälliga och får föras till mellanarkivet är en parameter under Regler och parametrar, där förhandsvisningen säger hur många diagnoser som påverkas och en läkare ska granska listan. Du läser inte journalerna.
+Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. Du kopplar också in vårdgivarens inloggningstjänster och anger lägsta tillitsnivå för var och en. Tillitsnivå 3, som SITHS-kortet med PIN-kod, räknas som flerfaktor, och med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen. Om flerfaktor krävs är inget val längre: systemet avgör det, och parametern Flerfaktor krävs vid inloggning står kvar i historiken som ersatt av en regel. En ändring gäller först när en annan systemförvaltare har godkänt den. Vid ett längre avbrott ger du driften nyckeln från sidan Säkerhetskopior, så att reservservern startar med rätt kopia, och när kärnsystemet är i drift igen läser du in reservserverns logg med ett klick på sidan Lagring. Vilka diagnoser som är tillfälliga och får föras till mellanarkivet är en parameter under Regler och parametrar, där förhandsvisningen säger hur många diagnoser som påverkas och en läkare ska granska listan. Du läser inte journalerna.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -122,5 +122,6 @@ Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag 
 - Kontrollera att säkerhetskopian går att läsa tillbaka.
 - Veta när reservservern används och vad den visar, och läsa in dess logg på sidan Lagring.
 - Ändra listan över tillfälliga diagnoser och läsa förhandsvisningen.
+- Ange lägsta tillitsnivå för en inloggningstjänst och förklara vad en lägre nivå betyder för personalen.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
 - Svara rätt på alla 3 övningar och få intyget.

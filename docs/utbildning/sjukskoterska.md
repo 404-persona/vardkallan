@@ -199,6 +199,12 @@ Börjar i: Arbetslistan efter inloggning. Klickbudget: högst 2 steg. I demon g�
 
 Sussa 11.2.1.8. Ett klick på Läkemedel att ge och ett på Reservdator för läkemedel. Sedan hämtar sidan själv listan över alla inskrivna patienter var fjärde minut, och ingen behöver göra något mer.
 
+### Skriva och signera en omvårdnadsanteckning
+
+Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan Ek flödet.
+
+Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning/cirkulation, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -301,6 +307,36 @@ Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren
 
 Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01).
 
+### Övning 10
+
+Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
+
+Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
+
+Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.
+
+Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 11
+
+Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
+
+Rätt svar: Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.
+
+Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.
+
+Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 12
+
+Vad får en egen fras innehålla?
+
+Rätt svar: Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.
+
+Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.
+
+Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -393,4 +429,4 @@ Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har 
 - Skriva och signera en omvårdnadsanteckning.
 - Bedöma resultatet mot vårdplanens mål i omvårdnadsanteckningen och se varför systemet föreslår ett område.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 9 övningar och få intyget.
+- Svara rätt på alla 12 övningar och få intyget.

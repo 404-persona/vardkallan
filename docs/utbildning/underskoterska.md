@@ -26,6 +26,12 @@ Börjar i: Arbetslistan efter inloggning. Klickbudget: högst 3 steg. I demon g�
 
 Sussa 3.5.2.18. Ett klick till Läkemedel att ge och ett på Ge för dosen. Systemet har kontrollerat att undersköterskans delegering omfattar dosens läkemedelsform och administrationssätt, att den gäller i dag och på vårdenheten, och visar knappen Ge bara för de doserna. Delegeringen sparas med dosen. Runda 13, r3 (E2-5): utan skannat armband bekräftar sjuksköterskan med ett klick hur patientens identitet kontrollerades, med det vanligaste sättet förvalt, en gång per patient och läkemedelsrunda. Med skanning behövs inget extra klick.
 
+### Skriva och signera undersköterskans anteckning
+
+Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Amira Haddad flödet.
+
+Ett klick för att öppna en ny anteckning, där Observationsanteckning är förvald eftersom det är yrkets mall, ett klick på det senaste mätvärdet i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och undersköterskan skriver bara det hon har sett.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -114,6 +120,36 @@ Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Obs
 
 Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01).
 
+### Övning 9
+
+Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
+
+Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
+
+Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 10
+
+Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
+
+Rätt svar: Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.
+
+Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 11
+
+Vad får en egen fras innehålla?
+
+Rätt svar: Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.
+
+Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -161,4 +197,4 @@ Du arbetar som Amira Haddad, undersköterska på avdelning 72, som motsvarar Sus
 - Veta vad systemet gör när en delegering saknas eller har gått ut.
 - Skriva och signera en observationsanteckning.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 8 övningar och få intyget.
+- Svara rätt på alla 11 övningar och få intyget.
