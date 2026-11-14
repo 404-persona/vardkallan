@@ -4,7 +4,7 @@
 // sista faktorn får tas bort bara när den pågående inloggningen har tillitsnivå 3. Parameterns beslutade versioner finns
 // kvar i historiken. Testnamnen används i kravregistret (krav.js).
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { testserver, klient, sandlada, personal } from './hjalp.js';
+import { testserver, klient, sandlada, personal, faktorEfterNiva3, bekraftaKod } from './hjalp.js';
 import { datumAv } from '../src/db.js';
 import * as konfiguration from '../src/konfiguration.js';
 import * as ff from '../src/flerfaktor.js';
@@ -43,106 +43,77 @@ describe('Flerfaktor som krav', () => {
     expect(() => db.query('DELETE FROM konfig_andringar WHERE nyckel = ?').run(NYCKEL)).toThrow();
   });
 
-  test('under tillitsnivå 3 leds den som saknar faktor till att registrera en, och får ingen behörighet eller läskopia förrän den är bekräftad', async () => {
+  // Säkerhetsgranskningen efter runda 15: under tillitsnivå 3 registreras ingen faktor med bara den första faktorn. Den
+  // registreras efter en inloggning med tillitsnivå 3 och bekräftar sedan en inloggning med lägre nivå.
+  test('under tillitsnivå 3 stoppas den som saknar faktor med en förklaring, och den som har en får ingen behörighet eller läskopia förrän den är bekräftad', async () => {
     const k = klient(app);
+    const stopp = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
+    expect(stopp.status).toBe(403);
+    expect(stopp.data.kod).toBe('kraver_tillitsniva');
+    expect(stopp.data.fel).toContain('SITHS-kortet');
+    expect((await k.post('/api/flerfaktor/totp/borja')).status).toBe(401);
+    const h = await faktorEfterNiva3(k, { personalId: 'ssk-kard' });
     const forsta = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
     expect(forsta.status).toBe(200);
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.lasnyckel).toBeUndefined();
-    expect(forsta.data.flerfaktor).toMatchObject({ kravs: true, registrera: true, metoder: [] });
-    expect(forsta.data.flerfaktorVantar).toMatchObject({ registrera: true });
+    expect(forsta.data.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
+    expect(forsta.data.flerfaktor.registrera).toBeUndefined();
     expect((await k.get('/api/patient/p01')).status).toBe(401);
     expect((await k.get('/api/inkorg')).status).toBe(401);
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const h = ff.fran32(b.nyckel);
-    const r = await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
-    expect(r.status).toBe(201);
+    const r = await bekraftaKod(k, h);
+    expect(r.status).toBe(200);
     expect(r.data.inloggad).toBe(true);
     expect(r.data.personal.id).toBe('ssk-kard');
-    expect(r.data.flerfaktor).toMatchObject({ aktiv: true, metod: 'totp' });
     expect(r.data.lasnyckel).toBeTruthy();
     expect((await k.get('/api/patient/p01')).status).toBe(200);
-    await k.post('/api/logout');
-    const nasta = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
-    expect(nasta.data.inloggad).toBe(false);
-    expect(nasta.data.flerfaktor.metoder).toEqual(['totp']);
-    expect(nasta.data.flerfaktor.registrera).toBeUndefined();
   });
 
-  test('under tillitsnivå 3 ger en felaktig kod vid registreringen ingen inloggning, och för många försök avbryter', async () => {
+  test('under tillitsnivå 3 kan en inloggning som väntar på faktorn inte registrera en ny faktor', async () => {
     const k = klient(app);
-    await k.post('/api/login', { personalId: 'usk-kard', tillitsniva: 2 });
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const h = ff.fran32(b.nyckel);
-    const giltiga = new Set([-1, 0, 1].map(d => ff.totp(h, Date.now() + d * 30_000)));
-    const felkoder = ['123456', '234567', '345678', '456789', '567890', '678901', '789012'].filter(x => !giltiga.has(x));
-    let sista;
-    for (let i = 0; i < ff.MAX_FORSOK; i++) {
-      sista = await k.post('/api/flerfaktor/totp', { kod: felkoder[i] });
-      expect(sista.status).toBe(400);
-      expect(sista.data.inloggad).toBeUndefined();
-    }
-    expect(sista.data.fel).toContain('För många felaktiga försök');
-    expect((await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) })).status).toBe(401);
+    await faktorEfterNiva3(k, { personalId: 'usk-kard' });
+    const v = await k.post('/api/login', { personalId: 'usk-kard', tillitsniva: 2 });
+    expect(v.data.flerfaktor.metoder).toEqual(['totp']);
+    expect((await k.post('/api/flerfaktor/totp/borja')).status).toBe(401);
+    expect((await k.post('/api/flerfaktor/totp', { kod: '123456' })).status).toBe(401);
     expect((await k.get('/api/session')).data.inloggad).toBe(false);
   });
 
-  test('under tillitsnivå 3 leds invånaren i Min journal till att registrera en faktor innan journalen visas', async () => {
+  test('under tillitsnivå 3 stoppas invånaren utan faktor, och med en faktor från en inloggning med tillitsnivå 3 visas journalen först efter bekräftelsen', async () => {
     const k = klient(app);
+    const stopp = await k.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
+    expect(stopp.status).toBe(403);
+    expect(stopp.data.fel).toContain('e-legitimation');
+    const h = await faktorEfterNiva3(k, { invanareId: 'inv-p01' });
     const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
     expect(forsta.data.inloggad).toBe(false);
-    expect(forsta.data.flerfaktor).toMatchObject({ kravs: true, registrera: true });
+    expect(forsta.data.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
     expect((await k.get('/api/min/journal/p01')).status).toBe(401);
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const r = await k.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(b.nyckel), Date.now()) });
-    expect(r.status).toBe(201);
+    const r = await bekraftaKod(k, h);
+    expect(r.status).toBe(200);
     expect(r.data.inloggad).toBe(true);
     expect(r.data.roll).toBe('invanare');
     expect(r.data.lasnyckel).toBeUndefined();
   });
 
   // Säkerhetsgranskningen: en väntande registrering får aldrig gå förbi en faktor som kontot redan har.
-  test('en väntande registrering slutför inte inloggningen när kontot har fått en faktor under tiden, och tar aldrig bort faktorer', async () => {
+  test('en inloggning som väntar på faktorn tar aldrig bort en faktor', async () => {
     const k = klient(app);
-    await k.logga('far-kard');
+    await faktorEfterNiva3(k, { personalId: 'far-kard' });
+    await k.post('/api/login', { personalId: 'far-kard', tillitsniva: 2 });
     const db = sandlada(app, k).db;
-    await k.post('/api/logout');
-    expect((await k.post('/api/login', { personalId: 'far-kard', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const annan = ff.borjaTotp(db, { typ: 'personal', id: 'far-kard', namn: 'Elsa Nordin' });
-    ff.bekraftaTotp(db, { typ: 'personal', id: 'far-kard' }, ff.totp(ff.fran32(annan.nyckel), Date.now()));
     const befintlig = ff.aktiva(db, 'personal', 'far-kard')[0];
-    const r = await k.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(b.nyckel), Date.now()) });
-    expect(r.status).toBe(400);
-    expect(r.data.inloggad).toBeUndefined();
-    expect(r.data.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
-    expect(r.data.flerfaktor.registrera).toBeUndefined();
+    expect((await k.post(`/api/flerfaktor/${befintlig.id}/ta-bort`)).status).toBe(401);
     expect(ff.aktiva(db, 'personal', 'far-kard').map(f => f.id)).toEqual([befintlig.id]);
     expect((await k.get('/api/session')).data.inloggad).toBe(false);
-    expect((await k.post('/api/flerfaktor/totp/borja')).status).toBe(401);
-    expect((await k.post(`/api/flerfaktor/${befintlig.id}/ta-bort`)).status).toBe(401);
-    expect(ff.aktiva(db, 'personal', 'far-kard').length).toBe(1);
   });
 
-  test('en väntande registrering kan aldrig ta bort en faktor', async () => {
-    const k = klient(app);
-    await k.logga('vch-kard');
-    const db = sandlada(app, k).db;
-    await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'vch-kard', tillitsniva: 2 });
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const rad = db.query("SELECT id FROM flerfaktorer WHERE agare_id = 'vch-kard'").get();
-    expect((await k.post(`/api/flerfaktor/${rad.id}/ta-bort`)).status).toBe(401);
-    expect(db.query("SELECT count(*) AS n FROM flerfaktorer WHERE agare_id = 'vch-kard'").get().n).toBe(1);
-    expect(b.nyckel).toBeTruthy();
-  });
 
   test('den sista faktorn tas bort bara efter en inloggning med tillitsnivå 3, och nekas med en förklaring efter en inloggning med lägre nivå', async () => {
     const k = klient(app);
+    const h = await faktorEfterNiva3(k, { personalId: 'adm-kard' });
     await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 });
-    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
-    const h = ff.fran32(b.nyckel);
-    await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
+    expect((await bekraftaKod(k, h)).data.inloggad).toBe(true);
     const o = (await k.get('/api/flerfaktor')).data;
     expect(o.sistaFaktorKanTasBort).toBe(false);
     expect(o.text).toContain('tillitsnivå 3');
@@ -161,9 +132,9 @@ describe('Flerfaktor som krav', () => {
     expect(ok.data.aktiv).toBe(false);
     // Samma regel för invånaren: efter e-legitimation med lägre nivå nekas den sista faktorn.
     const inv = klient(app);
+    const hi = await faktorEfterNiva3(inv, { invanareId: 'inv-p03' });
     await inv.post('/api/login/invanare', { invanareId: 'inv-p03', tillitsniva: 2 });
-    const bi = (await inv.post('/api/flerfaktor/totp/borja')).data;
-    await inv.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(bi.nyckel), Date.now()) });
+    expect((await bekraftaKod(inv, hi)).data.inloggad).toBe(true);
     const oi = (await inv.get('/api/flerfaktor')).data;
     const ri = await inv.post(`/api/flerfaktor/${oi.faktorer[0].id}/ta-bort`);
     expect(ri.status).toBe(400);

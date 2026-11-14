@@ -762,7 +762,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
           s.kopior.set(s.lasnyckel.id, { personalId: s.personalId, nyckel: s.lasnyckel.nyckel, giltigTill: s.lasnyckel.giltigTill, patienter: new Map(x.kopia ?? []), loggIds: new Set(x.kopiaLoggIds ?? []) });
         }
         // Runda 9, r5: en session från en version före biljetterna får uppdraget ur masterdata.
-        if (s.personalId && !s.uppdrag) s.uppdrag = idp.uppdragUrMasterdata(s.db, s.db.query('SELECT * FROM personal WHERE id = ?').get(s.personalId));
+        // Säkerhetsgranskningen efter runda 15: uppdraget har ingen tillitsnivå, eftersom inloggningen inte bevisade någon,
+        // så att kontrollen av känsliga handlingar stoppar och ber om en ny inloggning (tillitsniva.js).
+        if (s.personalId && !s.uppdrag) s.uppdrag = idp.uppdragForGammalSession(s.db, s.db.query('SELECT * FROM personal WHERE id = ?').get(s.personalId));
         rensaKopior(s);
         // Runda 13, r2: en sandlåda från en äldre version läses in en i taget och skrivs genast till disk, så att alla inte
         // ligger i minnet samtidigt.
@@ -1398,10 +1400,17 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     // Runda 12, r3: har personen en passkey eller en app för engångskoder i sandlådan väntar inloggningen på den.
     stoppaOprovbarFaktor(c, 'personal', p.id, p.enhet_id);
     const har = flerfaktor.kravs(c.db, 'personal', p.id);
+    // Säkerhetsgranskningen efter runda 15: den som saknar en faktor registrerar den inte här, med bara den första
+    // faktorn, utan efter en inloggning med tillitsnivå 3 (tillitsniva.utanFaktorText).
+    if (!har) stoppUtanFaktor(c, { personal_id: p.id, enhet_id: p.enhet_id }, uppdrag);
     const orsak = tillit.andraFaktorText(uppdrag, { harFaktor: har });
-    if (har) return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, orsak });
-    // Runda 13, r3: den som saknar en faktor leds till att registrera en.
-    return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, registrera: true, orsak });
+    return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, orsak });
+  }
+  function stoppUtanFaktor(c, vem, uppdrag) {
+    const text = tillit.utanFaktorText(uppdrag);
+    sakerhetslogg.logga(c.db, { typ: 'inloggning_misslyckad', personal_id: vem.personal_id ?? null, invanare_id: vem.invanare_id ?? null, enhet_id: vem.enhet_id ?? null,
+      metod: 'POST', vag: c.url.pathname, status: 403, beskrivning: `Inloggning under tillitsnivå 3 utan registrerad faktor. ${text}`.slice(0, 300) });
+    throw new Fel(403, text, 'kraver_tillitsniva');
   }
   // Runda 13, r3 (E2-5): bekräftelserna av patienters identitet i sessionen, per person och patient.
   const IDENTITET_RUNDA_MS = 15 * 60_000;
@@ -1503,9 +1512,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     // Runda 12, r3: med en passkey eller en app för engångskoder väntar inloggningen på den.
     stoppaOprovbarFaktor(c, 'invanare', inv.id, null);
     const har = flerfaktor.kravs(c.db, 'invanare', inv.id);
+    // Säkerhetsgranskningen efter runda 15: som för personalen registreras en faktor bara efter tillitsnivå 3.
+    if (!har) stoppUtanFaktor(c, { invanare_id: inv.id }, inloggning);
     const orsak = tillit.andraFaktorText(inloggning, { harFaktor: har });
-    // Runda 13, r3: den som saknar en faktor leds till att registrera en.
-    return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn, inloggning, orsak, ...(har ? {} : { registrera: true }) });
+    return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn, inloggning, orsak });
   });
   function slutforInvanare(c, inv, { metod = null, inloggning = null, stark = false } = {}) {
     glomIdentiteter(c.s);

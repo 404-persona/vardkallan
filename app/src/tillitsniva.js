@@ -143,6 +143,17 @@ export function andraFaktorText(uppdrag, { harFaktor }) {
   return `Du loggade in med ${har}. Det är en faktor, och ${krav}. ${harFaktor ? 'Bekräfta med din passkey eller en kod från appen.' : 'Registrera en passkey eller en app för engångskoder. Nästa gång räcker det att bekräfta med den.'}`;
 }
 
+// Säkerhetsgranskningen efter runda 15: under tillitsnivå 3 räcker inte den första faktorn för att registrera en andra,
+// eftersom vem som helst med bara den första faktorn då kunde lägga till en egen. En passkey eller en app för
+// engångskoder registreras efter en inloggning med tillitsnivå 3, och bekräftar sedan en inloggning med lägre nivå.
+export function utanFaktorText(uppdrag) {
+  const t = tolka(uppdrag?.tillitsniva);
+  const har = t.niva ? `tillitsnivå ${t.niva}` : 'en inloggning utan känd tillitsnivå';
+  return uppdrag?.invanare
+    ? `Du loggade in med ${har}. Det är en faktor, och åtkomst till din journal kräver flerfaktor. Du har ingen passkey eller app för engångskoder att bekräfta med, och en sådan kan bara registreras efter en inloggning med tillitsnivå 3. Logga in med en e-legitimation som BankID och registrera den under Flerfaktor, så räcker den lägre nivån nästa gång.`
+    : `Du loggade in med ${har}. Det är en faktor, och åtkomst till patientuppgifter kräver flerfaktor. Du har ingen passkey eller app för engångskoder att bekräfta med, och en sådan kan bara registreras efter en inloggning med tillitsnivå 3. Logga in med SITHS-kortet och registrera den under Flerfaktor, så räcker den lägre nivån nästa gång.`;
+}
+
 // Det som sessionen och API:t visar om inloggningens nivå.
 export const ut = (uppdrag) => {
   const b = forUppdrag(uppdrag);

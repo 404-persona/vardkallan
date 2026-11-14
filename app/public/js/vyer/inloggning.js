@@ -91,7 +91,7 @@ export async function visa(main, _param, q) {
         <fieldset class="kryssgrupp inloggningssatt" id="inloggningssatt">
           <legend>Hur loggar du in?</legend>
           <div class="kryssfalt"><input type="radio" id="inl-niva-3" name="tillitsniva" value="3" checked><label for="inl-niva-3">Med SITHS-kortet och PIN-koden (tillitsnivå 3). Det är redan flerfaktor.</label></div>
-          <div class="kryssfalt"><input type="radio" id="inl-niva-2" name="tillitsniva" value="2"><label for="inl-niva-2">Utan SITHS-kort (tillitsnivå 2, en faktor). Systemet ber om passkey eller kod från appen.</label></div>
+          <div class="kryssfalt"><input type="radio" id="inl-niva-2" name="tillitsniva" value="2"><label for="inl-niva-2">Utan SITHS-kort (tillitsnivå 2, en faktor). Systemet ber om den passkey eller app för engångskoder som du har registrerat efter en inloggning med kortet.</label></div>
         </fieldset>
         <ul class="rollista" id="rollista"><li class="tom">Hämtar demorollerna.</li></ul>
       </section>
@@ -109,7 +109,7 @@ export async function visa(main, _param, q) {
         <fieldset class="kryssgrupp inloggningssatt" id="inloggningssatt-invanare">
           <legend>Hur loggar du in?</legend>
           <div class="kryssfalt"><input type="radio" id="inv-niva-3" name="tillitsniva-invanare" value="3" checked><label for="inv-niva-3">Med e-legitimation (tillitsnivå 3). Det är redan flerfaktor.</label></div>
-          <div class="kryssfalt"><input type="radio" id="inv-niva-2" name="tillitsniva-invanare" value="2"><label for="inv-niva-2">Med en e-legitimation med lägre tillitsnivå (2, en faktor). Systemet ber om passkey eller kod från appen.</label></div>
+          <div class="kryssfalt"><input type="radio" id="inv-niva-2" name="tillitsniva-invanare" value="2"><label for="inv-niva-2">Med en e-legitimation med lägre tillitsnivå (2, en faktor). Systemet ber om den passkey eller app för engångskoder som du har registrerat efter en inloggning med tillitsnivå 3.</label></div>
         </fieldset>
         <ul class="rollista" id="patientlista"><li class="tom">Hämtar patienterna.</li></ul>
       </section>

@@ -95,3 +95,20 @@ export async function godkannGallring(app, k, id) {
   }
   return r;
 }
+
+// Säkerhetsgranskningen efter runda 15: en passkey eller en app för engångskoder registreras efter en inloggning med
+// tillitsnivå 3, aldrig med bara den första faktorn. Hjälparen loggar in med nivå 3 (personal eller invånare),
+// registrerar en app för engångskoder, loggar ut och ger hemligheten. bekraftaKod bekräftar en senare inloggning med
+// lägre nivå med koden för nästa tidsfönster, så att den inte är samma kod som vid registreringen.
+import * as flerfaktorMod from '../src/flerfaktor.js';
+export async function faktorEfterNiva3(k, { personalId = null, invanareId = null }) {
+  const inl = personalId ? await k.post('/api/login', { personalId }) : await k.post('/api/login/invanare', { invanareId });
+  if (inl.status !== 200 || !inl.data.inloggad) throw new Error(`inloggningen med tillitsnivå 3: ${JSON.stringify(inl.data)}`);
+  const b = (await k.post('/api/flerfaktor/totp/borja')).data;
+  const h = flerfaktorMod.fran32(b.nyckel);
+  const r = await k.post('/api/flerfaktor/totp', { kod: flerfaktorMod.totp(h, Date.now()) });
+  if (r.status !== 201) throw new Error(`registreringen: ${JSON.stringify(r.data)}`);
+  await k.post('/api/logout');
+  return h;
+}
+export const bekraftaKod = (k, h, steg = 1) => k.post('/api/login/flerfaktor', { typ: 'totp', kod: flerfaktorMod.totp(h, Date.now() + steg * 30_000) });

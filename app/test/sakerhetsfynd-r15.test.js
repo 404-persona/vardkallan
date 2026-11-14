@@ -4,6 +4,9 @@ import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { testserver, klient, sandlada, nyDb, atk } from './hjalp.js';
 import * as underlag from '../src/anteckningsunderlag.js';
 import * as journal from '../src/journal.js';
+import * as ff from '../src/flerfaktor.js';
+import * as idp from '../src/idp.js';
+import * as tillit from '../src/tillitsniva.js';
 
 let app;
 beforeAll(() => { app = testserver(); });
@@ -72,5 +75,48 @@ describe('Säkerhetsgranskningen efter runda 15: anteckningsvyn', () => {
     const antal = ut.reduce((s, x) => s + (x.referenser?.length ?? 0), 0);
     expect(antal).toBeGreaterThan(0);
     expect(antal).toBeLessThanOrEqual(underlag.MAX_REFERENSER_TOTALT);
+  });
+});
+
+describe('Säkerhetsgranskningen efter runda 15: tillitsnivån', () => {
+  test('under tillitsnivå 3 kan den som saknar faktor inte registrera en egen andra faktor och få behörighet med bara den första', async () => {
+    const k = klient(app);
+    const r = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
+    expect(r.status).toBe(403);
+    expect(r.data.kod).toBe('kraver_tillitsniva');
+    expect(r.data.fel).toContain('tillitsnivå 3');
+    expect((await k.post('/api/flerfaktor/totp/borja')).status).toBe(401);
+    expect((await k.get('/api/patient/p01')).status).toBe(401);
+    // Invånaren likadant.
+    const i = klient(app);
+    const ri = await i.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
+    expect(ri.status).toBe(403);
+    expect(ri.data.kod).toBe('kraver_tillitsniva');
+    expect((await i.post('/api/flerfaktor/totp/borja')).status).toBe(401);
+  });
+
+  test('en faktor som registrerades efter en inloggning med tillitsnivå 3 bekräftar en senare inloggning med tillitsnivå 2', async () => {
+    const k = klient(app);
+    await k.logga('lak-kard');
+    const b = (await k.post('/api/flerfaktor/totp/borja')).data;
+    const h = ff.fran32(b.nyckel);
+    expect((await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) })).status).toBe(201);
+    await k.post('/api/logout');
+    const r = await k.post('/api/login', { personalId: 'lak-kard', tillitsniva: 2 });
+    expect(r.status).toBe(200);
+    expect(r.data.inloggad).toBe(false);
+    expect(r.data.flerfaktor.metoder).toEqual(['totp']);
+    expect(r.data.flerfaktor.registrera).toBeUndefined();
+    const s = await k.post('/api/login/flerfaktor', { typ: 'totp', kod: ff.totp(h, Date.now() + 30_000) });
+    expect(s.status).toBe(200);
+    expect(s.data.inloggad).toBe(true);
+  });
+
+  test('en sparad session från en version före biljetterna räknas inte som flerfaktor', () => {
+    const db = nyDb();
+    const p = db.query("SELECT * FROM personal WHERE id = 'lak-kard'").get();
+    const u = idp.uppdragForGammalSession(db, p);
+    expect(u.personHsaId).toBe(p.hsa_id);
+    expect(tillit.forUppdrag(u).flerfaktor).toBe(false);
   });
 });

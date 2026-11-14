@@ -684,7 +684,7 @@ JANEJ['lakemedel.orsak_frivillig_utan_nll'] = {
 export const ERSATTA = {
   'sakerhet.flerfaktor_kravs': {
     rubrik: 'Flerfaktor krävs vid inloggning', omrade: 'sakerhet', sedan: '1.5.0', text: { true: 'Ja', false: 'Nej' },
-    regel: 'Inloggningen är alltid flerfaktor. Tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod eller en e-legitimation som BankID, räknas redan som flerfaktor, och en lägre nivå kompletteras med en passkey eller en kod från appen innan någon behörighet ges. Den sista faktorn får tas bort bara när den pågående inloggningen har tillitsnivå 3 eller högre.',
+    regel: 'Inloggningen är alltid flerfaktor. Tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod eller en e-legitimation som BankID, räknas redan som flerfaktor, och en lägre nivå kompletteras med en passkey eller en kod från appen innan någon behörighet ges. Den faktorn registreras efter en inloggning med tillitsnivå 3, aldrig med bara den första faktorn. Den sista faktorn får tas bort bara när den pågående inloggningen har tillitsnivå 3 eller högre.',
     varfor: 'Åtkomst till personuppgifter i ett system med direktåtkomst kräver stark autentisering (HSLF-FS 2016:40 3 kap. 15 §), och invånarens elektroniska tillgång kräver flerfaktorsautentisering (4 kap. 11 §). Det är inget val för vårdgivaren, så systemet avgör själv utifrån inloggningens tillitsnivå. Den sista faktorn får tas bort när inloggningen ändå är stark, och behålls annars, så att ingen tar bort den faktor som just gjorde inloggningen stark.',
   },
 };

@@ -2288,7 +2288,9 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await loggaIn(page, 'sysf-2');
     });
     // Runda 15, r1: lägsta tillitsnivå per inloggningstjänst. Tomas Lindh sänker den till 2, Nora Ekholm godkänner, och
-    // Sara Lindqvist loggar in med tillitsnivå 2 och registrerar en app för engångskoder som andra faktor.
+    // Sara Lindqvist loggar in med tillitsnivå 2 och bekräftar med en kod från appen. Säkerhetsgranskningen efter
+    // sammanslagningen: appen registreras efter en inloggning med SITHS-kortet (tillitsnivå 3), aldrig med bara den första
+    // faktorn, så Sara registrerar den först.
     await s('Inloggningstjänster: lägsta tillitsnivå sänks till 2 med fyra ögon, och en biljett med tillitsnivå 2 kompletteras med en kod från appen', async () => {
       const { createHmac } = require('node:crypto');
       const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -2314,6 +2316,17 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '.notis', 'Ändringen är godkänd');
       await forvanta(page, '#it-inkopplade ~ ul', 'Lägsta tillitsnivå: Tillitsnivå 2');
       await page.waitForLoadState('networkidle');
+      // Sara registrerar appen efter en inloggning med SITHS-kortet.
+      await loggaIn(page, 'lak-kard');
+      await page.click('a[data-flerfaktor="av"]');
+      await vantaVy(page);
+      await forvanta(page, 'main h1', 'Inloggning och flerfaktor');
+      await page.click('[data-a="totp"]');
+      const h = fran32(await page.locator('[data-ff-nyckel]').getAttribute('data-ff-nyckel'));
+      await page.fill('#ff-ny-kod', kodFor(h, await serverNu()));
+      await page.click('#ff-totp-form [type="submit"]');
+      await forvanta(page, '[data-ff-status="pa"]', 'Flerfaktor är på');
+      await page.waitForLoadState('networkidle');
       await page.click('[data-a="loggaut"]');
       await page.waitForSelector('#extern-inloggning [data-extern]');
       await page.click('#extern-inloggning [data-extern]');
@@ -2323,11 +2336,9 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       const dl = page.locator('dialog[open].flerfaktor-dialog');
       await dl.waitFor();
       await forvanta(page, 'dialog[open]', 'Du loggade in med tillitsnivå 2');
-      await dl.locator('[data-ffr="totp"]').click();
-      const h = fran32(await dl.locator('[data-ff-nyckel]').getAttribute('data-ff-nyckel'));
-      await dl.locator('#ffr-kod').fill(kodFor(h, await serverNu()));
+      await dl.locator('#ff-kod').fill(kodFor(h, (await serverNu()) + 30000));
       await bild(page, '104g-tillitsniva-2-kod');
-      await dl.locator('.ffr-totp [type="submit"]').click();
+      await dl.locator('[data-ff="totp"]').click();
       await page.waitForSelector('[data-a="loggaut"]');
       await vantaVy(page);
       await forvanta(page, '.vem', 'Sara Lindqvist');

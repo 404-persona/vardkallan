@@ -4,7 +4,7 @@
 // och i Sussa-mappningen (src/sussa/mappning/5.2.js).
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { generateKeyPairSync } from 'node:crypto';
-import { testserver, sandlada, personal } from './hjalp.js';
+import { testserver, sandlada, personal, faktorEfterNiva3, bekraftaKod } from './hjalp.js';
 import { startaTestutfardare } from './oidc-testutfardare.js';
 import { datumAv } from '../src/db.js';
 import * as konfiguration from '../src/konfiguration.js';
@@ -141,12 +141,14 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     expect(r.data.inloggad).toBe(true);
     expect(r.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
     expect(sakerhet(b).at(-1).beskrivning).toContain('tillitsnivå 2');
-    // Utan faktor: registreringen är den andra faktorn, oavsett vårdgivaren.
+    // Säkerhetsgranskningen efter runda 15: utan faktor stoppas inloggningen med en förklaring, eftersom en faktor bara
+    // registreras efter en inloggning med tillitsnivå 3.
     const c = webblasare();
     await c.get('/api/session');
     const u = await c.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
-    expect(u.data.flerfaktor).toMatchObject({ kravs: true, registrera: true, metoder: [] });
-    expect(u.data.flerfaktor.text).toContain('tillitsnivå 2');
+    expect(u.status).toBe(403);
+    expect(u.data.kod).toBe('kraver_tillitsniva');
+    expect(u.data.fel).toContain('tillitsnivå 2');
     // Bara nivå 2 och 3 finns i demon.
     expect((await c.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 1 })).status).toBe(400);
   });
@@ -197,26 +199,23 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     for (const krav of ['första', 'andra']) {
       db(b).query("DELETE FROM flerfaktorer WHERE agare_id = 'ssk-kard'").run();
       await b.post('/api/logout', {});
-      // Utan faktor: resultatet bär utmaningen, och registreringen slutför inloggningen.
+      // Säkerhetsgranskningen efter runda 15: utan faktor stoppas inloggningen, och ingen faktor registreras med bara
+      // den första. Med en faktor från en inloggning med tillitsnivå 3 frågar systemet efter koden.
       const r = await b.extern(id);
-      expect({ krav, ok: r.ok, registrera: r.flerfaktor?.registrera }).toEqual({ krav, ok: true, registrera: true });
-      expect(r.flerfaktor.text).toContain('tillitsnivå 2');
+      expect({ krav, ok: r.ok }).toEqual({ krav, ok: false });
+      expect(r.text).toContain('tillitsnivå 2');
+      expect(r.text).toContain('tillitsnivå 3');
       expect((await b.get('/api/session')).data.inloggad).toBe(false);
-      expect((await b.get('/api/inkorg')).status).toBe(401);
-      const bo = (await b.post('/api/flerfaktor/totp/borja')).data;
-      const h = ff.fran32(bo.nyckel);
-      const klar = await b.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
-      expect(klar.status).toBe(201);
-      expect(klar.data.inloggad).toBe(true);
-      expect(klar.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
-      // Nästa gång frågar systemet efter koden.
-      await b.post('/api/logout', {});
+      expect((await b.post('/api/flerfaktor/totp/borja')).status).toBe(401);
+      const h = await totpFor(b, 'ssk-kard');
       const igen = await b.extern(id);
       expect(igen.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
       expect(igen.flerfaktor.registrera).toBeUndefined();
+      expect((await b.get('/api/inkorg')).status).toBe(401);
       const ok = await b.post('/api/login/flerfaktor', { typ: 'totp', kod: ff.totp(h, Date.now() + 30_000) });
       expect(ok.data.inloggad).toBe(true);
       expect(ok.data.personal.id).toBe('ssk-kard');
+      expect(ok.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
     }
     op.manipulera = null;
   });
@@ -235,10 +234,10 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     await andraLagsta(b, id, 1);
     await b.post('/api/logout', {});
     op.manipulera = (h, p) => { const q = { ...p }; delete q.acr; return [h, q]; };
+    // Säkerhetsgranskningen efter runda 15: utan faktor stoppas också en inloggning utan känd nivå, med förklaringen.
     const en = await b.extern(id);
-    expect(en.ok).toBe(true);
-    expect(en.flerfaktor).toMatchObject({ kravs: true, registrera: true });
-    expect(en.flerfaktor.text).toContain('utan känd tillitsnivå');
+    expect(en.ok).toBe(false);
+    expect(en.text).toContain('utan känd tillitsnivå');
     op.manipulera = null;
   });
 
@@ -320,6 +319,13 @@ describe('SITHS och tillitsnivå 3 som flerfaktor', () => {
     const rad = sakerhet(b).filter(x => x.typ === 'inloggning').at(-1);
     expect(rad.beskrivning).toBe('Inloggning med SITHS-kort med PIN-kod (simulerat), tillitsnivå 3, flerfaktor.');
     await b.post('/api/logout', {});
+    // Säkerhetsgranskningen efter runda 15: en inloggning med nivå 2 väntar på en faktor som registrerades efter nivå 3,
+    // och utan faktor loggas stoppet.
+    await b.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
+    const stopp = sakerhet(b).filter(x => x.typ === 'inloggning_misslyckad' && x.personal_id === 'ssk-kard').at(-1);
+    expect(stopp).toMatchObject({ personal_id: 'ssk-kard', status: 403 });
+    expect(stopp.beskrivning).toContain('tillitsnivå 2');
+    await totpFor(b, 'ssk-kard');
     await b.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
     const vantar = sakerhet(b).filter(x => x.typ === 'flerfaktor').at(-1);
     expect(vantar.beskrivning).toContain('tillitsnivå 2');
@@ -358,11 +364,9 @@ describe('E-legitimation i Min journal och acr_values', () => {
     const b = webblasare();
     await b.som('lak-kard');
     await b.post('/api/logout', {});
-    // En registrerad app för engångskoder behövs inte efter e-legitimationen.
-    expect((await b.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
-    const bo = (await b.post('/api/flerfaktor/totp/borja')).data;
-    expect((await b.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(bo.nyckel), Date.now()) })).data.inloggad).toBe(true);
-    await b.post('/api/logout', {});
+    // En registrerad app för engångskoder behövs inte efter e-legitimationen. Säkerhetsgranskningen efter runda 15: appen
+    // registreras efter en inloggning med tillitsnivå 3.
+    await faktorEfterNiva3(b, { invanareId: 'inv-p01' });
     const r = await b.post('/api/login/invanare', { invanareId: 'inv-p01' });
     expect(r.data.inloggad).toBe(true);
     expect(r.data.roll).toBe('invanare');
@@ -379,20 +383,21 @@ describe('E-legitimation i Min journal och acr_values', () => {
   test('e-legitimation: med lägre tillitsnivå kompletteras inloggningen i Min journal med faktorn, och utan faktor leds invånaren till registreringen', async () => {
     const b = webblasare();
     await b.get('/api/session');
+    // Säkerhetsgranskningen efter runda 15: utan faktor stoppas invånaren med en förklaring, och appen registreras efter
+    // en inloggning med tillitsnivå 3.
     const u = await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 2 });
-    expect(u.data.inloggad).toBe(false);
-    expect(u.data.flerfaktor).toMatchObject({ kravs: true, registrera: true });
-    expect(u.data.flerfaktor.text).toContain('tillitsnivå 2');
+    expect(u.status).toBe(403);
+    expect(u.data.fel).toContain('tillitsnivå 2');
     expect((await b.get('/api/min/journal/p02')).status).toBe(401);
-    const bo = (await b.post('/api/flerfaktor/totp/borja')).data;
-    const h = ff.fran32(bo.nyckel);
-    const klar = await b.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
-    expect(klar.data.inloggad).toBe(true);
-    expect(klar.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
-    await b.post('/api/logout', {});
+    const h = await faktorEfterNiva3(b, { invanareId: 'inv-p02' });
     const igen = await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 2 });
+    expect(igen.data.inloggad).toBe(false);
     expect(igen.data.flerfaktor).toMatchObject({ kravs: true, metoder: ['totp'] });
     expect(igen.data.flerfaktor.orsak).toContain('din journal');
+    expect((await b.get('/api/min/journal/p02')).status).toBe(401);
+    const klar = await bekraftaKod(b, h);
+    expect(klar.data.inloggad).toBe(true);
+    expect(klar.data.inloggningsniva).toMatchObject({ niva: 2, flerfaktor: true, andraFaktor: 'totp' });
     // Bara nivå 2 och 3 finns i demon, och invånarens biljett godtas aldrig som personalens.
     expect((await b.post('/api/login/invanare', { invanareId: 'inv-p02', tillitsniva: 4 })).status).toBe(400);
     expect((await b.post('/api/login/biljett', { biljett: idp.autentiseraInvanare({ id: 'inv-p02' }) })).status).toBe(401);

@@ -228,6 +228,13 @@ export function uppdragUrMasterdata(db, p) {
     vardgivareHsaId: u.healthCareProviderHsaId, yrke: p.yrke, tillitsniva: TILLITSNIVA, autentiserad: null, biljett: null };
 }
 
+// Säkerhetsgranskningen efter runda 15: uppdraget för en sparad session från en version före biljetterna. Inloggningen
+// bevisade ingen tillitsnivå, så uppdraget har ingen, och kontrollen av känsliga handlingar stoppar (tillitsniva.js).
+export function uppdragForGammalSession(db, p) {
+  const u = uppdragUrMasterdata(db, p);
+  return u ? { ...u, tillitsniva: null } : null;
+}
+
 // Det som gränssnittet och API:t visar om inloggningen, utan biljettens id.
 // Runda 14, r1: en inloggning genom beställarens inloggningstjänst visar tjänstens namn (inloggningstjanster.js).
 export const uppdragUt = (db, u) => (u ? {
