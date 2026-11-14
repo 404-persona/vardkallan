@@ -65,10 +65,10 @@ describe(T, () => {
   test('utan dokumentation makuleras kontakten, och en makulerad kontakt ger ingen vårdrelation', async () => {
     const k = await inloggad('adm-kard');
     const db = sandlada(app, k).db;
-    const ny = await k.post('/api/patient/p15/vardkontakter', { kontaktsatt: 'besok', orsak: 'Kontroll' });
-    expect(ny.status).toBe(200);
-    const id = ny.data.id ?? ny.data.vardkontakt?.id;
-    expect(Number.isInteger(id)).toBe(true);
+    // En genomförd kontakt utan dokumentation, registrerad av vårdadministratören en timme sedan.
+    const nu = Date.now();
+    const id = Number(db.query("INSERT INTO vardkontakter (patient_id, enhet_id, typ, start, slut, orsak, kalla, kontaktsatt, skapad, skapad_av) VALUES ('p15', 'uso-kard-mott', 'oppenvard', ?, ?, 'Kontroll', 'vardkallan', 'besok', ?, 'adm-kard')")
+      .run(new Date(nu - 3600_000).toISOString(), new Date(nu - 1800_000).toISOString(), new Date(nu - 3600_000).toISOString()).lastInsertRowid);
     // Den nya kontakten är det enda som ger kardiologen vårdrelation till patienten i sandlådan.
     db.query("UPDATE vardkontakter SET ger_vardrelation = 0 WHERE patient_id = 'p15' AND id <> ?").run(id);
     db.query("DELETE FROM listningar WHERE patient_id = 'p15'").run();
