@@ -84,20 +84,29 @@ export function efterHandling(db, nu = new Date()) {
 // Timerns schema över de vakna sandlådorna. Sandlådor med en borttagning för skydd eller spärr först, och de skickas alltid,
 // sedan sandlådor med ändringar och sist avstämningen. Inom samma nivå börjar varje varv där förra varvet slutade, så att
 // ingen sandlåda svälter. Det som inte är brådskande slutar när varvets tid (maxMs) är slut.
+// Säkerhetsgranskningen efter sammanslagningen: också det brådskande har ett tak per varv (antal sandlådor och tid), så att
+// många sandlådor med väntande skydd i den publika demon inte kan hålla den gemensamma timern. Det som inte hinns med tas
+// först i nästa varv, eftersom varvet börjar där det förra slutade.
 let markor = 0;
-export function schemalagg(dbs, { nu = new Date(), maxMs = 150 } = {}) {
+export const MAX_BRADSKANDE = 25;
+export function schemalagg(dbs, { nu = new Date(), maxMs = 150, maxBradskandeMs = 1000, maxBradskande = MAX_BRADSKANDE, prioritet = ei.prioritet, kor = (db) => efterTid(db, nu, { anrop: false }) } = {}) {
   const t0 = performance.now();
   const n = dbs.length;
-  if (!n) return;
+  if (!n) return 0;
   const start = markor % n;
-  const ordning = dbs.map((db, i) => ({ db, plats: (i - start + n) % n, prio: ei.prioritet(db) })).sort((a, b) => b.prio - a.prio || a.plats - b.plats);
-  let senast = start;
+  const ordning = dbs.map((db, i) => ({ db, plats: (i - start + n) % n, prio: prioritet(db) })).sort((a, b) => b.prio - a.prio || a.plats - b.plats);
+  let senast = null;
+  let korda = 0;
   for (const x of ordning) {
-    if (x.prio < 2 && performance.now() - t0 > maxMs) break;
-    try { efterTid(x.db, nu, { anrop: false }); } catch (e) { console.error('De nationella köerna:', e.message); }
+    const tid = performance.now() - t0;
+    if (x.prio < 2 && tid > maxMs) break;
+    if (x.prio >= 2 && (korda >= maxBradskande || tid > maxBradskandeMs)) break;
+    try { kor(x.db); } catch (e) { console.error('De nationella köerna:', e.message); }
+    korda++;
     senast = (start + x.plats) % n;
   }
-  markor = senast + 1;
+  markor = senast == null ? start : senast + 1;
+  return korda;
 }
 
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.

@@ -391,12 +391,7 @@ export function prova(atk, { nu = new Date() } = {}) {
     }
   }
   const aterkallat = senasteAterkallande(db, atk.patientId, ve);
-  const giltig = lista.filter(x => {
-    const a = x.PDLAssertion;
-    const reg = String(x.RegistrationInfo?.RegistrationDate ?? '');
-    return a.AssertionType === 'Consent' && a.CareUnitId === minEnhet && (!a.EmployeeId || a.EmployeeId === jag) && !x.CancellationInfo && !x.DeletionInfo
-      && String(a.StartDate ?? '') <= t && (!a.EndDate || String(a.EndDate) >= t) && (!aterkallat || reg > tjanstTid(new Date(aterkallat)));
-  }).sort((a, b) => String(b.RegistrationInfo?.RegistrationDate).localeCompare(String(a.RegistrationInfo?.RegistrationDate)))[0] ?? null;
+  const giltig = lista.filter(x => giltigtSamtycke(x, { minEnhet, jag, t, aterkallat: aterkallat ? tjanstTid(new Date(aterkallat)) : null })).sort((a, b) => String(b.RegistrationInfo?.RegistrationDate).localeCompare(String(a.RegistrationInfo?.RegistrationDate)))[0] ?? null;
   const nationellt = giltig ? { registrerat: giltig.RegistrationInfo?.RegistrationDate ?? null, gallerTill: giltig.PDLAssertion.EndDate ?? null, personligt: Boolean(giltig.PDLAssertion.EmployeeId) } : null;
   const kalla = lok ? 'vardkallan' : giltig ? 'annat_system' : null;
   let text = null;
@@ -406,6 +401,16 @@ export function prova(atk, { nu = new Date() } = {}) {
   else if (aterkallatAnnat) text = 'Patienten har återkallat samtycket i ett annat system, och det är återkallat här också. Fråga patienten om samtycke igen för att hämta uppgifterna.';
   else text = upphorText(db, atk);
   return { galler: Boolean(kalla), kalla, lokalt: lok, nationellt, tjanst: 'ok', vantar, text };
+}
+
+// Ett intyg ur tjänsten som räknas som samtycke till sammanhållen journalföring på vårdenheten. Säkerhetsgranskningen
+// efter sammanslagningen: omfattningen (Scope) prövas. Bara NationalLevel avser sammanhållen journalföring; CareProviderLevel
+// gäller inre sekretess hos vårdgivaren och ett intyg utan omfattning räknas inte.
+export function giltigtSamtycke(x, { minEnhet, jag, t, aterkallat = null }) {
+  const a = x?.PDLAssertion ?? {};
+  const reg = String(x?.RegistrationInfo?.RegistrationDate ?? '');
+  return a.AssertionType === 'Consent' && a.Scope === 'NationalLevel' && a.CareUnitId === minEnhet && (!a.EmployeeId || a.EmployeeId === jag) && !x.CancellationInfo && !x.DeletionInfo
+    && String(a.StartDate ?? '') <= t && (!a.EndDate || String(a.EndDate) >= t) && (!aterkallat || reg > aterkallat);
 }
 
 const UPPHORT_TEXT = {

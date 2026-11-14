@@ -498,3 +498,27 @@ describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns',
     expect(rad(utan)).toBeTruthy();
   });
 });
+
+describe('Säkerhetsgranskningen efter runda 15: samtyckets omfattning', () => {
+  test('ett intyg med omfattningen CareProviderLevel eller utan omfattning räknas inte som samtycke till sammanhållen journalföring', () => {
+    const villkor = { minEnhet: 'SE2321000164-VK0120', jag: 'SE2321000164-L1', t: '2026-11-14T10:00:00' };
+    const intyg = (Scope) => ({ PDLAssertion: { AssertionType: 'Consent', ...(Scope ? { Scope } : {}), CareUnitId: villkor.minEnhet, StartDate: '2026-11-01T00:00:00' }, RegistrationInfo: { RegistrationDate: '2026-11-01T00:00:00' } });
+    expect(sam.giltigtSamtycke(intyg('NationalLevel'), villkor)).toBe(true);
+    expect(sam.giltigtSamtycke(intyg('CareProviderLevel'), villkor)).toBe(false);
+    expect(sam.giltigtSamtycke(intyg(null), villkor)).toBe(false);
+  });
+});
+
+describe('Säkerhetsgranskningen efter runda 15: timern för de nationella köerna', () => {
+  test('det brådskande har ett tak per varv, och nästa varv fortsätter där det förra slutade', async () => {
+    const r2 = await import('../src/r15r2-rutter.js');
+    const dbs = Array.from({ length: 100 }, (_, i) => ({ i }));
+    const korda = [];
+    const n1 = r2.schemalagg(dbs, { prioritet: () => 2, kor: (db) => korda.push(db.i) });
+    expect(n1).toBeLessThanOrEqual(r2.MAX_BRADSKANDE);
+    const n2 = r2.schemalagg(dbs, { prioritet: () => 2, kor: (db) => korda.push(db.i) });
+    expect(n2).toBeLessThanOrEqual(r2.MAX_BRADSKANDE);
+    expect(new Set(korda).size).toBe(korda.length);
+  });
+});
+
