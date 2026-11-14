@@ -11,6 +11,8 @@ const { B, A, S } = TEST;
 // test/presentationsvyer.test.js). Posterna här ersätter de tidigare, också runda 8:s version av 3.1.2.2.
 import { T4 } from '../planering-r4.js';
 import { T8 } from '../bokning-r8.js';
+// Runda 15, r4: anteckningsvyn (sussa/runda15-r4.js).
+import { medR15r4 } from '../runda15-r4.js';
 const AV = 'Anpassningsbara vyer > ';
 const UV = 'Uppföljningsvyn > ';
 const VU = 'Vyer utan personuppgifter > ';
@@ -81,7 +83,7 @@ const R10 = {
 };
 const medR10 = (poster) => poster.map(x => R10[x.id] ?? x);
 
-export default medR10(medR8([
+export default medR15r4(medR10(medR8([
   {
     id: '3.1.2.1', kategori: 'system', egna: ['D2', 'D8'], avsedd: 'delvis',
     tester: [
@@ -115,4 +117,4 @@ export default medR10(medR8([
     expert: 'Systemet avgör självt vem som får se namn i väntrummet, så den som ropar upp behöver inte veta vem som har skyddad identitet.',
     anmarkning: 'Andra vyer utan personuppgifter, till exempel beläggningsöversikt eller vyer för utbildning, saknas.',
   },
-]));
+])));

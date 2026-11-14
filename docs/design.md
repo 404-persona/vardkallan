@@ -3068,3 +3068,45 @@ Kravet: åtkomsten ska beviljas utifrån attributen i en autentiseringsbiljett f
 **Klickbudget.** Ett nytt flöde: logga in genom vårdgivarens inloggningstjänst (budget 2).
 
 **Det som är simulerat eller saknas.** Ingen verklig regions inloggningstjänst är inkopplad. SAML 2.0 är inte byggt, eftersom signaturkontrollen av XML kräver kanonisering och en härdad XML-tolk som inte finns utan ett granskat beroende, och Ineras IdP för medarbetare talar också OpenID Connect. Utloggning hos tjänsten, uppdragsval i Vårdkällan med `allCommissions` och attributet `commissionRight` används inte. En inloggning genom tjänsten som väntar på vårdgivarens krav på flerfaktor slutförs inte efter omdirigeringen; personen loggar då in med demorollen och bekräftar faktorn.
+
+## Anteckningsvyn: underlag, utkast, läsordning, varianter, egna fraser och mätning (runda 15, r4: anteckningsunderlag.js, anteckningsutkast.js, anteckningsmall.js, mallvarianter.js, mallforslag.js, egna-fraser.js och public/js/anteckningsstod.js, Sussa 3.1.7.1, 3.1.3.5, 3.1.2.3 och 8.4.1.1)
+
+Granskningen av journalmallarna i runda 15 fann att de vanliga mallarna var tomma textrutor: systemet visste kontaktorsaken, prioriteten, mätvärdena, provsvaren och läkemedelsändringarna, men användaren skrev dem igen, och text som inte var sparad försvann utan varning. Anteckningsvyn bär nu det som systemet vet, utan att kopiera in det som text.
+
+### Underlaget och referenserna (F1)
+
+Bredvid sökorden visar systemet underlaget för anteckningen (`GET /api/patient/:id/anteckningsmall?typ=`): kontaktorsaken ur vårdkontakten, prioriteten ur triagen på akuten, mätvärden och provsvar sedan förra anteckningen av samma slag med en pil för förändringen mot värdet före, läkemedel som har satts in, ändrats eller satts ut under vårdkontakten (det som är nytt sedan förra anteckningen är märkt) och de aktuella diagnoserna. En utsättning följd av en ny ordination av samma substans inom en timme visas som en ändring, från den gamla doseringen till den nya. Utan en förra anteckning av samma slag gäller perioden sedan vårdkontakten började, annars de senaste 30 dagarna. Mätvärden från utrustning eller patienten som inte är bedömda visas inte.
+
+Ett klick på ett värde för in texten med datum där användaren senast skrev, och sparar en referens `{ typ, id, text }` bredvid texten i sökordet. Kontaktorsak och Prioritet fyller systemet i med källan. Inget dras in av sig självt, eftersom data som kopieras in gör anteckningarna längre utan att de säger mer (Rule 2021, Epic Research 2023). Servern prövar varje referens när anteckningen sparas (`provaReferenser`): resursen måste finnas för patienten och synas för den som skriver, texten måste vara den som systemet skriver för resursen och stå kvar i sökordet. En referens som inte håller tas bort utan fel, och texten blir då personens egen. En rättelse behåller en referens vars text står kvar.
+
+Läsaren ser värdet markerat med källan (till exempel Ur mätvärdena), men aldrig resursens id. I FHIR har sökordet `section.entry` med referenser till Observation, MedicationRequest, Condition och Encounter, bara till resurser som läsaren får se.
+
+Allt räknas på det som den som skriver får se: varje rad prövas av behörighetsmotorn med spärr, inre sekretess, aktivt val och skyddad identitet, och en dos från en spärrad vårdenhet hamnar aldrig i texten om en ändring. Testerna jämför hela svaret med och utan en dold rad.
+
+### Utkastet som sparas av sig självt och läsrutan (F2)
+
+Utkastet sparas en och en halv sekund efter att användaren har slutat skriva och när fokus lämnar formuläret (`PUT /api/patient/:id/anteckningsutkast`), knutet till patienten och den vårdkontakt som systemet väljer, med samma behörighet och prövning som när man sparar med knappen. Utkastet är anteckningen med status utkast, syns bara för den som skriver och blir den signerade anteckningen när den signeras. Ny anteckning säger när personen redan har ett utkast för patienten. Byter användaren mall följer texten med, och det sparade utkastet i den förra mallen tas bort (`DELETE /api/patient/:id/anteckningsutkast/:id`).
+
+En annan anteckning i listan, eller den senaste bedömningen, öppnas i en läsruta ovanför skrivrutan, som står kvar med sin text. Lämnar användaren sidan sparas texten först, och systemet frågar en gång bara om den inte gick att spara (vakten i app.js). En rättelse, som signeras direkt, frågar en gång innan ändrad text lämnas. Under dikteringen sparas inget; utkastet sparas när dikteringen är slut.
+
+Under ett avbrott läggs utkastet i skrivkön, krypterat med läskopians nyckel, och en senare version av samma utkast ersätter den förra i kön. När servern svarar sparar skrivkön utkastet med samma funktion (skrivko.js), och flera versioner blir ett utkast genom utkastets id i webbläsaren.
+
+### Läsordning, skrivordning, varianter och färre mallar (F5)
+
+Läsvyn och läsrutan visar Bedömning och Åtgärd först (APSO), utan att något ändras i det sparade, och den som vill läser i skrivordningen med en knapp. Listan över anteckningar har den senaste bedömningen överst, räknad på servern bland de anteckningar som syns. Skrivordningen är vårdenhetens val: systemförvaltningen eller verksamhetschefen sätter vyn Skrivordningen i anteckningarna i vårdenhetens förval (mallens ordning eller bedömning och åtgärd först), och personen kan själv välja ordning på sökorden inom vårdenhetens mall.
+
+Varianter är undersökord inom en mall, inte nya mallar (mallvarianter.js). Systemet väljer variant ur sammanhanget och säger varför: en telefonkontakt ger Råd och egenvård i stället för Status, en psykiatrisk vårdenhet eller en kontaktorsak om suicidtankar ger Psykiskt status och Suicidriskbedömning, och på vårdcentralen fälls sökorden för de kroniska sjukdomar som patienten har bland diagnoserna ut. Andra undersökord fälls ut med ett klick under Fler sökord. Sökord som en mall föreslår för patienten (`foreslagna`, mallforslag.js, som del r5 fyller för omvårdnaden) står först och utfällda, och resten fälls in.
+
+Mallvalet visar högst fem mallar som förslag för rollen och situationen och resten under Fler mallar.
+
+### Egna fraser (F9)
+
+Varje person kan spara högst 20 egna fraser på högst 400 tecken och skriva in dem med punkt, kortnamnet och tabbtangenten, eller med ett klick under Mina fraser. Fraserna sparas med personen, aldrig med en patient, syns inte för någon annan och får inte innehålla personnummer eller värden ur journalen med datum, som förs in med underlaget i stället. De är inte mallar.
+
+### Mätningen (F6)
+
+Klickbudgeten räknar också tecken: de som användaren skriver, de som systemet skriver när ett värde förs in ur underlaget och de som användaren skrev fast systemet redan visste dem. Daganteckningen skriver en anteckning med blodtrycket och ändringen av metoprolol ur underlaget, där användaren skriver drygt 50 av omkring 185 tecken, och budgeten kräver att värdena kommer ur underlaget. Sjuksköterskans omvårdnadsanteckning för in syremättnaden ur underlaget, och läsflödet hittar den senaste bedömningen i en journal med 30 anteckningar med två klick. Undersköterskans flöde finns och slås på när undersköterskan får skriva.
+
+### Det som är simulerat eller saknas
+
+Varianternas sökord har ingen kod i Snomed CT förrän begreppen är kontrollerade mot den svenska utgåvan. En referens visar värdet som det var när det fördes in; rättas mätvärdet efteråt står anteckningen kvar som den skrevs. Ett utkast som skrevs under ett avbrott sparas när servern svarar, av samma person i samma webbläsare; rensas webbläsarens lagring innan dess finns utkastet inte kvar.

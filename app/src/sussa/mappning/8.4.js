@@ -2,6 +2,8 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 // Runda 7, r2: posten för tillgänglighet (8.4.1.3) ersätts ur sussa/runda7-r2.js.
 import { medR7r2 } from '../runda7-r2.js';
+// Runda 15, r4: anteckningsvyn (sussa/runda15-r4.js).
+import { medR15r4 } from '../runda15-r4.js';
 // Runda 7, r1: Sussas användbarhetstester (Bilaga F1:2 och F1:4) som automatiska tester (sussa-testfall.js).
 import { TEST, TEST_REGISTER, KORNINGSTESTER } from '../../sussa-testfall.js';
 
@@ -55,4 +57,4 @@ const AVSNITT = [
   { id: '8.4.1.3', kategori: 'system', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: "Användbarhet och tillgänglighet är inte byggt ännu (runda 7)." },
 ];
-export default medR7r2(AVSNITT);
+export default medR15r4(medR7r2(AVSNITT));
