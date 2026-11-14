@@ -255,7 +255,7 @@ describe('Anteckningsvyn: varianter och ordning', () => {
   test('mallen för patienten har varianterna och de kroniska sjukdomarna som patienten har, ur diagnoserna som syns', async () => {
     const k = await inloggad('lak-vc');
     const r = (await mall(k, 'p06', 'Mottagningsanteckning')).data;
-    expect(r.varianter.map(v => v.id)).toEqual(['telefon', 'psykiatri', 'kronisk']);
+    expect(r.varianter.map(v => v.id)).toEqual(['telefon', 'digital', 'psykiatri', 'kronisk', 'barn', 'aldre', 'palliativ', 'graviditet']);
     expect(r.valdaVarianter.find(v => v.id === 'kronisk').utfallda).toEqual(expect.arrayContaining(['Diabetes']));
     expect(r.valdaVarianter.find(v => v.id === 'kronisk').utfallda).not.toContain('Astma och KOL');
     expect(r.foreslagna).toEqual([]);

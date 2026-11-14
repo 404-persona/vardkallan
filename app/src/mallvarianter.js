@@ -36,15 +36,42 @@ export const VARIANTER = {
     id: 'kronisk', namn: 'Kroniska sjukdomar', sokord: KRONISKA.map(k => k.sokord), efter: 'Status',
     galler: { vardenhet: 'primarvard', diagnos: KRONISKA.map(k => k.kod.source) },
   },
+  // Beslut 2026-11-14: fler varianter, var och en med två till fyra undersökord. Inget av dem är obligatoriskt, och
+  // inget dras in som löptext; värdena finns i underlaget att föra in med ett klick.
+  digital: {
+    id: 'digital', namn: 'Digital kontakt', sokord: ['Observerat i videosamtalet', 'Råd och egenvård'], ersatter: ['Status'], efter: 'Aktuellt',
+    galler: { kontakttyp: ['video', 'chatt'] },
+  },
+  barn: {
+    id: 'barn', namn: 'Barn och unga', sokord: ['Tillväxt', 'Vaccinationer', 'Utveckling'], efter: 'Status',
+    galler: { alder: '< 18' },
+  },
+  aldre: {
+    id: 'aldre', namn: 'Äldre med många läkemedel', sokord: ['Läkemedelsgenomgång', 'Fallrisk'], efter: 'Bedömning',
+    galler: { alder: '>= 75', lakemedel: '>= 5' },
+  },
+  palliativ: {
+    id: 'palliativ', namn: 'Palliativ vård', sokord: ['Brytpunktssamtal', 'Symtomskattning'], efter: 'Aktuellt',
+    galler: { diagnos: ['Z51.5'], kontaktorsak: 'palliativ' },
+  },
+  graviditet: {
+    id: 'graviditet', namn: 'Graviditet', sokord: ['Graviditet', 'Läkemedel under graviditet'], efter: 'Aktuellt',
+    galler: { graviditet: true },
+  },
 };
 
 // Vilka varianter varje läkarmall har. Mallarna själva står i journal.js.
 export const MALLVARIANTER = {
-  Mottagningsanteckning: ['telefon', 'psykiatri', 'kronisk'],
-  Daganteckning: ['psykiatri'],
-  Inskrivningsanteckning: ['psykiatri'],
-  Akutanteckning: ['psykiatri'],
+  Mottagningsanteckning: ['telefon', 'digital', 'psykiatri', 'kronisk', 'barn', 'aldre', 'palliativ', 'graviditet'],
+  Daganteckning: ['psykiatri', 'barn', 'aldre', 'palliativ', 'graviditet'],
+  Inskrivningsanteckning: ['psykiatri', 'barn', 'aldre', 'palliativ', 'graviditet'],
+  Akutanteckning: ['psykiatri', 'barn', 'aldre', 'graviditet'],
 };
+// Gränserna för äldre med många läkemedel följer Socialstyrelsens föreskrift om läkemedelsgenomgång (HSLF-FS 2017:37),
+// som gäller patienter som är 75 år eller äldre och har minst fem läkemedel.
+export const ALDRE_ALDER = 75;
+export const ALDRE_LAKEMEDEL = 5;
+const PALLIATIV = /palliativ|brytpunkt/i;
 
 // Alla undersökord i varianterna, för fackspråket och kontrollen av mallarnas sökord.
 export const VARIANTSOKORD = [...new Set(Object.values(VARIANTER).flatMap(v => v.sokord))];
@@ -61,8 +88,9 @@ export const arPsykiatri = (db, enhetId) => foraldrar(db, vardenhetFor(db, enhet
 export const arPrimarvard = (db, enhetId) => foraldrar(db, enhetId).some(e => e.id === 'primarvard' || /^primärvård/i.test(e.namn));
 
 // Varianterna som systemet väljer för mallen, med varför på vanlig svenska. kontakt är svaret från vardkontakt.aktuell
-// ({ vardkontakt, ny }) och diagnoser de diagnoser som den som skriver får se. Bara det som syns för användaren räknas.
-export function valjVarianter(db, personal, typ, { kontakt = null, diagnoser = [] } = {}) {
+// ({ vardkontakt, ny }), diagnoser de diagnoser som den som skriver får se och patient { alder, lakemedel, graviditet }
+// med åldern, antalet aktuella läkemedel som syns och om en pågående graviditet syns. Bara det som syns räknas.
+export function valjVarianter(db, personal, typ, { kontakt = null, diagnoser = [], patient = {} } = {}) {
   const ut = [];
   const v = kontakt?.vardkontakt ?? null;
   const kontaktsatt = v?.kontaktsatt ?? kontakt?.ny?.kontaktsatt ?? null;
@@ -73,6 +101,16 @@ export function valjVarianter(db, personal, typ, { kontakt = null, diagnoser = [
     } else if (variant.id === 'psykiatri') {
       if (arPsykiatri(db, personal.enhet_id)) ut.push({ id: 'psykiatri', varfor: 'Du skriver på en psykiatrisk vårdenhet, så psykiskt status och suicidriskbedömning finns med.' });
       else if (SUICID.test(orsak)) ut.push({ id: 'psykiatri', varfor: 'Kontaktorsaken handlar om suicidtankar, så psykiskt status och suicidriskbedömning finns med.' });
+    } else if (variant.id === 'digital' && ['video', 'chatt'].includes(kontaktsatt)) {
+      ut.push({ id: 'digital', varfor: 'Kontakten är ett videosamtal, så systemet har valt den digitala varianten med det som syntes i samtalet och råd i stället för status.' });
+    } else if (variant.id === 'barn' && Number.isFinite(patient.alder) && patient.alder < 18) {
+      ut.push({ id: 'barn', varfor: `Patienten är ${patient.alder} år, så tillväxt, vaccinationer och utveckling finns med. Tillväxten och vaccinationerna står i underlaget.` });
+    } else if (variant.id === 'aldre' && Number.isFinite(patient.alder) && patient.alder >= ALDRE_ALDER && (patient.lakemedel ?? 0) >= ALDRE_LAKEMEDEL) {
+      ut.push({ id: 'aldre', varfor: `Patienten är ${patient.alder} år och har ${patient.lakemedel} läkemedel i läkemedelslistan, så läkemedelsgenomgång och fallrisk finns med (HSLF-FS 2017:37).` });
+    } else if (variant.id === 'palliativ' && (diagnoser.some(d => /^Z51\.5/.test(String(d.kod ?? ''))) || PALLIATIV.test(orsak))) {
+      ut.push({ id: 'palliativ', varfor: diagnoser.some(d => /^Z51\.5/.test(String(d.kod ?? ''))) ? 'Patienten har palliativ vård bland diagnoserna, så brytpunktssamtal och symtomskattning finns med.' : 'Kontaktorsaken handlar om palliativ vård, så brytpunktssamtal och symtomskattning finns med.' });
+    } else if (variant.id === 'graviditet' && patient.graviditet) {
+      ut.push({ id: 'graviditet', varfor: 'Patienten har en pågående graviditet i graviditetsjournalen, så graviditeten och läkemedel under graviditet finns med.' });
     } else if (variant.id === 'kronisk' && arPrimarvard(db, personal.enhet_id)) {
       const har = KRONISKA.map(k => ({ k, d: diagnoser.find(d => k.kod.test(String(d.kod ?? ''))) })).filter(x => x.d);
       if (har.length) {

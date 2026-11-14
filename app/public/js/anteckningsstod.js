@@ -10,6 +10,12 @@
 // Egna fraser: punkt och kortnamnet och tabbtangenten, eller ett klick i listan.
 import { esc, api, ApiFel, klockslag, datum, notis, ikon, avbrott } from './ui.js';
 import { lamnaVakt } from './app.js';
+// Beslut 2026-11-14 (K2 1.6.1): inmatning i rutan räknas som aktivitet, högst en signal i minuten.
+import { aktivitetsSignal } from './aktivitet-regler.js';
+
+const aktivitet = aktivitetsSignal();
+// Det användaren själv skriver eller gör i rutan förlänger inloggningen. Sparandet i bakgrunden gör det inte.
+const signalera = () => { if (aktivitet()) api('/api/session/forlang', { metod: 'POST', data: {}, tyst: true }).catch(() => {}); };
 
 const PAUS_MS = 1500;
 const namn = (s) => (typeof s === 'string' ? s : s?.namn);
@@ -318,7 +324,7 @@ export function autospara(form, ctx, { typ, anteckningId = null, las, nyKontakt 
     await pagar;
     return id;
   }
-  const schemalagg = () => { if (pausad()) return; clearTimeout(timer); timer = setTimeout(() => spara().catch(() => {}), PAUS_MS); };
+  const schemalagg = (e) => { if (e?.type === 'input') signalera(); if (pausad()) return; clearTimeout(timer); timer = setTimeout(() => spara().catch(() => {}), PAUS_MS); };
   const lamnar = (e) => { if (!form.contains(e.relatedTarget) && osparat() && !pausad()) spara().catch(() => {}); };
   form.addEventListener('input', schemalagg);
   form.addEventListener('focusout', lamnar);

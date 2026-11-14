@@ -135,7 +135,9 @@ describe('Nationellt fackspråk', () => {
     const r = await k.get('/api/fackssprak');
     expect(r.status).toBe(200);
     // Runda 15, r4: undersökorden i läkarmallarnas varianter (mallvarianter.js) har ingen kod förrän de är kontrollerade.
-    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Råd och egenvård', 'Psykiskt status', 'Suicidriskbedömning', 'Diabetes', 'Astma och KOL', 'Hypertoni', 'Hjärtsvikt']);
+    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Råd och egenvård', 'Psykiskt status', 'Suicidriskbedömning', 'Diabetes', 'Astma och KOL', 'Hypertoni', 'Hjärtsvikt',
+      // Beslut 2026-11-14: de nya varianternas undersökord.
+      'Observerat i videosamtalet', 'Tillväxt', 'Vaccinationer', 'Utveckling', 'Läkemedelsgenomgång', 'Fallrisk', 'Brytpunktssamtal', 'Symtomskattning', 'Graviditet', 'Läkemedel under graviditet']);
   });
 
   test(namn(T.nfAtgard), () => {

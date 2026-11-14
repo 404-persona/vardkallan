@@ -31,17 +31,26 @@ export const T = {
   bedomning: `${V}den senaste bedömningen räknas bland anteckningarna som syns`,
   fraser: `${F}egna fraser har tak och gränser, sparas med personen och syns inte för någon annan`,
   egenOrdning: `${F}egen ordning på sökorden flyttar bara mallens sökord och gäller i mallen för personen`,
+  // Beslut 2026-11-14 (anteckningsvy-r15b.test.js).
+  flerVarianter: 'Anteckningsvyn: fler varianter > systemet väljer variant ur kontakten och patientens uppgifter: digital kontakt, barn, äldre med många läkemedel, palliativ vård och graviditet',
+  barn: 'Anteckningsvyn: fler varianter > för ett barn visar underlaget tillväxten och vaccinationerna ur systemet, bara det som syns',
+  aldre: 'Anteckningsvyn: fler varianter > äldre med många läkemedel räknas ur läkemedelslistan som syns, och en spärrad vårdenhets läkemedel räknas inte',
+  signal: 'Anteckningsvyn: aktivitet och utloggning > aktivitetssignalen skickas högst en gång i minuten',
+  bakgrund: 'Anteckningsvyn: aktivitet och utloggning > sparande i bakgrunden utan inmatning förlänger inte inloggningen: efter tiden utan aktivitet loggas den ut med texten sparad',
+  inmatning: 'Anteckningsvyn: aktivitet och utloggning > inmatning i rutan räknas som aktivitet: en signal i minuten håller inloggningen vid liv medan användaren skriver',
 };
 
 const POSTER = {
   '3.1.7.1': {
     avsedd: 'uppfyllt_demo',
-    tester: [T.underlag, T.synligt, T.dos, T.akut, T.referens, T.rattelse, kb('daganteckning'), kb('omvardnadsanteckning')],
+    tester: [T.underlag, T.synligt, T.dos, T.akut, T.referens, T.rattelse, T.barn, kb('daganteckning'), kb('omvardnadsanteckning')],
     losning: 'Varje uppgift registreras en gång och samma post används i översikten, Min journal, FHIR och överföringen till NLL. Vårdkontakten skapas när någon börjar dokumentera, ett vårdtillfälle följer med vid flytt utan att något registreras om, och orsaken från akutbesöket eller remissen följer med till inskrivningen och den nya kontakten. I formulären fyller systemet i åldern och det senaste mätvärdet, och ett nytt mätvärde i ett formulär registreras en gång bland mätvärdena. I anteckningarna visar systemet underlaget bredvid sökorden: kontaktorsaken, prioriteten ur triagen, mätvärden och provsvar sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar under vårdkontakten och aktuella diagnoser. Ett klick för in värdet med datum som en referens till mätvärdet, ordinationen eller diagnosen, och i FHIR följer referensen med. Kontaktorsak och Prioritet fyller systemet i med källan.',
     expert: 'Systemet återanvänder det som redan finns: ordinationen skickas till NLL, kontakten skapas ur sammanhanget, formulären fyller i det journalen redan har, och i anteckningen står blodtrycket, dosändringen och diagnosen bredvid skrivrutan, så att ett klick ersätter att skriva om dem. Servern prövar varje referens mot det som den som skriver får se och drar aldrig in något i texten av sig självt, och klickbudgeten stoppar ett flöde där något skrivs för hand som systemet redan visste.',
     anmarkning: 'Principen gäller systemets egna flöden. Flödena mellan vårdgivare täcks av 3.2.2.3 och 3.5.1.1, och NLL är simulerad. Mätvärden från utrustning eller patienten som ännu inte är bedömda visas inte i underlaget. En referens visar värdet som det var när det fördes in; rättas mätvärdet efteråt står anteckningen kvar som den skrevs.',
   },
-  '3.1.3.5': { tester: [T.underlag, T.referens, T.utkast, T.variant] },
+  '3.1.3.5': { tester: [T.underlag, T.referens, T.utkast, T.variant, T.flerVarianter, T.aldre] },
+  // K2 1.6.1, justerbar tidsgräns: inmatning i rutan räknas som aktivitet, sparandet i bakgrunden gör det inte.
+  '8.4.1.3': { tester: [T.signal, T.bakgrund, T.inmatning] },
   '3.1.2.3': { tester: [T.ordning, T.egenOrdning, kb('senaste-bedomning')] },
   '8.4.1.1': { tester: [kb('daganteckning'), kb('omvardnadsanteckning'), kb('senaste-bedomning')] },
 };

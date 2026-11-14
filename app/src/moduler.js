@@ -430,7 +430,7 @@ MODULER.push(m('intyg', 'journal', 'Intyg',
   const a = MODULER.find(x => x.id === 'anteckningar');
   a.beskrivning += ' Bredvid sökorden visar systemet underlaget: kontaktorsak, prioritet, mätvärden och provsvar med pil för förändringen, läkemedelsändringar och diagnoser, och ett klick för in värdet med datum som en referens. Utkastet sparas av sig självt, en tidigare anteckning öppnas i en läsruta utan att skrivrutan stängs, varianter fälls ut ur kontakten och läsvyn visar bedömning och åtgärd först. Varje person kan spara egna korta fraser och sin egen ordning på sökorden.';
   a.avsnitt.push('3.1.7.1', '3.1.2.3');
-  a.kod.push('src/anteckningsunderlag.js', 'src/anteckningsutkast.js', 'src/anteckningsmall.js', 'src/mallvarianter.js', 'src/mallforslag.js', 'src/egna-fraser.js', 'src/r15r4-rutter.js', 'public/js/anteckningsstod.js');
+  a.kod.push('src/anteckningsunderlag.js', 'src/anteckningsutkast.js', 'src/anteckningsmall.js', 'src/mallvarianter.js', 'src/mallforslag.js', 'src/egna-fraser.js', 'src/r15r4-rutter.js', 'public/js/anteckningsstod.js', 'public/js/aktivitet-regler.js');
   a.api.push('/api/patient/:id/anteckningsmall', '/api/patient/:id/anteckningsutkast', '/api/egna-fraser');
 }
 

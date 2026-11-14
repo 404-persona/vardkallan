@@ -32,7 +32,12 @@ export const tidText = (t) => { const d = delar(t); return `${datumText(t)} ${d.
 
 // Provsvaren skiljs från mätvärdena i underlaget. Övriga typer, också de som systemförvaltningen skapar, är mätvärden.
 const PROVSVAR = new Set(['crp', 'egfr', 'kreatinin', 'hba1c', 'inr', 'ntprobnp', 'hb', 'glukos', 'kalium', 'troponin', 'tsh', 'lpk', 'tpk', 'natrium', 'kobalamin', 'folat', 'sr']);
-export const REFERENSTYPER = ['matvarde', 'ordination', 'dosandring', 'diagnos', 'vardkontakt', 'akutbesok'];
+export const REFERENSTYPER = ['matvarde', 'ordination', 'dosandring', 'diagnos', 'vardkontakt', 'akutbesok', 'vaccination'];
+// Beslut 2026-11-14: för barn och unga visar underlaget den senaste tillväxten och vaccinationerna.
+const TILLVAXT = ['langd', 'vikt', 'huvudomfang'];
+const vaccinNamn = (v) => { try { return require('./bhv-program.js').vaccinRad(v.vaccin_id)?.namn ?? require('./vaccinationsprogram-regler.js').vaccinRad(v.vaccin_id)?.namn ?? null; } catch { return null; } };
+const vaccinText = (v) => `${vaccinNamn(v) ?? `Vaccin ${v.atc}, dos ${v.dos}`} ${datumText(v.tid)} ${new Date(v.tid).getUTCFullYear()}`;
+const synligaVaccinationer = (atk) => { try { return atk.filtrera(atk.db.query('SELECT * FROM vaccinationer WHERE patient_id = ? ORDER BY tid DESC, id DESC').all(atk.patientId), 'las_oversikt'); } catch { return []; } };
 const MAX_REFERENSER = 30;
 
 const tal = (v) => String(v).replace('.', ',');
@@ -103,7 +108,7 @@ function forraAnteckning(atk, typ, utom = null) {
 
 // Underlaget för en ny anteckning av typen typ för patienten i atk. utkastId är utkastet som skrivs, som inte räknas
 // som förra anteckningen. nu används i testerna.
-export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = Date.now() } = {}) {
+export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = Date.now(), alder = null } = {}) {
   const db = atk.db;
   const k = kontakt === undefined ? kontaktFor(atk) : kontakt;
   const v = k?.vardkontakt ?? null;
@@ -114,7 +119,7 @@ export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = 
   const sedanText = forra ? `Sedan förra ${bestamd(typ)} ${tidText(sedan)}` : v && !v.dold ? `Sedan vårdkontakten började ${tidText(sedan)}` : 'De senaste 30 dagarna';
   // Läkemedlen gäller hela vårdtillfället eller kontakten, och det som är nytt sedan förra anteckningen märks.
   const lmSedan = [vtStart, v && !v.dold ? v.start : null, sedan].filter(Boolean).sort()[0];
-  const ut = { typ, sedan, sedanText, kontakt: null, prioritet: null, matvarden: [], provsvar: [], lakemedel: [], diagnoser: [], forifyllt: {} };
+  const ut = { typ, sedan, sedanText, kontakt: null, prioritet: null, matvarden: [], provsvar: [], lakemedel: [], diagnoser: [], tillvaxt: [], vaccinationer: [], forifyllt: {} };
 
   if (v && !v.dold && kontaktText(v)) {
     ut.kontakt = { ref: { typ: 'vardkontakt', id: v.id }, text: kontaktText(v), kalla: `Ur vårdkontakten ${datumText(v.start)}`, tid: v.start };
@@ -179,6 +184,20 @@ export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = 
     }
   }
 
+  // Barn och unga: den senaste längden, vikten och huvudomfånget oavsett period, och vaccinationerna.
+  if (Number.isFinite(alder) && alder < 18) {
+    if (kanRoll(atk.personal, 'las_matvarden')) {
+      const alla = journal.synligaMatvarden(atk);
+      for (const t of TILLVAXT) {
+        const m = alla.find(x => x.typ === t);
+        if (m) ut.tillvaxt.push({ ref: { typ: 'matvarde', id: m.id }, typ: t, namn: journal.mattypFor(db, t)?.namn ?? t, text: matvardeText(db, m), tid: m.tid });
+      }
+    }
+    if (kanRoll(atk.personal, 'las_oversikt')) {
+      ut.vaccinationer = synligaVaccinationer(atk).slice(0, 10).map(v => ({ ref: { typ: 'vaccination', id: v.id }, text: vaccinText(v), tid: v.tid }));
+    }
+  }
+
   // Förifyllnaden av sökorden Kontaktorsak och Prioritet, med källan.
   if (ut.kontakt) ut.forifyllt.Kontaktorsak = { text: ut.kontakt.text, kalla: ut.kontakt.kalla, ref: ut.kontakt.ref };
   if (ut.prioritet) ut.forifyllt.Prioritet = { text: ut.prioritet.text, kalla: ut.prioritet.kalla, ref: ut.prioritet.ref };
@@ -219,6 +238,11 @@ export function referensText(atk, typ, id) {
     const a = akutbesokFor(atk, kontaktFor(atk)?.vardkontakt);
     return a && a.id === id ? akutText(a) : null;
   }
+  if (typ === 'vaccination') {
+    if (!kanRoll(atk.personal, 'las_oversikt')) return null;
+    const v = synligaVaccinationer(atk).find(x => x.id === id);
+    return v ? vaccinText(v) : null;
+  }
   return null;
 }
 
@@ -244,12 +268,12 @@ export function provaReferenser(atk, sokord) {
 }
 
 // Referenserna i en sparad anteckning, för läsaren: texten och vilket slag av uppgift den kommer ur, aldrig id:t.
-const SLAG = { matvarde: 'Ur mätvärdena', ordination: 'Ur läkemedelslistan', dosandring: 'Ur läkemedelslistan', diagnos: 'Ur diagnoserna', vardkontakt: 'Ur vårdkontakten', akutbesok: 'Ur triagen' };
+const SLAG = { matvarde: 'Ur mätvärdena', ordination: 'Ur läkemedelslistan', dosandring: 'Ur läkemedelslistan', diagnos: 'Ur diagnoserna', vardkontakt: 'Ur vårdkontakten', akutbesok: 'Ur triagen', vaccination: 'Ur vaccinationerna' };
 export const referenserUt = (sokord) => sokord.map(s => (Array.isArray(s.referenser) ? { ...s, referenser: s.referenser.map(r => ({ text: r.text, kalla: SLAG[r.typ] ?? 'Ur journalen' })) } : s));
 
 // FHIR: referenserna i ett sökord som section.entry, bara till resurser som läsaren får se.
-const FHIR_TYP = { matvarde: 'Observation', ordination: 'MedicationRequest', diagnos: 'Condition', vardkontakt: 'Encounter' };
-const FHIR_TABELL = { matvarde: ['matvarden', 'las_matvarden', false], ordination: ['ordinationer', 'las_lakemedel', true], diagnos: ['diagnoser', 'las_diagnoser', false], vardkontakt: ['vardkontakter', 'las_admin', false] };
+const FHIR_TYP = { matvarde: 'Observation', ordination: 'MedicationRequest', diagnos: 'Condition', vardkontakt: 'Encounter', vaccination: 'Immunization' };
+const FHIR_TABELL = { matvarde: ['matvarden', 'las_matvarden', false], ordination: ['ordinationer', 'las_lakemedel', true], diagnos: ['diagnoser', 'las_diagnoser', false], vardkontakt: ['vardkontakter', 'las_admin', false], vaccination: ['vaccinationer', 'las_oversikt', false] };
 export function fhirEntries(atk, s) {
   if (!atk || !Array.isArray(s.referenser)) return [];
   const ut = [];

@@ -3107,6 +3107,26 @@ Varje person kan spara högst 20 egna fraser på högst 400 tecken och skriva in
 
 Klickbudgeten räknar också tecken: de som användaren skriver, de som systemet skriver när ett värde förs in ur underlaget och de som användaren skrev fast systemet redan visste dem. Daganteckningen skriver en anteckning med blodtrycket och ändringen av metoprolol ur underlaget, där användaren skriver drygt 50 av omkring 185 tecken, och budgeten kräver att värdena kommer ur underlaget. Sjuksköterskans omvårdnadsanteckning för in syremättnaden ur underlaget, och läsflödet hittar den senaste bedömningen i en journal med 30 anteckningar med två klick. Undersköterskans flöde finns och slås på när undersköterskan får skriva.
 
+### Fler varianter ur kontakten och patientens uppgifter
+
+Utöver telefon, psykiatri och kroniska sjukdomar väljer systemet fem varianter, var och en med två eller tre undersökord, och säger varför:
+
+- **Digital kontakt** när kontakten är ett videosamtal: Observerat i videosamtalet och Råd och egenvård, i stället för Status.
+- **Barn och unga** när patienten är under 18 år: Tillväxt, Vaccinationer och Utveckling. Underlaget visar då den senaste längden, vikten och huvudomfånget och vaccinationerna, att föra in med ett klick som referenser.
+- **Äldre med många läkemedel** när patienten är 75 år eller äldre och har minst fem aktuella läkemedel i listan, de gränser som Socialstyrelsens föreskrift om läkemedelsgenomgång (HSLF-FS 2017:37) använder: Läkemedelsgenomgång och Fallrisk, med åldern och antalet läkemedel i förklaringen.
+- **Palliativ vård** när patienten har diagnosen palliativ vård (Z51.5) eller kontaktorsaken nämner palliativ vård eller brytpunkt: Brytpunktssamtal och Symtomskattning.
+- **Graviditet** när en pågående graviditet finns i graviditetsjournalen: Graviditet och Läkemedel under graviditet.
+
+Inget undersökord är obligatoriskt, och inget dras in som löptext. Åldern, läkemedlen, diagnoserna och graviditeten räknas bara på det som den som skriver får se, så en spärrad vårdenhets läkemedel räknas inte och en graviditet syns bara för den som får läsa graviditetsjournalen.
+
+### Aktivitet och utloggning (K2 1.6.1)
+
+Det som användaren själv skriver eller gör i anteckningsrutan räknas som aktivitet och förlänger inloggningen, med högst en signal i minuten (public/js/aktivitet-regler.js och `POST /api/session/forlang`). Sparandet i bakgrunden räknas inte, eftersom anropet har rubriken X-Vk-Bakgrund. En skärm som lämnas med text i rutan loggas därför ut efter vårdgivarens tid utan aktivitet (parametern för utloggning, 30 minuter i demon), och texten finns kvar som utkast efter nästa inloggning. Båda fallen testas med falsk klocka.
+
+### Varför skrivordningen inte kräver fyra ögon
+
+Skrivordningen ändrar bara i vilken ordning sökorden står i skrivrutan på vårdenheten. Den ändrar inte vad som sparas, vilka sökord mallen har, vilka koder som sätts eller hur anteckningen visas för andra, eftersom läsvyn alltid visar bedömning och åtgärd först. Ett fel i valet kan inte skada något och syns direkt för den som skriver. Därför räcker vårdenhetens förval, som systemförvaltningen eller verksamhetschefen sätter och som loggas, utan en andra persons godkännande. Fyra ögon behövs där en ändring påverkar innehållet, koderna eller andra vårdenheter, som för mallarnas sökord och ramar (journalstruktur.js).
+
 ### Det som är simulerat eller saknas
 
 Varianternas sökord har ingen kod i Snomed CT förrän begreppen är kontrollerade mot den svenska utgåvan. En referens visar värdet som det var när det fördes in; rättas mätvärdet efteråt står anteckningen kvar som den skrevs. Ett utkast som skrevs under ett avbrott sparas när servern svarar, av samma person i samma webbläsare; rensas webbläsarens lagring innan dess finns utkastet inte kvar.

@@ -10,8 +10,9 @@
 //   utkast         den inloggades egna utkast för patienten, så att vyn kan föreslå att fortsätta i stället för att börja
 //                  om. Bara författaren ser sina utkast.
 // Allt prövas med den skrivandes behörighet, och åtkomsten loggas på patienten.
-import { Fel } from './db.js';
-import { kanRoll } from './atkomst.js';
+import { Fel, idag } from './db.js';
+import { kanRoll, alder } from './atkomst.js';
+import * as lakemedel from './lakemedel.js';
 import * as journal from './journal.js';
 import * as underlag from './anteckningsunderlag.js';
 import * as varianter from './mallvarianter.js';
@@ -23,6 +24,17 @@ const namn = (s) => (typeof s === 'string' ? s : s?.namn);
 
 // Vårdenhetens skrivordning ur förvalet för vyn anteckning, eller mallens ordning.
 export const skrivordningFor = (db, personal) => forvalFor(db, personal, 'anteckning')?.skrivordning ?? 'mall';
+
+function patientUppgifter(atk) {
+  const db = atk.db;
+  const p = db.query('SELECT fodd FROM patienter WHERE id = ?').get(atk.patientId);
+  const ut = { alder: p ? alder(p.fodd, idag()) : null, lakemedel: 0, graviditet: false };
+  if (kanRoll(atk.personal, 'las_lakemedel')) ut.lakemedel = lakemedel.synligaOrdinationer(atk).filter(o => o.status === 'aktiv' && (!o.slut || o.slut >= idag())).length;
+  if (kanRoll(atk.personal, 'las_graviditet')) {
+    try { ut.graviditet = atk.filtrera(db.query("SELECT * FROM graviditeter WHERE patient_id = ? AND status = 'pagaende'").all(atk.patientId), 'las_graviditet').length > 0; } catch { /* utan graviditetsjournal */ }
+  }
+  return ut;
+}
 
 export function forPatient(atk, mall, { utkastId = null } = {}) {
   if (!mall) throw new Fel(404, 'Mallen finns inte.', 'saknas');
@@ -38,13 +50,15 @@ export function forPatient(atk, mall, { utkastId = null } = {}) {
     if (egen.length === finns.size && egen.every(x => finns.has(x))) sokord = egen.map(n => sokord.find(s => namn(s) === n));
   }
   const diagnoser = kanRoll(atk.personal, 'las_diagnoser') ? journal.synligaDiagnoser(atk) : [];
+  // Beslut 2026-11-14: patientens ålder, antalet aktuella läkemedel och en pågående graviditet, bara det som syns.
+  const patient = patientUppgifter(atk);
   const ut = {
     mall: { ...mall, sokord },
     skrivordning: { id: ordning, text: varianter.SKRIVORDNINGAR[ordning] ?? null, egen: Boolean(egen) },
     varianter: strukt ? [] : varianter.varianterFor(mall.typ),
-    valdaVarianter: strukt ? [] : varianter.valjVarianter(db, atk.personal, mall.typ, { kontakt, diagnoser }),
+    valdaVarianter: strukt ? [] : varianter.valjVarianter(db, atk.personal, mall.typ, { kontakt, diagnoser, patient }),
     foreslagna: (() => { const f = foreslagnaSokord(atk, atk.patientId, { ...mall, sokord }, kontakt); return Array.isArray(f) ? f : []; })(),
-    underlag: strukt ? null : underlag.underlag(atk, { typ: mall.typ, utkastId, kontakt }),
+    underlag: strukt ? null : underlag.underlag(atk, { typ: mall.typ, utkastId, kontakt, alder: patient.alder }),
     utkast: journal.synligaAnteckningar(atk).filter(a => a.status === 'utkast' && a.forfattare_id === atk.personal.id && a.id !== utkastId)
       .map(a => ({ id: a.id, typ: a.typ, skapad: a.skapad, andrad: a.andrad ?? a.skapad })),
   };

@@ -62,6 +62,17 @@ export const SOKORD = {
   'Astma och KOL': { ingen: 'Sökordet samlar uppföljningen av astma och KOL vid besöket. Diagnoserna har sina koder i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
   'Hypertoni': { ingen: 'Sökordet samlar uppföljningen av högt blodtryck vid besöket. Diagnosen har sin kod i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
   'Hjärtsvikt': { ingen: 'Sökordet samlar uppföljningen av hjärtsvikt vid besöket. Diagnosen har sin kod i ICD-10-SE, och Snomed CT har inget avsnitt för uppföljningen, så sökordet får ingen kod.' },
+  // Beslut 2026-11-14: undersökorden i de nya varianterna. Ingen kod förrän begreppen är kontrollerade.
+  'Observerat i videosamtalet': { ingen: 'Sökordet är det som syntes eller hördes i ett videosamtal, inte en fysisk undersökning. Snomed CT har inget begrepp för det, så sökordet får ingen kod.' },
+  'Tillväxt': { ingen: 'Sökordet samlar bedömningen av barnets tillväxt. Mätvärdena har sina egna koder, och begreppet för avsnittet är inte kontrollerat mot den svenska utgåvan, så sökordet får ingen kod än.' },
+  'Vaccinationer': { ingen: 'Sökordet samlar det som sägs om vaccinationerna. Varje vaccination har sin kod i vaccinationsregistret och ATC, så sökordet får ingen egen kod.' },
+  'Utveckling': { ingen: 'Sökordet samlar bedömningen av barnets utveckling. Begreppet är inte kontrollerat mot den svenska utgåvan av Snomed CT, så sökordet får ingen kod än.' },
+  'Läkemedelsgenomgång': { ingen: 'Läkemedelsgenomgången får sin kod i KVÅ (XV015) när den registreras som åtgärd, inte som sökord.' },
+  'Fallrisk': { ingen: 'Sökordet samlar bedömningen av fallrisken i text. Ett formulär för fallrisk har egna frågor, och begreppet för avsnittet är inte kontrollerat, så sökordet får ingen kod än.' },
+  'Brytpunktssamtal': { ingen: 'Brytpunktssamtalet registreras som åtgärd med sin kod i KVÅ, inte som sökord, så sökordet får ingen kod.' },
+  'Symtomskattning': { ingen: 'Sökordet samlar patientens symtom och skattningen av dem i text. Skalorna har egna koder när de används, så sökordet får ingen kod.' },
+  'Graviditet': { ingen: 'Sökordet samlar det som gäller graviditeten vid kontakten. Graviditetsjournalen har sina egna uppgifter, och begreppet för avsnittet är inte kontrollerat, så sökordet får ingen kod än.' },
+  'Läkemedel under graviditet': { ingen: 'Sökordet samlar bedömningen av läkemedlen under graviditeten. Snomed CT har inget begrepp för avsnittet som är kontrollerat, så sökordet får ingen kod än.' },
 };
 
 // Åtgärderna med KVÅ och samma åtgärd i Snomed CT. Åtgärder utan exakt motsvarighet har ingen Snomed-kod.

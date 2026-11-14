@@ -42,7 +42,7 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Bedömning och åtgärd först, och varianter ur kontakten",
-          "text": "När du läser en anteckning står bedömning och åtgärd först, utan att något ändras i det sparade, och journalen visar den senaste bedömningen överst i listan. När du skriver väljer systemet variant ur kontakten: en telefonkontakt ger råd och egenvård i stället för status, psykiatrin och suicidtankar ger psykiskt status och suicidriskbedömning, och på vårdcentralen fälls sökorden för patientens kroniska sjukdomar ut. Högst fem mallar visas som förslag och resten under Fler mallar."
+          "text": "När du läser en anteckning står bedömning och åtgärd först, utan att något ändras i det sparade, och journalen visar den senaste bedömningen överst i listan. När du skriver väljer systemet variant ur kontakten: en telefonkontakt ger råd och egenvård i stället för status, psykiatrin och suicidtankar ger psykiskt status och suicidriskbedömning, på vårdcentralen fälls sökorden för patientens kroniska sjukdomar ut, och videosamtal, barn, äldre med många läkemedel, palliativ vård och graviditet ger några korta undersökord med en förklaring. Högst fem mallar visas som förslag och resten under Fler mallar."
         },
         {
           "id": "anteckning-fraser-1-5-0",
