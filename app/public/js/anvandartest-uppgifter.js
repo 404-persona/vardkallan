@@ -712,6 +712,12 @@ export const UPPGIFTER = [
     text: 'Datorn i läkemedelsrummet ska visa avdelningens läkemedel om journalsystemet slutar svara. Ställ i ordning den.',
     kontroll: { sel: '#reservdator', text: 'inskrivna patienter' },
   },
+  // Runda 15, r3: en utsatt ordination ur mellanarkivet.
+  {
+    id: 'las-mellanarkiv-ordination', namn: 'Läsa en utsatt ordination ur mellanarkivet', roll: 'lak-kard', start: 'Patientens översikt',
+    text: 'Gunnar Åkesson fick Alvedon mot feber när han låg inne för influensa 2012. Ta reda på hur många doser han fick och varför en dos inte gavs.',
+    kontroll: { sel: '[data-mellanarkiv-kontroll]', text: 'Kontrollsumman visar' },
+  },
   // Runda 14, r5: systemförvaltaren registrerar en incident.
   {
     id: 'registrera-incident', namn: 'Registrera en incident', roll: 'sysf', start: 'Servicenivåsidan efter återställning',

@@ -2749,6 +2749,8 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
         'skriv-intyg', 'skicka-eremiss',
         // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.
         'las-mellanarkiv', 'overfor-mellanarkiv', 'oppna-reservdator',
+        // Runda 15, r3: en utsatt ordination ur mellanarkivet.
+        'las-mellanarkiv-ordination',
         // Runda 14, r5: incidenten på sidan Servicenivåer och incidenter.
         'registrera-incident',
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.

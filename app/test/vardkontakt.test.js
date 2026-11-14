@@ -610,7 +610,9 @@ describe('Vårdkontakt', () => {
     const fraga = (vag) => fhir.hantera({ db: d, personal: pers, valFor: () => ({}), url: new URL(`http://test.local${vag}`), base: 'http://test.local' }).body;
     for (const t of ['Observation', 'MedicationRequest', 'ServiceRequest']) {
       const b = fraga(`/fhir/${t}?patient=p01`);
-      expect({ t, alla: b.entry.every(e => e.resource.encounter?.reference?.startsWith('Encounter/')) }).toEqual({ t, alla: true });
+      // Runda 15, r3: handlingar ur mellanarkivet som migrerades från VAS utan vårdkontakt räknas inte (mellanarkiv.js).
+      const aktiva = b.entry.filter(e => !(e.resource.meta?.tag ?? []).some(x => x.code === 'mellanarkiv'));
+      expect({ t, alla: aktiva.every(e => e.resource.encounter?.reference?.startsWith('Encounter/')) }).toEqual({ t, alla: true });
     }
   });
 });
