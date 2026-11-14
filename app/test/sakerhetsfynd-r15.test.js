@@ -417,6 +417,18 @@ describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns',
   const forhandsvisning = (db, v) => JSON.stringify(makuleringMod.forhandsvisa(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id)));
   const vagran = (db, v) => { try { makuleringMod.makulera(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.' }); return 'lyckades'; } catch (e) { return JSON.stringify([e.status, e.message, e.kod, e.extra]); } };
 
+  test('en flytt tar med kontrasigneringen av en anteckning och uppmärksamhetsinformation byggd på en diagnos, så att inget blir kvar hos fel patient', () => {
+    const db = nyDb();
+    const v = kontakt(db);
+    const a = db.query('SELECT * FROM anteckningar WHERE vardkontakt_id = ? LIMIT 1').get(v.id);
+    lagIn(db, 'kontrasigneringar', { patient_id: v.patient_id, typ: 'anteckning', post_id: a.id, enhet_id: a.enhet_id, begard_av: 'lak-kard', begard: '2026-11-14T09:00:00.000Z', mottagare_id: 'lak-kard', status: 'begard' });
+    const d = lagIn(db, 'diagnoser', { patient_id: v.patient_id, enhet_id: v.enhet_id, vardkontakt_id: v.id, kod: 'I48.9', text: 'Förmaksflimmer', typ: 'huvud', datum: '2026-11-14' });
+    lagIn(db, 'uppmarksamhet', { patient_id: v.patient_id, enhet_id: v.enhet_id, kategori: 'medicinskt', term: 'Prov', kalla_typ: 'diagnos', kalla_id: d, status: 'aktiv', registrerad: '2026-11-14T09:00:00.000Z' });
+    const f = makuleringMod.tillhor(db, makuleringMod.objekt(db, 'vardkontakt', v.id));
+    expect(f.get('kontrasigneringar')?.length).toBe(1);
+    expect(f.get('uppmarksamhet')?.length).toBe(1);
+  });
+
   test('förhandsvisningen är densamma med och utan en dold anteckning på en spärrad vårdenhet', () => {
     const utan = nyDb(); const med = nyDb();
     const v = kontakt(utan); sparr(utan, v);

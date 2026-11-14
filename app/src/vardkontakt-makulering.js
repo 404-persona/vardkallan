@@ -110,8 +110,30 @@ export function tillhor(db, o) {
   }
   // Det som pekar på det som flyttas, i flera varv, så att en betalning för en bokning eller en kontrasignering av en
   // anteckning följer med. En kallelse som redan har skickats ligger kvar.
+  // Säkerhetsgranskningen efter sammanslagningen: rader som pekar med typ och id (en kontrasignering av en anteckning,
+  // en makulering av en dos, uppmärksamhetsinformation byggd på en diagnos eller ordination och en återbetalning av en
+  // bokning) följer också med, så att inget blir kvar hos fel patient.
+  const TYPADE = [['kontrasigneringar', 'typ', 'post_id', { anteckning: 'anteckningar', matvarde: 'matvarden' }],
+    ['makuleringar', 'typ', 'post_id', { administrering: 'administreringar', vatskebalans: 'vatskebalans' }],
+    ['uppmarksamhet', 'kalla_typ', 'kalla_id', { diagnos: 'diagnoser', ordination: 'ordinationer' }],
+    ['aterbetalningar', 'kalla', 'kalla_id', { bokning: 'bokningar' }]];
   for (let varv = 0; varv < 4; varv++) {
     let ny = false;
+    for (const [t, typKol, idKol, typer] of TYPADE) {
+      const k = meta.get(t);
+      if (!k || !k.includes(typKol) || !k.includes(idKol)) continue;
+      for (const [typ, mal] of Object.entries(typer)) {
+        if (!ut.has(mal)) continue;
+        const malIds = ut.get(mal);
+        const rader = db.query(`SELECT ${idFor(t)} AS id, ${idKol} AS foralder FROM ${t} WHERE ${typKol} = ? AND ${idKol} IN (${ph(malIds)}) AND patient_id = ?`).all(typ, ...malIds, o.patientId);
+        for (const r of rader) {
+          const nyckel = `${t}:${r.id}`;
+          if (!foraldrar.has(nyckel)) foraldrar.set(nyckel, new Set());
+          foraldrar.get(nyckel).add(`${mal}:${r.foralder}`);
+        }
+        if (lagg(t, rader.map(r => r.id))) ny = true;
+      }
+    }
     for (const [t, k] of meta) {
       for (const kol of k.filter(x => x.endsWith('_id') && !['patient_id', 'enhet_id', 'vardkontakt_id', 'vardtillfalle_id', 'id'].includes(x))) {
         const mal = malFor(alla, kol);
