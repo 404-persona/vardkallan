@@ -2,8 +2,8 @@
 //
 // Systemet vet redan kontaktorsaken, prioriteten ur triagen, mätvärdena och provsvaren, läkemedelsändringarna och
 // diagnoserna. Underlaget visar det som hör till anteckningen bredvid skrivrutan: mätvärden och provsvar sedan förra
-// anteckningen av samma slag med en pil för förändringen mot värdet före, läkemedel som har satts in, ändrats eller
-// satts ut under vårdkontakten eller sedan förra anteckningen, och de aktuella diagnoserna. Kontaktorsak och Prioritet
+// anteckningen av samma slag med en pil för förändringen mot värdet före, läkemedel som är nya, ändrade eller
+// utsatta under vårdkontakten eller sedan förra anteckningen, och de aktuella diagnoserna. Kontaktorsak och Prioritet
 // fyller systemet i med källan, och användaren kan ändra dem.
 //
 // Ett värde förs in i texten med ett klick som en referens: texten står i anteckningen som systemet skrev den, med
@@ -56,7 +56,7 @@ const PILTEXT = { upp: 'högre än förra', ned: 'lägre än förra', samma: 'sa
 
 const lmNamn = (db, o) => { const k = db.query('SELECT namn, styrka FROM katalog WHERE id = ?').get(o.lakemedel_id); return k ? `${k.namn}${k.styrka ? ` ${k.styrka}` : ''}` : 'Läkemedel'; };
 const substans = (db, o) => db.query('SELECT substans, namn FROM katalog WHERE id = ?').get(o.lakemedel_id)?.substans ?? o.lakemedel_id;
-// En ordination som satts in högst en timme efter att samma substans sattes ut är en ändring. Bara ordinationerna som
+// En ordination som sätts in högst en timme efter att samma substans sattes ut är en ändring. Bara ordinationerna som
 // den som skriver får se (synliga) räknas, så att en dos från en spärrad vårdenhet aldrig hamnar i texten.
 const NARA = 3600_000;
 const foregangare = (db, o, synliga) => synliga.filter(x => x.id !== o.id && x.status === 'utsatt' && x.utsatt_tid && substans(db, x) === substans(db, o) && Math.abs(Date.parse(o.skapad) - Date.parse(x.utsatt_tid)) <= NARA)
@@ -108,7 +108,7 @@ export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = 
   const k = kontakt === undefined ? kontaktFor(atk) : kontakt;
   const v = k?.vardkontakt ?? null;
   const forra = forraAnteckning(atk, typ, utkastId);
-  const vtStart = v?.vardtillfalleId ? db.query('SELECT inskriven FROM vardtillfallen WHERE id = ?').get(v.vardtillfalleId)?.inskriven : null;
+  const vtStart = v?.vardtillfalleId && !v.dold ? db.query('SELECT inskriven FROM vardtillfallen WHERE id = ?').get(v.vardtillfalleId)?.inskriven : null;
   // Mätvärdena gäller sedan förra anteckningen av samma typ, annars sedan kontakten började, annars de senaste 30 dagarna.
   const sedan = forra ? (forra.signerad_tid ?? forra.skapad) : (v && !v.dold ? v.start : null) ?? new Date(nu - 30 * DAG).toISOString();
   const sedanText = forra ? `Sedan förra ${bestamd(typ)} ${tidText(sedan)}` : v && !v.dold ? `Sedan vårdkontakten började ${tidText(sedan)}` : 'De senaste 30 dagarna';

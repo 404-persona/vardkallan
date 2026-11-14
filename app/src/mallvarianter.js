@@ -95,7 +95,7 @@ export function lasordning(sokord) {
 }
 
 // Skrivordningen i vårdenhetens förval: 'apso' sätter Bedömning och Åtgärd först i läkarmallarna, annars mallens ordning.
-export const SKRIVORDNINGAR = { mall: 'Mallens ordning, med kontaktorsak och anamnes först', apso: 'Bedömning och åtgärd först (APSO)' };
+export const SKRIVORDNINGAR = { mall: 'Mallens ordning, med kontaktorsak och anamnes först', apso: 'Bedömning och åtgärd först' };
 export function skrivordning(sokord, ordning) {
   if (ordning !== 'apso') return sokord;
   const namn = (s) => (typeof s === 'string' ? s : s?.namn);

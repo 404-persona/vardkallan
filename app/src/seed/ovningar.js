@@ -122,15 +122,15 @@ OVNINGAR_V1.push(
     ['a', 'Öppnar mätvärdena i ett annat fönster och skriver av värdet.'],
     ['b', 'Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.'],
     ['c', 'Systemet drar in alla dagens värden i anteckningen av sig självt.'],
-  ], 'b', 'Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.', '#/patient/p01/journal/ny'),
+  ], 'b', 'Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.', '#/patient/p01/journal'),
   o('utkast-sparas', ['lakare', 'sjukskoterska', 'underskoterska', 'fysioterapeut'], 'Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?', [
     ['a', 'Texten försvinner om du inte har sparat.'],
     ['b', 'Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.'],
     ['c', 'Du måste först trycka på Spara utkast.'],
-  ], 'b', 'Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.', '#/patient/p01/journal/ny'),
+  ], 'b', 'Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.', '#/patient/p01/journal'),
   o('egna-fraser', ['lakare', 'sjukskoterska', 'underskoterska', 'fysioterapeut'], 'Vad får en egen fras innehålla?', [
     ['a', 'Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.'],
     ['b', 'Värden ur journalen, till exempel ett blodtryck med datum.'],
     ['c', 'En hel mall med många sökord.'],
-  ], 'a', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal/ny'),
+  ], 'a', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
 );

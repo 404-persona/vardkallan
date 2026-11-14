@@ -39,9 +39,9 @@ Ett klick på den senaste anteckningen i översikten, som då visas i sin helhet
 
 ### Skriva och signera en daganteckning
 
-Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Sara Lindqvist flödet.
+Börjar i: Patientens översikt. Klickbudget: högst 5 steg. I demon gör Sara Lindqvist flödet.
 
-Ett klick för att öppna en ny anteckning, ett fältbyte för vart och ett av de två sökord som skrivs (Aktuellt och Bedömning) och ett klick för att signera. Mallen Daganteckning och den pågående vårdkontakten ska vara förvalda.
+Ett klick för att öppna en ny anteckning, där fokus står i Aktuellt, ett klick på blodtrycket i underlaget, ett fältbyte till Bedömning, ett klick på läkemedelsändringen i underlaget och ett klick för att signera. Mallen Daganteckning och den pågående vårdkontakten är förvalda. Anteckningen har ungefär demons medianlängd för en daganteckning, men användaren skriver bara drygt hälften av tecknen: blodtrycket och ändringen av metoprolol skriver systemet med datum, som referenser, och inget som systemet redan vet får skrivas för hand. Utkastet sparas av sig självt under tiden.
 
 ### Ordinera ett läkemedel utan varning
 
@@ -391,6 +391,12 @@ Börjar i: Inloggningssidan med en inkopplad inloggningstjänst. Klickbudget: h�
 
 Sussa 5.2.1.1. Ett klick på tjänsten på inloggningssidan och ett på Logga in i tjänsten. Uppdraget, vårdenheten och behörigheten kommer ur biljetten och katalogen, så personen väljer ingenting i Vårdkällan. I en verklig tjänst ersätts klicket i tjänsten av SITHS-kortet.
 
+### Hitta den senaste bedömningen i en journal med 30 anteckningar
+
+Börjar i: Översikten för en patient med 30 anteckningar. Klickbudget: högst 2 steg. I demon gör Sara Lindqvist flödet.
+
+Ett klick på fliken Journal och ett på Senaste bedömning, som systemet har räknat fram bland de anteckningar som läkaren får se. Anteckningen öppnas med bedömning och åtgärd först. Ingen behöver bläddra förbi de nyare omvårdnadsanteckningarna.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -399,7 +405,7 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Läkaren skriver en daganteckning i patientens översikt och signerar den. Systemet fyller i vårdkontakt, enhet och tid.
 
-Flöde: Skriva och signera en daganteckning, klickbudget 4. [Se filmen](../filmer/daganteckning.webm)
+Flöde: Skriva och signera en daganteckning, klickbudget 5. [Se filmen](../filmer/daganteckning.webm)
 
 ### Ordinera ett läkemedel
 
@@ -486,6 +492,36 @@ Rätt svar: Du väljer Nödåtkomst med ett syfte. Åtkomsten flaggas i loggen o
 Nödåtkomst kräver syfte och intyg om att patienten inte kan samtycka. Den syns för logggranskaren.
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sok).
+
+### Övning 8
+
+Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
+
+Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
+
+Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 9
+
+Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
+
+Rätt svar: Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.
+
+Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 10
+
+Vad får en egen fras innehålla?
+
+Rätt svar: Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.
+
+Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
 ## Praktiska prov
 
@@ -613,4 +649,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 7 övningar och få intyget.
+- Svara rätt på alla 10 övningar och få intyget.

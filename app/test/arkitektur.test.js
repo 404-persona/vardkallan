@@ -134,7 +134,8 @@ describe('Nationellt fackspråk', () => {
     await k.logga('lak-kard');
     const r = await k.get('/api/fackssprak');
     expect(r.status).toBe(200);
-    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående']);
+    // Runda 15, r4: undersökorden i läkarmallarnas varianter (mallvarianter.js) har ingen kod förrän de är kontrollerade.
+    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Råd och egenvård', 'Psykiskt status', 'Suicidriskbedömning', 'Diabetes', 'Astma och KOL', 'Hypertoni', 'Hjärtsvikt']);
   });
 
   test(namn(T.nfAtgard), () => {

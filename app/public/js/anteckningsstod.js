@@ -114,7 +114,7 @@ function infoga(t, text) {
 export function kopplaFalt(form, { forvalda = [] } = {}) {
   const refs = new WeakMap();
   let sista = null;
-  const textfalt = () => [...form.querySelectorAll('textarea[data-sokord]')];
+  const textfalt = () => [...form.querySelectorAll('[data-sokord]')];
   const forbered = (t) => {
     if (t.dataset.kopplad) return;
     t.dataset.kopplad = '1';
@@ -156,7 +156,7 @@ export function kopplaFalt(form, { forvalda = [] } = {}) {
 function utfall(form, sokordNamn, forbered) {
   const knapp = [...form.querySelectorAll('[data-utfall]')].find(b => b.dataset.utfall === sokordNamn);
   if (!knapp) return;
-  const alla = form.querySelectorAll('textarea[data-sokord]').length;
+  const alla = form.querySelectorAll('[data-sokord]').length;
   const id = `so-u${alla}-${Math.random().toString(36).slice(2, 7)}`;
   const div = document.createElement('div');
   div.className = 'falt';

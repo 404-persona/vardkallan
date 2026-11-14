@@ -64,6 +64,36 @@ Systemet maskerar skyddad identitet överallt utan att någon behöver komma ih�
 
 Pröva i demon: logga in som Jenny Holmberg och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/arbetslista).
 
+### Övning 6
+
+Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
+
+Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
+
+Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.
+
+Pröva i demon: logga in som Jenny Holmberg och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 7
+
+Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
+
+Rätt svar: Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.
+
+Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.
+
+Pröva i demon: logga in som Jenny Holmberg och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 8
+
+Vad får en egen fras innehålla?
+
+Rätt svar: Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.
+
+Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.
+
+Pröva i demon: logga in som Jenny Holmberg och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -114,4 +144,4 @@ Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen. Hon
 - Bedöma och besvara en remiss.
 - Skriva och signera en anteckning efter ett besök.
 - Bocka av en planerad uppgift.
-- Svara rätt på alla 5 övningar och få intyget.
+- Svara rätt på alla 8 övningar och få intyget.

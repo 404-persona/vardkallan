@@ -104,6 +104,36 @@ Delegeringen registreras av en sjuksköterska eller läkare enligt HSLF-FS 2017:
 
 Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/delegeringar).
 
+### Övning 8
+
+Du skriver en daganteckning och vill ta med dagens blodtryck. Hur gör du?
+
+Rätt svar: Klickar på blodtrycket i underlaget bredvid sökorden. Systemet för in värdet med datum där du senast skrev, som en referens till mätvärdet.
+
+Underlaget visar det som hör till anteckningen: mätvärden sedan förra anteckningen av samma slag med en pil för förändringen, läkemedelsändringar och diagnoser. Inget förs in av sig självt, så att anteckningen bara får med det du väljer.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 9
+
+Mitt i en anteckning klickar du på en tidigare anteckning i listan. Vad händer med det du har skrivit?
+
+Rätt svar: Den tidigare anteckningen öppnas i en läsruta ovanför, och din text står kvar. Utkastet sparas också av sig självt.
+
+Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Lämnar du patienten sparas texten först, och systemet frågar bara om det inte gick.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
+### Övning 10
+
+Vad får en egen fras innehålla?
+
+Rätt svar: Text som du själv har skrivit, till exempel Inga bröstsmärtor, ingen andnöd.
+
+Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.
+
+Pröva i demon: logga in som Amira Haddad och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -150,4 +180,4 @@ Du arbetar som Amira Haddad, undersköterska på avdelning 72, som motsvarar Sus
 - Ge en dos med en giltig delegering.
 - Veta vad systemet gör när en delegering saknas eller har gått ut.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 7 övningar och få intyget.
+- Svara rätt på alla 10 övningar och få intyget.

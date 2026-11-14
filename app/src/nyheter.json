@@ -16,7 +16,7 @@
           "omfattning": "stor",
           "var": null,
           "rubrik": "Underlaget bredvid sökorden",
-          "text": "När du skriver en anteckning visar systemet underlaget bredvid sökorden: kontaktorsaken, prioriteten ur triagen, mätvärden och provsvar sedan förra anteckningen av samma slag med en pil för förändringen, läkemedel som har satts in, ändrats eller satts ut och aktuella diagnoser. Ett klick för in värdet med datum där du senast skrev, så att du inte skriver om det som redan finns. Kontaktorsak och prioritet fyller systemet i med källan, och du kan ändra dem."
+          "text": "När du skriver en anteckning visar systemet underlaget bredvid sökorden: kontaktorsaken, prioriteten ur triagen, mätvärden och provsvar sedan förra anteckningen av samma slag med en pil för förändringen, läkemedel som är nya, ändrade eller utsatta och aktuella diagnoser. Ett klick för in värdet med datum där du senast skrev, så att du inte skriver om det som redan finns. Kontaktorsak och prioritet fyller systemet i med källan, och du kan ändra dem."
         },
         {
           "id": "anteckning-utkast-1-5-0",
