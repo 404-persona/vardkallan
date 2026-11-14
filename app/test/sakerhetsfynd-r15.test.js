@@ -464,15 +464,44 @@ describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns',
     expect(f.get('uppmarksamhet')?.length).toBe(1);
   });
 
-  test('en flytt till rätt patient ger samma svar med och utan en dold rad från en annan vårdenhet, och den dolda raden följer med', () => {
-    const utan = nyDb(); const med = nyDb();
-    const v = kontakt(utan);
-    sparr(utan, v);
-    sparr(med, v); doljAnteckning(med, v);
-    const flytta = (db) => { try { const r = makuleringMod.makulera(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: '196503143254' }, { valFor: () => ({}) }); return JSON.stringify({ atgard: r.atgard, text: r.text }); } catch (e) { return JSON.stringify([e.status, e.message]); } };
-    const a = flytta(utan);
-    expect(flytta(med)).toBe(a);
-    if (JSON.parse(a).atgard === 'flyttad') expect(med.query("SELECT patient_id FROM anteckningar WHERE vardkontakt_id = ? AND enhet_id = 'kkoga-ane'").get(v.id).patient_id).toBe('p05');
+  // Behörigheten prövas alltid på allt som flyttas. En dold rad från en annan vårdenhet stoppar flytten med samma svar som
+  // en synlig rad från en annan vårdenhet, och inget flyttas.
+  const synligAnnan = (db, v) => doljAnteckning(db, v); // utan spärr syns raden med ett aktivt val
+  test('direkt flytt: en dold rad från en annan vårdenhet stoppar flytten med samma svar som en synlig, och inget flyttas', () => {
+    const synlig = nyDb(); const dold = nyDb();
+    const v = kontakt(synlig);
+    synligAnnan(synlig, v);
+    sparr(dold, v); doljAnteckning(dold, v);
+    const flytta = (db, val) => { try { makuleringMod.makulera(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, val, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: '196503143254' }, { valFor: () => ({}) }); return 'flyttad'; } catch (e) { return JSON.stringify([e.status, e.message, e.kod]); } };
+    // Den som flyttar ser den andra vårdenhetens rad med ett aktivt val i det ena fallet, men inte den spärrade i det andra.
+    const a = flytta(synlig, { andra_enheter: { syfte: 'Rättelse' } });
+    const b = flytta(dold, {});
+    expect(a).not.toBe('flyttad');
+    expect(b).toBe(a);
+    for (const db of [synlig, dold]) {
+      expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
+      expect(db.query("SELECT count(*) AS n FROM anteckningar WHERE vardkontakt_id = ? AND patient_id <> ?").get(v.id, v.patient_id).n).toBe(0);
+      expect(db.query("SELECT count(*) AS n FROM sakerhetslogg WHERE typ = 'flytt_hindrad'").get().n).toBe(1);
+    }
+  });
+
+  test('godkännande: en dold rad från en annan vårdenhet stoppar godkännandet med samma svar som en synlig, och inget flyttas', () => {
+    const synlig = nyDb(); const dold = nyDb();
+    const v = kontakt(synlig);
+    synligAnnan(synlig, v);
+    sparr(dold, v); doljAnteckning(dold, v);
+    const godkann = (db, val) => {
+      const adm = new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, val, 'registrera_vardkontakt');
+      const nummer = db.query("SELECT personnummer FROM patienter WHERE id = 'p12'").get().personnummer;
+      makuleringMod.makulera(adm, makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: nummer }, { valFor: () => ({}) });
+      const f = db.query("SELECT id FROM makulering_forslag WHERE status = 'vantar' ORDER BY id DESC").get();
+      try { makuleringMod.godkann(db, pers(db, 'vch-kard'), f.id); return 'flyttad'; } catch (e) { return JSON.stringify([e.status, e.message, e.kod]); }
+    };
+    const a = godkann(synlig, { andra_enheter: { syfte: 'Rättelse' } });
+    const b = godkann(dold, {});
+    expect(a).not.toBe('flyttad');
+    expect(b).toBe(a);
+    for (const db of [synlig, dold]) expect(db.query('SELECT patient_id FROM vardkontakter WHERE id = ?').get(v.id).patient_id).toBe(v.patient_id);
   });
 
   test('förhandsvisningen är densamma med och utan en dold anteckning på en spärrad vårdenhet', () => {

@@ -429,10 +429,11 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   // Andra säkerhetsgranskningen: allt som flyttas prövas i behörighetsmotorn för rätt patient vid varje vårdenhet som
   // raderna hör till, och flytten får aldrig ge rätt patient en vårdrelation som inte fanns före flytten, från någon av
   // de källor som behörighetsmotorn läser (vårdkontakter, remisser, operationsanmälningar och listning).
-  // Säkerhetsgranskningen efter sammanslagningen: vårdenheterna prövas på det som användaren får se, så att en dold rad
-  // aldrig ändrar svaret. Dolda rader som hör till kontakten följer med till rätt patient, eftersom de hör till den.
+  // Säkerhetsgranskningen efter sammanslagningen: behörigheten prövas alltid på allt som flyttas (fail closed), också dolda
+  // rader. Bara svaret är neutralt: samma text och samma meddelande till systemförvaltningen oavsett om raden som hindrar
+  // syns eller är dold. Synligheten styr bara det som visas och räknas.
   const syns = synligt(atk, foljer);
-  if (till) provaEnheter(atk, till, o, syns, valFor);
+  if (till) provaEnheter(atk, till, o, foljer, valFor);
   let id;
   try { id = genomfor(db, { aktor: atk.personal, av: atk.personal.id, o, till, orsak, foljer, nu, grund: atk.grund() }); } catch (e) {
     if (e instanceof Fel && e.message === NY_RELATION) meddelaForvaltningen(atk, o);
@@ -518,7 +519,8 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
   const foljer = tillhor(db, o);
   const ve = vardenhetFor(db, o.enhetId);
   const syns = synligt(atkG, foljer);
-  if ([...enheterFor(db, o, syns)].some(e => e !== ve)) { meddelaForvaltningen(atkG, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
+  // Behörigheten prövas på allt som flyttas, och svaret är detsamma oavsett om raden som hindrar syns.
+  if ([...enheterFor(db, o, foljer)].some(e => e !== ve)) { meddelaForvaltningen(atkG, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
   let id;
   try { id = genomfor(db, {
     aktor: personal, av: f.foreslagen_av, godkandAv: personal.id, forslagId: f.id, o, till, orsak: f.orsak, foljer, nu, behallRelation: true, grund: 'administrativ',
