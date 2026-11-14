@@ -19,6 +19,8 @@ import * as uppgraderingar from './vyer/uppgraderingar.js';
 import * as servicenivaer from './vyer/servicenivaer.js';
 // Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex för systemförvaltaren.
 import * as nationellaTjanster from './vyer/nationella-tjanster.js';
+// Runda 15, r2, tredje omgången: flyttar till rätt patient som väntar på godkännande.
+import * as flyttar from './vyer/flyttar.js';
 import * as oppetApi from './vyer/oppet-api.js';
 import * as drift from './vyer/drift.js';
 import * as anvandartest from './anvandartest.js';
@@ -210,6 +212,8 @@ const MENY = [
   // Runda 10, r7: kontorsstödet, med kalenderprenumerationen, för dem som har en tidbok.
   ['#/kontorsstod', 'Kontorsstöd', 'moduler', () => far('las_tidbok')],
   // Runda 7, r2: övningar och intyg för all personal (Sussa 10.1.1.5).
+  // Runda 15, r2, tredje omgången: flyttar till rätt patient med fyra ögon, för verksamhetschefen och vårdadministratören.
+  ['#/flyttar', 'Flyttar till rätt patient', 'pil', () => far('godkanna_flytt')],
   ['#/utbildning', 'Utbildning', 'person', () => far('utbildning')],
   // Runda 7, r1: testledaren läser och exporterar svaren från användartesterna.
   ['#/sussatest', 'Användartester', 'krav', () => far('anvandartest_las')],
@@ -281,6 +285,7 @@ const RUTTER = [
   [/^#\/servicenivaer$/, servicenivaer, () => far('servicenivaer')],
   // Runda 15, r2.
   [/^#\/nationella-tjanster$/, nationellaTjanster, () => far('forvalta_api')],
+  [/^#\/flyttar$/, flyttar, () => far('godkanna_flytt')],
   // Runda 9, r4.
   [/^#\/kodverk$/, kodverk, () => far('konfigurera')],
   // Runda 12, r1.
@@ -442,6 +447,8 @@ export async function uppdateraInkorg() {
     const d = await api('/api/inkorg', { tyst: true });
     S.inkorg = d.osigneradeAnteckningar.length + d.okvitteradeSvar.length + d.larm.length + d.nllAvvikelser.length + (d.dubbletter?.length ?? 0) + (d.kontrasigneringar?.length ?? 0) + (d.aterlamnanden?.length ?? 0)
       + (d.delegeringarSomGarUt?.length ?? 0)
+      // Runda 15, r2: flyttar till rätt patient som väntar på godkännande.
+      + (d.flyttarAttGodkanna?.length ?? 0)
       // Återinsättning efter uppehåll med antikoagulantia (runda 5, r4).
       + (d.aterinsattningar?.length ?? 0)
       // Vårdhändelser som avbokades eftersom remissen avvisades (runda 5, r4).

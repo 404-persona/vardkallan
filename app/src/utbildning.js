@@ -78,6 +78,8 @@ export const PROVA = {
   '#/ekonomi': 'faktureringsunderlag', '#/regler': 'konfigurera',
   // Runda 15, r2: köerna till de nationella tjänsterna.
   '#/nationella-tjanster': 'forvalta_api',
+  // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
+  '#/flyttar': 'godkanna_flytt',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

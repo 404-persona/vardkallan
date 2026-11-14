@@ -44,7 +44,7 @@ Handlingar i koden (24): `las_oversikt`, `las_omvardnad`, `las_lakemedel`, `las_
 
 ## Vårdadministratör (vardadministrator)
 
-Behov: Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan.
+Behov: Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt.
 
 Risker: Insyn i journaltext eller läkemedel utan vårdbehov.
 
@@ -52,7 +52,7 @@ Så begränsas risken: Ser kontaktuppgifter, vårdkontakter och remissernas stat
 
 Får inte: `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_diagnoser`, `ordinera`.
 
-Handlingar i koden (36): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`.
+Handlingar i koden (37): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `godkanna_flytt`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`.
 
 ## Logggranskare (logggranskare)
 
@@ -116,15 +116,15 @@ Handlingar i koden (2): `samverkan`, `utbildning`.
 
 ## Verksamhetschef (verksamhetschef)
 
-Behov: Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan.
+Behov: Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten.
 
 Risker: Att chefsrollen används för att läsa enskilda patienters journaler.
 
-Så begränsas risken: Läser inte journalen. Uppgifterna gäller den egna vårdenheten.
+Så begränsas risken: Läser inte journalen. Uppgifterna gäller den egna vårdenheten. Ett förslag om flytt visar numret som skrevs men ingenting om patienten som numret leder till, och den som föreslog flytten kan aldrig godkänna den själv.
 
 Får inte: `las_journal`, `las_oversikt`, `ordinera`.
 
-Handlingar i koden (7): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `vyforval`.
+Handlingar i koden (8): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `godkanna_flytt`, `vyforval`.
 
 ## Ekonom (ekonom)
 

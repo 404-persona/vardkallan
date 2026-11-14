@@ -977,6 +977,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       vardkontakter: vk.map(v => vardkontakt.kontaktUt(db, v, pers)),
       // Runda 15, r2: vårdkontakter som har makulerats på patienten, utan något om en annan patient.
       makuleradeVardkontakter: require('./vardkontakt-makulering.js').forPatient(atk),
+      // Tredje omgången: flyttar till rätt patient som väntar på godkännande, utan något om den andra patienten.
+      vantandeFlyttar: require('./vardkontakt-makulering.js').vantandeForPatient(atk),
       vardstruktur,
       kontakt: { adress: p.skyddad ? null : p.adress, postnr: p.skyddad ? null : p.postnr, ort: p.skyddad ? null : p.ort, telefon: p.skyddad ? null : p.telefon, kontaktperson: p.skyddad ? null : p.kontaktperson },
       // Runda 7, r4: undantagna uppgifter står med antal och motivering (undantag.js).

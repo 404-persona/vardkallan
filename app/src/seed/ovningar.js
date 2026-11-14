@@ -125,7 +125,13 @@ export const OVNINGAR_V1 = [
     ['a', 'Ber läkaren skriva om anteckningen på rätt patient och låter besöket stå kvar.'],
     ['b', 'Väljer Registrerad på fel patient på vårdkontakten, skriver varför och anger numret för rätt patient. Systemet flyttar besöket med anteckningen dit och lämnar bara makuleringen kvar på fel patient.'],
     ['c', 'Raderar besöket.'],
-  ], 'b', 'Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten.', null),
+  ], 'b', 'Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten. Har rätt patient ingen vårdrelation till vårdenheten väntar flytten på att verksamhetschefen eller en annan vårdadministratör godkänner den.', null),
+  // Runda 15, r2, tredje omgången: fyra ögon när rätt patient saknar vårdrelation.
+  o('flytt-fyra-ogon', ['verksamhetschef'], 'En vårdadministratör föreslår att ett besök på fel patient flyttas till en patient som inte har vårdrelation till vårdenheten. Vad gör du?', [
+    ['a', 'Godkänner direkt, eftersom förslaget kommer från en kollega.'],
+    ['b', 'Öppnar Flyttar till rätt patient, kontrollerar numret mot underlaget och godkänner eller avslår med en kommentar. Först när du godkänner flyttas besöket, och rätt patient får den vårdrelation som besöket ger.'],
+    ['c', 'Öppnar journalen för rätt patient för att se om det stämmer.'],
+  ], 'b', 'Förslaget ger ingen åtkomst till rätt patient och visar bara numret som skrevs. Den som föreslog flytten kan aldrig godkänna den själv.', '#/flyttar'),
   o('nationella-koer', ['systemforvaltare'], 'Samtyckestjänsten har inte svarat på en timme. Vad händer med samtyckena som registreras under tiden?', [
     ['a', 'De går förlorade och måste registreras igen.'],
     ['b', 'De gäller i Vårdkällan och ligger i kön. Systemet skickar dem när tjänsten svarar, och sidan Nationella tjänster visar det som inte har kommit fram, utan patientuppgifter.'],

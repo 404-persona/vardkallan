@@ -1,132 +1,132 @@
 {
-  "tid": "2026-11-14T19:00:28.884Z",
+  "tid": "2026-11-14T20:31:32.330Z",
   "bas": "http://127.0.0.1:18152",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "73cd617f40cd84bb79a720ec421d9a644947fbfbbdfe772e57af748513f05d4b",
+  "gransnittHash": "7f51d6960ad7d9285dea203eb84ab85ac57baf4dfff60b47cd4a91753565174d",
   "tester": [
     {
       "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > appen startar utan nät från service workern och visar läsläget",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > skrivande är avstängt i läsläget med en förklaring",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > åtkomster i läsläget når åtkomstloggen när servern svarar igen",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > simulerat avbrott ger läsläge medan servern svarar andra besökare",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > läskopian rensas vid utloggning",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > utloggning under avbrott loggar ut sessionen på servern, även om fliken stängs",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > läskopian används inte efter 8 timmar",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > läskopian förnyas av sig själv medan personen är inloggad",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > läsläget visar hur gammal läkemedelsinformationen är per patient och varnar efter 10 minuter",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > reservkoden väljs när webbläsaren är uppkopplad och bara den inslagna nyckeln sparas",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > efter omstart av webbläsaren utan nät visas vilka som har en reservkopia på datorn och när den går ut",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > fel reservkod ger väntetid och rätt reservkod öppnar läsläget",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > åtkomster med reservkod loggas krypterat och överlever att fliken stängs",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > när servern svarar igen mitt i läsläget med reservkod når åtkomsterna åtkomstloggen",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > utloggning raderar reservkopian, den inslagna nyckeln och loggen efter att loggen förts över",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > utloggning i en flik avslutar läsläget i webbläsarens andra flikar",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > en navigering direkt till en fil ersätter inte appen i service workerns cache",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > fem fel reservkoder raderar reservkopian och flikar kan inte pröva samtidigt",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > två personer på samma dator har var sin reservkopia som bara öppnas med egen kod",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > simulerat avbrott visar reservinloggningen när fliken stängs i demon",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > en dos och ett mätvärde som registreras under avbrottet märks som inte sparade och sparas när förbindelsen är tillbaka",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > en dos som någon annan gav under avbrottet blir en konflikt som sjuksköterskan avgör, och dosen sparas inte två gånger",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > flerfaktor: en passkey i Chromes virtuella autentiserare slår på flerfaktor, bekräftar nästa inloggning, och läsläget vid avbrott fungerar efter den andra faktorn",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Avbrott > flerfaktor: invånaren slår på en app för engångskoder i Min journal och loggar sedan in med en kod från appen",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > testläget räknar klick, fältbyten och tangenter som klickbudgetskriptet för samma flöden",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > enkäten ger SUS-poäng enligt standardformeln",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > resultatfilen laddas ner med datum, version, deltagarkod, uppgifter och SUS-poäng",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > hoppa över och hjälp registreras per uppgift",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > inget anrop skickar testresultat till servern",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Användartest > testläget rensas när testet avslutas",
-      "status": "grön"
+      "status": "inaktuell"
     },
     {
       "namn": "Gränssnitt > Tillgänglighet > röstinmatningen frågar i en dialog innan ljudet går till webbläsarens tjänst när igenkänning på enheten saknas, valet sparas per användare, och med igenkänning på enheten kommer ingen fråga",

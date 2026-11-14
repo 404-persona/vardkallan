@@ -216,7 +216,7 @@ Ett besök har registrerats på fel patient, och läkaren har redan skrivit en a
 
 Rätt svar: Väljer Registrerad på fel patient på vårdkontakten, skriver varför och anger numret för rätt patient. Systemet flyttar besöket med anteckningen dit och lämnar bara makuleringen kvar på fel patient.
 
-Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten.
+Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten. Har rätt patient ingen vårdrelation till vårdenheten väntar flytten på att verksamhetschefen eller en annan vårdadministratör godkänner den.
 
 ## Uppdrag i testinbjudan
 

@@ -34,7 +34,18 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Vårdkontakt på fel patient",
-          "text": "En genomförd vårdkontakt som har registrerats på fel patient makuleras med en motivering. Ange numret för rätt patient, så flyttar systemet kontakten och allt som hör till den dit, som när två journaler slås samman. På fel patient står bara att kontakten är makulerad, och ingenting om den andra patienten."
+          "text": "En genomförd vårdkontakt som har registrerats på fel patient makuleras med en motivering. Ange numret för rätt patient, så flyttar systemet kontakten och allt som hör till den dit, som när två journaler slås samman. På fel patient står bara att kontakten är makulerad, och ingenting om den andra patienten. Ett vårdtillfälle på fel patient flyttas på samma sätt."
+        },
+        {
+          "id": "flytt-fyra-ogon-1-5-0",
+          "roller": [
+            "vardadministrator",
+            "verksamhetschef"
+          ],
+          "omfattning": "liten",
+          "var": "#/flyttar",
+          "rubrik": "Flytt till rätt patient med fyra ögon",
+          "text": "Har rätt patient ingen vårdrelation till vårdenheten flyttas inget direkt. Flytten väntar på att verksamhetschefen eller en annan vårdadministratör godkänner den i sin egen inloggning på sidan Flyttar till rätt patient. Förslaget visar numret som skrevs, men ingenting om patienten som numret leder till."
         }
       ]
     },

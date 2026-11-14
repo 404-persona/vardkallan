@@ -26,13 +26,19 @@ export function lage(db, nu = new Date()) {
 
 export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Runda 15, r2, andra omgången: makulering av en genomförd vårdkontakt som har registrerats på fel patient.
-  const medKontakt = (c, id, fn) => {
+  // Tredje omgången: samma rättelse för ett vårdtillfälle, och förslag med fyra ögon när rätt patient saknar vårdrelation.
+  const medObjekt = (c, slag, id, fn) => {
     kravInloggad(c);
-    const v = require('./vardkontakt.js').hamtaKontakt(c.db, id);
-    return medPatient(c, v.patient_id, 'registrera_vardkontakt', (atk) => fn(atk, v));
+    const o = makulering.objekt(c.db, slag, id);
+    return medPatient(c, o.patientId, 'registrera_vardkontakt', (atk) => fn(atk, o));
   };
-  rutt('GET', '/api/vardkontakt/:id/makulering', (c, id) => medKontakt(c, id, (atk, v) => makulering.forhandsvisa(atk, v)));
-  rutt('POST', '/api/vardkontakt/:id/makulera', (c, id) => medKontakt(c, id, (atk, v) => makulering.makulera(atk, v, c.body, { valFor: (pid) => valFor(c.s, pid) })));
+  for (const [slag, bas] of [['vardkontakt', '/api/vardkontakt/:id'], ['vardtillfalle', '/api/vardtillfalle/:id']]) {
+    rutt('GET', `${bas}/makulering`, (c, id) => medObjekt(c, slag, id, (atk, o) => makulering.forhandsvisa(atk, o)));
+    rutt('POST', `${bas}/makulera`, (c, id) => medObjekt(c, slag, id, (atk, o) => makulering.makulera(atk, o, c.body, { valFor: (pid) => valFor(c.s, pid) })));
+  }
+  rutt('GET', '/api/flyttar', (c) => makulering.forslagFor(c.db, kravInloggad(c)));
+  rutt('POST', '/api/flyttar/:id/godkann', (c, id) => makulering.godkann(c.db, kravInloggad(c), id));
+  rutt('POST', '/api/flyttar/:id/avsluta', (c, id) => makulering.avsluta(c.db, kravInloggad(c), id, c.body));
   rutt('GET', '/api/nationella-tjanster', (c) => { kravForvaltare(c, kravInloggad); return lage(c.db); });
   // Skickar allt som väntar nu, utan att vänta på nästa försök.
   rutt('POST', '/api/nationella-tjanster/skicka', (c) => {
@@ -94,11 +100,13 @@ export function schemalagg(dbs, { nu = new Date(), maxMs = 150 } = {}) {
 
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.
 export function inkorg(c) {
-  if (!c.personal || !kanRoll(c.personal, 'forvalta_api') || !c.db) return {};
+  // Tredje omgången: flyttar till rätt patient som väntar på den inloggades godkännande.
+  const flyttar = c.personal && c.db && kanRoll(c.personal, 'godkanna_flytt') ? { flyttarAttGodkanna: makulering.forslagFor(c.db, c.personal).attGodkanna } : {};
+  if (!c.personal || !kanRoll(c.personal, 'forvalta_api') || !c.db) return flyttar;
   const s = samtycke.lageForvaltning(c.db);
   const e = ei.lage(c.db);
   const rader = [];
   if (s.ejFramme) rader.push({ tjanst: 'samtyckestjansten', rubrik: 'Samtyckestjänsten', text: s.text, href: '#/nationella-tjanster' });
   if (e.ejFramme) rader.push({ tjanst: 'engagemangsindex', rubrik: 'Engagemangsindex', text: e.text, href: '#/nationella-tjanster' });
-  return { nationellaTjanster: rader };
+  return { ...flyttar, nationellaTjanster: rader };
 }

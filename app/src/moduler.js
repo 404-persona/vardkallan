@@ -320,6 +320,11 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   v.beskrivning += ' En genomförd vårdkontakt som har registrerats på fel patient makuleras med motivering, och det som hör till den flyttas till rätt patient som vid en sammanslagning.';
   v.kod.push('src/vardkontakt-makulering.js');
   v.api.push('/api/vardkontakt/:id/makulera');
+  // Tredje omgången: vårdtillfällen, och fyra ögon när rätt patient saknar vårdrelation.
+  v.beskrivning += ' Ett vårdtillfälle rättas på samma sätt, och när rätt patient saknar vårdrelation till vårdenheten flyttas uppgifterna först när en andra behörig person har godkänt det.';
+  v.api.push('/api/vardtillfalle/:id/makulera', '/api/flyttar');
+  v.rutter.push('#/flyttar');
+  v.vyer.push('flyttar.js');
 }
 // Runda 12, r1: journalens mallar, sökord och mätvärdestyper hör till systemförvaltningen (journalstruktur.js).
 {

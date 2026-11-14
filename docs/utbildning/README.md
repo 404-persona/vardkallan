@@ -66,7 +66,7 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 | [Analytiker (uppföljning)](uppfoljning.md) | 1 | 0 | 3 | 0 |
 | [Kommunens personal (simulerad)](kommun.md) | 0 | 0 | 3 | 0 |
 | [Farmaceut](farmaceut.md) | 1 | 0 | 6 | 0 |
-| [Verksamhetschef](verksamhetschef.md) | 1 | 0 | 4 | 0 |
+| [Verksamhetschef](verksamhetschef.md) | 1 | 0 | 5 | 0 |
 | [Ekonom](ekonom.md) | 1 | 0 | 3 | 0 |
 | [Systemförvaltare](systemforvaltare.md) | 4 | 1 | 4 | 7 |
 | [Fysioterapeut](fysioterapeut.md) | 0 | 0 | 5 | 7 |

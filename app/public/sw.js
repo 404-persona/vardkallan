@@ -66,7 +66,9 @@ const FILER = [
   '/js/vyer/servicenivaer.js',
   '/js/vyer/inloggningstjanster.js',
   '/js/vyer/nationella-tjanster.js',
+  '/js/vyer/flyttar.js',
 ];
+// Runda 15, r2, tredje omgången: listan har flyttarna till rätt patient (vyer/flyttar.js).
 // Runda 15, r2: listan har köerna till de nationella tjänsterna (vyer/nationella-tjanster.js).
 // Runda 14, r3: listan har intygen, den simulerade intygsapplikationen och e-remissen (patient-intyg.js, intygsapplikation.js och eremiss-ui.js).
 // Runda 14, r4: listan har testprotokollet (testprotokoll.js).

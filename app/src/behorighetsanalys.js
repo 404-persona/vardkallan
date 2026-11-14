@@ -40,7 +40,7 @@ export const ANALYS = {
   },
   vardadministrator: {
     namn: "Vårdadministratör",
-    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan.",
+    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt.",
     risker: "Insyn i journaltext eller läkemedel utan vårdbehov.",
     atgarder: "Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift.",
     inte: ["las_journal", "las_omvardnad", "las_lakemedel", "las_diagnoser", "ordinera"],
@@ -82,9 +82,9 @@ export const ANALYS = {
   },
   verksamhetschef: {
     namn: "Verksamhetschef",
-    behov: "Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan.",
+    behov: "Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten.",
     risker: "Att chefsrollen används för att läsa enskilda patienters journaler.",
-    atgarder: "Läser inte journalen. Uppgifterna gäller den egna vårdenheten.",
+    atgarder: "Läser inte journalen. Uppgifterna gäller den egna vårdenheten. Ett förslag om flytt visar numret som skrevs men ingenting om patienten som numret leder till, och den som föreslog flytten kan aldrig godkänna den själv.",
     inte: ["las_journal", "las_oversikt", "ordinera"],
   },
   ekonom: {
