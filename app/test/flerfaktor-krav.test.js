@@ -45,7 +45,7 @@ describe('Flerfaktor som krav', () => {
     await k.logga('ssk-kard');
     kravFlerfaktor(sandlada(app, k).db);
     await k.post('/api/logout');
-    const forsta = await k.post('/api/login', { personalId: 'ssk-kard' });
+    const forsta = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
     expect(forsta.status).toBe(200);
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.lasnyckel).toBeUndefined();
@@ -70,7 +70,7 @@ describe('Flerfaktor som krav', () => {
     expect((await k.get('/api/patient/p01')).status).toBe(200);
     // Nästa inloggning kräver faktorn som vanligt.
     await k.post('/api/logout');
-    const nasta = await k.post('/api/login', { personalId: 'ssk-kard' });
+    const nasta = await k.post('/api/login', { personalId: 'ssk-kard', tillitsniva: 2 });
     expect(nasta.data.inloggad).toBe(false);
     expect(nasta.data.flerfaktor.metoder).toEqual(['totp']);
     expect(nasta.data.flerfaktor.registrera).toBeUndefined();
@@ -81,7 +81,7 @@ describe('Flerfaktor som krav', () => {
     await k.logga('usk-kard');
     kravFlerfaktor(sandlada(app, k).db);
     await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'usk-kard' });
+    await k.post('/api/login', { personalId: 'usk-kard', tillitsniva: 2 });
     const b = (await k.post('/api/flerfaktor/totp/borja')).data;
     const h = ff.fran32(b.nyckel);
     const giltiga = new Set([-1, 0, 1].map(d => ff.totp(h, Date.now() + d * 30_000)));
@@ -105,7 +105,7 @@ describe('Flerfaktor som krav', () => {
     expect(s.inloggad).toBe(true);
     expect((await k.get('/api/patient/p01')).status).toBe(200);
     await k.post('/api/logout');
-    expect((await k.post('/api/login', { personalId: 'lak-kard' })).data.flerfaktor.registrera).toBe(true);
+    expect((await k.post('/api/login', { personalId: 'lak-kard', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
   });
 
   test('med kravet på ja leds invånaren i Min journal till att registrera en faktor innan journalen visas', async () => {
@@ -132,7 +132,7 @@ describe('Flerfaktor som krav', () => {
     const db = sandlada(app, k).db;
     kravFlerfaktor(db);
     await k.post('/api/logout');
-    expect((await k.post('/api/login', { personalId: 'far-kard' })).data.flerfaktor.registrera).toBe(true);
+    expect((await k.post('/api/login', { personalId: 'far-kard', tillitsniva: 2 })).data.flerfaktor.registrera).toBe(true);
     const b = (await k.post('/api/flerfaktor/totp/borja')).data;
     // Under tiden får kontot en faktor, som om en annan session hade registrerat den.
     const annan = ff.borjaTotp(db, { typ: 'personal', id: 'far-kard', namn: 'Elsa Nordin' });
@@ -158,7 +158,7 @@ describe('Flerfaktor som krav', () => {
     const db = sandlada(app, k).db;
     kravFlerfaktor(db);
     await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'vch-kard' });
+    await k.post('/api/login', { personalId: 'vch-kard', tillitsniva: 2 });
     const b = (await k.post('/api/flerfaktor/totp/borja')).data;
     const rad = db.query("SELECT id FROM flerfaktorer WHERE agare_id = 'vch-kard'").get();
     expect((await k.post(`/api/flerfaktor/${rad.id}/ta-bort`)).status).toBe(401);
@@ -171,7 +171,7 @@ describe('Flerfaktor som krav', () => {
     await k.logga('adm-kard');
     kravFlerfaktor(sandlada(app, k).db);
     await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'adm-kard' });
+    await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 });
     const b = (await k.post('/api/flerfaktor/totp/borja')).data;
     await k.post('/api/flerfaktor/totp', { kod: ff.totp(ff.fran32(b.nyckel), Date.now()) });
     const o = (await k.get('/api/flerfaktor')).data;

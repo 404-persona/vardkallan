@@ -159,7 +159,7 @@ describe('Vilande sandlådor i servern', () => {
     const hemlighet = ff.fran32(b.nyckel);
     expect((await k.post('/api/flerfaktor/totp', { kod: ff.totp(hemlighet, Date.now()) })).status).toBe(201);
     await k.post('/api/logout');
-    expect((await k.post('/api/login', { personalId: 'adm-kard' })).data.flerfaktor.metoder).toEqual(['totp']);
+    expect((await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 })).data.flerfaktor.metoder).toEqual(['totp']);
     app.vila(sandlada(app, k));
     const r = await k.post('/api/login/flerfaktor', { typ: 'totp', kod: ff.totp(hemlighet, Date.now() + 30_000) });
     expect(r.data.inloggad).toBe(true);

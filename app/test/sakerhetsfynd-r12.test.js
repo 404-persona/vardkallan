@@ -151,7 +151,7 @@ describe('Säkerhetsfynd 3 och 4: återställning och inläsning av kopior', () 
     expect(r.status).toBe(200);
     expect(r.data.utloggad).toBe(true);
     expect((await k.get('/api/session')).data.inloggad).toBe(false);
-    const login = await k.post('/api/login', { personalId: 'lak-kard' });
+    const login = await k.post('/api/login', { personalId: 'lak-kard', tillitsniva: 2 });
     expect(login.data.flerfaktor?.metoder).toEqual(['totp']);
     expect((await k.get('/api/session')).data.inloggad).toBe(false);
   });
@@ -161,7 +161,7 @@ describe('Säkerhetsfynd 3 och 4: återställning och inläsning av kopior', () 
     const tid = await nyMedKopia(k);
     await totp(k, 'lak-kard');
     expect((await aterstall(k, tid)).status).toBe(200);
-    const login = await k.post('/api/login', { personalId: 'lak-kard' });
+    const login = await k.post('/api/login', { personalId: 'lak-kard', tillitsniva: 2 });
     expect(login.data.flerfaktor?.metoder).toEqual(['totp']);
   });
 
@@ -216,6 +216,9 @@ describe('Säkerhetsfynd 7, 8 och 11: flerfaktorn och parametrarnas namn', () =>
     const h = ff.fran32(b.nyckel);
     const r = await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
     expect(r.status).toBe(201);
+    // Runda 15, r1: inloggningen med SITHS-kortet räknas som en färsk bekräftelse i fem minuter. Testerna gäller tiden
+    // efter det, när bara en faktor kan bekräfta en ändring.
+    sandlada(app, k).flerfaktorTid = Date.now() - 6 * 60_000;
     return { k, h, fid: r.data.faktorer[0].id };
   }
 
@@ -223,7 +226,7 @@ describe('Säkerhetsfynd 7, 8 och 11: flerfaktorn och parametrarnas namn', () =>
     const { k } = await medTotp('adm-kard');
     await k.post('/api/logout');
     sandlada(app, k).db.query("UPDATE flerfaktorer SET hemlighet = ? WHERE agare_id = 'adm-kard'").run(ff.kryptera('ABCDEFGHIJKLMNOPQRST', 'personal:annan'));
-    const r = await k.post('/api/login', { personalId: 'adm-kard' });
+    const r = await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 });
     expect(r.status).toBe(403);
     expect(r.data.fel).toContain('kan inte prövas');
     expect((await k.get('/api/session')).data.inloggad).toBe(false);

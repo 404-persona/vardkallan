@@ -2,6 +2,32 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.5.0",
+      "datum": "2026-11-14",
+      "nyheter": [
+        {
+          "id": "siths-flerfaktor-1-5-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "SITHS-kortet räcker som flerfaktor",
+          "text": "När du loggar in med SITHS-kortet eller SITHS eID i mobilen och PIN-koden, tillitsnivå 3, är inloggningen redan flerfaktor. Systemet frågar inte efter din passkey eller en kod från appen, också när vårdgivaren kräver flerfaktor. Loggar du in på ett sätt med lägre tillitsnivå säger systemet varför och ber om passkey eller kod. I demon är kortet simulerat, och du kan pröva en inloggning utan kort på inloggningssidan."
+        },
+        {
+          "id": "tillitsniva-tjanst-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/inloggningstjanster",
+          "rubrik": "Lägsta tillitsnivå per inloggningstjänst",
+          "text": "För varje inloggningstjänst anger du lägsta tillitsnivå, med fyra ögon som andra ändringar. Systemet förklarar vad varje nivå betyder. Nivå 3 är förvald och rekommenderas. Med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen innan de får behörighet. Säkerhetsloggen visar metod och tillitsnivå för varje inloggning."
+        }
+      ]
+    },
+    {
       "version": "1.4.0",
       "datum": "2026-11-13",
       "nyheter": [

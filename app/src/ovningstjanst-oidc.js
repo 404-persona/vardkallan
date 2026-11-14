@@ -43,7 +43,7 @@ export const metadata = (bas) => {
     id_token_signing_alg_values_supported: ['ES256'], token_endpoint_auth_methods_supported: ['private_key_jwt'], subject_types_supported: ['public'],
     scopes_supported: ['openid', 'commission'], claims_supported: ['sub', 'employeeHsaId', 'given_name', 'family_name', 'name', 'commissionHsaId', 'commissionName',
       'commissionPurpose', 'healthCareUnitHsaId', 'healthCareUnitName', 'healthCareProviderHsaId', 'healthCareProviderName', 'healthcareProfessionalLicense', 'acr', 'amr', 'auth_time', 'jti'],
-    acr_values_supported: [TILLITSNIVA], 'x-simulerad': `${NAMN}. Ingen verklig inloggningstjänst är ansluten.`,
+    acr_values_supported: [TILLITSNIVA, 'http://id.sambi.se/loa/loa2'], 'x-simulerad': `${NAMN}. Ingen verklig inloggningstjänst är ansluten.`,
   };
 };
 
@@ -55,6 +55,9 @@ export const VARIANTER = [
   { id: 'saknar_legitimation', text: 'Utan legitimation', legitimerad: true },
   { id: 'saknar_uppdrag', text: 'Utan medarbetaruppdrag' },
   { id: 'okand_person', text: 'En person som inte finns i katalogen' },
+  // Runda 15, r1: biljetter med lägre tillitsnivå, för att se vad tjänstens lägsta nivå och flerfaktorn gör.
+  { id: 'niva2', text: 'Tillitsnivå 2, till exempel inloggning med lösenord' },
+  { id: 'utan_niva', text: 'Utan uppgift om tillitsnivå' },
 ];
 const LEGITIMATION = { lakare: 'LK', sjukskoterska: 'SJ', fysioterapeut: 'FT', farmaceut: 'AP' };
 
@@ -117,6 +120,9 @@ function pastaende(db, p, variant) {
   if (variant === 'fel_andamal') a.commissionPurpose = u.commissionPurpose === 'Vård och behandling' ? 'Statistik' : 'Vård och behandling';
   if (variant === 'saknar_legitimation') delete a.healthcareProfessionalLicense;
   if (variant === 'saknar_uppdrag') { delete a.commissionHsaId; delete a.commissionName; delete a.commissionPurpose; }
+  // Runda 15, r1: attributen läggs efter tjänstens egna värden i biljetten, så de ersätter acr och amr.
+  if (variant === 'niva2') Object.assign(a, { acr: 'http://id.sambi.se/loa/loa2', amr: ['pwd'] });
+  if (variant === 'utan_niva') Object.assign(a, { acr: undefined });
   if (variant === 'okand_person') Object.assign(a, { employeeHsaId: 'SE2321000164-DEMO-OKAND', given_name: 'Okänd', family_name: 'Person (demo)', name: 'Okänd Person (demo)' });
   return a;
 }

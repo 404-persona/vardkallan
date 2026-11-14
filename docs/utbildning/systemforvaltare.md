@@ -4,7 +4,7 @@ Det här materialet hör till Grundkurs i Vårdkällan. Det skrivs ur Vårdkäll
 
 ## Vad du gör i Vårdkällan
 
-Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.
+Som systemförvaltare föreslår du ändringar av regler, parametrar, mallar, kodverk och formulär, förbereder omorganisationer, registrerar externa tillämpningar och följer upp lagringen och säkerhetskopiorna. Du kopplar också in vårdgivarens inloggningstjänster och anger lägsta tillitsnivå för var och en. Tillitsnivå 3, som SITHS-kortet med PIN-kod, räknas som flerfaktor, och med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen. En ändring gäller först när en annan systemförvaltare har godkänt den. Du läser inte journalerna.
 
 Systemet är experten, inte du. Det betyder att systemet fyller i det som det kan räkna ut ur sammanhanget, till exempel vårdkontakt, enhet, tid och koder. Det föreslår nästa steg och kontrollerar mot regler och kodverk innan något sparas.
 
@@ -114,5 +114,6 @@ Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag 
 - Förbereda ett namnbyte för en enhet.
 - Registrera en extern tillämpning på sidan Öppet API.
 - Kontrollera att säkerhetskopian går att läsa tillbaka.
+- Ange lägsta tillitsnivå för en inloggningstjänst och förklara vad en lägre nivå betyder för personalen.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
 - Svara rätt på alla 3 övningar och få intyget.

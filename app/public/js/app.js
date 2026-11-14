@@ -666,11 +666,12 @@ async function medAndraFaktorn(s, forra = null) {
   return klar;
 }
 
-export async function loggaIn(personalId, knapp) {
+// Runda 15, r1: extra kan ha tillitsniva 2, demons inloggning utan SITHS-kort.
+export async function loggaIn(personalId, knapp, extra = {}) {
   // Runda 7, r2: en förnyelse av läskopian för den förra inloggningen får inte fortsätta.
   avbrottslage.stoppaFornyelse();
   const forra = S.session?.personal?.id ?? null;
-  const s = await medAndraFaktorn(await medKnapp(knapp, () => api('/api/login', { metod: 'POST', data: { personalId } })), forra);
+  const s = await medAndraFaktorn(await medKnapp(knapp, () => api('/api/login', { metod: 'POST', data: { personalId, ...(extra.tillitsniva === 2 ? { tillitsniva: 2 } : {}) } })), forra);
   if (!s) return;
   nySession();
   S.session = s;

@@ -79,7 +79,7 @@ describe('Säkerhetsloggen', () => {
     await k.post('/api/logout', {});
     const rader = sakerhetsrader(k);
     expect(rader.map(r => r.typ)).toEqual(['inloggning_misslyckad', 'inloggning', 'avvisat_anrop', 'utloggning']);
-    expect(rader[1]).toMatchObject({ personal_id: 'usk-kard', enhet_id: 'uso-kard-72', beskrivning: 'Inloggning med SITHS-kort (simulerat).' });
+    expect(rader[1]).toMatchObject({ personal_id: 'usk-kard', enhet_id: 'uso-kard-72', beskrivning: 'Inloggning med SITHS-kort med PIN-kod (simulerat), tillitsnivå 3, flerfaktor.' });
     expect(rader[2]).toMatchObject({ status: 403, vag: '/api/logg', metod: 'GET', personal_id: 'usk-kard' });
     expect(rader[3]).toMatchObject({ typ: 'utloggning', personal_id: 'usk-kard' });
     // En nekad journal ger en säkerhetshändelse utan patientens id.

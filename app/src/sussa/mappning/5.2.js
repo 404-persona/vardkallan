@@ -125,4 +125,29 @@ const POSTERNA = [
 import { medR14r5 } from '../runda14-r5.js';
 
 const R14_FORE = medR9r5(medR8r5(POSTERNA));
-export default medR14r5(R14_FORE);
+
+// Runda 15, r1: SITHS och tillitsnivå 3 räknas som flerfaktor, och lägsta tillitsnivå per inloggningstjänst
+// (tillitsniva.js och test/tillitsniva-r15.test.js). Testerna läggs till postens egna och texterna kompletteras.
+import { TESTER_TILLITSNIVA_R15 } from '../runda15-r1-tester.js';
+const R15_TEXT = {
+  '5.2.1.1': {
+    losning: ' Runda 15: tillitsnivån (acr) i biljetten tolkas mot Ineras och DIGG:s identifierare, och varje tjänst har en lägsta tillitsnivå som systemförvaltningen ändrar med fyra ögon (standard 3). Tillitsnivå 3 eller högre, till exempel SITHS eID, räknas som flerfaktor och ger åtkomst utan extra steg. En lägre nivå som tjänsten godtar räknas som en faktor och kompletteras alltid med passkey eller engångskod innan personen får behörighet.',
+    ersatt: 'Systemförvaltaren skriver bara in tjänstens adress och klient-id och väljer lägsta tillitsnivå bland förklarade alternativ; systemet hämtar och kontrollerar resten, visar tumavtrycken och föreslår själv ett byte när tjänsten har bytt nyckel. Personalen väljer aldrig uppdrag, behörighet eller hur inloggningen ska bekräftas: systemet avgör ur biljetten om tillitsnivån redan är flerfaktor, och när något saknas eller inte räcker säger det på vanlig svenska vad som är fel och vem som kan rätta det.',
+    anmarkning: ' Tillitsnivåernas identifierare är kontrollerade mot Sweden Connect, Registry for identifiers (version 1.9) och Ineras OIDC-profil, men ingen verklig tjänst som ger dem är inkopplad.',
+  },
+  '5.2.1.6': {
+    losning: ' Runda 15: en inloggning med tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod, räknas som flerfaktor. En lägre nivå kompletteras med passkey (WebAuthn) eller engångskod (RFC 6238), och känsliga handlingar som nödåtkomst, att häva en spärr och godkännanden med fyra ögon prövar på servern att inloggningen är flerfaktor.',
+    ersatt: 'Personen väljer aldrig uppdrag, vårdenhet, behörighet eller hur inloggningen ska bekräftas: systemet läser dem ur biljetten, avgör själv om tillitsnivån redan är flerfaktor, som med SITHS, och kontrollerar uppgifterna mot katalogen. När något inte stämmer eller nivån inte räcker säger systemet på vanlig svenska varför och vad personen kan göra, och en biljett som inte går att lita på avvisas med orsaken i säkerhetsloggen.',
+    anmarkning: ' SITHS-kortet och PIN-koden är simulerade i demon. En inloggning utan kort med tillitsnivå 2 finns i demon för att visa kompletteringen med passkey eller kod.',
+  },
+};
+function medR15r1(poster) {
+  return poster.map(p => {
+    const t = R15_TEXT[p.id];
+    if (!t) return p;
+    return { ...p, tester: [...(p.tester ?? []), ...TESTER_TILLITSNIVA_R15], losning: `${p.losning ?? ''}${t.losning}`, expert: t.ersatt ?? `${p.expert ?? ''}${t.expert}`, anmarkning: `${p.anmarkning ?? ''}${t.anmarkning}` };
+  });
+}
+
+const R15_FORE = medR14r5(R14_FORE);
+export default medR15r1(R15_FORE);

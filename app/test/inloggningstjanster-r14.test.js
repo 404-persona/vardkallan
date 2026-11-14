@@ -145,7 +145,7 @@ describe('Inloggningstjänst (5.2.1.1)', () => {
     expect(t.falt).toMatchObject({ grant_type: 'authorization_code', redirect_uri: `${app.url}/api/inloggning/svar` });
     expect(t.falt.code_verifier.length).toBeGreaterThanOrEqual(43);
     expect(t.auth).toBe(`Basic ${Buffer.from(`${op.klientId}:${HEMLIGHET}`).toString('base64')}`);
-    expect(sakerhet(b).at(-1)).toMatchObject({ typ: 'inloggning', personal_id: 'lak-kard', beskrivning: 'Inloggning genom Regionens inloggningstjänst (test) (OpenID Connect).' });
+    expect(sakerhet(b).at(-1)).toMatchObject({ typ: 'inloggning', personal_id: 'lak-kard', beskrivning: 'Inloggning genom Regionens inloggningstjänst (test) (OpenID Connect), tillitsnivå 3, flerfaktor.' });
     // Behörigheten följer rollen ur masterdata: läkaren når journalen.
     expect((await b.get('/api/patienter?q=Lindqvist')).status).not.toBe(401);
   });

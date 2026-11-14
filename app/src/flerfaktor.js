@@ -228,13 +228,18 @@ const faktorUt = (r) => ({ id: r.id, typ: r.typ, typText: TYPER[r.typ], namn: r.
 // Runda 13, r3: kravsAvVardgivaren är parametern sakerhet.flerfaktor_kravs, som servern läser och skickar in.
 export function oversikt(db, typ, id, { metod = null, kravsAvVardgivaren = false } = {}) {
   const a = aktiva(db, typ, id);
+  // Runda 15, r1: för personalen är en inloggning med tillitsnivå 3, som SITHS-kortet, redan flerfaktor, så faktorn
+  // används bara vid en inloggning med lägre nivå.
+  const personalText = `${kravsAvVardgivaren ? 'Vårdgivaren kräver flerfaktor. ' : ''}${a.length
+    ? 'Flerfaktor är på. Din faktor används när du loggar in med lägre tillitsnivå än 3, till exempel utan SITHS-kortet. Med SITHS-kortet och PIN-koden behövs den inte, eftersom den inloggningen redan är flerfaktor.'
+    : 'Flerfaktor är av, men med SITHS-kortet och PIN-koden (tillitsnivå 3) är inloggningen ändå flerfaktor. Registrera en passkey eller en app för engångskoder om du ibland loggar in med lägre tillitsnivå.'}`;
   return {
     aktiv: a.length > 0,
     faktorer: a.map(faktorUt),
     metod,
     max: MAX_FAKTORER,
     kravsAvVardgivaren,
-    text: kravsAvVardgivaren
+    text: typ === 'personal' ? personalText : kravsAvVardgivaren
       ? (a.length ? 'Vårdgivaren kräver flerfaktor. Varje inloggning bekräftas med en av faktorerna nedan, och den sista faktorn går inte att ta bort.'
         : 'Vårdgivaren kräver flerfaktor. Registrera en passkey eller en app för engångskoder för att logga in.')
       : a.length

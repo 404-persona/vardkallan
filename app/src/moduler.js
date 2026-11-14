@@ -352,6 +352,13 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   b.api.push('/api/inloggningstjanster', '/api/inloggning/extern/:id', '/api/inloggning/svar', '/api/ovningstjanst/authorize');
   b.simulerat += ' Övningstjänsten är en simulerad extern inloggningstjänst i samma server. Ingen verklig regions inloggningstjänst är inkopplad.';
 }
+// Runda 15, r1: SITHS och tillitsnivå 3 som flerfaktor, och lägsta tillitsnivå per inloggningstjänst.
+{
+  const b = MODULER.find(x => x.id === 'behorighet');
+  b.beskrivning += ' En inloggning med tillitsnivå 3 eller högre, som SITHS-kortet med PIN-kod, räknas som flerfaktor och ger åtkomst utan extra steg. Systemet läser nivån ur den signerade biljetten, kompletterar en lägre nivå med passkey eller engångskod och låter systemförvaltningen ange lägsta tillitsnivå per inloggningstjänst med fyra ögon.';
+  b.kod.push('src/tillitsniva.js');
+  b.api.push('/api/inloggningstjanster/:tjanst/tillitsniva');
+}
 // Runda 13, r2: kapaciteten för många besökare (sandlådor som vilar på disk, sidan när demon är full och taken mot
 // missbruk) hör till modulen för systemuppbyggnad och svarstider.
 {

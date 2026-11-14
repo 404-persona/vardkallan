@@ -426,6 +426,8 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '[data-ff-status="pa"]', 'Flerfaktor är på');
       await bild(page, '02b-flerfaktor');
       await page.click('[data-a="loggaut"]');
+      // Runda 15, r1: med SITHS-kortet (tillitsnivå 3) behövs ingen kod, så steget loggar in utan kort.
+      await page.check('#inl-niva-2');
       await page.click('[data-roll="lak-kard"]');
       const dl = page.locator('dialog[open].flerfaktor-dialog');
       await dl.waitFor();
@@ -1523,7 +1525,7 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await page.locator('.loggexport a[data-export="csv"]').waitFor();
       await page.click('.delflikar a:has-text("Säkerhetshändelser")');
       await vantaVy(page);
-      await forvanta(page, '.logg-tabell', 'Inloggning med SITHS-kort (simulerat).');
+      await forvanta(page, '.logg-tabell', 'Inloggning med SITHS-kort med PIN-kod (simulerat), tillitsnivå 3, flerfaktor.');
       await forvanta(page, '.kedja-hel', 'Loggkedjan är hel');
       await bild(page, '93-sakerhetslogg', true);
     });
@@ -2203,6 +2205,53 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await forvanta(page, '.vem', 'Sara Lindqvist');
       await page.waitForLoadState('networkidle');
       // Nora Ekholm fortsätter med det som väntar på hennes godkännande.
+      await loggaIn(page, 'sysf-2');
+    });
+    // Runda 15, r1: lägsta tillitsnivå per inloggningstjänst. Tomas Lindh sänker den till 2, Nora Ekholm godkänner, och
+    // Sara Lindqvist loggar in med tillitsnivå 2 och registrerar en app för engångskoder som andra faktor.
+    await s('Inloggningstjänster: lägsta tillitsnivå sänks till 2 med fyra ögon, och en biljett med tillitsnivå 2 kompletteras med en kod från appen', async () => {
+      const { createHmac } = require('node:crypto');
+      const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+      const fran32 = (t) => { let b = 0, v = 0; const u = []; for (const ch of t) { v = (v << 5) | B32.indexOf(ch); b += 5; if (b >= 8) { u.push((v >>> (b - 8)) & 255); b -= 8; } } return Buffer.from(u); };
+      const kodFor = (h, ms) => { const r = Buffer.alloc(8); r.writeBigUInt64BE(BigInt(Math.floor(ms / 30000))); const d = createHmac('sha1', h).update(r).digest(); const o = d[d.length - 1] & 15; return String((((d[o] & 0x7f) << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) % 1e6).padStart(6, '0'); };
+      const serverNu = async () => Date.parse((await (await fetch(`${BAS}/api/health`)).json()).testklocka ?? new Date().toISOString());
+      await loggaIn(page, 'sysf');
+      await gaTill(page, '#/inloggningstjanster');
+      await forvanta(page, '#it-inkopplade ~ ul', 'Lägsta tillitsnivå: Tillitsnivå 3 (rekommenderas)');
+      await page.click('#it-inkopplade ~ ul [data-tillitsniva]');
+      await page.waitForSelector('dialog[open] #it-niva-2');
+      await forvanta(page, 'dialog[open]', 'Personalen bekräftar då inloggningen med en passkey');
+      await page.check('dialog[open] #it-niva-2');
+      await page.locator('dialog[open] #it-niva-mot').fill('Personal utan SITHS-kort ska kunna logga in och bekräfta med en kod.');
+      await bild(page, '104f-lagsta-tillitsniva');
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'väntar på att en annan systemförvaltare godkänner');
+      await page.waitForLoadState('networkidle');
+      await loggaIn(page, 'sysf-2');
+      await gaTill(page, '#/inloggningstjanster');
+      await forvanta(page, '#it-att-godkanna ~ ul', 'Lägsta tillitsnivå ändras från 3 till 2');
+      await page.click('#it-att-godkanna ~ ul [data-godkann]');
+      await forvanta(page, '.notis', 'Ändringen är godkänd');
+      await forvanta(page, '#it-inkopplade ~ ul', 'Lägsta tillitsnivå: Tillitsnivå 2');
+      await page.waitForLoadState('networkidle');
+      await page.click('[data-a="loggaut"]');
+      await page.waitForSelector('#extern-inloggning [data-extern]');
+      await page.click('#extern-inloggning [data-extern]');
+      await page.waitForSelector('#ot-form');
+      await page.check('#ot-v-niva2');
+      await page.click('#ot-form button[type="submit"]');
+      const dl = page.locator('dialog[open].flerfaktor-dialog');
+      await dl.waitFor();
+      await forvanta(page, 'dialog[open]', 'Du loggade in med tillitsnivå 2');
+      await dl.locator('[data-ffr="totp"]').click();
+      const h = fran32(await dl.locator('[data-ff-nyckel]').getAttribute('data-ff-nyckel'));
+      await dl.locator('#ffr-kod').fill(kodFor(h, await serverNu()));
+      await bild(page, '104g-tillitsniva-2-kod');
+      await dl.locator('.ffr-totp [type="submit"]').click();
+      await page.waitForSelector('[data-a="loggaut"]');
+      await vantaVy(page);
+      await forvanta(page, '.vem', 'Sara Lindqvist');
+      await page.waitForLoadState('networkidle');
       await loggaIn(page, 'sysf-2');
     });
     // Runda 9, r4: fyra ögon på kodverket som Tomas Lindh skapade.

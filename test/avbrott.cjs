@@ -965,6 +965,8 @@ const undersok = (page, kod, nyckelB64) => page.evaluate(async ({ kod, nyckelB64
       await bild(fp, '44-flerfaktor-passkey');
       await fp.click('[data-a="loggaut"]');
       await fp.waitForSelector('[data-roll="lak-kard"]');
+      // Runda 15, r1: med SITHS-kortet (tillitsnivå 3) behövs ingen passkey, så testet loggar in utan kort.
+      await fp.check('#inl-niva-2');
       await fp.click('[data-roll="lak-kard"]');
       // Dialogen visas, och passkeyn efterfrågas direkt. Autentiseraren svarar utan att någon klickar.
       await fp.waitForSelector('[data-a="loggaut"]', { timeout: 15000 });
@@ -984,6 +986,21 @@ const undersok = (page, kod, nyckelB64) => page.evaluate(async ({ kod, nyckelB64
       await synlig(fp, 'main h1', 'Gunnar Åkesson');
       await fp.click('[data-avbrott="avsluta"]');
       await fp.waitForSelector('#avbrott h2', { state: 'detached', timeout: 10000 }).catch(() => {});
+    });
+    // Runda 15, r1: SITHS-kortet med PIN-kod är tillitsnivå 3 och redan flerfaktor.
+    await test('tillitsnivå: med SITHS-kortet och PIN-koden loggar personen med passkey in utan dialog, och sidan Flerfaktor säger varför', async () => {
+      await fp.goto(`${LOKAL}/#/`);
+      await fp.waitForLoadState('networkidle');
+      if (await fp.locator('[data-a="loggaut"]').count()) { await fp.click('[data-a="loggaut"]'); await fp.waitForSelector('[data-roll="lak-kard"]'); }
+      anta(await fp.isChecked('#inl-niva-3'), 'SITHS-kortet är förvalt');
+      await fp.click('[data-roll="lak-kard"]');
+      await fp.waitForSelector('[data-a="loggaut"]', { timeout: 15000 });
+      anta(!(await fp.locator('dialog[open].flerfaktor-dialog').count()), 'ingen dialog för den andra faktorn');
+      const sess = await fp.evaluate(async () => (await fetch('/api/session')).json());
+      anta(sess.inloggningsniva?.niva === 3 && sess.inloggningsniva?.flerfaktor === true && sess.lasnyckel?.nyckel, `sessionen: ${JSON.stringify(sess.inloggningsniva)}`);
+      await fp.click('a[data-flerfaktor="pa"]');
+      await synlig(fp, '[data-ff-inloggning="3"]', 'redan flerfaktor');
+      await bild(fp, '46-tillitsniva-siths');
     });
     await test('flerfaktor: invånaren slår på en app för engångskoder i Min journal och loggar sedan in med en kod från appen', async () => {
       const { createHmac } = require('node:crypto');

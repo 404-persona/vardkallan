@@ -71,8 +71,11 @@ export const MATRIS = [
 
   // HSLF-FS 2016:40
   rad('HSLF-FS 2016:40', '3 kap. 15 §', 'Stark autentisering vid åtkomst till personuppgifter i ett system med direktåtkomst.',
-    'Inloggning med SITHS-kort och PIN är byggd som ett flöde i demon, och invånaren loggar in med e-legitimation. Båda är simulerade.',
-    [`${MJ}inloggning med simulerad e-legitimation ger en egen session utan personalens behörigheter`, `${MJ}personalens session når inte Min journal`]),
+    'Inloggning med SITHS-kort och PIN är byggd som ett flöde i demon, och invånaren loggar in med e-legitimation. Båda är simulerade. Runda 15: tillitsnivå 3 räknas som flerfaktor, och en lägre nivå ger aldrig åtkomst ensam utan kompletteras med passkey eller engångskod.',
+    [`${MJ}inloggning med simulerad e-legitimation ger en egen session utan personalens behörigheter`, `${MJ}personalens session når inte Min journal`,
+      // Runda 15, r1.
+      'SITHS och tillitsnivå 3 som flerfaktor > simulerat SITHS-kort: utan kortet i demon (tillitsnivå 2) kompletteras inloggningen med faktorn, och utan faktor leds personen till att registrera en',
+      'SITHS och tillitsnivå 3 som flerfaktor > biljett med nivå 2 godtas när tjänstens lägsta nivå är 2, men ger behörighet först efter passkey eller kod, med kravet på och av']),
   avgr('HSLF-FS 2016:40', '4 kap. 2, 2 a och 3 §§', 'Behörigheter ska tilldelas efter en behovs- och riskanalys, och analysen ska dokumenteras (2 a §).',
     'Analysen görs av vårdgivaren. Systemet ger varje roll minsta åtkomst och visar vad varje roll får, så att analysen kan göras mot det som systemet faktiskt tillåter.',
     'Rollerna och deras handlingar är testade.', [`${B}yrkesroll: logggranskare får läsa loggen men inte journalen`]),
