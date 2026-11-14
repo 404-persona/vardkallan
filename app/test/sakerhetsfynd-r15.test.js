@@ -464,6 +464,17 @@ describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns',
     expect(f.get('uppmarksamhet')?.length).toBe(1);
   });
 
+  test('en flytt till rätt patient ger samma svar med och utan en dold rad från en annan vårdenhet, och den dolda raden följer med', () => {
+    const utan = nyDb(); const med = nyDb();
+    const v = kontakt(utan);
+    sparr(utan, v);
+    sparr(med, v); doljAnteckning(med, v);
+    const flytta = (db) => { try { const r = makuleringMod.makulera(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: '196503143254' }, { valFor: () => ({}) }); return JSON.stringify({ atgard: r.atgard, text: r.text }); } catch (e) { return JSON.stringify([e.status, e.message]); } };
+    const a = flytta(utan);
+    expect(flytta(med)).toBe(a);
+    if (JSON.parse(a).atgard === 'flyttad') expect(med.query("SELECT patient_id FROM anteckningar WHERE vardkontakt_id = ? AND enhet_id = 'kkoga-ane'").get(v.id).patient_id).toBe('p05');
+  });
+
   test('förhandsvisningen är densamma med och utan en dold anteckning på en spärrad vårdenhet', () => {
     const utan = nyDb(); const med = nyDb();
     const v = kontakt(utan); sparr(utan, v);

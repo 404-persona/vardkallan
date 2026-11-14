@@ -317,7 +317,8 @@ function provaNummer(atk, nummer, o, valFor) {
   return { till, nummer: t.varde };
 }
 
-export const NY_RELATION = 'Uppgifterna har något, till exempel en remiss eller en operationsanmälan, som skulle ge rätt patient en vårdrelation till en vårdenhet som patienten inte har i dag. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
+// Säkerhetsgranskningen efter sammanslagningen: samma neutrala text som andra hinder, utan att nämna en vårdenhet.
+export const NY_RELATION = 'Det går inte att göra här, och inget har ändrats. Systemförvaltningen har fått ett meddelande och ser till att uppgifterna rättas.';
 // Säkerhetsgranskningen efter sammanslagningen: texten nämner ingen vårdenhet, eftersom användaren kanske inte får se
 // den, och pekar på systemförvaltningen, som kan rätta uppgifterna.
 export const ANNAN_ENHET = 'Det går inte att göra här, och inget har ändrats. Systemförvaltningen har fått ett meddelande och ser till att uppgifterna rättas.';
@@ -428,9 +429,15 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   // Andra säkerhetsgranskningen: allt som flyttas prövas i behörighetsmotorn för rätt patient vid varje vårdenhet som
   // raderna hör till, och flytten får aldrig ge rätt patient en vårdrelation som inte fanns före flytten, från någon av
   // de källor som behörighetsmotorn läser (vårdkontakter, remisser, operationsanmälningar och listning).
-  if (till) provaEnheter(atk, till, o, foljer, valFor);
+  // Säkerhetsgranskningen efter sammanslagningen: vårdenheterna prövas på det som användaren får se, så att en dold rad
+  // aldrig ändrar svaret. Dolda rader som hör till kontakten följer med till rätt patient, eftersom de hör till den.
   const syns = synligt(atk, foljer);
-  const id = genomfor(db, { aktor: atk.personal, av: atk.personal.id, o, till, orsak, foljer, nu, grund: atk.grund() });
+  if (till) provaEnheter(atk, till, o, syns, valFor);
+  let id;
+  try { id = genomfor(db, { aktor: atk.personal, av: atk.personal.id, o, till, orsak, foljer, nu, grund: atk.grund() }); } catch (e) {
+    if (e instanceof Fel && e.message === NY_RELATION) meddelaForvaltningen(atk, o);
+    throw e;
+  }
   atk.loggad = true;
   return { makulering: id, atgard: till ? 'flyttad' : 'makulerad', text: klarText(o, till, syns) };
 }
@@ -510,16 +517,20 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
   }
   const foljer = tillhor(db, o);
   const ve = vardenhetFor(db, o.enhetId);
-  if ([...enheterFor(db, o, foljer)].some(e => e !== ve)) { meddelaForvaltningen(atkG, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
   const syns = synligt(atkG, foljer);
-  const id = genomfor(db, {
+  if ([...enheterFor(db, o, syns)].some(e => e !== ve)) { meddelaForvaltningen(atkG, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
+  let id;
+  try { id = genomfor(db, {
     aktor: personal, av: f.foreslagen_av, godkandAv: personal.id, forslagId: f.id, o, till, orsak: f.orsak, foljer, nu, behallRelation: true, grund: 'administrativ',
     iTransaktion: (mid) => {
       db.query("UPDATE makulering_forslag SET status = 'godkand', beslutad_av = ?, beslutad = ?, makulering_id = ? WHERE id = ?").run(personal.id, iso(nu), mid, f.id);
       loggaRad(db, { tid: iso(nu), personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: f.patient_id, handling: 'registrera_vardkontakt',
         resurs: `makulering:forslag:${f.id}:godkand`, grund: 'administrativ', syfte: f.orsak });
     },
-  });
+  }); } catch (e) {
+    if (e instanceof Fel && e.message === NY_RELATION) meddelaForvaltningen(atkG, o);
+    throw e;
+  }
   return { makulering: id, atgard: 'flyttad', text: `Flytten är godkänd. ${klarText(o, till, syns)}`, forslag: forslagUt(db, hamtaForslag(db, f.id), personal) };
 }
 
