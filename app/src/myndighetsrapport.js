@@ -20,6 +20,8 @@ import { lage } from './tvangsvard-regler.js';
 import * as K from './rapportkoder.js';
 // Runda 9, r4: kodverkens utgåvor över tid.
 import * as kodverksforvaltning from './kodverksforvaltning.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 const TZ = 'Europe/Stockholm';
 const pad = (n) => String(n).padStart(2, '0');
@@ -225,12 +227,12 @@ function laggFel(ctx, f) {
 
 // Diagnoserna på en eller flera vårdkontakter, i den ordning de registrerades.
 const diagnoserFor = (db, kontaktIdn) => (kontaktIdn.length
-  ? db.query(`SELECT * FROM diagnoser WHERE vardkontakt_id IN (${kontaktIdn.map(() => '?').join(', ')}) ORDER BY id`).all(...kontaktIdn) : []);
+  ? db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} WHERE vardkontakt_id IN (${kontaktIdn.map(() => '?').join(', ')}) ORDER BY id`).all(...kontaktIdn) : []);
 const atgarderFor = (db, kontaktIdn) => (kontaktIdn.length && finnsTabell(db, 'atgarder')
   ? db.query(`SELECT * FROM atgarder WHERE vardkontakt_id IN (${kontaktIdn.map(() => '?').join(', ')}) ORDER BY tid, id`).all(...kontaktIdn) : []);
 function lakemedelFor(db, patientId, fran, till) {
   if (!finnsTabell(db, 'administreringar')) return [];
-  const rader = db.query(`SELECT a.tid, k.atc FROM administreringar a JOIN katalog k ON k.id = a.lakemedel_id
+  const rader = db.query(`SELECT a.tid, k.atc FROM ${statVy(db, 'administreringar')} a JOIN katalog k ON k.id = a.lakemedel_id
     WHERE a.patient_id = ? AND a.status = 'given' AND a.tid >= ? AND (? IS NULL OR a.tid <= ?) ORDER BY a.tid`).all(patientId, fran, till, till);
   // Läkemedelstillförseln anges en gång per läkemedel, med datum då den påbörjades.
   const forsta = new Map();
@@ -308,14 +310,14 @@ function byggPar(ctx) {
     if (!k) continue;
     ctx.kontakter++;
     const id = identitet(ctx, p, nyckel, vt.enhet_id);
-    const kontakter = db.query('SELECT * FROM vardkontakter WHERE vardtillfalle_id = ? ORDER BY start').all(vt.id);
+    const kontakter = db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE vardtillfalle_id = ? ORDER BY start`).all(vt.id);
     const kontaktIdn = kontakter.map(v => v.id);
     const sist = kontakter.filter(v => vardenhetFor(db, v.enhet_id) === k.ve).at(-1) ?? kontakter.at(-1);
     const dia = kontrolleraDiagnoser(ctx, { diagnoser: diagnoserFor(db, kontaktIdn), radNyckel: nyckel, patientId: p.id, vardkontaktId: sist?.id ?? null, enhetId: vt.enhet_id, datum: inskr, pagar: !vt.utskriven });
     if (!id || !dia) continue;
     raknaSkydd(ctx, p, vt.enhet_id, true);
     ctx.patienter.add(p.id);
-    const forra = kontakter[0]?.foregaende_id ? db.query('SELECT typ, vardtillfalle_id FROM vardkontakter WHERE id = ?').get(kontakter[0].foregaende_id) : null;
+    const forra = kontakter[0]?.foregaende_id ? db.query(`SELECT typ, vardtillfalle_id FROM ${statVy(db, 'vardkontakter')} WHERE id = ?`).get(kontakter[0].foregaende_id) : null;
     const nasta = vt.utskriven ? db.query("SELECT 1 FROM vardtillfallen WHERE patient_id = ? AND id <> ? AND inskriven >= ? AND inskriven <= ?").get(p.id, vt.id, vt.utskriven, new Date(Date.parse(vt.utskriven) + 86400_000).toISOString()) : null;
     ctx.rad('SV_AD', [nyckel, id.pnr, kon(p), p.fodd.slice(0, 4), k.sjukhus, k.mvo, kompakt(inskr), kompakt(utskr), kontakter[0]?.planerad ? '1' : '2',
       forra?.vardtillfalle_id ? '1' : '3', vt.utskriven ? (nasta ? '1' : '3') : '']);
@@ -327,7 +329,7 @@ function byggPar(ctx) {
   }
 
   // Den specialiserade öppenvården: besök, telefon, video och hembesök som har ägt rum under perioden.
-  for (const v of db.query("SELECT * FROM vardkontakter WHERE typ IN ('oppenvard', 'akut') ORDER BY start, id").all()) {
+  for (const v of db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE typ IN ('oppenvard', 'akut') ORDER BY start, id`).all()) {
     const datum = datumSv(v.ankomst ?? v.start);
     if (!iPerioden(datum, per)) continue;
     if (Date.parse(v.start) > ctx.nu.getTime() || (v.planerad && !v.ankomst && !v.slut)) continue;
@@ -349,7 +351,7 @@ function byggPar(ctx) {
     raknaSkydd(ctx, p, v.enhet_id, true);
     ctx.patienter.add(p.id);
     const akut1 = k.akut === '1';
-    const bedomning = akut1 ? db.query("SELECT min(a.skapad) AS t FROM anteckningar a JOIN personal pe ON pe.id = a.forfattare_id WHERE a.vardkontakt_id = ? AND pe.yrke = 'lakare'").get(v.id)?.t : null;
+    const bedomning = akut1 ? db.query(`SELECT min(a.skapad) AS t FROM ${statVy(db, 'anteckningar')} a JOIN personal pe ON pe.id = a.forfattare_id WHERE a.vardkontakt_id = ? AND pe.yrke = 'lakare'`).get(v.id)?.t : null;
     if (akut1 && !bedomning) ctx.varningar.push({ nyckel: `par:bedomning:${nyckel}`, text: `Ett besök på ${k.namn} saknar tidpunkt för läkarens första bedömning, eftersom ingen läkaranteckning finns. Besöket rapporteras utan tidpunkten.` });
     const form = { telefon: '8', video: '8', hembesok: '4' }[v.kontaktsatt] ?? '0';
     ctx.rad('OV_AD', [nyckel, id.pnr, kon(p), p.fodd.slice(0, 4), k.sjukhus, k.mvo, kompakt(datum), k.akut,
@@ -386,8 +388,8 @@ function byggPar(ctx) {
 // Vem patienten träffade vid en vårdkontakt: yrket hos den som skrev en anteckning, registrerade en åtgärd eller hade
 // den bokade tiden. Bara läkare registrerar diagnoser, så en diagnos betyder att patienten träffade en läkare.
 function utforare(db, vkId) {
-  const y = new Set(db.query('SELECT DISTINCT pe.yrke FROM anteckningar a JOIN personal pe ON pe.id = a.forfattare_id WHERE a.vardkontakt_id = ?').all(vkId).map(r => r.yrke));
-  if (db.query('SELECT 1 FROM diagnoser WHERE vardkontakt_id = ? LIMIT 1').get(vkId)) y.add('lakare');
+  const y = new Set(db.query(`SELECT DISTINCT pe.yrke FROM ${statVy(db, 'anteckningar')} a JOIN personal pe ON pe.id = a.forfattare_id WHERE a.vardkontakt_id = ?`).all(vkId).map(r => r.yrke));
+  if (db.query(`SELECT 1 FROM ${statVy(db, 'diagnoser')} WHERE vardkontakt_id = ? LIMIT 1`).get(vkId)) y.add('lakare');
   if (finnsTabell(db, 'bokningar')) for (const r of db.query('SELECT s.yrkesroll FROM bokningar b JOIN tider t ON t.id = b.tid_id JOIN scheman s ON s.id = t.schema_id WHERE b.vardkontakt_id = ?').all(vkId)) y.add(r.yrkesroll);
   if (finnsTabell(db, 'atgarder')) for (const r of db.query('SELECT DISTINCT pe.yrke FROM atgarder a JOIN personal pe ON pe.id = a.av WHERE a.vardkontakt_id = ?').all(vkId)) y.add(r.yrke);
   return y;
@@ -456,7 +458,7 @@ function byggViv(ctx) {
         text: 'Ett återbesök på väntelistan saknar medicinskt måldatum, som krävs för återbesök. Ange när patienten senast bör komma.' });
       continue;
     }
-    const remiss = v.remiss_id ? db.query('SELECT * FROM remisser WHERE id = ?').get(v.remiss_id) : null;
+    const remiss = v.remiss_id ? db.query(`SELECT * FROM ${statVy(db, 'remisser')} WHERE id = ?`).get(v.remiss_id) : null;
     const listning = db.query('SELECT enhet_id FROM listningar WHERE patient_id = ?').get(p.id);
     const kommun = K.KOMMUNKOD[p.ort] ?? null;
     if (!kommun) ctx.rakna('kommun', 'Väntande utan känd folkbokföringskommun, rapporterade med 0000', p.skyddad
@@ -493,7 +495,7 @@ function byggVtd(ctx) {
     if (!k) continue;
     ctx.kontakter++;
     const id = identitet(ctx, p, nyckel, vt.enhet_id);
-    const kontakter = db.query('SELECT * FROM vardkontakter WHERE vardtillfalle_id = ? ORDER BY start').all(vt.id);
+    const kontakter = db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE vardtillfalle_id = ? ORDER BY start`).all(vt.id);
     const sist = kontakter.filter(v => vardenhetFor(db, v.enhet_id) === k.ve).at(-1) ?? kontakter.at(-1);
     const dia = kontrolleraDiagnoser(ctx, { diagnoser: diagnoserFor(db, kontakter.map(v => v.id)), radNyckel: nyckel, patientId: p.id, vardkontaktId: sist?.id ?? null, enhetId: vt.enhet_id, datum: datumSv(vt.inskriven), pagar: false });
     if (!id || !dia) continue;
@@ -512,7 +514,7 @@ function byggMfr(ctx) {
   const { db, period: per } = ctx;
   const tidigare = new Set(db.query("SELECT filer FROM myndighetsrapporter WHERE rapport = 'mfr'").all().flatMap(r => JSON.parse(r.filer).flatMap(f => f.idn ?? [])));
   for (const vt of db.query('SELECT * FROM vardtillfallen ORDER BY id').all()) {
-    const kontakter = db.query('SELECT * FROM vardkontakter WHERE vardtillfalle_id = ? ORDER BY start').all(vt.id);
+    const kontakter = db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE vardtillfalle_id = ? ORDER BY start`).all(vt.id);
     const diagnoser = diagnoserFor(db, kontakter.map(v => v.id));
     const forlossning = diagnoser.find(d => K.FORLOSSNING[d.kod.slice(0, 3)]);
     if (!forlossning) continue;
@@ -553,11 +555,11 @@ function byggKvalitetsregister(ctx) {
   const { db, period: per } = ctx;
   const motsatt = new Set(db.query('SELECT patient_id FROM kvalitetsregister_motsatt WHERE register = ? AND aterkallad IS NULL').all(KVALITETSREGISTER).map(r => r.patient_id));
   const sett = new Set();
-  for (const d of db.query("SELECT * FROM diagnoser WHERE kod LIKE 'I50%' ORDER BY datum DESC, id DESC").all()) {
+  for (const d of db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} WHERE kod LIKE 'I50%' ORDER BY datum DESC, id DESC`).all()) {
     if (sett.has(d.patient_id)) continue;
     const p = ctx.patient(d.patient_id);
     if (!p || p.sammanslagen_till) continue;
-    const kontakt = db.query("SELECT * FROM vardkontakter WHERE patient_id = ? AND typ IN ('oppenvard', 'slutenvard', 'akut') ORDER BY start DESC").all(p.id)
+    const kontakt = db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE patient_id = ? AND typ IN ('oppenvard', 'slutenvard', 'akut') ORDER BY start DESC`).all(p.id)
       .find(v => iPerioden(datumSv(v.start), per) && K.ENHETER[vardenhetFor(db, v.enhet_id)] && !K.ENHETER[vardenhetFor(db, v.enhet_id)].primarvard);
     if (!kontakt) continue;
     sett.add(p.id);
@@ -569,9 +571,9 @@ function byggKvalitetsregister(ctx) {
     const id = identitet(ctx, p, nyckel, kontakt.enhet_id);
     if (!id) continue;
     ctx.patienter.add(p.id);
-    const atc = db.query("SELECT k.atc FROM ordinationer o JOIN katalog k ON k.id = o.lakemedel_id WHERE o.patient_id = ? AND o.status = 'aktiv'").all(p.id).map(r => r.atc ?? '');
+    const atc = db.query(`SELECT k.atc FROM ${statVy(db, 'ordinationer')} o JOIN katalog k ON k.id = o.lakemedel_id WHERE o.patient_id = ? AND o.status = 'aktiv'`).all(p.id).map(r => r.atc ?? '');
     const har = (...prefix) => (atc.some(a => prefix.some(x => a.startsWith(x))) ? '1' : '0');
-    const senaste = (typ) => db.query('SELECT varde, varde_num FROM matvarden WHERE patient_id = ? AND typ = ? ORDER BY tid DESC LIMIT 1').get(p.id, typ);
+    const senaste = (typ) => db.query(`SELECT varde, varde_num FROM ${statVy(db, 'matvarden')} WHERE patient_id = ? AND typ = ? ORDER BY tid DESC LIMIT 1`).get(p.id, typ);
     const bt = senaste('blodtryck');
     const num = (m) => (m?.varde_num != null ? String(Math.round(m.varde_num)) : '');
     ctx.rad('KR', [id.pnr, kon(p), p.fodd.slice(0, 4), ctx.enheter.get(vardenhetFor(db, kontakt.enhet_id))?.hsa_id ?? '', K.utanPunkt(d.kod), kompakt(d.datum),

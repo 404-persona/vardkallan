@@ -26,6 +26,8 @@ import { loggaRad } from './logg.js';
 import { ICD10SE, KVA } from './kodverk.js';
 import * as LV from '../public/js/levnadsvanor-regler.js';
 import * as TB from '../public/js/tobak-regler.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 export const SCHEMA = `
 -- Sparade urval: en patientgrupp (slag grupp) eller en statistikfråga (slag statistik). villkor och fraga är JSON.
@@ -230,16 +232,16 @@ export function underlag(db, personal, niv) {
   const atc = new Map(db.query('SELECT id, atc FROM katalog').all().map(k => [k.id, k.atc]));
   return {
     min, far, ve, patienter, atc,
-    diagnoser: per('SELECT * FROM diagnoser'),
+    diagnoser: per(`SELECT * FROM ${statVy(db, 'diagnoser')}`),
     atgarder: harTabell('atgarder') ? per('SELECT * FROM atgarder') : new Map(),
-    ordinationer: per('SELECT * FROM ordinationer'),
-    matvarden: per('SELECT * FROM matvarden ORDER BY tid DESC, id DESC'),
-    kontakter: per('SELECT * FROM vardkontakter'),
+    ordinationer: per(`SELECT * FROM ${statVy(db, 'ordinationer')}`),
+    matvarden: per(`SELECT * FROM ${statVy(db, 'matvarden')} ORDER BY tid DESC, id DESC`),
+    kontakter: per(`SELECT * FROM ${statVy(db, 'vardkontakter')}`),
     // Levnadsvanorna: signerade anteckningar i den gällande versionen.
-    tobak: harTabell('tobaksvanor') ? per(`SELECT a.patient_id, a.enhet_id, a.signerad_tid AS tid, t.svar, t.alder FROM tobaksvanor t JOIN anteckningar a ON a.id = t.anteckning_id
-      WHERE a.status = 'signerad' AND NOT EXISTS (SELECT 1 FROM anteckningar b WHERE b.ersatter_id = a.id) ORDER BY a.signerad_tid DESC`) : new Map(),
-    levnadsvanor: harTabell('levnadsvanor') ? per(`SELECT a.patient_id, a.enhet_id, a.signerad_tid AS tid, l.risk FROM levnadsvanor l JOIN anteckningar a ON a.id = l.anteckning_id
-      WHERE a.status = 'signerad' AND NOT EXISTS (SELECT 1 FROM anteckningar b WHERE b.ersatter_id = a.id) ORDER BY a.signerad_tid DESC`) : new Map(),
+    tobak: harTabell('tobaksvanor') ? per(`SELECT a.patient_id, a.enhet_id, a.signerad_tid AS tid, t.svar, t.alder FROM tobaksvanor t JOIN ${statVy(db, 'anteckningar')} a ON a.id = t.anteckning_id
+      WHERE a.status = 'signerad' AND NOT EXISTS (SELECT 1 FROM ${statVy(db, 'anteckningar')} b WHERE b.ersatter_id = a.id) ORDER BY a.signerad_tid DESC`) : new Map(),
+    levnadsvanor: harTabell('levnadsvanor') ? per(`SELECT a.patient_id, a.enhet_id, a.signerad_tid AS tid, l.risk FROM levnadsvanor l JOIN ${statVy(db, 'anteckningar')} a ON a.id = l.anteckning_id
+      WHERE a.status = 'signerad' AND NOT EXISTS (SELECT 1 FROM ${statVy(db, 'anteckningar')} b WHERE b.ersatter_id = a.id) ORDER BY a.signerad_tid DESC`) : new Map(),
   };
 }
 
@@ -423,7 +425,7 @@ export function statistik(db, personal, inp = {}) {
   } else if (matt === 'ordinationer') {
     for (const [pid, rader] of u.ordinationer) for (const o of rader) if (ok(pid, o.enhet_id) && iPer(o.start)) h.push({ pid, enhet: u.ve(o.enhet_id), datum: o.start, kategori: (u.atc.get(o.lakemedel_id) ?? '').slice(0, 3), varde: 1 });
   } else if (matt === 'remissledtid') {
-    for (const r of db.query('SELECT * FROM remisser WHERE besvarad_tid IS NOT NULL').all()) {
+    for (const r of db.query(`SELECT * FROM ${statVy(db, 'remisser')} WHERE besvarad_tid IS NOT NULL`).all()) {
       if (!ok(r.patient_id, r.till_enhet_id) || !u.far(r.patient_id, r.fran_enhet_id, { gemensam: niv === 'enhet' }) || !iPer(r.besvarad_tid)) continue;
       h.push({ pid: r.patient_id, enhet: u.ve(r.till_enhet_id), datum: datumAv(r.besvarad_tid), varde: Math.max(0, Math.floor((Date.parse(r.besvarad_tid) - Date.parse(r.skickad_tid)) / dagMs)) });
     }

@@ -23,6 +23,8 @@ import { CS } from './fhir-definitioner.js';
 import { HANDLING_FOR } from './atgarder.js';
 import * as samordnad from './samordnad.js';
 import { DEMO, KATEGORIER, DRG_DEMO, DRG_OGRUPPERAD, EGEN_REGION, folkbokforing, lmaFor } from './ekonomi-schema.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 export { DEMO, KATEGORIER };
 export const DEMO_AVGIFT = 'Avgifterna är demoregler, inte några verkliga regionavgifter.';
@@ -197,13 +199,13 @@ const vardtid = (start, slut, nu) => Math.max(1, Math.ceil(((slut ? Date.parse(s
 export function drgFor(db, vt, { dygn = null, nu = Date.now() } = {}) {
   const ve = vardenhetFor(db, vt.enhet_id);
   const egna = new Set(enheterUnder(db, ve));
-  const kontakter = db.query('SELECT id FROM vardkontakter WHERE vardtillfalle_id = ?').all(vt.id).map(k => k.id);
-  const dia = kontakter.length ? db.query(`SELECT * FROM diagnoser WHERE vardkontakt_id IN (${kontakter.map(() => '?').join(', ')}) ORDER BY datum DESC, id DESC`).all(...kontakter).filter(d => egna.has(d.enhet_id)) : [];
+  const kontakter = db.query(`SELECT id FROM ${statVy(db, 'vardkontakter')} WHERE vardtillfalle_id = ?`).all(vt.id).map(k => k.id);
+  const dia = kontakter.length ? db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} WHERE vardkontakt_id IN (${kontakter.map(() => '?').join(', ')}) ORDER BY datum DESC, id DESC`).all(...kontakter).filter(d => egna.has(d.enhet_id)) : [];
   let huvud = dia.find(d => d.typ === 'huvud');
   let fran = 'vardtillfallet';
   if (!huvud) {
     const grans = addDagar(datumI(vt.inskriven), -90);
-    huvud = db.query("SELECT * FROM diagnoser WHERE patient_id = ? AND typ = 'huvud' AND datum >= ? AND datum <= ? ORDER BY datum DESC, id DESC").all(vt.patient_id, grans, datumI(vt.inskriven)).find(d => egna.has(d.enhet_id));
+    huvud = db.query(`SELECT * FROM ${statVy(db, 'diagnoser')} WHERE patient_id = ? AND typ = 'huvud' AND datum >= ? AND datum <= ? ORDER BY datum DESC, id DESC`).all(vt.patient_id, grans, datumI(vt.inskriven)).find(d => egna.has(d.enhet_id));
     fran = 'tidigare_kontakt';
   }
   const tid = dygn ?? vardtid(vt.inskriven, vt.utskriven, nu);
@@ -290,9 +292,9 @@ function sammanhang(db, nu) {
 // uppgiften gjordes, med vårdtillfället först.
 function kontaktFor(c, rad, tid) {
   const db = c.db;
-  if (rad.vardkontakt_id) return db.query('SELECT * FROM vardkontakter WHERE id = ?').get(rad.vardkontakt_id) ?? null;
+  if (rad.vardkontakt_id) return db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE id = ?`).get(rad.vardkontakt_id) ?? null;
   const enh = enheterUnder(db, vardenhetFor(db, rad.enhet_id));
-  return db.query(`SELECT * FROM vardkontakter WHERE patient_id = ? AND enhet_id IN (${enh.map(() => '?').join(', ')}) AND start <= ? AND (slut IS NULL OR slut >= ?)
+  return db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE patient_id = ? AND enhet_id IN (${enh.map(() => '?').join(', ')}) AND start <= ? AND (slut IS NULL OR slut >= ?)
     ORDER BY (typ = 'slutenvard') DESC, start DESC LIMIT 1`).get(rad.patient_id, ...enh, tid, tid) ?? null;
 }
 
@@ -428,7 +430,7 @@ function hjalpmedelPoster(c, h, kontakt) {
 function drgPost(c, vt) {
   const ve = vardenhetFor(c.db, vt.enhet_id);
   // För en patient med en spärr räknas vårdtiden och inskrivningen bara på vistelserna på den egna vårdenheten.
-  const egna = c.sparr(vt.patient_id) ? c.db.query(`SELECT * FROM vardkontakter WHERE vardtillfalle_id = ? AND enhet_id IN (${enheterUnder(c.db, ve).map(() => '?').join(', ')}) ORDER BY start`).all(vt.id, ...enheterUnder(c.db, ve)) : null;
+  const egna = c.sparr(vt.patient_id) ? c.db.query(`SELECT * FROM ${statVy(c.db, 'vardkontakter')} WHERE vardtillfalle_id = ? AND enhet_id IN (${enheterUnder(c.db, ve).map(() => '?').join(', ')}) ORDER BY start`).all(vt.id, ...enheterUnder(c.db, ve)) : null;
   const g = drgFor(c.db, vt, { nu: c.nu, ...(egna?.length ? { dygn: egna.reduce((s, v) => s + vardtid(v.start, v.slut, c.nu), 0) } : {}) });
   const inskriven = egna?.length ? egna[0].start : vt.inskriven;
   const pl = c.pris(ve, datumI(vt.utskriven));
@@ -454,14 +456,14 @@ export function transaktioner(db, { vardenhet, fran, till, nu = Date.now() }) {
   const ph = enh.map(() => '?').join(', ');
   const inom = (t) => { const d = datumI(t); return d >= fran && d <= till; };
   const ut = [];
-  for (const v of db.query(`SELECT * FROM vardkontakter WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan' ORDER BY start, id`).all(...enh).filter(hant(c))) ut.push(...kontaktPoster(c, v, { fran, till }));
+  for (const v of db.query(`SELECT * FROM ${statVy(db, 'vardkontakter')} WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan' ORDER BY start, id`).all(...enh).filter(hant(c))) ut.push(...kontaktPoster(c, v, { fran, till }));
   for (const vt of db.query("SELECT * FROM vardtillfallen WHERE kalla = 'vardkallan' AND utskriven IS NOT NULL ORDER BY utskriven, id").all()) {
     if (vardenhetFor(db, vt.enhet_id) === e.id && inom(vt.utskriven)) ut.push(drgPost(c, vt));
   }
   const objekt = [
     ...db.query(`SELECT * FROM atgarder WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan'`).all(...enh).map(a => ['a', a]),
     ...(finns(db, 'lakemedelsgenomgangar') ? db.query(`SELECT *, 'XV015' AS kod, 1 AS lg, NULL AS vardkontakt_id FROM lakemedelsgenomgangar WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan'`).all(...enh).map(a => ['a', a]) : []),
-    ...db.query(`SELECT * FROM administreringar WHERE enhet_id IN (${ph}) AND status IN ('given', 'overlamnad') AND kalla = 'vardkallan'`).all(...enh).map(a => ['l', a]),
+    ...db.query(`SELECT * FROM ${statVy(db, 'administreringar')} WHERE enhet_id IN (${ph}) AND status IN ('given', 'overlamnad') AND kalla = 'vardkallan'`).all(...enh).map(a => ['l', a]),
     ...db.query(`SELECT * FROM hjalpmedel_utlamnade WHERE enhet_id IN (${ph})`).all(...enh).map(a => ['h', a]),
   ];
   for (const [typ, a] of objekt) {

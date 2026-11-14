@@ -18,6 +18,8 @@
 // MDR-bedömning är gjord, och de säger ingenting om orsak och verkan.
 import { vardenhetFor, enheterUnder } from './atkomst.js';
 import { addDagar } from './db.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 export const MINSTA = 5;
 export const DEMOMARKNING = 'Utfallen räknas ur journalens egna data på vårdenheten och är beskrivande statistik, inte ett bevis för orsak och verkan. Det kunskapsgenererande stödet är en demo och inte en medicinteknisk produkt (ingen MDR-bedömning).';
@@ -64,7 +66,7 @@ export function vardplan(db, personal, mall) {
 export function varning(db, personal, regel, nu = Date.now()) {
   const en = enheterFor(db, personal);
   const fran = new Date(nu - 365 * 86400_000).toISOString();
-  const n = db.query(`SELECT kvitterade_varningar AS k FROM ordinationer WHERE enhet_id IN (${ph(en)}) AND skapad >= ? AND kvitterade_varningar IS NOT NULL`).all(...en, fran)
+  const n = db.query(`SELECT kvitterade_varningar AS k FROM ${statVy(db, 'ordinationer')} WHERE enhet_id IN (${ph(en)}) AND skapad >= ? AND kvitterade_varningar IS NOT NULL`).all(...en, fran)
     .filter(r => { try { return JSON.parse(r.k).some(x => x?.regel === regel); } catch { return false; } }).length;
   const visas = ok(n);
   return {
@@ -80,7 +82,7 @@ export function varning(db, personal, regel, nu = Date.now()) {
 export function substans(db, personal, atc, nu = Date.now()) {
   const en = enheterFor(db, personal);
   const fran = new Date(nu - 730 * 86400_000).toISOString().slice(0, 10);
-  const rader = db.query(`SELECT o.start, o.utsatt_tid AS utsatt FROM ordinationer o JOIN katalog k ON k.id = o.lakemedel_id
+  const rader = db.query(`SELECT o.start, o.utsatt_tid AS utsatt FROM ${statVy(db, 'ordinationer')} o JOIN katalog k ON k.id = o.lakemedel_id
     WHERE k.atc = ? AND o.enhet_id IN (${ph(en)}) AND o.start >= ?`).all(atc, ...en, fran);
   const tidigt = rader.filter(r => r.utsatt && r.utsatt.slice(0, 10) <= addDagar(r.start, 30)).length;
   const a = andel(tidigt, rader.length);

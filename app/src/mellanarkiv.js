@@ -52,12 +52,14 @@ export const MAX_PER_JOURNAL = 500;
 // en spärrad vårdenhets ordination inte syns, som i läkemedelslistan. sista är den sista tidpunkten i handlingen, för
 // en ordination när den sattes ut eller slutade, så att gallringsregeln räknar från den (arkiv.js, sistaUppgift).
 // Beslut 2026-11-14: också avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser (slagen vardkontakt,
-// remiss och diagnos). mottagare_enhet_id är vårdenheten som remissen gick till.
+// remiss och diagnos). mottagare_enhet_id är vårdenheten som remissen gick till. rad är raden som den var i den
+// aktiva journalen, ur paketets statistikunderlag, så att statistik och rapporter räknar likadant före och efter en
+// överföring (vy).
 const HANDLINGAR_TABELL = `
 CREATE TABLE IF NOT EXISTS mellanarkiv_handlingar (
   id INTEGER PRIMARY KEY AUTOINCREMENT, paket_id TEXT NOT NULL, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, slag TEXT NOT NULL,
   kategori TEXT, typ TEXT NOT NULL, referens TEXT NOT NULL, datum TEXT NOT NULL, rubrik TEXT NOT NULL, forfattare TEXT, text TEXT NOT NULL,
-  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT, sista TEXT, mottagare_enhet_id TEXT,
+  resurs TEXT NOT NULL, sha256 TEXT NOT NULL, ordination_enhet_id TEXT, sista TEXT, mottagare_enhet_id TEXT, rad TEXT,
   CHECK (slag IN ('anteckning', 'matvarde', 'ordination', 'administrering', 'vardkontakt', 'remiss', 'diagnos'))
 );`;
 const HANDLINGAR_SKYDD = `
@@ -83,7 +85,7 @@ CREATE TRIGGER IF NOT EXISTS mellanarkiv_paket_raderas_ej BEFORE DELETE ON mella
 // och triggrarna läggs tillbaka. Inget innehåll ändras.
 function uppgradera(db) {
   const sql = db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'mellanarkiv_handlingar'").get()?.sql;
-  if (!sql || sql.includes("'diagnos'")) return;
+  if (!sql || (sql.includes("'diagnos'") && sql.includes(' rad TEXT'))) return;
   db.transaction(() => {
     db.exec('DROP TRIGGER IF EXISTS mellanarkiv_handlingar_andras_ej; DROP TRIGGER IF EXISTS mellanarkiv_handlingar_raderas_ej;');
     db.exec('ALTER TABLE mellanarkiv_handlingar RENAME TO mellanarkiv_handlingar_v14');
@@ -474,7 +476,13 @@ export function paketFor(db, pid, valda, { version = null, kalla = 'Överföring
     if (mall) for (const [a, oe] of adm) { index.push(admIndexPost(db, mall, a, oe)); refs.add(`urn:vardkallan:MedicationAdministration/${a.id}`); }
   }
   const objid = `IP_${randomUUID()}`;
+  // Beslut 2026-11-14: raderna som de var i den aktiva journalen, som statistikunderlag (vy).
+  const rader = [...valda.anteckningar.map(r => ['Composition', r]), ...valda.matvarden.map(r => ['Observation', r]),
+    ...(valda.ordinationer ?? []).map(({ administreringar: _, ...o }) => ['MedicationRequest', o]), ...adm.map(([a]) => ['MedicationAdministration', a]),
+    ...(valda.vardkontakter ?? []).map(r => ['Encounter', r]), ...(valda.remisser ?? []).map(r => ['ServiceRequest', r]), ...(valda.diagnoser ?? []).map(r => ['Condition', r])]
+    .map(([t, r]) => ({ referens: `urn:vardkallan:${t}/${r.id}`, rad: r }));
   return byggFgsPaket(db, { objid, version, scheman, ...(tid ? { tid } : {}), filer: [
+    { relativ: 'representations/rep_1/data/tabeller/rader.json', data: JSON.stringify(rader), mime: 'application/json', grupp: 'Representations' },
     { relativ: `representations/rep_1/data/journal/${pid}.json`, data: JSON.stringify(bundleFor(db, pid, valda), null, 1), mime: 'application/fhir+json', grupp: 'Representations' },
     { relativ: 'metadata/descriptive/earkiv-index.xml', data: earkiv.indexXml(index), mime: 'text/xml', grupp: 'Descriptive' },
     { relativ: 'documentation/beskrivning.md', data: beskrivning(objid, kalla, refs.size), mime: 'text/markdown', grupp: 'Documentation' },
@@ -552,6 +560,10 @@ export function taEmot(db, paket, { kalla, beslutId = null, av = null, tid = iso
   const rot = [...filer.keys()].find(n => /^IP_[^/]+\/$/.test(n)) ?? '';
   const handlingar = [];
   let patient = null;
+  // Beslut 2026-11-14: statistikunderlaget, raderna som de var i den aktiva journalen, per referens.
+  const raderna = new Map();
+  const underlag = filer.get(`${rot}representations/rep_1/data/tabeller/rader.json`);
+  if (underlag) { try { for (const x of JSON.parse(underlag.data.toString('utf8'))) if (x?.referens && x.rad) raderna.set(x.referens, JSON.stringify(x.rad)); } catch { fel.push('Statistikunderlaget i paketet går inte att läsa.'); } }
   for (const [namn, f] of filer) {
     if (!namn.startsWith(`${rot}representations/rep_1/data/journal/`) || !namn.endsWith('.json')) continue;
     let b;
@@ -585,8 +597,8 @@ export function taEmot(db, paket, { kalla, beslutId = null, av = null, tid = iso
   db.query('INSERT INTO mellanarkiv_paket (id, patient_id, beslut_id, kalla, mottaget, overfort_av, storlek, sha256, handlingar, data, kontroll) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(objid, pid, beslutId, kalla, tid, av, paket.length, sha(paket).toUpperCase(), handlingar.length, paket, JSON.stringify(kv));
   // Runda 15, r3: ordination_enhet_id för en administrering.
-  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id, sista, mottagare_enhet_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null, h.sista ?? h.datum, h.mottagare ?? null);
+  const ins = db.query('INSERT INTO mellanarkiv_handlingar (paket_id, patient_id, enhet_id, slag, kategori, typ, referens, datum, rubrik, forfattare, text, resurs, sha256, ordination_enhet_id, sista, mottagare_enhet_id, rad) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const h of handlingar) ins.run(objid, pid, h.enhet, h.slag, h.kategori, h.typ, h.referens, h.datum, h.rubrik, h.forfattare, h.text, h.resurs, sha(h.resurs), h.ordinationEnhet ?? null, h.sista ?? h.datum, h.mottagare ?? null, raderna.get(h.referens) ?? null);
   return { paket: objid, patient: pid, handlingar: handlingar.length, kontroll: kv };
 }
 
@@ -1029,6 +1041,35 @@ function seedaJournal(db) {
     { relativ: 'documentation/beskrivning.md', data: beskrivning(objid, 'Migreringen från VAS (demo)', index.length), mime: 'text/markdown', grupp: 'Documentation' },
   ] });
   taEmot(db, paket, { kalla: 'Migreringen från VAS (demo)', tid: '2026-01-15T10:00:00.000Z', forvantadPatient: 'p01' });
+}
+
+// ---- Beslut 2026-11-14: statistiken räknar likadant före och efter en överföring -------------------------------------
+//
+// vy(db, tabell) ger namnet på en tillfällig vy med tabellens rader i den aktiva journalen och raderna i mellanarkivet som
+// de var när de fördes över (kolumnen rad), med samma kolumner och id. Statistiken, analysen, datauttaget,
+// läkemedelsstatistiken, kvalitetsregistren och infektionsrapporteringen läser vyn, så att ett resultat är detsamma
+// oavsett var uppgiften ligger. Patientens id är det gällande, också efter en sammanslagning. Vyn är tillfällig
+// (TEMP) och följer databasens anslutning, så att den aldrig sparas i en kopia, och den byggs om när tabellens
+// kolumner har ändrats.
+const SLAG_TABELL = { anteckningar: 'anteckning', matvarden: 'matvarde', ordinationer: 'ordination', administreringar: 'administrering',
+  vardkontakter: 'vardkontakt', remisser: 'remiss', diagnoser: 'diagnos' };
+const vyer = new WeakMap();
+export function vy(db, tabell) {
+  const slag = SLAG_TABELL[tabell];
+  if (!slag || !finnsTabell(db)) return tabell;
+  sakra(db);
+  const kol = db.query(`PRAGMA table_info("${tabell}")`).all().map(k => k.name);
+  let m = vyer.get(db);
+  if (!m) { m = new Map(); vyer.set(db, m); }
+  const namn = `alla_${tabell}`;
+  if (m.get(tabell) !== kol.join(',')) {
+    const ut = kol.map(k => (k === 'patient_id' ? 'h.patient_id AS patient_id' : `json_extract(h.rad, '$.${k}') AS "${k}"`));
+    db.exec(`DROP VIEW IF EXISTS temp.${namn}`);
+    db.exec(`CREATE TEMP VIEW ${namn} AS SELECT ${kol.map(k => `"${k}"`).join(', ')} FROM main."${tabell}"
+      UNION ALL SELECT ${ut.join(', ')} FROM main.mellanarkiv_handlingar h WHERE h.slag = '${slag}' AND h.rad IS NOT NULL`);
+    m.set(tabell, kol.join(','));
+  }
+  return namn;
 }
 
 // Gränsen för ett nytt beslut: handlingar äldre än MELLANARKIV_AR år.

@@ -12,6 +12,8 @@ import { Fel, idag, addDagar } from './db.js';
 import { kanRoll, vardenhetFor } from './atkomst.js';
 import { loggaRad } from './logg.js';
 import { huvudman } from './lagring.js';
+// Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
+const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
 export const MINSTA_ANTAL = 3;
 export const PERIODER = [30, 90, 365];
@@ -28,9 +30,9 @@ export function vardgivarniva(db, personal, { dagar = 90 } = {}, nu = new Date()
   const iVardgivaren = (enhetId) => hm.get(enhetId) === min;
   const fran = addDagar(idag(), -period);
   const franIso = new Date(nu.getTime() - period * 86400_000).toISOString();
-  const ord = db.query('SELECT * FROM ordinationer').all().filter(o => iVardgivaren(o.enhet_id));
+  const ord = db.query(`SELECT * FROM ${statVy(db, 'ordinationer')}`).all().filter(o => iVardgivaren(o.enhet_id));
   const makulerade = new Set(db.query("SELECT post_id FROM makuleringar WHERE typ = 'administrering'").all().map(r => r.post_id));
-  const doser = db.query("SELECT id, ordination_id, lakemedel_id, patient_id, enhet_id FROM administreringar WHERE status IN ('given', 'overlamnad') AND tid >= ?").all(franIso)
+  const doser = db.query(`SELECT id, ordination_id, lakemedel_id, patient_id, enhet_id FROM ${statVy(db, 'administreringar')} WHERE status IN ('given', 'overlamnad') AND tid >= ?`).all(franIso)
     .filter(a => iVardgivaren(a.enhet_id) && !makulerade.has(a.id));
   const per = new Map();
   const rad = (k, lm) => per.get(k) ?? per.set(k, { substans: k, atc: lm?.atc ?? null, forskrivna: 0, nya: 0, pagaende: 0, vardenheter: new Set(), patienter: new Set(), doser: 0,
