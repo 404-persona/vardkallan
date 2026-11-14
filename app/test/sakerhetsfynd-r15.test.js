@@ -12,6 +12,9 @@ import * as ff from '../src/flerfaktor.js';
 import * as idp from '../src/idp.js';
 import * as tillit from '../src/tillitsniva.js';
 import * as mellanarkiv from '../src/mellanarkiv.js';
+import * as sam from '../src/samtycke-nationellt.js';
+import * as nat from '../src/rivta/nationella.js';
+import { Atkomst as AtkomstKlass } from '../src/atkomst.js';
 import * as konfiguration from '../src/konfiguration.js';
 import * as reservserver from '../src/reservserver.js';
 import { hashFor } from '../src/logg.js';
@@ -331,6 +334,33 @@ describe('Säkerhetsgranskningen efter runda 15: omvårdnadsprocessen och unders
     const fore = d.query("SELECT count(*) AS n FROM vardplan_historik WHERE typ = 'resultat'").get().n;
     journal.signera(ssk, journal.hamtaAnteckningRad(d, a.id));
     expect(d.query("SELECT count(*) AS n FROM vardplan_historik WHERE typ = 'resultat'").get().n).toBe(fore);
+  });
+});
+
+describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade identiteten', () => {
+  const pers = (db, id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
+  const iTjansten = (db) => { try { return db.query("SELECT intyg_id, aterkallat FROM rivta_sim_samtycken WHERE patient_id = 'p01'").all(); } catch { return []; } };
+  test('en köad registrering skickas inte till samtyckestjänsten när patienten har fått skyddad identitet', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', {}, 'las_journal');
+    nat.satt(() => { throw new Error('nere'); });
+    try { sam.registrera(a, { giltighet: 'tillsvidare' }); } finally { nat.satt(null); }
+    expect(db.query("SELECT count(*) AS n FROM samtycke_utkorg WHERE status = 'vantar'").get().n).toBe(1);
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    sam.skickaKo(db, { tvinga: true });
+    expect(iTjansten(db)).toEqual([]);
+    expect(db.query("SELECT status FROM samtycke_utkorg").get().status).toBe('avbruten');
+  });
+  test('ett samtycke som registrerades före skyddet återkallas i tjänsten med vårdenhetens egna intyg, utan personnummer', () => {
+    const db = nyDb();
+    const a = new AtkomstKlass(db, pers(db, 'lak-kard'), 'p01', {}, 'las_journal');
+    sam.registrera(a, { giltighet: 'tillsvidare' });
+    expect(iTjansten(db).filter(x => !x.aterkallat).length).toBe(1);
+    db.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    sam.aterkalla(a);
+    expect(iTjansten(db).filter(x => !x.aterkallat)).toEqual([]);
+    const sista = db.query("SELECT begaran FROM samtycke_utkorg WHERE handling = 'aterkalla' ORDER BY id DESC").get();
+    expect(sista.begaran).not.toContain('194502024732');
   });
 });
 
