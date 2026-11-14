@@ -1150,9 +1150,11 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       // Runda 8, r5: sjuksköterskan skriver också tobaksvanor, som har kategorin omvårdnad.
       // Runda 10, r3: och formulären Fallriskbedömning och Sårdokumentation, som sjuksköterskan får fylla i.
       if (JSON.stringify(mallar) !== JSON.stringify(['Omvårdnadsanteckning', 'Tobaksvanor', 'Levnadsvanor', 'Fallriskbedömning', 'Sårdokumentation'])) throw new Error(`mallar ${mallar}`);
-      await page.fill('textarea[data-sokord="Sömn"]', 'Sov hela natten.');
+      // Runda 15, r5: omvårdnadsanteckningen har omvårdnadsprocessen, och statusområdena som inte föreslås är ihopfällda.
+      await page.waitForSelector('[data-omvardnadsprocess]');
+      await page.fill('textarea[data-sokord="Åtgärd"]', 'Hjälp vid förflyttning till toaletten under natten.');
       await page.click('.ant-form [data-signera]');
-      await forvanta(page, '.anteckning', 'Sov hela natten.');
+      await forvanta(page, '.anteckning', 'Hjälp vid förflyttning till toaletten under natten.');
     });
     // Delegering av läkemedelshantering (runda 5, HSLF-FS 2017:37 9 kap.).
     await s('Johan Ek ser i inkorgen att Amira Haddads delegering går ut och registrerar en ny med systemets förslag', async () => {
@@ -1235,6 +1237,18 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
       await page.click('#mv-form [type="submit"]');
       await forvanta(page, '.notis', 'Syremättnad 95');
       await bild(page, '26-underskoterska', true);
+    });
+    // Runda 15, r5: undersköterskan dokumenterar sina observationer i en observationsanteckning, som systemet väljer.
+    await s('Amira Haddad skriver en observationsanteckning, och systemet har valt mallen åt henne', async () => {
+      await gaTill(page, '#/patient/p01/journal/ny');
+      await forvanta(page, '.ant-form h2', 'Ny anteckning');
+      const mallar = await page.locator('select[name="typ"] option').allTextContents();
+      // Beslut 2026-11-14: och fallriskbedömningen, som vårdgivaren ger yrket i samma parameter.
+      if (JSON.stringify(mallar) !== JSON.stringify(['Observationsanteckning', 'Fallriskbedömning'])) throw new Error(`mallar ${mallar}`);
+      await page.fill('textarea[data-sokord="Observation"]', 'Blek efter frukost, säger att hon mår illa.');
+      await page.fill('textarea[data-sokord="Utförd åtgärd"]', 'Mätte puls och syremättnad och sa till sjuksköterskan.');
+      await page.click('.ant-form [data-signera]');
+      await forvanta(page, '.anteckning', 'Blek efter frukost');
     });
     await s('Amira Haddad ger en dos med delegering och ser inte Ge för en injektion som delegeringen inte omfattar', async () => {
       // Läkaren ordinerar Fragmin, en injektion under huden utan fasta tider, via API:t.

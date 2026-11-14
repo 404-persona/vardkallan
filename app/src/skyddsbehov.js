@@ -30,7 +30,7 @@ export const INFORMATIONSTYPER = [
   { id: 'skyddad_identitet', rubrik: 'Skyddade personuppgifter', niva: 3, tabell: 'patienter', villkor: 'skyddad = 1', handlingar: ['visa_identitet'],
     urskiljs: { organisation: null, process: null, plan: null },
     skydd: 'Namn och personnummer maskeras överallt. Att visa identiteten kräver ett syfte och loggas. Varje åtkomst till journalen har mycket högt skyddsbehov.' },
-  { id: 'anteckning', rubrik: 'Journalanteckningar', niva: 2, tabell: 'anteckningar', handlingar: ['las_journal', 'las_omvardnad', 'skriv_journal', 'skriv_omvardnad'],
+  { id: 'anteckning', rubrik: 'Journalanteckningar', niva: 2, tabell: 'anteckningar', handlingar: ['las_journal', 'las_omvardnad', 'skriv_journal', 'skriv_omvardnad', 'skriv_observation'],
     urskiljs: { organisation: 'enhet_id', process: 'vardkontakt_id', plan: null },
     skydd: 'Läkaranteckningar och omvårdnadsanteckningar har var sin handling, så att yrkesrollen avgör vilka som syns.' },
   { id: 'diagnos', rubrik: 'Diagnoser', niva: 2, tabell: 'diagnoser', handlingar: ['las_diagnoser'], urskiljs: { organisation: 'enhet_id', process: 'vardkontakt_id', plan: null },

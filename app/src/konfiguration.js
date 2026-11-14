@@ -18,6 +18,8 @@ import * as sakerhetslogg from './sakerhetslogg.js';
 import { ATC, INTERAKTIONER_STANDARD, MAXDOSER_STANDARD } from './kodverk.js';
 // Runda 13, r3: lagens tak för patientavgifterna räknas ur prisbasbeloppet för det år ändringen gäller.
 import { hogkostnadstak, slutenvardstak, LAGRUM as AVGIFT_LAGRUM, AVGIFTSFRI_ALDER_LAG } from './prisbasbelopp.js';
+// Runda 15, r5: vilka yrken som skriver med vilka mallar (mallar-yrken.js, Sussa 12.1.1.7).
+import { yrkesparameter, yrkenMedParameter, parameterNyckel as yrkesNyckel } from './mallar-yrken.js';
 
 export const OMRADEN = {
   administration: { rubrik: 'Administration', sussa: '12.1.1.6' },
@@ -505,6 +507,8 @@ export function parametrar() {
     Object.assign(alla, labbR11Parametrar());
     // Runda 12, r1: läkemedelsvarningarnas interaktioner och maxdoser (Sussa 12.1.1.8).
     Object.assign(alla, lakemedelR12Parametrar());
+    // Runda 15, r5: mallarna som varje yrke skriver med (Sussa 12.1.1.7).
+    for (const y of yrkenMedParameter()) alla[yrkesNyckel(y)] = yrkesparameter(y);
   }
   return alla;
 }
@@ -713,7 +717,7 @@ export function varde(db, nyckel, nu = new Date()) {
 
 // Kontrollerar ett värde. Returnerar { ok, varde, varfor }.
 // Runda 13, r3: datum är dagen då ändringen ska gälla. En parameter med maxFor får sitt tak för det året.
-export function prova(nyckel, inmatat, { datum = null } = {}) {
+export function prova(nyckel, inmatat, { datum = null, db = null } = {}) {
   const def = paramDef(nyckel);
   if (!def) return { ok: false, varfor: 'Parametern finns inte.' };
   // Runda 8, r5: ja eller nej.
@@ -736,9 +740,10 @@ export function prova(nyckel, inmatat, { datum = null } = {}) {
     if (def.provaLista) {
       // Runda 10, r5: en lista som får vara tom (opioider utan kollegakontroll).
       if (!lista.length && def.tomTillaten) return { ok: true, varde: [] };
-      const fel = def.provaLista(lista);
+      // Runda 15, r5: en lista som prövas mot sandlådans innehåll (formulären i yrkenas mallar) får databasen.
+      const fel = def.provaLista(lista, { db });
       if (fel) return { ok: false, varfor: fel };
-      return { ok: true, varde: def.normalisera ? def.normalisera(lista) : lista.map(s => labbAnalysNamn.get(s.toLocaleLowerCase('sv'))?.namn ?? s) };
+      return { ok: true, varde: def.normalisera ? def.normalisera(lista, { db }) : lista.map(s => labbAnalysNamn.get(s.toLocaleLowerCase('sv'))?.namn ?? s) };
     }
     if (!lista.length) return { ok: false, varfor: 'Mallen behöver minst ett sökord, annars har den som skriver inget att utgå från.' };
     if (lista.length > SOKORD_MAX) return { ok: false, varfor: `En mall kan ha högst ${SOKORD_MAX} sökord. Fler går inte att överblicka, och en anteckning kan alltid få fler sökord när den skrivs.` };
@@ -780,7 +785,7 @@ export function forhandsvisa(db, personal, { nyckel, varde: inmatat, giltigFran 
   if (!def) throw new Fel(404, 'Parametern finns inte.', 'saknas');
   const forra = varde(db, nyckel, nu);
   const datum = giltigFran ?? addDagar(datumAv(nu), 1);
-  const p = prova(nyckel, inmatat, { datum });
+  const p = prova(nyckel, inmatat, { datum, db });
   const ut = { nyckel, rubrik: def.rubrik, forra, forraText: visa(def, forra), ok: p.ok, varfor: p.varfor ?? null, effekt: [], giltigFran: datum };
   if (!p.ok) return ut;
   ut.varde = p.varde;
@@ -803,7 +808,7 @@ export function foresla(db, personal, { nyckel, varde: inmatat, giltigFran, moti
   const m = typeof motivering === 'string' ? motivering.trim() : '';
   if (!m) throw new Fel(400, 'Skriv varför ändringen behövs. Motiveringen följer med ändringen i historiken.', 'ogiltig', { falt: ['motivering'] });
   if (m.length > 1000) throw new Fel(400, 'Motiveringen får vara högst 1000 tecken.', 'ogiltig', { falt: ['motivering'] });
-  const p = prova(nyckel, inmatat, { datum });
+  const p = prova(nyckel, inmatat, { datum, db });
   if (!p.ok) throw new Fel(400, p.varfor, 'ogiltig', { falt: ['varde'] });
   const forra = varde(db, nyckel, nu);
   if (lika(p.varde, forra)) throw new Fel(400, redan(def, forra), 'ogiltig', { falt: ['varde'] });
@@ -829,7 +834,7 @@ function hamta(db, id, slag = null) {
 // för parametrar och undantag, vilken väg godkännandet än kommer.
 function proverIgen(db, a, nu) {
   if (a.slag === 'parameter') {
-    const p = prova(a.nyckel, JSON.parse(a.varde), { datum: a.giltig_fran < datumAv(nu) ? datumAv(nu) : a.giltig_fran });
+    const p = prova(a.nyckel, JSON.parse(a.varde), { datum: a.giltig_fran < datumAv(nu) ? datumAv(nu) : a.giltig_fran, db });
     if (!p.ok) throw new Fel(400, `Ändringen kan inte godkännas: ${p.varfor}`, 'ogiltig');
     return;
   }

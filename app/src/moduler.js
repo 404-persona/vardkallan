@@ -442,6 +442,16 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
 
 // Rutterna i app.js (regexlitteraler som börjar med #/, var de än står), menyns rader och flikarna i journalen och Min
 // journal. Också rader som en annan del lägger till med splice eller push känns igen.
+// Runda 15, r5: mallarna per yrke, undersköterskans observationsanteckning och omvårdnadsprocessen hör till
+// journalanteckningarna.
+{
+  const a = MODULER.find(x => x.id === 'anteckningar');
+  a.beskrivning += ' Varje yrke skriver med sina mallar, som vårdgivaren bestämmer med fyra ögon: undersköterskan i en observationsanteckning som sjuksköterskan ser i sitt underlag, fysioterapeuten om funktion, aktivitet, mål, åtgärd och resultat, och sjuksköterskan i en omvårdnadsanteckning som följer omvårdnadsprocessen, där systemet föreslår de statusområden och omvårdnadsproblem som gäller patienten i dag och resultatet bedöms mot vårdplanens mål.';
+  a.avsnitt.push('3.2.2.1', '12.1.1.7');
+  a.kod.push('src/mallar-yrken.js', 'src/omvardnadsprocess.js', 'src/mallforslag.js', 'src/fallrisklakemedel.js', 'src/r15r5-rutter.js', 'public/js/omvardnadsprocess.js');
+  a.api.push('/api/patient/:id/omvardnadsprocess');
+}
+
 export function lasGransnitt({ rot = APP, text = null } = {}) {
   const las = (f) => text?.[f] ?? readFileSync(join(rot, f), 'utf8');
   const app = las('public/js/app.js');

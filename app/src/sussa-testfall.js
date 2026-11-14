@@ -169,7 +169,9 @@ export const TESTFALL = [
     // Runda 13, r3 (E2-5): utan skannat armband bekräftar sjuksköterskan hur Bertils identitet kontrollerades, med det
     // vanligaste sättet förvalt. Bekräftelsen gäller sessionen, så den görs en gång till efter att sjuksköterskan har
     // loggat in igen efter kollegans kontroll (budgeten var 12).
-    korningar: [kor('ssk_slutenvard', 14, 'Ett klick på Läkemedel att ge, ett på Ge för paracetamol och ett på Identiteten är kontrollerad, Mer och Iordningsställ för glukoslösningen med Addex-Magnesium och sedan Ge, där identiteten bekräftas igen efter den nya inloggningen, Ge för Stesolid och Ge för Zopiklon vid behov (9). Instruktionerna står i doseringen i listan, och för infusionen med tillsatsen räknar systemet koncentrationen och hastigheten. Kräkningen dokumenteras med ett klick på patienten, fliken Översikt, Ny anteckning, där omvårdnadsanteckningen är förvald, ett fältbyte för sökordet Elimination och Signera (5).')],
+    // Runda 15, r5: omvårdnadsanteckningens statusområden är ihopfällda när systemet inte föreslår dem, så Elimination
+    // fälls ut med ett klick på Fler områden (budgeten var 14).
+    korningar: [kor('ssk_slutenvard', 15, 'Ett klick på Läkemedel att ge, ett på Ge för paracetamol och ett på Identiteten är kontrollerad, Mer och Iordningsställ för glukoslösningen med Addex-Magnesium och sedan Ge, där identiteten bekräftas igen efter den nya inloggningen, Ge för Stesolid och Ge för Zopiklon vid behov (9). Instruktionerna står i doseringen i listan, och för infusionen med tillsatsen räknar systemet koncentrationen och hastigheten. Kräkningen dokumenteras med ett klick på patienten, fliken Översikt, Ny anteckning, där omvårdnadsanteckningen är förvald, Fler områden, ett fältbyte för sökordet Elimination och Signera (6).')],
     avvikelser: ['Ordinationerna gjordes i går och dosen ska ges i dag vid den hela timmen före testet. Glukosen med Addex-Magnesium är en ordination med tillsats. Att patienten kräktes upp premedicineringen registreras inte på dosen utan i en omvårdnadsanteckning.',
       // Runda 10, r5: kollegakontrollen av högriskläkemedel (beslut 2026-11-08).
       'Addex-Magnesium är en koncentrerad elektrolyt, så en kollega kontrollerar beredningen i sin egen inloggning innan glukosen ges. I körningen gör läkaren Sara Lindqvist kontrollen, och hennes steg räknas inte i sjuksköterskans klick.'],
@@ -289,9 +291,10 @@ export const TESTFALL = [
     tidsklass: 6, tidsklassSkal: 'Fem frågor med fasta svar och en kommentar.',
     korningar: [kor('lakare_oppenvard', 6, 'Ett klick på patienten i arbetslistan och ett på Dokumentera tobaksvanor i översikten. Ett klick på Dagligen för cigaretter sätter svaret Ja själv och flyttar fokus till antalet, och systemet föreslår kvalificerat rådgivande samtal med KVÅ-kod. Ett klick på Erbjudet och accepterat, ett fältbyte för kommentaren och ett klick för att signera.'),
       kor('ssk_slutenvard', 6, 'Samma steg som för läkaren, från arbetslistan på Kardiologiska kliniken. Tobaksvanorna skrivs och läses med samma behörighet som omvårdnadsanteckningar.'),
-      kor('paramedicinare', 6, 'Samma steg som för läkaren. Fysioterapeuten skriver omvårdnadsanteckningar och därmed tobaksvanor.')],
+      kor('paramedicinare', 6, 'Samma steg som för läkaren. Tobaksvanorna hör till fysioterapeutens mallar.')],
     avvikelser: ['Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.',
-      'Undersköterskan och vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan ser tobaksvanorna i översikten.',
+      // Runda 15, r5: undersköterskan skriver observationsanteckningar men inte tobaksvanor, som vårdgivaren bestämmer.
+      'Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.',
       'Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat.'],
   }),
   t('4.2', 'Registrera mätvärden', ['lakare_slutenvard', 'lakare_oppenvard', 'ssk_oppenvard', 'ssk_slutenvard', 'underskoterska', 'medicinsk_sekreterare'], {

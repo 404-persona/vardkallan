@@ -2,6 +2,8 @@
 // ingen patient och har inga patientuppgifter. Förifyllnaden prövas och loggas på patienten som andra uppslag i journalen.
 // Rättstavningen tar emot text från ett fält som håller på att skrivas, sparar den aldrig och loggar den aldrig.
 import * as formular from './formularmotor.js';
+// Runda 15, r5.
+import { skrivHandling } from './journal.js';
 import * as stavning from './stavning.js';
 import * as rost from './rostinmatning.js';
 import { Fel } from './db.js';
@@ -24,7 +26,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
   rutt('POST', '/api/formular/:id/avveckla', (c, id) => formular.avveckla(c.db, kravInloggad(c), id, c.body));
   rutt('GET', '/api/patient/:id/formular/:kod/forifyllnad', (c, id, kod) => {
     kravInloggad(c);
-    return medPatient(c, id, 'skriv_omvardnad', (atk) => formular.forifyllnad(atk, kod));
+    // Runda 15, r5: undersköterskan med den smala behörigheten för anteckningar (journal.skrivHandling).
+    return medPatient(c, id, skrivHandling('omvardnad', c.personal), (atk) => formular.forifyllnad(atk, kod));
   });
 
   rutt('POST', '/api/stavning', (c) => stavning.kontrollera(c.db, kravInloggad(c), c.body));

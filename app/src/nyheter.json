@@ -6,14 +6,25 @@
       "datum": "2026-11-14",
       "nyheter": [
         {
-          "id": "mellanarkiv-lakemedel-1-5-0",
+          "id": "formular-1-5-0",
           "roller": [
-            "personal"
+            "sjukskoterska",
+            "fysioterapeut"
           ],
           "omfattning": "liten",
           "var": null,
-          "rubrik": "Avslutade ordinationer ur mellanarkivet i läkemedelslistan",
-          "text": "Ordinationer som har förts till mellanarkivet står bland de utsatta och avslutade i läkemedelslistan, märkta Ur mellanarkivet, och öppnas med dosering, period, historik och doser. De syns med samma behörighet som läkemedelslistan i övrigt, och varje läsning loggas. Aktuella ordinationer förs aldrig dit."
+          "rubrik": "Fallriskbedömningen räknar läkemedlen åt dig",
+          "text": "Systemet räknar läkemedlen som ökar risken för fall ur läkemedelslistan enligt Socialstyrelsens lista, och fyller i svar som sällan ändras från förra bedömningen. Under svaret står varifrån det kommer, och du kan ändra det. Fritextfrågorna i formulären kan dikteras."
+        },
+        {
+          "id": "fysioterapi-1-5-0",
+          "roller": [
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "En egen mall för fysioterapeuten",
+          "text": "Fysioterapianteckningen har funktion, aktivitet, mål, åtgärd och resultat i stället för sjuksköterskans omvårdnadsanteckning. Systemet väljer den åt dig."
         },
         {
           "id": "mellanarkiv-arkivarie-1-5-0",
@@ -26,14 +37,14 @@
           "text": "Ett beslut om överföring till mellanarkiv tar nu också med ordinationer som avslutades före gränsen med alla doser, avslutade vårdkontakter, avslutade remisser och tillfälliga diagnoser. Systemet låter det som fortfarande gäller stanna i journalen, till exempel kroniska diagnoser, det som en bokning eller uppmärksamhetsinformationen pekar på och det senaste mätvärdet av varje typ. Exporten till e-arkivet tar med det som finns i mellanarkivet. Statistik, rapporter och datauttaget för uppföljning räknar med det som har förts över, så att resultaten inte ändras."
         },
         {
-          "id": "reservserver-1-5-0",
+          "id": "mellanarkiv-lakemedel-1-5-0",
           "roller": [
             "personal"
           ],
           "omfattning": "liten",
           "var": null,
-          "rubrik": "Reservserver när kärnsystemet inte går att använda",
-          "text": "Vid ett längre avbrott kan driften starta en reservserver på en annan plats. Den visar journalen ur den senaste säkerhetskopian och säger överst på varje sida hur gamla uppgifterna är. Den kan bara läsas, så det som behöver registreras antecknas på papper och förs in när kärnsystemet är i drift igen. Varje läsning loggas som vanligt."
+          "rubrik": "Avslutade ordinationer ur mellanarkivet i läkemedelslistan",
+          "text": "Ordinationer som har förts till mellanarkivet står bland de utsatta och avslutade i läkemedelslistan, märkta Ur mellanarkivet, och öppnas med dosering, period, historik och doser. De syns med samma behörighet som läkemedelslistan i övrigt, och varje läsning loggas. Aktuella ordinationer förs aldrig dit."
         },
         {
           "id": "min-journal-mellanarkiv-1-5-0",
@@ -46,6 +57,27 @@
           "text": "Uppgifter som är äldre än fem år och som vården har flyttat till sitt arkiv visas i Min journal som förut, märkta Äldre uppgift från arkivet. Samma regler gäller som för resten av din journal i Min journal, också när du hämtar din journal med en app genom FHIR."
         },
         {
+          "id": "observation-1-5-0",
+          "roller": [
+            "underskoterska"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Du dokumenterar dina observationer i journalen",
+          "text": "Undersköterskan skriver en kort observationsanteckning med det som har observerats och det som har gjorts, och fyller i fallriskbedömningen. Systemet väljer mallen åt dig. Sjuksköterskan ser anteckningen i sitt underlag när hon skriver nästa omvårdnadsanteckning, så att inget behöver föras vidare muntligt."
+        },
+        {
+          "id": "omvardnadsprocess-1-5-0",
+          "roller": [
+            "sjukskoterska",
+            "lakare"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Omvårdnadsanteckningen följer omvårdnadsprocessen",
+          "text": "Omvårdnadsanteckningen har omvårdnadsproblem, mål, åtgärd och resultat, och statusområdena fälls ut när de behövs. Systemet föreslår de områden och omvårdnadsproblem som gäller patienten i dag ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten, och säger varför. Resultatet bedöms mot vårdplanens mål och står sedan i vårdplanen. Statusområdena har nya namn."
+        },
+        {
           "id": "reservlogg-1-5-0",
           "roller": [
             "systemforvaltare"
@@ -56,6 +88,16 @@
           "text": "Sidan Lagring visar när det finns en logg från reservservern som inte är inläst, med antal rader, period och vilken säkerhetskopia reservservern läste. Systemet kontrollerar kedjan i loggen, och ett klick läser in varje rad en gång."
         },
         {
+          "id": "reservserver-1-5-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Reservserver när kärnsystemet inte går att använda",
+          "text": "Vid ett längre avbrott kan driften starta en reservserver på en annan plats. Den visar journalen ur den senaste säkerhetskopian och säger överst på varje sida hur gamla uppgifterna är. Den kan bara läsas, så det som behöver registreras antecknas på papper och förs in när kärnsystemet är i drift igen. Varje läsning loggas som vanligt."
+        },
+        {
           "id": "tillfalliga-diagnoser-1-5-0",
           "roller": [
             "systemforvaltare"
@@ -64,6 +106,16 @@
           "var": null,
           "rubrik": "Vilka diagnoser som är tillfälliga är en parameter",
           "text": "Under Regler och parametrar finns parametern Diagnoser som är tillfälliga och får föras till mellanarkivet. Den ändras med fyra ögon, och förhandsvisningen säger hur många diagnoser som påverkas. Grundinställningen är försiktig och är en demoregel som en läkare ska granska. Kroniska diagnoser och diagnoser som ett beslutsstöd läser stannar alltid i journalen."
+        },
+        {
+          "id": "yrkesmallar-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vilka yrken som skriver med vilka mallar",
+          "text": "Under Regler och parametrar bestämmer vårdgivaren vilka mallar varje yrke skriver med, med fyra ögon och giltighetsdatum. En mall kan bara ges till ett yrke som har behörighet att skriva i mallens kategori. Sökorden Status och Planering har fått rätt koder i Snomed CT, och bygget stoppar två sökord med samma kod."
         }
       ]
     },

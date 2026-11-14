@@ -20,13 +20,18 @@ import * as signering from './anteckningssignatur.js';
 import * as formular from './formularmotor.js';
 // Runda 12, r1: mallar och mätvärdestyper som systemförvaltningen skapar (journalstruktur.js).
 import * as struktur from './journalstruktur.js';
+// Runda 15, r5: mallarna per yrke och omvårdnadsprocessen (mallar-yrken.js och omvardnadsprocess.js).
+import * as yrkesmallar from './mallar-yrken.js';
+import * as omvardnad from './omvardnadsprocess.js';
 
-// Mallar per anteckningstyp. Omvårdnadsanteckningen följer VIPS-sökorden.
+// Mallar per anteckningstyp. Vilka yrken som skriver med vilka mallar står i mallar-yrken.js.
 export const MALLAR = [
   { typ: 'Inskrivningsanteckning', kategori: 'lakare', sokord: ['Kontaktorsak', 'Anamnes', 'Aktuellt', 'Status', 'Bedömning', 'Åtgärd'] },
   { typ: 'Daganteckning', kategori: 'lakare', sokord: ['Aktuellt', 'Status', 'Bedömning', 'Åtgärd'] },
   { typ: 'Mottagningsanteckning', kategori: 'lakare', sokord: ['Kontaktorsak', 'Anamnes', 'Aktuellt', 'Status', 'Bedömning', 'Åtgärd'] },
-  { typ: 'Omvårdnadsanteckning', kategori: 'omvardnad', sokord: ['Kommunikation', 'Andning/cirkulation', 'Nutrition', 'Elimination', 'Hud/vävnad', 'Aktivitet', 'Sömn', 'Smärta', 'Psykosocialt', 'Planering'] },
+  // Runda 15, r5 (F4): omvårdnadsanteckningen med omvårdnadsprocessen och statusområden med egna namn
+  // (omvardnadsprocess.js). Förut tio statusrubriker efter VIPS.
+  omvardnad.MALL,
   { typ: 'Epikris', kategori: 'lakare', sokord: ['Orsak till vård', 'Förlopp', 'Läkemedelsförändringar', 'Uppföljning'] },
   { typ: 'Akutanteckning', kategori: 'lakare', sokord: ['Kontaktorsak', 'Prioritet', 'Anamnes', 'Status', 'Bedömning', 'Åtgärd'] },
   // Runda 8, r5: en strukturerad mall. Sökorden skriver systemet ur svaren (tobak.js), så de går inte att ändra.
@@ -36,6 +41,9 @@ export const MALLAR = [
   // Runda 10, r4: donationsanteckningen, som systemet skriver ur donationens checklista (donation.js). Samma sökord som
   // MALL i donation.js.
   { typ: 'Donationsanteckning', kategori: 'lakare', sokord: ['Aktuellt', 'Bedömning', 'Närstående', 'Åtgärd'] },
+  // Runda 15, r5 (F3): undersköterskans observationsanteckning och mallarna för fysioterapeut, arbetsterapeut, kurator
+  // och dietist (mallar-yrken.js).
+  ...yrkesmallar.MALLAR,
 ];
 const MALL = Object.fromEntries(MALLAR.map(m => [m.typ, m]));
 // Runda 10, r3: mallen för en anteckningstyp, en av de fasta eller ett formulär som gäller och som personen får fylla i.
@@ -53,7 +61,10 @@ export function kategoriFor(db, typ) {
 }
 
 export const lasHandling = (kategori) => (kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal');
-export const skrivHandling = (kategori) => (kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
+// Runda 15, r5: ett yrke som bara har den smala handlingen skriv_observation (undersköterskan) skriver omvårdnadens
+// anteckningar med den, och bara med de mallar som vårdgivaren har gett yrket (yrkesmallar.provaMall).
+export const skrivHandling = (kategori, personal = null) => (kategori !== 'omvardnad' ? 'skriv_journal'
+  : personal && !kanRoll(personal, 'skriv_omvardnad') && kanRoll(personal, 'skriv_observation') ? 'skriv_observation' : 'skriv_omvardnad');
 
 export function kallaEtikett(kalla, tid) {
   if (!kalla?.startsWith('migrerad:')) return null;
@@ -99,6 +110,8 @@ export function anteckningUt(db, a, { full = true } = {}) {
   // Runda 10, r3: svaren i ett formulär, med formulärets version.
   if (full) { const f = formular.ut(db, a.id); if (f) ut.formular = f; }
   if (!full) ut.sammanfattning = sokord.map(s => `${s.sokord}: ${s.text}`).join(' ').slice(0, 200);
+  // Runda 15, r5: omvårdnadsproblemen och resultaten mot vårdplanens mål.
+  if (full) { const op = omvardnad.ut(db, a.id); if (op) ut.omvardnadsprocess = op; }
   return ut;
 }
 
@@ -174,10 +187,14 @@ function valideraVardkontakt(db, patientId, vardkontaktId) {
   return vk.id;
 }
 
-export function skapaAnteckning(atk, { typ, vardkontaktId, sokord, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar }) {
+export function skapaAnteckning(atk, { typ, vardkontaktId, sokord, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar, process: processSvar }) {
   const mall = mallFor(atk, typ);
   if (!mall) throw new Fel(400, 'Okänd anteckningstyp.', 'ogiltig', { falt: ['typ'] });
-  atk.krav(skrivHandling(mall.kategori));
+  atk.krav(skrivHandling(mall.kategori, atk.personal));
+  // Runda 15, r5 (F3): yrket skriver bara med sina mallar, som vårdgivaren har bestämt (mallar-yrken.js).
+  yrkesmallar.provaMall(atk.db, atk.personal, mall);
+  // Runda 15, r5 (F4): omvårdnadsproblemen och resultaten mot vårdplanens mål.
+  const pr = processFor(atk, mall, processSvar);
   // Runda 10, r3: i ett formulär skriver systemet sökorden ur svaren.
   const fo = mall.formular ? formular.forbered(atk, mall.formular, formularSvar) : null;
   // Runda 8, r5: i mallen för tobaksvanor skriver systemet sökorden ur svaren.
@@ -191,13 +208,22 @@ export function skapaAnteckning(atk, { typ, vardkontaktId, sokord, tobak: tobakS
   if (t) tobak.spara(atk.db, Number(r.lastInsertRowid), t);
   if (lv) levnadsvanor.spara(atk.db, Number(r.lastInsertRowid), lv);
   if (fo) formular.spara(atk.db, Number(r.lastInsertRowid), fo);
+  // Runda 15, r5.
+  omvardnad.spara(atk.db, Number(r.lastInsertRowid), pr);
   return anteckningUt(atk.db, hamtaAnteckningRad(atk.db, r.lastInsertRowid));
 }
 
-export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar }) {
+// Runda 15, r5: omvårdnadsprocessen hör bara till mallar med processen.
+function processFor(atk, mall, processSvar) {
+  if (processSvar === undefined || processSvar === null) return null;
+  if (!mall.process) throw new Fel(400, `Omvårdnadsproblem och resultat mot vårdplanens mål hör till ${omvardnad.TYP.toLowerCase()}en.`, 'ogiltig', { falt: ['process'] });
+  return omvardnad.forbered(atk, processSvar);
+}
+
+export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar, process: processSvar }) {
   if (a.status === 'signerad') throw new Fel(400, 'En signerad anteckning kan inte ändras. Gör en rättelse i stället.', 'ogiltig');
   if (a.forfattare_id !== atk.personal.id) throw new Fel(403, 'Bara författaren kan ändra ett utkast.', 'nekad');
-  atk.krav(skrivHandling(a.kategori));
+  atk.krav(skrivHandling(a.kategori, atk.personal));
   // Runda 8, r5: ett utkast om tobaksvanor ändras med svaren, aldrig med sökorden.
   const t = a.typ === tobak.TYP && tobakSvar !== undefined ? tobak.forbered(atk, tobakSvar) : null;
   if (a.typ === tobak.TYP && sokord !== undefined) throw new Fel(400, 'Texten i en anteckning om tobaksvanor skrivs av systemet ur svaren. Ändra svaren i stället.', 'ogiltig', { falt: ['sokord'] });
@@ -213,6 +239,8 @@ export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, l
   if (fo) formular.spara(atk.db, a.id, fo);
   const s = fo ? fo.sokord : t ? t.sokord : lv ? lv.sokord : sokord === undefined ? JSON.parse(a.sokord) : valideraSokord(sokord);
   const vk = vardkontaktId === undefined ? a.vardkontakt_id : valideraVardkontakt(atk.db, atk.patientId, vardkontaktId);
+  // Runda 15, r5.
+  if (processSvar !== undefined) omvardnad.spara(atk.db, a.id, processFor(atk, mallFor(atk, a.typ) ?? {}, processSvar) ?? { problem: [], resultat: [] });
   atk.db.query('UPDATE anteckningar SET sokord = ?, vardkontakt_id = ?, andrad = ? WHERE id = ?').run(JSON.stringify(s), vk, iso(), a.id);
   return anteckningUt(atk.db, hamtaAnteckningRad(atk.db, a.id));
 }
@@ -220,7 +248,7 @@ export function andraUtkast(atk, a, { sokord, vardkontaktId, tobak: tobakSvar, l
 export function signera(atk, a) {
   if (a.status === 'signerad') throw new Fel(400, 'Anteckningen är redan signerad.', 'ogiltig');
   if (a.forfattare_id !== atk.personal.id) throw new Fel(403, 'Bara författaren kan signera anteckningen.', 'nekad');
-  atk.krav(skrivHandling(a.kategori));
+  atk.krav(skrivHandling(a.kategori, atk.personal));
   if (!JSON.parse(a.sokord).some(s => s.text)) throw new Fel(400, 'Anteckningen är tom.', 'ogiltig', { falt: ['sokord'] });
   const t = iso();
   atk.db.transaction(() => {
@@ -231,6 +259,8 @@ export function signera(atk, a) {
     tobak.vidSignering(atk, a, t);
     // Runda 9, r7: samtalen om levnadsvanor registreras som åtgärder med KVÅ-koden.
     levnadsvanor.vidSignering(atk, a, t);
+    // Runda 15, r5: resultatet mot vårdplanens mål förs in i vårdplanen.
+    omvardnad.vidSignering(atk, a);
     // Runda 9, r7: signaturen över innehållet.
     signering.vidSignering(atk.db, a.id);
   })();
@@ -238,11 +268,11 @@ export function signera(atk, a) {
 }
 
 // Rättelse enligt HSLF-FS 2016:40 6 kap.: den signerade versionen står kvar och en ny version ersätter den.
-export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar }) {
+export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: lvSvar, formular: formularSvar, process: processSvar }) {
   if (a.status !== 'signerad') throw new Fel(400, 'Bara signerade anteckningar rättas. Ett utkast ändras direkt.', 'ogiltig');
   if (ersattAv(atk.db, a.id) != null) throw new Fel(400, 'Anteckningen har redan rättats. Rätta den senaste versionen.', 'ogiltig');
   if (typeof orsak !== 'string' || orsak.trim().length < 3) throw new Fel(400, 'Ange orsak till rättelsen.', 'ogiltig', { falt: ['orsak'] });
-  atk.krav(skrivHandling(a.kategori), { resurs: { enhet_id: a.enhet_id } });
+  atk.krav(skrivHandling(a.kategori, atk.personal), { resurs: { enhet_id: a.enhet_id } });
   if (vardenhetFor(atk.db, a.enhet_id) !== vardenhetFor(atk.db, atk.personal.enhet_id)) {
     throw new Fel(403, 'Anteckningen kan bara rättas av den vårdenhet som skrev den.', 'nekad');
   }
@@ -259,6 +289,8 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   const ff = formular.formularFor(atk.db, a.id);
   const fo = ff ? formular.forbered(atk, ff.formular, formularSvar, { forra: ff }) : null;
   const s = fo ? fo.sokord : tb ? tb.sokord : lv ? lv.sokord : valideraSokord(sokord);
+  // Runda 15, r5: en rättelse behåller omvårdnadsproblemen och resultaten om inte nya anges.
+  const pr = processSvar !== undefined ? processFor(atk, mallFor(atk, a.typ) ?? {}, processSvar) : omvardnad.lasRad(atk.db, a.id);
   const t = iso();
   const r = atk.db.query(`INSERT INTO anteckningar (patient_id, enhet_id, vardkontakt_id, typ, kategori, sokord, forfattare_id, skapad, status,
     signerad_tid, signerad_av, ersatter_id, rattelse_orsak, version, kalla) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'signerad', ?, ?, ?, ?, ?, 'vardkallan')`)
@@ -266,6 +298,9 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   if (tb) tobak.spara(atk.db, Number(r.lastInsertRowid), tb);
   if (lv) levnadsvanor.spara(atk.db, Number(r.lastInsertRowid), lv);
   if (fo) formular.spara(atk.db, Number(r.lastInsertRowid), fo);
+  // Runda 15, r5: nya resultat i rättelsen förs in i vårdplanen.
+  omvardnad.spara(atk.db, Number(r.lastInsertRowid), pr);
+  if (processSvar !== undefined && pr) omvardnad.vidSignering(atk, { id: Number(r.lastInsertRowid) });
   // Runda 9, r7: rättelsen signeras med en egen signatur.
   signering.vidSignering(atk.db, Number(r.lastInsertRowid));
   const ny = hamtaAnteckningRad(atk.db, r.lastInsertRowid);

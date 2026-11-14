@@ -22,6 +22,9 @@ import { ICD10SE, KVA, SYSTEM } from './kodverk.js';
 import { SOKORD, provaBegrepp, delmangd } from './fackssprak.js';
 import * as R from '../public/js/formularmotor-regler.js';
 import { SCHEMA_FORMULAR } from './schema-runda10-r3.js';
+// Runda 15, r5 (F7): läkemedel som ökar risken för fall (fallrisklakemedel.js) och yrken med avgränsad dokumentation.
+import * as fallrisk from './fallrisklakemedel.js';
+import { ENDAST_LISTADE, mallarForYrke } from './mallar-yrken.js';
 
 const harTabell = (db, namn = 'formular') => Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(namn));
 export function sakra(db) { db.exec(SCHEMA_FORMULAR); }
@@ -36,7 +39,8 @@ const journalModul = () => require('./journal.js');
 function sammanhang(db) {
   const j = journalModul();
   const mattyper = Object.fromEntries(Object.entries(j.MATTYPER).map(([id, m]) => [id, { namn: m.namn, min: m.min, max: m.max, enhet: m.enhet, format: m.format ?? null, heltal: m.heltal ?? false }]));
-  const sokord = Object.keys(SOKORD).filter(s => SOKORD[s].code || s === 'Kommentar' || s === 'Hud/vävnad');
+  // Runda 15, r5: Hud och sår ersätter Hud/vävnad i nya formulär. Båda saknar kod i Snomed CT av samma skäl.
+  const sokord = Object.keys(SOKORD).filter(s => SOKORD[s].code || s === 'Kommentar' || s === 'Hud/vävnad' || s === 'Hud och sår');
   const vardenheter = db.query("SELECT id FROM enheter WHERE typ = 'vardenhet'").all().map(r => r.id);
   return { mattyper, sokord, upptagnaNamn: j.MALLAR.map(m => m.typ), vardenheter };
 }
@@ -278,8 +282,16 @@ export function byggstenar(db, personal) {
 // Får personen fylla i formuläret? Kategorin prövas av behörighetsmotorn som för andra anteckningar, och yrkena och
 // vårdenheterna här.
 function far(db, personal, def) {
+  if (!personal) return false;
+  // Runda 15, r5 (beslut 2026-11-14): ett yrke med avgränsad dokumentation (undersköterskan) fyller i de formulär för
+  // omvårdnad som vårdgivaren har gett yrket i parametern för yrkets mallar, med den smala behörigheten
+  // skriv_observation. Parametern avgör för yrket, och vårdenheterna i formuläret gäller som för andra.
+  if (ENDAST_LISTADE.has(personal.yrke)) {
+    return def.kategori === 'omvardnad' && kanRoll(personal, 'skriv_observation') && mallarForYrke(db, personal.yrke).includes(def.namn)
+      && (!def.enheter || def.enheter.includes(vardenhetFor(db, personal.enhet_id)));
+  }
   const handling = def.kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal';
-  if (!personal || !kanRoll(personal, handling)) return false;
+  if (!kanRoll(personal, handling)) return false;
   if (def.roller && !def.roller.includes(personal.yrke)) return false;
   if (def.enheter && !def.enheter.includes(vardenhetFor(db, personal.enhet_id))) return false;
   return true;
@@ -324,10 +336,46 @@ function senasteMatvarde(atk, typ) {
 }
 const enhetsnamn = (db, id) => db.query('SELECT namn FROM enheter WHERE id = ?').get(id)?.namn ?? id;
 // Texten i anteckningen för var ett värde kommer ifrån. Den innehåller aldrig en vårdenhet.
-const KALLTEXT = { personnummer: 'ur personnumret', matvarde: 'förifyllt av systemet', ny: 'registreras som mätvärde när anteckningen signeras', registrerat: 'registrerat som mätvärde vid signeringen' };
+const KALLTEXT = { personnummer: 'ur personnumret', matvarde: 'förifyllt av systemet', ny: 'registreras som mätvärde när anteckningen signeras', registrerat: 'registrerat som mätvärde vid signeringen',
+  // Runda 15, r5.
+  lakemedelslistan: 'räknat ur läkemedelslistan', news2: 'räknat av systemet ur vitalparametrarna', tidigare: 'samma som vid förra bedömningen' };
 const kalltexter = (kallor) => Object.fromEntries(Object.entries(kallor).map(([id, k]) => [id, KALLTEXT[k?.typ] ?? (typeof k === 'string' ? k : 'förifyllt av systemet')]));
-function forifyllda(atk, def) {
+// Runda 15, r5 (F7): antalet läkemedel som ökar risken för fall i läkemedelslistan, som är gemensam för vårdgivaren.
+// Spärrade vårdenheters ordinationer räknas inte.
+function fallriskLakemedel(atk) {
+  if (!kanRoll(atk.personal, 'las_lakemedel')) return null;
+  const lm = require('./lakemedel.js');
+  const a = new (require('./atkomst.js').Atkomst)(atk.db, atk.personal, atk.patientId, {}, 'las_lakemedel');
+  const lista = lm.synligaOrdinationer(a).filter(o => lm.aktuell(o)).map(o => atk.db.query('SELECT namn, atc FROM katalog WHERE id = ?').get(o.lakemedel_id)).filter(Boolean);
+  return fallrisk.rakna(lista);
+}
+// Runda 15, r5: NEWS2 ur den egna vårdenhetens värden från det senaste dygnet.
+function senasteNews2(atk) {
+  if (!kanRoll(atk.personal, 'las_matvarden')) return null;
+  const p = atk.db.query('SELECT * FROM patienter WHERE id = ?').get(atk.patientId);
+  const egen = egenAtkomst(atk);
+  const rader = journalModul().synligaMatvarden(egen).filter(m => egenVardenhet(atk, m.enhet_id));
+  const a = require('./vitalparametrar.js').news2For(egen, p, rader).aktuell;
+  return a?.komplett && Date.now() - Date.parse(a.tid) <= 86400_000 ? a : null;
+}
+// Runda 15, r5: förra svaren i samma formulär, i den senaste signerade anteckningen på den egna vårdenheten som personen
+// får läsa.
+function forraSvaren(atk, kod) {
+  if (!kod || !harTabell(atk.db, 'formular_svar')) return null;
+  const j = journalModul();
+  const rader = atk.db.query(`SELECT a.* FROM anteckningar a JOIN formular_svar s ON s.anteckning_id = a.id JOIN formular f ON f.id = s.formular_id
+    WHERE a.patient_id = ? AND a.status = 'signerad' AND f.kod = ? ORDER BY a.signerad_tid DESC, a.id DESC`).all(atk.patientId, kod)
+    .filter(a => !atk.db.query('SELECT 1 FROM anteckningar WHERE ersatter_id = ?').get(a.id));
+  const egen = egenAtkomst(atk);
+  const a = require('./undantag.js').filtreraVisning(egen, egen.filtrera(rader, r => j.lasHandling(r.kategori)), 'anteckning').find(r => egenVardenhet(atk, r.enhet_id));
+  return a ? { svar: formularFor(atk.db, a.id).svar, tid: a.signerad_tid } : null;
+}
+const datumText = (t) => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long' });
+const klockText = (t) => new Date(t).toLocaleTimeString('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit' });
+
+function forifyllda(atk, def, kod = null) {
   const ut = {};
+  let forra;
   for (const f of def.falt) {
     if (f.forifyll === 'alder') {
       const p = atk.db.query('SELECT fodd FROM patienter WHERE id = ?').get(atk.patientId);
@@ -338,6 +386,19 @@ function forifyllda(atk, def) {
     } else if (f.forifyll === 'diagnoser') {
       const d = journalModul().synligaDiagnoser(egenAtkomst(atk)).filter(x => x.typ !== 'avslutad' && egenVardenhet(atk, x.enhet_id));
       if (d.length) ut[f.id] = { varde: d.map(x => `${x.text} (${x.kod})`).join(', ').slice(0, f.maxLangd), kalla: 'Diagnoserna i journalen' };
+    } else if (f.forifyll === 'fallrisklakemedel') {
+      // Runda 15, r5.
+      const r = fallriskLakemedel(atk);
+      const varde = r && (f.typ === 'heltal' ? r.antal : R.alternativForAntal(f, r.antal));
+      if (r && varde != null) ut[f.id] = { varde, kalla: r.antal ? `Räknat ur läkemedelslistan: ${r.lakemedel.map(l => l.namn).join(', ')}` : 'Räknat ur läkemedelslistan: inga läkemedel som ökar risken för fall', typ: 'lakemedelslistan' };
+    } else if (f.forifyll === 'news2') {
+      const n = senasteNews2(atk);
+      if (n) ut[f.id] = { varde: n.poang, kalla: `NEWS2 klockan ${klockText(n.tid)}, räknat ur vitalparametrarna`, typ: 'news2' };
+    } else if (f.forifyll === 'tidigare') {
+      forra ??= forraSvaren(atk, kod) ?? false;
+      const v = forra ? forra.svar[f.id] : undefined;
+      const giltigt = v != null && (f.typ !== 'val' || f.alternativ.some(a => a.varde === v)) && (f.typ !== 'flerval' || (Array.isArray(v) && v.every(x => f.alternativ.some(a => a.varde === x))));
+      if (giltigt) ut[f.id] = { varde: v, kalla: `Samma som vid förra bedömningen ${datumText(forra.tid)}. Kontrollera att det stämmer i dag`, typ: 'tidigare' };
     }
   }
   return ut;
@@ -348,8 +409,9 @@ export function forifyllnad(atk, kod) {
   if (!r) throw new Fel(404, 'Formuläret finns inte.', 'saknas');
   const def = JSON.parse(r.definition);
   if (!far(atk.db, atk.personal, def)) throw new Fel(403, 'Din yrkesroll fyller inte i formuläret.', 'nekad');
-  atk.krav(def.kategori === 'omvardnad' ? 'skriv_omvardnad' : 'skriv_journal');
-  const v = forifyllda(atk, def);
+  // Runda 15, r5: samma behörighet som anteckningen, också den smala för undersköterskan (journal.skrivHandling).
+  atk.krav(journalModul().skrivHandling(def.kategori, atk.personal));
+  const v = forifyllda(atk, def, r.kod);
   return { formular: { id: r.id, kod: r.kod, version: r.version }, varden: Object.fromEntries(Object.entries(v).map(([id, x]) => [id, { varde: x.varde, kalla: x.kalla }])) };
 }
 
@@ -360,9 +422,11 @@ export function forbered(atk, formular, svar, { forra = null } = {}) {
   const p = R.provaSvar(def, svar, { idag: idag() });
   if (!p.ok) throw new Fel(400, p.varfor, 'ogiltig', { falt: [p.falt] });
   const v = p.varde;
-  const fore = forifyllda(atk, def);
+  const fore = forifyllda(atk, def, formular.kod);
   const kallor = {};
   for (const f of R.synligaFalt(def, v)) {
+    // Runda 15, r5: ett svar som är detsamma som systemet räknade fram eller som förra gången får källan med sig.
+    if (['lakemedelslistan', 'news2', 'tidigare'].includes(fore[f.id]?.typ) && JSON.stringify(v[f.id]) === JSON.stringify(fore[f.id].varde)) kallor[f.id] = { typ: fore[f.id].typ };
     if (f.forifyll === 'alder' && fore[f.id]) {
       // Åldern vet systemet. Ett tomt fält fylls i, och en annan ålder sparas inte.
       if (v[f.id] == null) v[f.id] = fore[f.id].varde;
@@ -439,7 +503,7 @@ export function foreSignering(atk, a) {
   const f = formularFor(atk.db, a.id);
   if (!f) return;
   const def = f.formular.definition;
-  const fore = forifyllda(atk, def);
+  const fore = forifyllda(atk, def, f.formular.kod);
   const kallor = { ...f.kallor };
   const j = journalModul();
   for (const falt of R.synligaFalt(def, f.svar)) {

@@ -9,7 +9,8 @@ describe('Journal', () => {
   test('mallar finns för alla anteckningstyper', () => {
     const typer = journal.MALLAR.map(m => m.typ);
     for (const t of ['Inskrivningsanteckning', 'Daganteckning', 'Mottagningsanteckning', 'Omvårdnadsanteckning', 'Epikris', 'Akutanteckning']) expect(typer).toContain(t);
-    for (const m of journal.MALLAR) expect(m.sokord.length).toBeGreaterThan(2);
+    // Runda 15, r5: undersköterskans observationsanteckning är kort med avsikt, med två sökord.
+    for (const m of journal.MALLAR) expect(m.sokord.length).toBeGreaterThan(m.typ === 'Observationsanteckning' ? 1 : 2);
   });
 
   test('utkast kan ändras av författaren', () => {

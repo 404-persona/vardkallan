@@ -3112,3 +3112,60 @@ Vårdrelationen kommer av pågående kontakter, kontakter som avslutades de sena
 **Loggen från reservservern.** Sidan Lagring visar loggfilerna från reservservern i katalogen som driften gör tillgänglig för kärnsystemet (RESERV_LOGG), bara för den egna sandlådan (nyckeln för dess säkerhetskopior): antal rader, hur många som väntar, period, vilken kopia reservservern läste och om kedjan håller. Ett klick läser in en logg vars kedja håller, varje rad en gång, och säkerhetsloggen får en rad. En logg vars kedja inte håller läses inte in. Kommandot bun src/reservserver.js --las-in-logg finns kvar. I demon skapar knappen Demo en simulerad logg för sandlådan, märkt som simulerad.
 
 **Klickbudget.** Ett nytt flöde: läsa in loggen från reservservern (budget 1).
+## Mallarnas innehåll: yrken, undersköterskan, omvårdnadsprocessen, formulär och fackspråk (runda 15, r5: mallar-yrken.js, omvardnadsprocess.js, mallforslag.js, fallrisklakemedel.js, r15r5-rutter.js och public/js/omvardnadsprocess.js, Sussa 3.1.3.5, 3.2.2.1, 5.1.1.3, 5.1.3.2, 5.1.3.4 och 12.1.1.7)
+
+Granskningen av journalmallarna i runda 15 fann att undersköterskan inte kunde dokumentera, att fysioterapeuten fick sjuksköterskans rubriker, att omvårdnadsmallen var tio statusrubriker efter VIPS i stället för omvårdnadsprocessen, att formulären inte använde läkemedelslistan och att två sökordspar delade kod. Det här avsnittet beskriver mallarnas innehåll. Anteckningsvyn (underlaget, utkasten, läsordningen och varianterna) beskrivs i sitt eget avsnitt.
+
+### Mallar per yrke (F3)
+
+Varje yrke ser bara sina mallar, och systemet väljer mallen efter yrket. `mallar-yrken.js` har förvalet per yrke, i den ordning mallarna visas, och den första är yrkets huvudmall (`huvudmall` i `GET /api/mallar`):
+
+| Yrke | Mallar i förvalet |
+|---|---|
+| Läkare | daganteckning, mottagningsanteckning, akutanteckning, inskrivningsanteckning, epikris, omvårdnadsanteckning, tobaksvanor, levnadsvanor, donationsanteckning |
+| Sjuksköterska | omvårdnadsanteckning, tobaksvanor, levnadsvanor |
+| Undersköterska | observationsanteckning |
+| Fysioterapeut | fysioterapianteckning, tobaksvanor, levnadsvanor |
+| Arbetsterapeut, kurator, dietist | arbetsterapianteckning, kuratorsanteckning, dietistanteckning (yrkena är inte roller i demon) |
+
+Undersköterskan har fått en egen, smal handling, `skriv_observation`, i `atkomst.js`, eftersom annan personal som vårdar en patient får föra journal (Socialstyrelsen; patientdatalagen 3 kap.). Handlingen godtas bara av anteckningsflödet (`journal.skrivHandling`) och bara för de inbyggda mallar som vårdgivaren har gett yrket. Alla andra skrivvägar som prövar `skriv_omvardnad`, som bilder och media, uppladdning, annoteringar och omvårdnadsprocessen, är stängda för undersköterskan som förut, och hennes övriga behörigheter är oförändrade (`app/test/underskoterska-behorighet.test.js`). Formulär för omvårdnad fyller hon i när vårdgivaren har gett yrket formuläret i samma parameter som mallarna, och i förvalet ingår fallriskbedömningen. Det prövas på servern på samma sätt som anteckningen och med samma smala behörighet, så att ett formulär som yrket inte har stoppas.
+
+Rehabiliteringens och kuratorns anteckningar hör till omvårdnadens kategori och läses med samma behörighet. En egen kategori ger inget extra skydd: journalen delas mellan yrkena inom vårdgivaren när det finns en vårdrelation, och den inre sekretessen, spärren och den skyddade identiteten gäller per vårdenhet och patient, inte per yrke. Hennes observationsanteckning har två sökord, Observation och Utförd åtgärd, och hör till omvårdnadens dokumentation, så att sjuksköterskan läser den. Undersköterskan skriver bara med de mallar som står i hennes lista (`ENDAST_LISTADE`): inte med systemförvaltningens egna mallar och inte i formulär som inte uttryckligen är gjorda för yrket. Rehabiliteringens och kuratorns mallar är byggda kring funktion, aktivitet, mål, åtgärd och resultat, som i ICF.
+
+Vilka yrken som skriver med vilka mallar är en parameter per yrke under Regler och parametrar (`journal.yrkesmallar.<yrke>`), med fyra ögon och giltighetsdatum som de andra parametrarna i `konfiguration.js`. En mall kan bara ges till ett yrke som har behörighet att skriva i mallens kategori, eftersom behörigheten följer patientdatalagen och inte är en parameter. Servern prövar mallen när anteckningen skapas (`provaMall` i `journal.skapaAnteckning`), och felet säger vilka yrken som skriver med mallen och vilken som är personens egen. En anteckning som redan är skriven står kvar, och ett utkast kan signeras och rättas också om parametern ändras.
+
+### Omvårdnadsprocessen (F4)
+
+Omvårdnadsanteckningen har processens fyra delar, Omvårdnadsproblem, Mål, Åtgärd och Resultat, och tolv statusområden. Statusområdena är Vårdkällans egna. De är grupperade efter kroppsfunktioner och aktiviteter i ICF (WHO:s Klassifikation av funktionstillstånd, funktionshinder och hälsa, i svensk version från Socialstyrelsen) och efter de bedömningar som systemet redan gör: Medvetande (ICF b110 och b114), Psykiskt mående (b152), Sömn (b134), Kommunikation (d3, b210 och b230), Smärta (b280), Andning och cirkulation (b4), Nutrition (b510, b530 och b545), Elimination (b525 och b620), Hud och sår (b8), Rörlighet (d4), Personlig vård (d5) och Sociala förhållanden (d7 och e3). Namnen och ordningen är inte hämtade ur VIPS-modellen, som är upphovsrättsligt skyddad. Processens steg är den allmänna omvårdnadsprocessen. Äldre anteckningar behåller sina sökord.
+
+Statusområdena är utfällbara (`utfallda` i mallen). `mallforslag.js` (`foreslagnaSokord(atk, patientId, mall, kontakt)`, gränssnittet mot anteckningsvyn) föreslår de områden som gäller patienten i dag, med en kort förklaring:
+
+- vårdplanen: en pågående standardplan ger sina områden (hjärtsvikt ger andning och cirkulation och nutrition, förebyggande av fall ger rörlighet, och så vidare),
+- förra omvårdnadsanteckningen på vårdenheten: områden som hade text, också med de äldre namnen,
+- NEWS2 från det senaste dygnet: minst 5 poäng eller ett värde med 3 poäng ger andning och cirkulation, och medvetandegraden med 3 poäng ger medvetande,
+- fallrisken: en fallriskbedömning med hög risk eller planen för fall,
+- såren: en sårdokumentation de senaste 14 dagarna,
+- smärtskattningen: NRS 4 eller mer det senaste dygnet,
+- vikten: en ökning med minst 2 kg på tre dygn eller en minskning med minst 5 procent på tre månader.
+
+Omvårdnadsproblemen väljs bland 14 begrepp i Snomed CT (till exempel ökad risk för fall, risk för trycksår, akut smärta, nedsatt gasutbyte och risk för undernäring), och systemet förväljer dem som journalen visar, med varför. Resultatet bedöms per mål i vårdplanens pågående planer på den egna vårdenheten (uppnått, delvis uppnått eller inte uppnått), och när anteckningen signeras förs bedömningen in i vårdplanens historik som typen `resultat`, med anteckningen som källa. Vårdplanen visar sedan den senaste bedömningen av varje mål, ur uppföljningen eller ur en omvårdnadsanteckning. Att bedöma målen kräver samma behörighet som en uppföljning av planen (handlingen `vardplan`, vårdrelation på vårdenheten och inte nödåtkomst). Problemen och resultaten sparas i `omvardnad_process` bredvid anteckningen, med målets text som den var, och en rättelse behåller dem om inte nya anges.
+
+`GET /api/patient/:id/omvardnadsprocess` ger det som anteckningen behöver: vårdplanens mål med den senaste bedömningen, omvårdnadsproblemen med förslagen, de föreslagna statusområdena, undersköterskans observationer sedan personens egen förra omvårdnadsanteckning (högst två dygn bakåt) och formulär som borde fyllas i (fallriskbedömningen för en inneliggande patient som är 65 år eller äldre eller har planen för fall och inte är bedömd på sju dagar, och sårdokumentationen när såret dokumenterades för mer än två dygn sedan). `public/js/omvardnadsprocess.js` ritar det i formuläret, fäller ihop områden utan text som inte föreslås och väljer ett föreslaget formulär med ett klick.
+
+**Behörighet.** Allt räknas på den egna vårdenhetens uppgifter som den som skriver får se, efter behörighetsmotorn, utan aktiva val och nödåtkomst, som formulärens förifyllnad. En spärrad eller annan vårdenhets mätvärden, anteckningar och planer ändrar inte svaret, vilket testet jämför med `JSON.stringify` med och utan dolda rader. Rutten kräver `skriv_omvardnad` och att yrket skriver med omvårdnadsanteckningen, och loggas på patienten.
+
+**FHIR.** Omvårdnadsproblemen följer med anteckningens Composition som Condition (kategorin problem-list-item, koden i Snomed CT) och resultaten som Goal med `achievementStatus` (achieved, improving eller not-achieved), som resurser i `contained` med en referens från avsnitten Omvårdnadsproblem och Resultat. De har samma behörighet som anteckningen.
+
+### Formulärens förifyllnad (F7)
+
+Formulärmotorn kan fylla i tre saker till: antalet läkemedel som ökar risken för fall ur läkemedelslistan (`fallrisklakemedel`), NEWS2 från det senaste dygnet på den egna vårdenheten (`news2`) och svaret vid förra ifyllningen av samma formulär på den egna vårdenheten (`tidigare`). Listan över läkemedel är Socialstyrelsens, Indikatorer för god läkemedelsterapi hos äldre (2017-6-7), tabell 4 Läkemedel/läkemedelsgrupper som ökar risken för fall med tabell 3 och bilaga 1 som tabellen hänvisar till, inläst som ATC-grupper med undantag (`fallrisklakemedel.js`, kontrollerad i `docs/kodkontroll.md`). Läkemedelslistan är gemensam för vårdgivaren, men spärrade vårdenheters ordinationer räknas inte. Ett fast svar kan väljas av systemet ur ett antal: svarsalternativen får ett antal (`antal: { fran, till }`), och byggaren stoppar en definition där antalen har luckor eller överlapp. Seedens fallriskbedömning räknar läkemedlen och fyller i synen från förra bedömningen. Källan står under svaret och i anteckningens text, och ett svar som ändras sparas utan källa.
+
+Fritextfrågorna i formulären kan dikteras med samma motor och röstkommandon som sökorden. Ett formulär väljs med ett klick när systemet föreslår det i omvårdnadsanteckningen. Fallriskbedömningens poäng är en demoregel och märkt så. Ingen validerad skala är byggd: en sådan byggs bara med källa och prövad licens, och ingen sådan skala har behövts för flödena här.
+
+### Fackspråket (F8)
+
+Status hade koden 5880005 (Physical examination), som är undersökningen som åtgärd, och har nu avsnittskoden 425044008 (Physical exam section). Planering hade samma kod som Åtgärd och har nu 423134005 (Plan section). Aktivitet hade samma kod som Fysisk aktivitet (68130003) och har nu ingen kod, med en förklaring. Ett test i bygget (`dubblettkoder` i `fackssprak.js`) stoppar två sökord med samma kod, och omvårdnadsproblemens koder får inte heller vara ett sökords. Formulären Fallriskbedömning och Sårdokumentation skriver under Rörlighet och Hud och sår. De nya sökorden och omvårdnadsproblemen är kontrollerade mot den internationella utgåvan på tx.fhir.org (`docs/kodkontroll.md`). Den svenska utgåvan och ICNP-delmängden kräver licens och är inte kontrollerade.
+
+### Det som är simulerat eller saknas
+
+Förslagsreglerna för statusområden, omvårdnadsproblem och formulär är demoregler. Arbetsterapeut, kurator och dietist är inte inloggningsroller, så deras mallar används inte i demon. En dikterad fritext i ett formulär märks inte som dikterad i anteckningen, som i sökorden. Omvårdnadsproblemen är begrepp i den internationella utgåvan av Snomed CT och inte kontrollerade mot ICNP-delmängden i den svenska utgåvan.

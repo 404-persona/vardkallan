@@ -1,6 +1,8 @@
 // Sussa 3.1.3 Informationsinmatning: hur Vårdkällan möter posterna i avsnittet.
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST, klickbudgetTest } from '../../krav.js';
+// Runda 15, r5: mallarnas innehåll, omvårdnadsprocessen, formulärens förifyllnad och fackspråket (sussa/runda15-r5.js).
+import { medR15r5 } from '../runda15-r5.js';
 import { FLODEN } from '../../klickbudget.js';
 // Runda 8, r5: tilläggen för tobaksvanor, epikrisen, mätvärdena, övningarna och parametrarna (sussa/runda8-r5.js).
 import { medR8r5 } from '../runda8-r5.js';
@@ -111,4 +113,4 @@ const POSTERNA = [
   { id: '3.1.3.10', kategori: 'system', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: 'Rättstavning och grammatikkontroll med medicinska termer är inte byggd.' },
 ];
-export default medR10r3(medR8r5(POSTERNA));
+export default medR15r5(medR10r3(medR8r5(POSTERNA)));

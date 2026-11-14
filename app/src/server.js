@@ -161,6 +161,9 @@ import { MIGRERINGAR as r12r2Migreringar } from './releaser.js';
 import { registreraRutter as r13r1Rutter } from './r13r1-rutter.js';
 // Runda 14, r3: intyg genom intygsapplikationen och e-remiss (r14r3-rutter.js).
 import { registreraRutter as r14r3Rutter } from './r14r3-rutter.js';
+// Runda 15, r5: omvårdnadsprocessen (r15r5-rutter.js) och mallarna per yrke (mallar-yrken.js).
+import { registreraRutter as r15r5Rutter } from './r15r5-rutter.js';
+import { mallarForPerson as yrkesMallar } from './mallar-yrken.js';
 // Runda 14, r5: incidentregistret, servicenivårapporten och incidentrapporten till beställaren (servicenivaer-rutter.js).
 import { registreraRutter as r14r5Rutter } from './servicenivaer-rutter.js';
 // Runda 14, r1: inloggning genom beställarens inloggningstjänst (inloggningstjanster-rutter.js, Sussa 5.2.1.1).
@@ -1181,7 +1184,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const ut = {
       kopiaId: s.lasnyckel.id, skapad: new Date().toISOString(), giltigTill: s.lasnyckel.giltigTill, session,
       fornyas: { intervallMs: LASKOPIA_FORNYA_MS, lakemedelMaxMs: LASKOPIA_LAKEMEDEL_MAX_MS },
-      enheter: alla.filter(e => !e.forald_id).map(nod), mallar: journal.MALLAR, arbetslista: [], patienter: {},
+      // Runda 15, r5: läskopians mallar är de som personens yrke skriver med.
+      enheter: alla.filter(e => !e.forald_id).map(nod), mallar: yrkesMallar(db, pers, journal.MALLAR), arbetslista: [], patienter: {},
     };
     if (pers.yrke === 'logggranskare') return ut;
     ut.arbetslista = arbetslista(c);
@@ -1765,7 +1769,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('POST', '/api/patient/:id/anteckningar', (c, id) => {
     kravInloggad(c);
     // Runda 10, r3: kategorin för ett formulär kommer ur formulärets definition (journal.kategoriFor).
-    return [201, medPatient(c, id, journal.skrivHandling(journal.kategoriFor(c.db, c.body.typ)), (atk) => vardkontakt.knyt(atk, 'anteckningar', journal.skapaAnteckning(atk, c.body), c.body))];
+    return [201, medPatient(c, id, journal.skrivHandling(journal.kategoriFor(c.db, c.body.typ), c.personal), (atk) => vardkontakt.knyt(atk, 'anteckningar', journal.skapaAnteckning(atk, c.body), c.body))];
   });
   const medAnteckning = (c, id, handling, fn) => {
     kravInloggad(c);
@@ -1773,9 +1777,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     return medPatient(c, a.patient_id, handling(a), (atk) => fn(atk, a));
   };
   rutt('GET', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => utdata.anteckning(c.db, c.personal, journal.hamtaAnteckning(atk, a))));
-  rutt('PUT', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => journal.andraUtkast(atk, a, c.body)));
-  rutt('POST', '/api/anteckning/:id/signera', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => journal.signera(atk, a)));
-  rutt('POST', '/api/anteckning/:id/ratta', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori), (atk, a) => [201, journal.ratta(atk, a, c.body)]));
+  rutt('PUT', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.andraUtkast(atk, a, c.body)));
+  rutt('POST', '/api/anteckning/:id/signera', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.signera(atk, a)));
+  rutt('POST', '/api/anteckning/:id/ratta', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => [201, journal.ratta(atk, a, c.body)]));
   // Runda 13, r3 (beslut från Jonas): den som skrev anteckningen eller patientens ansvariga läkare begär att den undantas
   // från visning eller publicering. Begäran kräver att anteckningen får läsas, och den ger ingen åtkomst.
   rutt('POST', '/api/anteckning/:id/undantag', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => {
@@ -1785,7 +1789,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 7, r4: mallarnas sökord kan ändras av systemförvaltningen (konfiguration.js).
   // Runda 10, r3: och de formulär som den inloggade får fylla i (formularmotor.js).
   // Runda 12, r1: de mallar som systemförvaltningen har skapat och vårdenhetens lokala anpassningar (journalstruktur.js).
-  rutt('GET', '/api/mallar', (c) => [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)]);
+  // Runda 15, r5: bara de mallar som personens yrke skriver med, yrkets egna först (mallar-yrken.js).
+  rutt('GET', '/api/mallar', (c) => yrkesMallar(c.db, c.personal, [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)]));
 
   rutt('GET', '/api/patient/:id/lakemedel', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_lakemedel', (atk) => lakemedel.lista(atk)); });
   rutt('GET', '/api/lakemedel/katalog', (c) => { kravInloggad(c); return lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? ''); });
@@ -2534,6 +2539,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r12r1Rutter({ rutt, kravInloggad });
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // Runda 15, r5 (r15r5-rutter.js).
+  r15r5Rutter({ rutt, kravInloggad, medPatient });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.

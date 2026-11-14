@@ -242,6 +242,9 @@ describe('Systemförvaltning', () => {
     const f = await k.post('/api/konfiguration/forhandsvisa', { nyckel: 'arkiv.gallring_ar', varde: 7 });
     expect(f.data).toMatchObject({ ok: false });
     expect((await k.post('/api/konfiguration', { nyckel: 'journal.sokord.Epikris', varde: 'Orsak till vård, Förlopp, Läkemedelsförändringar, Uppföljning, Kontakt', motivering: 'Kontaktuppgifter efter utskrivning.' })).status).toBe(201);
+    // Runda 15, r5: mallarna i anteckningsformuläret är yrkets, så läkaren i samma sandlåda läser dem.
+    expect((await k.get('/api/mallar')).data).toEqual([]);
+    await k.logga('lak-kard');
     expect((await k.get('/api/mallar')).data.find(m => m.typ === 'Epikris').sokord).not.toContain('Kontakt');
     utanPatientuppgifter(sandlada(app, k).db, o);
   });

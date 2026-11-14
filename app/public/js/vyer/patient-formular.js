@@ -6,8 +6,10 @@
 //
 // Modulen har samma gränssnitt som mallarna för tobaksvanor och levnadsvanor: falt(svar) ger formulärets innehåll,
 // koppla(form, ...) kopplar händelserna och las(form) läser svaren.
-import { esc, api } from '../ui.js';
+import { esc, api, ikon } from '../ui.js';
 import * as R from '../formularmotor-regler.js';
+// Runda 15, r5 (F7): diktering i formulärens fritextfrågor, med samma motor och regler som i sökorden.
+import * as diktat from '../rostinmatning.js';
 
 const id = (...d) => `fm-${d.join('-')}`;
 const talText = (n) => String(n).replace('.', ',');
@@ -48,10 +50,12 @@ function fraga(f, v) {
     const alt = f.typ === 'ja_nej' ? [{ varde: 'ja', text: 'Ja' }, { varde: 'nej', text: 'Nej' }] : f.alternativ;
     const typ = f.typ === 'flerval' ? 'checkbox' : 'radio';
     const vald = (a) => (Array.isArray(v) ? v.includes(a.varde) : v === a.varde);
-    return `<fieldset class="kryssgrupp fm-val"><legend>${etikett}</legend>${hjalp}${alt.map(a => `<div class="kryssfalt"><input type="${typ}" id="${id(f.id, a.varde)}" name="${id(f.id)}" value="${esc(a.varde)}"${vald(a) ? ' checked' : ''}><label for="${id(f.id, a.varde)}">${esc(a.text)}</label></div>`).join('')}</fieldset>`;
+    // Runda 15, r5: källan till ett svar som systemet har valt står under alternativen.
+    return `<fieldset class="kryssgrupp fm-val"><legend>${etikett}</legend>${hjalp}${alt.map(a => `<div class="kryssfalt"><input type="${typ}" id="${id(f.id, a.varde)}" name="${id(f.id)}" value="${esc(a.varde)}"${vald(a) ? ' checked' : ''}><label for="${id(f.id, a.varde)}">${esc(a.text)}</label></div>`).join('')}${kalla}</fieldset>`;
   }
   if (f.typ === 'bild') return `<fieldset class="fm-bildgrupp"><legend>${etikett}</legend>${hjalp}${bildFalt(f, v ?? [])}</fieldset>`;
-  if (f.typ === 'text') return `<div class="falt"><label for="${id(f.id)}">${etikett}</label>${hjalp}<textarea id="${id(f.id)}" rows="2" maxlength="${f.maxLangd}" spellcheck="true" lang="sv">${esc(v ?? '')}</textarea>${kalla}</div>`;
+  // Runda 15, r5: data-sokord gör att fritexten kan dikteras och att röstkommandot gå till fungerar med frågan.
+  if (f.typ === 'text') return `<div class="falt"><label for="${id(f.id)}">${etikett}</label>${hjalp}<textarea id="${id(f.id)}" rows="2" maxlength="${f.maxLangd}" spellcheck="true" lang="sv" data-sokord="${esc(f.fraga)}">${esc(v ?? '')}</textarea>${kalla}</div>`;
   const typ = f.typ === 'datum' ? 'date' : 'text';
   const inmatning = f.typ === 'datum' ? '' : ` inputmode="${f.typ === 'heltal' || f.heltal ? 'numeric' : 'decimal'}"`;
   return `<div class="falt fm-tal"><label for="${id(f.id)}">${etikett}</label>${hjalp}<span class="med-enhet"><input type="${typ}" id="${id(f.id)}"${inmatning} autocomplete="off" size="6" value="${esc(v == null ? '' : typeof v === 'number' ? talText(v) : v)}">${f.enhet ? `<span class="enhet">${esc(f.enhet)}</span>` : ''}</span>${kalla}</div>`;
@@ -60,8 +64,11 @@ function fraga(f, v) {
 // Modulen för ett formulär. def är formulärets definition, som servern gav med mallen eller anteckningen.
 export function modul(formular) {
   const def = formular.definition;
+  // Runda 15, r5: knappen Diktera när formuläret har fritextfrågor.
+  const harText = def.falt.some(f => f.typ === 'text');
   const falt = (svar = {}) => `<div class="formular" data-formular="${esc(formular.kod)}">
       ${def.beskrivning ? `<p class="hjalp">${esc(def.beskrivning)}</p>` : ''}
+      ${harText ? `<div class="diktat"><button type="button" class="knapp liten sekundar" data-diktera aria-pressed="false">${ikon.penna}<span>Diktera</span></button><div data-diktat hidden></div></div>` : ''}
       ${def.falt.map(f => `<div class="fm-fraga" data-fraga="${esc(f.id)}">${fraga(f, svar[f.id])}</div>`).join('')}
       <div class="fm-resultat" data-fm-resultat aria-live="polite"></div>
       <p class="under-text">Formuläret ${esc(def.namn)}, version ${formular.version}.${def.skala?.kalla ? ` Skalan: ${esc(def.skala.kalla)}.` : ''}</p>
@@ -88,8 +95,10 @@ export function modul(formular) {
     return ut;
   };
 
-  const koppla = (el, { svar = {}, patientId = null } = {}) => {
+  const koppla = (el, { svar = {}, patientId = null, patient = null } = {}) => {
     const yta = el.querySelector('[data-formular]');
+    // Runda 15, r5: dikteringen i fritextfrågorna hör till den patient som är öppen.
+    if (harText) diktat.koppla(yta, { patient: patient ?? { id: patientId, namn: 'patienten', personnummer: null } });
     const resultat = yta.querySelector('[data-fm-resultat]');
     const rita = () => {
       const s = las(el);
@@ -157,6 +166,15 @@ export function modul(formular) {
         if (!yta.isConnected) return;
         for (const [fid, x] of Object.entries(f.varden ?? {})) {
           const fr = yta.querySelector(`[data-fraga="${fid}"]`);
+          // Runda 15, r5: ett fast svar som systemet har valt (antalet läkemedel eller förra svaret) kryssas i.
+          const kryss = fr ? [...fr.querySelectorAll('input[type="radio"], input[type="checkbox"]')] : [];
+          if (kryss.length) {
+            if (kryss.some(k => k.checked)) continue;
+            for (const k of kryss) k.checked = Array.isArray(x.varde) ? x.varde.includes(k.value) : k.value === x.varde;
+            const k = fr.querySelector('[data-kalla]');
+            if (k) { k.textContent = `Ifyllt av systemet: ${x.kalla}.`; k.hidden = false; }
+            continue;
+          }
           const inp = fr?.querySelector('input, textarea');
           if (!inp || inp.value) continue;
           inp.value = typeof x.varde === 'number' ? talText(x.varde) : x.varde;

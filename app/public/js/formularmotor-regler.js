@@ -30,6 +30,10 @@ export const FORIFYLLNAD = {
   alder: { text: 'Patientens ålder, ur personnumret', typer: ['heltal'] },
   senaste: { text: 'Det senaste mätvärdet som du får se', typer: ['matvarde'] },
   diagnoser: { text: 'Patientens diagnoser som du får se', typer: ['text'] },
+  // Runda 15, r5 (F7): läkemedelslistan, NEWS2 och förra svaret i samma formulär.
+  fallrisklakemedel: { text: 'Antalet läkemedel som ökar risken för fall, räknat ur läkemedelslistan', typer: ['heltal', 'val'] },
+  news2: { text: 'NEWS2 från det senaste dygnet', typer: ['heltal'] },
+  tidigare: { text: 'Svaret vid förra ifyllningen av formuläret', typer: ['text', 'heltal', 'decimal', 'datum', 'ja_nej', 'val', 'flerval'] },
 };
 
 export const KATEGORIER = { omvardnad: 'Omvårdnad: skrivs och läses av dem som skriver omvårdnadsanteckningar', lakare: 'Läkare: skrivs och läses av dem som skriver läkaranteckningar' };
@@ -197,7 +201,15 @@ export function provaDefinition(def, { mattyper = {}, sokord = [SOKORD_STANDARD]
         if (sett.has(varde)) return fel(`${nr}, ${fraga}: nyckeln ${varde} finns för två svarsalternativ.`, `nr${i}.alternativ.${j}`);
         sett.add(varde);
         if (a.poang != null && !(Number.isInteger(a.poang) && Math.abs(a.poang) <= 10)) return fel(`${nr}, ${fraga}: poängen för ${text} ska vara ett heltal mellan -10 och 10.`, `nr${i}.alternativ.${j}`);
-        f.alternativ.push({ varde, text, ...(a.poang != null ? { poang: a.poang } : {}), ...(a.kod != null ? { kod: a.kod } : {}) });
+        // Runda 15, r5: ett svarsalternativ kan gälla ett antal, till exempel två eller fler läkemedel, så att systemet kan
+        // välja det ur ett antal som det räknar fram.
+        let antal = null;
+        if (a.antal != null) {
+          const fran = Number(a.antal?.fran); const till = a.antal?.till == null ? null : Number(a.antal.till);
+          if (!Number.isInteger(fran) || fran < 0 || (till != null && (!Number.isInteger(till) || till < fran))) return fel(`${nr}, ${fraga}: antalet för ${text} anges med ett heltal från och med 0 och ett heltal till, eller utan övre gräns.`, `nr${i}.alternativ.${j}`);
+          antal = { fran, till };
+        }
+        f.alternativ.push({ varde, text, ...(a.poang != null ? { poang: a.poang } : {}), ...(a.kod != null ? { kod: a.kod } : {}), ...(antal ? { antal } : {}) });
       }
     }
     if (f.typ === 'bild') {
@@ -209,6 +221,14 @@ export function provaDefinition(def, { mattyper = {}, sokord = [SOKORD_STANDARD]
     if (f0.forifyll != null) {
       const ff = FORIFYLLNAD[f0.forifyll];
       if (!ff || !ff.typer.includes(f.typ)) return fel(`${nr}, ${fraga}: systemet kan inte fylla i den här frågan ur journalen. ${Object.values(FORIFYLLNAD).map(x => x.text).join(', ')} kan fyllas i, för var sin datatyp.`, `nr${i}.forifyll`);
+      // Runda 15, r5: ett antal som systemet räknar fram och väljer ett svarsalternativ för behöver ett alternativ för
+      // varje antal, utan överlapp.
+      if (f0.forifyll === 'fallrisklakemedel' && f.typ === 'val') {
+        const intervall = f.alternativ.map(a => a.antal).filter(Boolean).sort((a, b) => a.fran - b.fran);
+        let nasta = 0;
+        for (const x of intervall) { if (x.fran !== nasta) { nasta = -1; break; } nasta = x.till == null ? Infinity : x.till + 1; }
+        if (intervall.length !== f.alternativ.length || nasta !== Infinity) return fel(`${nr}, ${fraga}: för att systemet ska kunna välja svaret ur antalet behöver varje svarsalternativ ett antal, från 0 och utan luckor eller överlapp, och det sista utan övre gräns.`, `nr${i}.alternativ`);
+      }
       f.forifyll = f0.forifyll;
     }
     for (const nyckel of ['visaOm', 'kravsOm']) {
@@ -276,6 +296,11 @@ export function poangOmfang(def) {
     }
   }
   return { min, max };
+}
+
+// Runda 15, r5: svarsalternativet för ett antal, eller null.
+export function alternativForAntal(f, antal) {
+  return f.alternativ?.find(a => a.antal && antal >= a.antal.fran && (a.antal.till == null || antal <= a.antal.till))?.varde ?? null;
 }
 
 // De frågor som gäller för svaren: en fråga med visaOm visas bara när villkoret gäller.
@@ -378,15 +403,17 @@ export function varningar(def, svar) {
 
 // Svaret på en fråga som text.
 export function svarText(f, v, { kalla = null } = {}) {
-  if (f.typ === 'ja_nej') return v === 'ja' ? 'ja' : 'nej';
-  if (f.typ === 'val') return f.alternativ.find(a => a.varde === v)?.text ?? String(v);
-  if (f.typ === 'flerval') return f.alternativ.filter(a => v.includes(a.varde)).map(a => a.text).join(', ');
+  // Runda 15, r5: ett fast svar som systemet räknade fram eller tog från förra bedömningen får källan i texten.
+  const medKalla = (t) => (kalla ? `${t} (${kalla})` : t);
+  if (f.typ === 'ja_nej') return medKalla(v === 'ja' ? 'ja' : 'nej');
+  if (f.typ === 'val') return medKalla(f.alternativ.find(a => a.varde === v)?.text ?? String(v));
+  if (f.typ === 'flerval') return medKalla(f.alternativ.filter(a => v.includes(a.varde)).map(a => a.text).join(', '));
   if (f.typ === 'bild') return v.map((m, i) => `${i + 1}) ${m.regionText}${m.text ? `: ${m.text}` : ''}`).join('. ');
   if (f.typ === 'heltal' || f.typ === 'decimal' || f.typ === 'matvarde') {
     const t = `${talText(v)}${f.enhet ? ` ${f.enhet}` : ''}`;
     return kalla ? `${t} (${kalla})` : t;
   }
-  return String(v);
+  return f.typ === 'text' || f.typ === 'datum' ? medKalla(String(v)) : String(v);
 }
 
 // Anteckningens text: frågorna och svaren under sina sökord, och skalan och reglerna under Bedömning. kallor är

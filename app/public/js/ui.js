@@ -61,7 +61,7 @@ export const PRIORITET_VANTRUM = { rod: 'Röd', orange: 'Orange', gul: 'Gul', gr
 export const VARDFORM = { slutenvard: 'Slutenvård', akut: 'Akut', oppenvard: 'Öppenvård' };
 export const HANDLING = {
   las_oversikt: 'Läste patientöversikten', las_journal: 'Läste journalanteckningar', las_omvardnad: 'Läste omvårdnadsanteckningar',
-  skriv_journal: 'Skrev journalanteckning', skriv_omvardnad: 'Skrev omvårdnadsanteckning', las_lakemedel: 'Läste läkemedelslistan',
+  skriv_journal: 'Skrev journalanteckning', skriv_omvardnad: 'Skrev omvårdnadsanteckning', skriv_observation: 'Skrev observationsanteckning', las_lakemedel: 'Läste läkemedelslistan',
   ordinera: 'Ordinerade eller ändrade läkemedel', ge_lakemedel: 'Gav läkemedel', las_matvarden: 'Läste mätvärden', registrera_matvarde: 'Registrerade mätvärde',
   las_diagnoser: 'Läste diagnoser', las_remiss: 'Läste remisser', las_remiss_status: 'Såg remissers status', remittera: 'Skickade remiss',
   mottag_remiss: 'Kvitterade mottagen remiss', bedom_remiss: 'Bedömde remiss', svara_remiss: 'Svarade på remiss', kvittera_svar: 'Kvitterade remissvar',

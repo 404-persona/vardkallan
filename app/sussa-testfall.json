@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-14T14:49:56.087Z",
-  "bas": "http://127.0.0.1:18153",
+  "tid": "2026-11-14T12:25:26.637Z",
+  "bas": "http://127.0.0.1:18155",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "5590877680c4ddb4bfad86929995c984398253a9a857e5115b9486a1bfd9b97c",
+  "gransnittHash": "8a53c5c47c495d119b4188d35cded59a96e65ed9df8aaab88576e797fe20bf36",
   "kalla": "Region Örebro län, upphandlingen Framtidens vårdinformationsstöd (Sussa samverkan, dnr 16RS2022): Bilaga F1:4 Testfall, Bilaga F1:2 Modell för att testa och utvärdera användbarhet, Bilaga F1:3 Information till anbudsgivare och Bilaga F1 Utvärderingsmodell, versionerna 2018-03-07.",
   "klm": {
     "kalla": "Card, Moran och Newell 1980, Communications of the ACM 23(7), s. 396 till 410",
@@ -44,7 +44,7 @@
       "tecken": 260,
       "uppmatt": 23,
       "inomBudget": true,
-      "skriptetsTidMs": 6137,
+      "skriptetsTidMs": 6140,
       "uppskattadTidS": 139.4,
       "klmDelar": {
         "klick": 42.4,
@@ -113,15 +113,15 @@
       "tecken": 152,
       "uppmatt": 16,
       "inomBudget": true,
-      "skriptetsTidMs": 5495,
-      "uppskattadTidS": 90.5,
+      "skriptetsTidMs": 5787,
+      "uppskattadTidS": 90.8,
       "klmDelar": {
         "klick": 31.8,
         "listval": 0,
         "faltbyten": 10.4,
         "tecken": 42.6,
         "tangenter": 0.3,
-        "svarstid": 5.5
+        "svarstid": 5.8
       },
       "steg": [
         "klick: Elin Arnström i arbetslistan",
@@ -175,15 +175,15 @@
       "tecken": 50,
       "uppmatt": 18,
       "inomBudget": true,
-      "skriptetsTidMs": 4087,
-      "uppskattadTidS": 63.1,
+      "skriptetsTidMs": 4186,
+      "uppskattadTidS": 63.2,
       "klmDelar": {
         "klick": 26.5,
         "listval": 7.9,
         "faltbyten": 10.4,
         "tecken": 14,
         "tangenter": 0.3,
-        "svarstid": 4.1
+        "svarstid": 4.2
       },
       "steg": [
         "klick: Trevis Ljung i arbetslistan",
@@ -218,30 +218,30 @@
       "demoroll": "ssk-kard",
       "tidsklass": 15,
       "tidsklassSkal": "Fyra administreringar, ett iordningställande och en avvikelse som ska dokumenteras.",
-      "budget": 14,
-      "motivering": "Ett klick på Läkemedel att ge, ett på Ge för paracetamol och ett på Identiteten är kontrollerad, Mer och Iordningsställ för glukoslösningen med Addex-Magnesium och sedan Ge, där identiteten bekräftas igen efter den nya inloggningen, Ge för Stesolid och Ge för Zopiklon vid behov (9). Instruktionerna står i doseringen i listan, och för infusionen med tillsatsen räknar systemet koncentrationen och hastigheten. Kräkningen dokumenteras med ett klick på patienten, fliken Översikt, Ny anteckning, där omvårdnadsanteckningen är förvald, ett fältbyte för sökordet Elimination och Signera (5).",
+      "budget": 15,
+      "motivering": "Ett klick på Läkemedel att ge, ett på Ge för paracetamol och ett på Identiteten är kontrollerad, Mer och Iordningsställ för glukoslösningen med Addex-Magnesium och sedan Ge, där identiteten bekräftas igen efter den nya inloggningen, Ge för Stesolid och Ge för Zopiklon vid behov (9). Instruktionerna står i doseringen i listan, och för infusionen med tillsatsen räknar systemet koncentrationen och hastigheten. Kräkningen dokumenteras med ett klick på patienten, fliken Översikt, Ny anteckning, där omvårdnadsanteckningen är förvald, Fler områden, ett fältbyte för sökordet Elimination och Signera (6).",
       "avvikelser": [
         "Ordinationerna gjordes i går och dosen ska ges i dag vid den hela timmen före testet. Glukosen med Addex-Magnesium är en ordination med tillsats. Att patienten kräktes upp premedicineringen registreras inte på dosen utan i en omvårdnadsanteckning.",
         "Addex-Magnesium är en koncentrerad elektrolyt, så en kollega kontrollerar beredningen i sin egen inloggning innan glukosen ges. I körningen gör läkaren Sara Lindqvist kontrollen, och hennes steg räknas inte i sjuksköterskans klick."
       ],
       "slut": "Instruktionerna är upplästa, alla fyra läkemedel är administrerade och det är dokumenterat att patienten kräktes upp premedicineringen.",
       "uppnatt": true,
-      "klick": 13,
+      "klick": 14,
       "listval": 0,
       "faltbyten": 1,
       "tangenter": 0,
       "tecken": 78,
-      "uppmatt": 14,
+      "uppmatt": 15,
       "inomBudget": true,
-      "skriptetsTidMs": 3525,
-      "uppskattadTidS": 63.3,
+      "skriptetsTidMs": 3590,
+      "uppskattadTidS": 66,
       "klmDelar": {
-        "klick": 34.5,
+        "klick": 37.1,
         "listval": 0,
         "faltbyten": 3.5,
         "tecken": 21.8,
         "tangenter": 0,
-        "svarstid": 3.5
+        "svarstid": 3.6
       },
       "steg": [
         "klick: Läkemedel att ge i menyn",
@@ -258,6 +258,7 @@
         "klick: fliken Översikt",
         "klick: Ny anteckning",
         "förvalt: mallen Omvårdnadsanteckning",
+        "klick: Fler områden",
         "fältbyte: sökordet Elimination",
         "klick: Signera"
       ],
@@ -287,7 +288,7 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 404,
+      "skriptetsTidMs": 394,
       "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
@@ -331,8 +332,8 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 436,
-      "uppskattadTidS": 47,
+      "skriptetsTidMs": 410,
+      "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
         "listval": 4,
@@ -375,7 +376,7 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 374,
+      "skriptetsTidMs": 391,
       "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
@@ -420,8 +421,8 @@
       "tecken": 103,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 478,
-      "uppskattadTidS": 51,
+      "skriptetsTidMs": 527,
+      "uppskattadTidS": 51.1,
       "klmDelar": {
         "klick": 10.6,
         "listval": 4,
@@ -469,7 +470,7 @@
       "tecken": 172,
       "uppmatt": 15,
       "inomBudget": true,
-      "skriptetsTidMs": 801,
+      "skriptetsTidMs": 847,
       "uppskattadTidS": 89,
       "klmDelar": {
         "klick": 29.2,
@@ -523,15 +524,15 @@
       "tecken": 172,
       "uppmatt": 15,
       "inomBudget": true,
-      "skriptetsTidMs": 1717,
-      "uppskattadTidS": 89.9,
+      "skriptetsTidMs": 943,
+      "uppskattadTidS": 89.1,
       "klmDelar": {
         "klick": 29.2,
         "listval": 4,
         "faltbyten": 6.9,
         "tecken": 48.2,
         "tangenter": 0,
-        "svarstid": 1.7
+        "svarstid": 0.9
       },
       "steg": [
         "klick: Remisser i menyn",
@@ -576,15 +577,15 @@
       "tecken": 0,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 467,
-      "uppskattadTidS": 16.4,
+      "skriptetsTidMs": 578,
+      "uppskattadTidS": 16.5,
       "klmDelar": {
         "klick": 15.9,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.5
+        "svarstid": 0.6
       },
       "steg": [
         "klick: Remisser i menyn",
@@ -621,7 +622,7 @@
       "tecken": 158,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 773,
+      "skriptetsTidMs": 775,
       "uppskattadTidS": 66.8,
       "klmDelar": {
         "klick": 8,
@@ -667,7 +668,7 @@
       "tecken": 70,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 360,
+      "skriptetsTidMs": 366,
       "uppskattadTidS": 30.6,
       "klmDelar": {
         "klick": 10.6,
@@ -710,7 +711,7 @@
       "tecken": 70,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 311,
+      "skriptetsTidMs": 315,
       "uppskattadTidS": 30.5,
       "klmDelar": {
         "klick": 10.6,
@@ -755,7 +756,7 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 367,
+      "skriptetsTidMs": 323,
       "uppskattadTidS": 8.3,
       "klmDelar": {
         "klick": 8,
@@ -763,7 +764,7 @@
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Hamid Burvall i arbetslistan",
@@ -798,8 +799,8 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 425,
-      "uppskattadTidS": 8.4,
+      "skriptetsTidMs": 368,
+      "uppskattadTidS": 8.3,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
@@ -840,7 +841,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 346,
+      "skriptetsTidMs": 332,
       "uppskattadTidS": 12.2,
       "klmDelar": {
         "klick": 8,
@@ -883,7 +884,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 269,
+      "skriptetsTidMs": 288,
       "uppskattadTidS": 12.2,
       "klmDelar": {
         "klick": 8,
@@ -925,7 +926,7 @@
       "tecken": 0,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 369,
+      "skriptetsTidMs": 351,
       "uppskattadTidS": 11,
       "klmDelar": {
         "klick": 10.6,
@@ -967,7 +968,7 @@
       "tecken": 0,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 366,
+      "skriptetsTidMs": 381,
       "uppskattadTidS": 11,
       "klmDelar": {
         "klick": 10.6,
@@ -1009,7 +1010,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 434,
+      "skriptetsTidMs": 428,
       "uppskattadTidS": 13.7,
       "klmDelar": {
         "klick": 13.3,
@@ -1052,15 +1053,15 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 440,
-      "uppskattadTidS": 13.7,
+      "skriptetsTidMs": 332,
+      "uppskattadTidS": 13.6,
       "klmDelar": {
         "klick": 13.3,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Bertil Danielsson i arbetslistan",
@@ -1095,7 +1096,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 310,
+      "skriptetsTidMs": 328,
       "uppskattadTidS": 13.6,
       "klmDelar": {
         "klick": 13.3,
@@ -1138,15 +1139,15 @@
       "tecken": 0,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 1280,
-      "uppskattadTidS": 25.1,
+      "skriptetsTidMs": 488,
+      "uppskattadTidS": 24.3,
       "klmDelar": {
         "klick": 23.9,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 1.3
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Inga Strand i arbetslistan",
@@ -1185,15 +1186,15 @@
       "tecken": 0,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 477,
-      "uppskattadTidS": 24.3,
+      "skriptetsTidMs": 2517,
+      "uppskattadTidS": 26.4,
       "klmDelar": {
         "klick": 23.9,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.5
+        "svarstid": 2.5
       },
       "steg": [
         "klick: Inga Strand i arbetslistan",
@@ -1222,7 +1223,7 @@
       "motivering": "Ett klick på patienten i arbetslistan och ett på Dokumentera tobaksvanor i översikten. Ett klick på Dagligen för cigaretter sätter svaret Ja själv och flyttar fokus till antalet, och systemet föreslår kvalificerat rådgivande samtal med KVÅ-kod. Ett klick på Erbjudet och accepterat, ett fältbyte för kommentaren och ett klick för att signera.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Undersköterskan och vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1234,7 +1235,7 @@
       "tecken": 68,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 588,
+      "skriptetsTidMs": 575,
       "uppskattadTidS": 36.3,
       "klmDelar": {
         "klick": 13.3,
@@ -1269,7 +1270,7 @@
       "motivering": "Samma steg som för läkaren, från arbetslistan på Kardiologiska kliniken. Tobaksvanorna skrivs och läses med samma behörighet som omvårdnadsanteckningar.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Undersköterskan och vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1281,8 +1282,8 @@
       "tecken": 68,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 543,
-      "uppskattadTidS": 36.3,
+      "skriptetsTidMs": 484,
+      "uppskattadTidS": 36.2,
       "klmDelar": {
         "klick": 13.3,
         "listval": 0,
@@ -1313,10 +1314,10 @@
       "tidsklass": 6,
       "tidsklassSkal": "Fem frågor med fasta svar och en kommentar.",
       "budget": 6,
-      "motivering": "Samma steg som för läkaren. Fysioterapeuten skriver omvårdnadsanteckningar och därmed tobaksvanor.",
+      "motivering": "Samma steg som för läkaren. Tobaksvanorna hör till fysioterapeutens mallar.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Undersköterskan och vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1328,7 +1329,7 @@
       "tecken": 68,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 441,
+      "skriptetsTidMs": 473,
       "uppskattadTidS": 36.2,
       "klmDelar": {
         "klick": 13.3,
@@ -1336,7 +1337,7 @@
         "faltbyten": 3.5,
         "tecken": 19,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Berit Strandhall i arbetslistan",
@@ -1374,7 +1375,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 391,
+      "skriptetsTidMs": 423,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1421,7 +1422,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 402,
+      "skriptetsTidMs": 440,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1468,7 +1469,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 431,
+      "skriptetsTidMs": 370,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1516,7 +1517,7 @@
       "tecken": 308,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 663,
+      "skriptetsTidMs": 687,
       "uppskattadTidS": 98.3,
       "klmDelar": {
         "klick": 8,
@@ -1560,15 +1561,15 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 619,
-      "uppskattadTidS": 8.6,
+      "skriptetsTidMs": 755,
+      "uppskattadTidS": 8.7,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.6
+        "svarstid": 0.8
       },
       "steg": [
         "klick: Inkorg i menyn",
@@ -1603,7 +1604,7 @@
       "tecken": 11,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 287,
+      "skriptetsTidMs": 199,
       "uppskattadTidS": 8.9,
       "klmDelar": {
         "klick": 5.3,
@@ -1611,7 +1612,7 @@
         "faltbyten": 0,
         "tecken": 3.1,
         "tangenter": 0.3,
-        "svarstid": 0.3
+        "svarstid": 0.2
       },
       "steg": [
         "klick: Boka besök i Dagens arbete",
@@ -1646,7 +1647,7 @@
       "tecken": 14,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 134,
+      "skriptetsTidMs": 142,
       "uppskattadTidS": 9.6,
       "klmDelar": {
         "klick": 5.3,
@@ -1689,7 +1690,7 @@
       "tecken": 61,
       "uppmatt": 14,
       "inomBudget": true,
-      "skriptetsTidMs": 741,
+      "skriptetsTidMs": 760,
       "uppskattadTidS": 43.1,
       "klmDelar": {
         "klick": 23.9,
@@ -1697,7 +1698,7 @@
         "faltbyten": 0,
         "tecken": 17.1,
         "tangenter": 1.4,
-        "svarstid": 0.7
+        "svarstid": 0.8
       },
       "steg": [
         "klick: Lägg till patient vid gruppträffen",
@@ -1746,7 +1747,7 @@
       "tecken": 37,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 346,
+      "skriptetsTidMs": 379,
       "uppskattadTidS": 21.6,
       "klmDelar": {
         "klick": 10.6,
@@ -1754,7 +1755,7 @@
         "faltbyten": 0,
         "tecken": 10.4,
         "tangenter": 0.3,
-        "svarstid": 0.3
+        "svarstid": 0.4
       },
       "steg": [
         "klick: Sök patient i menyn",
@@ -1791,7 +1792,7 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 43,
+      "skriptetsTidMs": 51,
       "uppskattadTidS": 2.7,
       "klmDelar": {
         "klick": 2.7,
@@ -1799,7 +1800,7 @@
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0
+        "svarstid": 0.1
       },
       "steg": [
         "klick: Checka in för Sofia Andersson"
@@ -1830,7 +1831,7 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 102,
+      "skriptetsTidMs": 104,
       "uppskattadTidS": 2.8,
       "klmDelar": {
         "klick": 2.7,
@@ -1870,7 +1871,7 @@
       "tecken": 5,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 305,
+      "skriptetsTidMs": 332,
       "uppskattadTidS": 12.6,
       "klmDelar": {
         "klick": 10.6,
@@ -1914,7 +1915,7 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 264,
+      "skriptetsTidMs": 247,
       "uppskattadTidS": 8.2,
       "klmDelar": {
         "klick": 8,
@@ -1922,7 +1923,7 @@
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.3
+        "svarstid": 0.2
       },
       "steg": [
         "klick: Väntelista i menyn",
@@ -1955,15 +1956,15 @@
       "tecken": 37,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 301,
-      "uppskattadTidS": 22.1,
+      "skriptetsTidMs": 452,
+      "uppskattadTidS": 22.2,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
         "faltbyten": 3.5,
         "tecken": 10.4,
         "tangenter": 0,
-        "svarstid": 0.3
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Mira Axelsson i arbetslistan",
@@ -1998,7 +1999,7 @@
       "tecken": 37,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 354,
+      "skriptetsTidMs": 358,
       "uppskattadTidS": 22.1,
       "klmDelar": {
         "klick": 8,
@@ -2041,7 +2042,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 223,
+      "skriptetsTidMs": 248,
       "uppskattadTidS": 12.1,
       "klmDelar": {
         "klick": 8,
@@ -2083,7 +2084,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 205,
+      "skriptetsTidMs": 240,
       "uppskattadTidS": 12.1,
       "klmDelar": {
         "klick": 8,
@@ -2125,7 +2126,7 @@
       "tecken": 7,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 279,
+      "skriptetsTidMs": 320,
       "uppskattadTidS": 11.3,
       "klmDelar": {
         "klick": 5.3,
@@ -2167,7 +2168,7 @@
       "tecken": 7,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 294,
+      "skriptetsTidMs": 279,
       "uppskattadTidS": 11.3,
       "klmDelar": {
         "klick": 5.3,
@@ -2210,7 +2211,7 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 106,
+      "skriptetsTidMs": 115,
       "uppskattadTidS": 2.8,
       "klmDelar": {
         "klick": 2.7,
@@ -2250,8 +2251,8 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 92,
-      "uppskattadTidS": 2.7,
+      "skriptetsTidMs": 104,
+      "uppskattadTidS": 2.8,
       "klmDelar": {
         "klick": 2.7,
         "listval": 0,
@@ -2290,8 +2291,8 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 95,
-      "uppskattadTidS": 2.7,
+      "skriptetsTidMs": 104,
+      "uppskattadTidS": 2.8,
       "klmDelar": {
         "klick": 2.7,
         "listval": 0,
@@ -2329,7 +2330,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 434,
+      "skriptetsTidMs": 460,
       "uppskattadTidS": 13.7,
       "klmDelar": {
         "klick": 13.3,
@@ -2337,7 +2338,7 @@
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Avdelningens planering i arbetslistan",
@@ -2372,7 +2373,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 500,
+      "skriptetsTidMs": 519,
       "uppskattadTidS": 13.8,
       "klmDelar": {
         "klick": 13.3,
@@ -2415,7 +2416,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 200,
+      "skriptetsTidMs": 193,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
@@ -2455,7 +2456,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 216,
+      "skriptetsTidMs": 203,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
@@ -2495,7 +2496,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 203,
+      "skriptetsTidMs": 198,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
@@ -2535,7 +2536,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 195,
+      "skriptetsTidMs": 222,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,

@@ -1,6 +1,8 @@
 // Sussa 5.1.3 Gemensam informationsstruktur: hur Vårdkällan möter posterna i avsnittet.
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST } from '../../krav.js';
+// Runda 15, r5: mallarnas innehåll, omvårdnadsprocessen, formulärens förifyllnad och fackspråket (sussa/runda15-r5.js).
+import { medR15r5 } from '../runda15-r5.js';
 // Runda 9, r4: informationsmodellen mot NI, nationellt fackspråk och förvaltningen av kodverk.
 import { TESTER_NI, TESTER_NF, TESTER_KODVERK } from '../runda9-r4.js';
 
@@ -12,7 +14,7 @@ const NF_LOSNING = 'Nationellt fackspråk används i alla delar där det är til
 const NF_EXPERT = 'Systemet sätter koden själv ur det användaren redan gör: sökordet Bedömning ger Snomed CT 424836000 och en NEWS2-kontroll både KVÅ QD008 och Snomed CT 304495004. Användaren ser bara den svenska texten och behöver aldrig välja eller kunna en kod.';
 const NF_ANM = 'Delmängden är begrepp i den internationella utgåvan, kontrollerade mot tx.fhir.org (20250201). Den svenska utgåvan med svenska termer kräver licens och är inte kontrollerad. Fyra sökord har ingen exakt motsvarighet och får ingen kod. Sökning och inmatning med hjälp av strukturen i Snomed CT finns inte.';
 
-export default [
+const POSTERNA = [
   { id: '5.1.3.1', kategori: 'system', egna: ['D9'], avsedd: 'uppfyllt_demo', tester: [...TESTER_NI],
     losning: NI_LOSNING, expert: NI_EXPERT,
     anmarkning: 'Kontrollerad mot NI 2023:2 för hälso- och sjukvård, den senaste utgåvan som går att läsa. Ansvaret för NI flyttas till E-hälsomyndigheten, och en ny utgåva därifrån är inte kontrollerad. Modellerna för vård och omsorg och för socialtjänst är inte mappade.' },
@@ -45,3 +47,4 @@ export default [
     anmarkning: 'Utgåvorna i demon är de inbyggda. Ingen riktig utgåva läses från Socialstyrelsen, WHO, IFCC eller Regenstrief, och en utgåva kan ha högst 2000 koder. Åtgärder som systemet registrerar själv (KVÅ) prövas inte mot utgåvan, eftersom systemet sätter dem ur en fast koppling. Ett lokalt kodverk som skapas här används ännu inte av någon funktion i journalen, men går att hämta i API:t.',
   },
 ];
+export default medR15r5(POSTERNA);

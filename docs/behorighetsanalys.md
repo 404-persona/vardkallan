@@ -40,7 +40,7 @@ Så begränsas risken: Läser inga läkaranteckningar och inga diagnoser. Ger l�
 
 Får inte: `las_journal`, `las_diagnoser`, `ordinera`, `nodatkomst`, `skriv_journal`.
 
-Handlingar i koden (24): `las_oversikt`, `las_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_admin`, `sok`, `vantrum`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `ge_lakemedel`, `las_vardplan`, `vardplan_atgard`, `las_tvangsvard`, `utbildning`, `las_planering`, `utfora_uppgift`, `las_prover`, `bestalla_prov_uppdrag`, `ta_prov`, `koppla_utrustning`, `las_operation`.
+Handlingar i koden (25): `las_oversikt`, `las_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_admin`, `sok`, `vantrum`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `ge_lakemedel`, `las_vardplan`, `vardplan_atgard`, `las_tvangsvard`, `utbildning`, `las_planering`, `utfora_uppgift`, `las_prover`, `bestalla_prov_uppdrag`, `ta_prov`, `koppla_utrustning`, `las_operation`, `skriv_observation`.
 
 ## Vårdadministratör (vardadministrator)
 

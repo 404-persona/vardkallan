@@ -112,6 +112,6 @@ Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen. Hon
 ## Det här ska du kunna efter utbildningen
 
 - Bedöma och besvara en remiss.
-- Skriva och signera en anteckning efter ett besök.
+- Skriva och signera en fysioterapianteckning med funktion, aktivitet, mål, åtgärd och resultat.
 - Bocka av en planerad uppgift.
 - Svara rätt på alla 5 övningar och få intyget.

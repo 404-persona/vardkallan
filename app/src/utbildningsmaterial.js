@@ -34,12 +34,12 @@ export const ROLLER = {
     ['öppna en patient från arbetslistan och läsa översikten', 'skriva och signera en daganteckning', 'ordinera ett läkemedel och ta ställning till en varning', 'skicka en remiss och kvittera ett remissvar', 'veta när nödåtkomst får användas och vad som loggas'],
   ),
   sjukskoterska: R(
-    'Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon.',
-    ['ge en dos från Läkemedel att ge och förstå varningen för dubbel dos', 'registrera en NEWS2-kontroll och följa det systemet föreslår', 'skriva in, flytta och skriva ut en patient', 'registrera en delegering för en undersköterska', 'skriva och signera en omvårdnadsanteckning'],
+    'Som sjuksköterska registrerar du mätvärden och vitalparametrar, ger doser från Läkemedel att ge, skriver omvårdnadsanteckningar, skriver in, flyttar och skriver ut patienter och registrerar delegeringar till undersköterskor. Barnmorskan och distriktssköterskan har samma behörigheter i demon. Omvårdnadsanteckningen följer omvårdnadsprocessen: systemet föreslår de statusområden och omvårdnadsproblem som gäller patienten i dag och visar undersköterskans observationer, och du bedömer resultatet mot vårdplanens mål.',
+    ['ge en dos från Läkemedel att ge och förstå varningen för dubbel dos', 'registrera en NEWS2-kontroll och följa det systemet föreslår', 'skriva in, flytta och skriva ut en patient', 'registrera en delegering för en undersköterska', 'skriva och signera en omvårdnadsanteckning', 'bedöma resultatet mot vårdplanens mål i omvårdnadsanteckningen och se varför systemet föreslår ett område'],
   ),
   underskoterska: R(
-    'Som undersköterska registrerar du mätvärden och vätskebalans, tar prover och ger doser när du har en giltig delegering. Systemet prövar delegeringen för varje dos och visar knappen Ge bara när delegeringen gäller.',
-    ['registrera mätvärden och vätskebalans', 'ge en dos med en giltig delegering', 'veta vad systemet gör när en delegering saknas eller har gått ut'],
+    'Som undersköterska registrerar du mätvärden och vätskebalans, tar prover och ger doser när du har en giltig delegering. Systemet prövar delegeringen för varje dos och visar knappen Ge bara när delegeringen gäller. Du dokumenterar dina observationer och det du har gjort i en kort observationsanteckning, som sjuksköterskan ser i sitt underlag.',
+    ['registrera mätvärden och vätskebalans', 'ge en dos med en giltig delegering', 'veta vad systemet gör när en delegering saknas eller har gått ut', 'skriva och signera en observationsanteckning'],
   ),
   vardadministrator: R(
     'Som vårdadministratör bokar, bokar om och avbokar du tider, checkar in patienter, skickar kallelser, registrerar besök, tar betalt och gör dagsavslut i kassan. Du slår också samman journaler när systemet har hittat en trolig dubblett. Dagens arbete är din startsida.',
@@ -81,7 +81,7 @@ export const ROLLER = {
   ),
   fysioterapeut: R(
     'Som fysioterapeut tar du emot och bedömer remisser, skriver anteckningar efter besök, registrerar mätvärden och bockar av planerade uppgifter som träning. Fysioterapeuten spelar också Sussas paramedicinare, alltså arbetsterapeut, dietist och kurator.',
-    ['bedöma och besvara en remiss', 'skriva och signera en anteckning efter ett besök', 'bocka av en planerad uppgift'],
+    ['bedöma och besvara en remiss', 'skriva och signera en fysioterapianteckning med funktion, aktivitet, mål, åtgärd och resultat', 'bocka av en planerad uppgift'],
   ),
   [INVANARE]: R(
     'Som invånare loggar du in i Min journal med en simulerad e-legitimation. Där läser du din journal, ser vilka vårdenheter som har läst den, bokar och bokar om tider, lämnar egna mätningar, skriver till vården och begär loggutdrag eller spärr.',

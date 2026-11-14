@@ -134,7 +134,8 @@ describe('Nationellt fackspråk', () => {
     await k.logga('lak-kard');
     const r = await k.get('/api/fackssprak');
     expect(r.status).toBe(200);
-    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående']);
+    // Runda 15, r5: Aktivitet och de nya sökorden utan exakt motsvarighet i Snomed CT.
+    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Aktivitet', 'Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Mål', 'Resultat', 'Andning och cirkulation', 'Hud och sår', 'Observation']);
   });
 
   test(namn(T.nfAtgard), () => {

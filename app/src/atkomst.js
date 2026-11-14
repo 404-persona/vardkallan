@@ -675,3 +675,12 @@ for (const h of ['kassa', 'kapacitet']) UTAN_PATIENT.add(h);
 Object.assign(HANDLINGAR, { las_intyg: 'se patientens intyg och deras status', skriv_intyg: 'skapa, skriva och signera intyg' });
 ROLLER.lakare.push('las_intyg', 'skriv_intyg');
 ROLLER.sjukskoterska.push('las_intyg');
+
+// Runda 15, r5 (F3, Sussa 3.1.3.5): undersköterskan dokumenterar sina observationer och utförda åtgärder i en
+// omvårdnadsanteckning ("annan personal som vårdar en patient kan föra patientjournal", Socialstyrelsen; patientdatalagen
+// 3 kap.). Behörigheten är en egen, smal handling som bara anteckningsflödet godtar (journal.skrivHandling), och bara för
+// de inbyggda mallar som vårdgivaren har gett yrket (mallar-yrken.js, i förvalet observationsanteckningen). Andra
+// skrivvägar som prövar skriv_omvardnad (bilder och media, formulär och omvårdnadsprocessen) är stängda som förut.
+// Undersköterskan läser inte läkarnas anteckningar.
+HANDLINGAR.skriv_observation = 'skriva anteckningar med de mallar som vårdgivaren har gett yrket';
+ROLLER.underskoterska.push('skriv_observation');

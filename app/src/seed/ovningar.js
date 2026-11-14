@@ -59,6 +59,17 @@ export const OVNINGAR_V1 = [
     ['b', 'Bara med en giltig delegering. Systemet prövar delegeringen för just den dosen och visar knappen Ge bara då.'],
     ['c', 'Aldrig.'],
   ], 'b', 'Delegeringen registreras av en sjuksköterska eller läkare enligt HSLF-FS 2017:37 9 kap., och systemet påminner innan den går ut.', '#/delegeringar'),
+  // Runda 15, r5: undersköterskans observationsanteckning och omvårdnadsprocessen.
+  o('observation', ['underskoterska'], 'Du har hjälpt patienten till toaletten och sett att hon är ostadig. Hur dokumenterar du det?', [
+    ['a', 'Du berättar det för sjuksköterskan, som skriver det.'],
+    ['b', 'Du skriver en observationsanteckning med det du har sett och det du har gjort. Systemet väljer mallen, och sjuksköterskan ser anteckningen i sitt underlag.'],
+    ['c', 'Du skriver det i en daganteckning.'],
+  ], 'b', 'Undersköterskan dokumenterar i en kort observationsanteckning med sökorden Observation och Utförd åtgärd. Vårdgivaren bestämmer vilka mallar yrket skriver med.', '#/patient/p01'),
+  o('omvardnadsprocess', ['sjukskoterska'], 'Du skriver en omvårdnadsanteckning för en patient med vårdplanen Förebyggande av fall. Vad gör systemet?', [
+    ['a', 'Visar alla tolv statusområden och låter dig välja.'],
+    ['b', 'Föreslår de områden och omvårdnadsproblem som gäller patienten i dag och säger varför, visar undersköterskans observationer och vårdplanens mål, och för in ditt resultat i vårdplanen när du signerar.'],
+    ['c', 'Skriver anteckningen åt dig.'],
+  ], 'b', 'Förslagen kommer ur vårdplanen, förra anteckningen, NEWS2, fallrisken, såren, smärtan och vikten på din vårdenhet. Reglerna är demoregler.', '#/patient/p01'),
   o('boka', ['vardadministrator'], 'En remiss väntar på tid. Hur bokar du?', [
     ['a', 'Letar själv efter en ledig tid i tidboken och räknar dagarna mot vårdgarantin.'],
     ['b', 'Väljer en av de tider som systemet föreslår i Dagens arbete. Systemet räknar dagarna mot vårdgarantin och skriver kallelsen.'],
