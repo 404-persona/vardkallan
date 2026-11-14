@@ -128,7 +128,8 @@ export function kopplaFalt(form, { forvalda = [] } = {}) {
   };
   textfalt().forEach(forbered);
   sista = textfalt()[0] ?? null;
-  form.addEventListener('click', (e) => {
+  // Klicken fångas på mallens innehåll, som byggs om när mallen byts, så att inget kopplas två gånger.
+  (form.querySelector('.ant-skriv') ?? form).addEventListener('click', (e) => {
     const knapp = e.target.closest('[data-utfall]');
     if (knapp) { utfall(form, knapp.dataset.utfall, forbered); return; }
     const ul = e.target.closest('[data-infoga]');
