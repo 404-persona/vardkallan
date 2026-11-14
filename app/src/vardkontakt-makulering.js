@@ -122,6 +122,21 @@ export function tillhor(db, o) {
   }
   return ut;
 }
+// Säkerhetsgranskningen efter sammanslagningen: det som visas för användaren räknas bara på rader som användaren får se.
+// En rad från en vårdenhet som användaren inte får se (till exempel en spärrad) flyttas ändå med, men räknas inte och
+// nämns inte, så att antalen aldrig röjer att den finns.
+export function synligt(atk, foljer) {
+  const ut = new Map();
+  for (const [t, ids] of foljer) {
+    const kol = kolumner(atk.db, t).filter(k => k.endsWith('enhet_id'));
+    if (!kol.length) { ut.set(t, ids); continue; }
+    const har = kolumner(atk.db, t).includes('id') ? 'id' : 'rowid';
+    const rader = ids.length ? atk.db.query(`SELECT ${har} AS id, ${kol.join(', ')} FROM ${t} WHERE ${har} IN (${ph(ids)})`).all(...ids) : [];
+    const kvar = rader.filter(r => kol.every(k => !r[k] || r[k] === 'extern' || atk.prova('registrera_vardkontakt', { enhet_id: r[k] }).tillaten)).map(r => r.id);
+    if (kvar.length) ut.set(t, kvar);
+  }
+  return ut;
+}
 const sammanfattning = (foljer) => [...foljer].map(([t, ids]) => `${ids.length} ${BENAMNING[t] ?? t.replace(/_/g, ' ')}`).join(', ');
 
 // Prövar att kontakten eller vårdtillfället får makuleras av personen.
@@ -146,18 +161,19 @@ const VT_UTAN = 'Ett vårdtillfälle raderas aldrig. Ange rätt patient, så fly
 export function forhandsvisa(atk, o) {
   sakra(atk.db);
   provaObjekt(atk, o);
-  const foljer = tillhor(atk.db, o);
+  const alla = tillhor(atk.db, o);
+  const foljer = synligt(atk, alla);
   const ord = ORD[o.slag];
   atk.logga('registrera_vardkontakt', atk.grund(), `${o.slag}:${o.id}:makulering-forhandsvisning`);
   const kontakter = o.slag === 'vardtillfalle' && o.kontakter.length ? `${o.kontakter.length} ${o.kontakter.length === 1 ? 'vårdkontakt' : 'vårdkontakter'}, ` : '';
   return {
     slag: o.slag, id: o.id, start: o.start, orsak: o.orsak,
     foljer: [...foljer].map(([t, ids]) => ({ tabell: t, text: BENAMNING[t] ?? t.replace(/_/g, ' '), antal: ids.length })),
-    kanMakuleras: o.slag === 'vardkontakt' && !harDokumentation(foljer),
+    kanMakuleras: o.slag === 'vardkontakt' && !harDokumentation(alla),
     vantar: Boolean(pagaende(atk.db, o)),
     text: foljer.size || kontakter ? `Det här följer med till rätt patient: ${kontakter}${sammanfattning(foljer) || 'inga andra uppgifter'}.` : `Inga uppgifter hör till ${ord.namn}.`,
     utanPatientText: o.slag === 'vardtillfalle' ? VT_UTAN
-      : harDokumentation(foljer) ? 'Vårdkontakten har dokumentation, som aldrig förstörs. Ange rätt patient, så flyttas den dit.' : 'Utan rätt patient makuleras vårdkontakten. Den finns kvar som makulerad med din motivering.',
+      : harDokumentation(alla) ? 'Vårdkontakten har dokumentation, som aldrig förstörs. Ange rätt patient, så flyttas den dit.' : 'Utan rätt patient makuleras vårdkontakten. Den finns kvar som makulerad med din motivering.',
     fyraOgonText: FYRA_OGON_TEXT,
   };
 }
@@ -243,7 +259,9 @@ function provaNummer(atk, nummer, o, valFor) {
 }
 
 export const NY_RELATION = 'Uppgifterna har något, till exempel en remiss eller en operationsanmälan, som skulle ge rätt patient en vårdrelation till en vårdenhet som patienten inte har i dag. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
-export const ANNAN_ENHET = 'Uppgifterna har något som hör till en annan vårdenhet än din, och det får inte registreras på rätt patient härifrån. Inget har flyttats. Be den vårdenheten rätta uppgifterna först.';
+// Säkerhetsgranskningen efter sammanslagningen: texten nämner ingen vårdenhet, eftersom användaren kanske inte får se
+// den, och pekar på systemförvaltningen, som kan rätta uppgifterna.
+export const ANNAN_ENHET = 'Flytten kan inte göras från din vårdenhet, eftersom inte allt som hör till uppgifterna får registreras på rätt patient härifrån. Inget har flyttats. Kontakta systemförvaltningen, som kan rätta uppgifterna.';
 // Vårdenheterna som patienten har vårdrelation till, enligt behörighetsmotorns regel.
 function relationer(db, patientId, nu) {
   const { harVardrelation } = require('./atkomst.js');
@@ -339,7 +357,10 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   const till = n?.till ?? null;
   const foljer = tillhor(db, o);
   if (!till && o.slag === 'vardtillfalle') throw new Fel(409, VT_UTAN, 'ogiltig', { falt: ['rattPatient'] });
-  if (!till && harDokumentation(foljer)) throw new Fel(409, `Vårdkontakten har dokumentation (${sammanfattning(new Map([...foljer].filter(([t]) => !DOKUMENTATION_UTAN.has(t))))}), som aldrig förstörs. Ange rätt patient, så flyttas den dit.`, 'ogiltig', { falt: ['rattPatient'] });
+  if (!till && harDokumentation(foljer)) {
+    const syns = sammanfattning(new Map([...synligt(atk, foljer)].filter(([t]) => !DOKUMENTATION_UTAN.has(t))));
+    throw new Fel(409, `Vårdkontakten har dokumentation${syns ? ` (${syns})` : ''}, som aldrig förstörs. Ange rätt patient, så flyttas den dit.`, 'ogiltig', { falt: ['rattPatient'] });
+  }
   if (!till && db.query("SELECT 1 FROM sqlite_master WHERE name = 'betalningar'").get() && (foljer.get('bokningar') ?? []).some(b => db.query('SELECT 1 FROM betalningar WHERE bokning_id = ?').get(b))) {
     throw new Fel(409, 'Besöket är betalt. Återbetala avgiften i kassan först, sedan kan vårdkontakten makuleras.', 'ogiltig');
   }
@@ -347,9 +368,10 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   // raderna hör till, och flytten får aldrig ge rätt patient en vårdrelation som inte fanns före flytten, från någon av
   // de källor som behörighetsmotorn läser (vårdkontakter, remisser, operationsanmälningar och listning).
   if (till) provaEnheter(atk, till, o, foljer, valFor);
+  const syns = synligt(atk, foljer);
   const id = genomfor(db, { aktor: atk.personal, av: atk.personal.id, o, till, orsak, foljer, nu, grund: atk.grund() });
   atk.loggad = true;
-  return { makulering: id, atgard: till ? 'flyttad' : 'makulerad', text: klarText(o, till, foljer) };
+  return { makulering: id, atgard: till ? 'flyttad' : 'makulerad', text: klarText(o, till, syns) };
 }
 
 // Förslaget: numret sparas som det skrevs, och ingenting slås upp för den som föreslår. Svaret är detsamma för alla
@@ -417,7 +439,7 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
     throw new Fel(409, `${BYTT_TEXT} Förslaget är avslutat.`, 'ogiltig');
   }
   // Godkännaren ser patienten och kontakten, så godkännandet prövas och loggas som när förslaget öppnas.
-  oppnaPatient(db, personal, f, valFor);
+  const atkG = oppnaPatient(db, personal, f, valFor);
   const t = require('./identitet.js').tolka(f.nummer);
   const till = t?.ok ? losUpp(db, t, o) : null;
   if (!till || db.query('SELECT skyddad FROM patienter WHERE id = ?').get(till)?.skyddad) {
@@ -428,6 +450,7 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
   const foljer = tillhor(db, o);
   const ve = vardenhetFor(db, o.enhetId);
   if ([...enheterFor(db, o, foljer)].some(e => e !== ve)) throw new Fel(409, ANNAN_ENHET, 'ogiltig');
+  const syns = synligt(atkG, foljer);
   const id = genomfor(db, {
     aktor: personal, av: f.foreslagen_av, godkandAv: personal.id, forslagId: f.id, o, till, orsak: f.orsak, foljer, nu, behallRelation: true, grund: 'administrativ',
     iTransaktion: (mid) => {
@@ -436,7 +459,7 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
         resurs: `makulering:forslag:${f.id}:godkand`, grund: 'administrativ', syfte: f.orsak });
     },
   });
-  return { makulering: id, atgard: 'flyttad', text: `Flytten är godkänd. ${klarText(o, till, foljer)}`, forslag: forslagUt(db, hamtaForslag(db, f.id), personal) };
+  return { makulering: id, atgard: 'flyttad', text: `Flytten är godkänd. ${klarText(o, till, syns)}`, forslag: forslagUt(db, hamtaForslag(db, f.id), personal) };
 }
 
 // Avslår ett förslag (en behörig person som inte föreslog det, med en kommentar) eller återkallar det (den som föreslog).
@@ -493,13 +516,13 @@ function oppnaPatient(db, personal, f, valFor) {
 export function forslagDetalj(db, personal, forslagId, { valFor = () => ({}) } = {}) {
   const f = hamtaForslag(db, forslagId);
   if (f.foreslagen_av !== personal.id && !behorig(db, personal, f.enhet_id)) throw new Fel(404, 'Förslaget finns inte.', 'saknas');
-  oppnaPatient(db, personal, f, valFor);
+  const atk = oppnaPatient(db, personal, f, valFor);
   let o = null;
   try { o = objekt(db, f.slag, f.objekt_id); } catch { o = null; }
   const p = db.query('SELECT * FROM patienter WHERE id = ?').get(f.patient_id);
   const visa = Boolean(valFor(f.patient_id)?.visa_identitet);
   const t = require('./identitet.js').tolka(f.nummer);
-  const foljer = o && f.status === 'vantar' && o.patientId === f.patient_id && !bytt(db, f, o) ? tillhor(db, o) : null;
+  const foljer = o && f.status === 'vantar' && o.patientId === f.patient_id && !bytt(db, f, o) ? synligt(atk, tillhor(db, o)) : null;
   return {
     ...forslagUt(db, f, personal),
     objekt: o && !bytt(db, f, o) ? { id: o.id, start: o.start, orsak: o.orsak, vardenhet: db.query('SELECT id, namn FROM enheter WHERE id = ?').get(vardenhetFor(db, o.enhetId)) ?? null } : null,

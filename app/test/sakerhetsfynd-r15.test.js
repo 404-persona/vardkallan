@@ -15,6 +15,7 @@ import * as mellanarkiv from '../src/mellanarkiv.js';
 import * as sam from '../src/samtycke-nationellt.js';
 import * as nat from '../src/rivta/nationella.js';
 import { Atkomst as AtkomstKlass } from '../src/atkomst.js';
+import * as makuleringMod from '../src/vardkontakt-makulering.js';
 import * as konfiguration from '../src/konfiguration.js';
 import * as reservserver from '../src/reservserver.js';
 import { hashFor } from '../src/logg.js';
@@ -361,6 +362,27 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
     expect(iTjansten(db).filter(x => !x.aterkallat)).toEqual([]);
     const sista = db.query("SELECT begaran FROM samtycke_utkorg WHERE handling = 'aterkalla' ORDER BY id DESC").get();
     expect(sista.begaran).not.toContain('194502024732');
+  });
+});
+
+describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns', () => {
+  const pers = (db, id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
+  test('förhandsvisningen räknar inte en anteckning från en spärrad vårdenhet, och svaret är detsamma utan den', () => {
+    const db = nyDb();
+    const v = db.query(`SELECT v.* FROM vardkontakter v WHERE v.enhet_id LIKE 'uso-kard%' AND v.kalla = 'vardkallan' AND v.vardtillfalle_id IS NULL
+      AND v.typ <> 'slutenvard' AND coalesce(v.planerad, 0) = 0 AND v.patient_id NOT IN ('p05', 'p12') AND EXISTS (SELECT 1 FROM anteckningar a WHERE a.vardkontakt_id = v.id) ORDER BY v.id LIMIT 1`).get();
+    const atkFor = () => new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt');
+    const svar = () => JSON.stringify(makuleringMod.forhandsvisa(atkFor(), makuleringMod.objekt(db, 'vardkontakt', v.id)));
+    const fore = svar();
+    const a = db.query('SELECT * FROM anteckningar WHERE vardkontakt_id = ? LIMIT 1').get(v.id);
+    const kol = Object.keys(a).filter(k => k !== 'id');
+    db.query(`INSERT INTO anteckningar (${kol.join(', ')}) VALUES (${kol.map(() => '?').join(', ')})`).run(...kol.map(k => (k === 'enhet_id' ? 'kkoga-ane' : a[k])));
+    db.query('INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES (?, ?, ?, 1)').run(v.patient_id, 'kkoga-ane', new Date().toISOString());
+    expect(svar()).toBe(fore);
+    // Flytten stoppas, men texten nämner ingen vårdenhet.
+    let fel = null;
+    try { makuleringMod.makulera(atkFor(), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: '196503143254' }, { valFor: () => ({}) }); } catch (e) { fel = e; }
+    if (fel?.status === 409) { expect(fel.message).not.toMatch(/Be den vårdenheten|annan vårdenhet än din/); expect(fel.message).toContain('systemförvaltningen'); }
   });
 });
 
