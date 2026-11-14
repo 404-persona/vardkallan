@@ -70,6 +70,8 @@ export const SYSTEM = {
   sesakerhet: 'http://hl7.se/fhir/ig/base/CodeSystem/SecurityLabel',
   actcode: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
   uppmarksamhet: `${CS}/uppmarksamhet`,
+  // Runda 15, r3: var journalhandlingen finns (mellanarkiv.js).
+  lagring: `${CS}/lagring`,
 };
 export const TYPER = ['Patient', 'Encounter', 'EpisodeOfCare', 'Condition', 'Observation', 'MedicationRequest', 'AllergyIntolerance', 'Flag', 'ServiceRequest', 'Composition', 'Organization', 'Practitioner', 'AuditEvent', 'MedicationAdministration', 'List'];
 // Runda 6, r3: vårdplanen är en CarePlan (vardplan.js), med samma behörighet som i gränssnittet.
@@ -795,6 +797,9 @@ export function hantera(ctx) {
     atk.logga('las_matvarden', atk.grund(), `fhir/Observation/${id}`);
     return { status: 200, body: obs };
   }
+  // Runda 15, r3 (Sussa 5.4.2.2): en resurs ur mellanarkivet har id:t ma-<nummer>, med samma prövning och loggning som
+  // resursen i den aktiva journalen (mellanarkiv.js).
+  if (id && /^ma-\d{1,9}$/.test(id) && require('./mellanarkiv.js').FHIR_SLAG[typ]) return { status: 200, body: require('./mellanarkiv.js').fhirLas(ctx, typ, id) };
   if (id) {
     const rad = radMedId(db, typ, id);
     if (!rad || !finnsSomResurs(typ, rad)) throw new Fel(404, 'Resursen finns inte.', 'saknas');
@@ -851,8 +856,12 @@ export function hantera(ctx) {
   // Runda 7, r4: undantag från FHIR, prövat efter behörigheten.
   // Runda 12, r1: producenten för tjänstekontrakt (_kontrakt) prövar också undantagen från publicering till nationella tjänster.
   { const undantagen = undantag.fhirProvare(db, typ, { nationell: url.searchParams.has('_kontrakt') }); rader = rader.filter(r => !undantagen(r)); }
+  // Runda 15, r3 (Sussa 5.4.2.2): journalhandlingarna i mellanarkivet som anroparen får se, märkta med var de finns. De
+  // prövas före loggningen, så att loggen får grunden för dem också.
+  const ur = require('./mellanarkiv.js').FHIR_SLAG[typ] ? require('./mellanarkiv.js').fhirResurser(atk, typ, { nationell: url.searchParams.has('_kontrakt') }) : [];
   atk.logga(handling, atk.grund(), `fhir/${typ}${url.search}`);
   const resurser = rader.map(r => (typ === 'ServiceRequest' ? serviceRequest(db, r, kanRoll(personal, 'las_remiss')) : typ === 'EpisodeOfCare' ? episodeOfCare(db, r, forstaSynliga(atk, r)) : mappa(db, r)));
+  resurser.push(...ur);
   // Runda 8, r1: labbeställningarna står med bland patientens ServiceRequest.
   if (typ === 'ServiceRequest') resurser.push(...labbFhir.serviceRequestsFor(db, personal, pid, ctx.valFor(pid)));
   // Runda 6, r1: NEWS2 räknat ur de synliga mätvärdena.

@@ -98,6 +98,9 @@ export async function visa(el, ctx) {
 
 // Runda 14, r4 (Sussa 5.4.2.2): en handling ur mellanarkivet läses i journalen som en anteckning, med samma behörighet,
 // och läsningen loggas. Den ändras aldrig, och systemet säger själv om innehållet är detsamma som när det togs emot.
+// Runda 15, r3: en ordination och en administrering ur mellanarkivet har egna rubriker för vem och när.
+const MA_AV = { ordination: 'Ordinerad av', administrering: 'Given av' };
+const MA_TID = { matvarde: 'Mätt', ordination: 'Ordinerad', administrering: 'Registrerad' };
 async function lasMellanarkiv(las, ctx, id) {
   let h;
   try { h = await api(`/api/mellanarkiv/${encodeURIComponent(id)}`); } catch (e) {
@@ -111,8 +114,8 @@ async function lasMellanarkiv(las, ctx, id) {
         <h2 id="ant-rubrik" tabindex="-1">${esc(h.typ)}</h2>
         <p class="ant-meta">${esc(h.enhet.namn)}</p>
         <dl class="ant-fakta">
-          ${h.forfattare ? `<div><dt>Skriven av</dt><dd>${esc(h.forfattare.namn)}</dd></div>` : ''}
-          <div><dt>${h.slag === 'matvarde' ? 'Mätt' : 'Signerad'}</dt><dd>${esc(tidpunkt(h.datum))}</dd></div>
+          ${h.forfattare ? `<div><dt>${esc(MA_AV[h.slag] ?? 'Skriven av')}</dt><dd>${esc(h.forfattare.namn)}</dd></div>` : ''}
+          <div><dt>${esc(MA_TID[h.slag] ?? 'Signerad')}</dt><dd>${esc(tidpunkt(h.datum))}</dd></div>
         </dl>
         ${migreradEtikett(h)}
       </header>

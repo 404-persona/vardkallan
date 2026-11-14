@@ -172,6 +172,8 @@ import { Database } from 'bun:sqlite';
 import * as vila from './sandlada-vila.js';
 // Runda 14, r4: testprotokollet med spårbarhet till kraven (testprotokoll.js, Sussa 11.2.1.7).
 import * as testprotokoll from './testprotokoll.js';
+// Runda 15, r3: den fristående reservservern (reservserver.js), som startas med RESERVSERVER=1 eller reservserver.js.
+import * as reservserverMod from './reservserver.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -345,8 +347,17 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 13, r1: synpunkterna i en egen databas bredvid sandlådorna (synpunkter.js), och taken som testerna kan ändra.
   synpunktFil = '', synpunktTak = undefined,
   // Runda 14, r1: ursprungen (schema, värd och port) för de inloggningstjänster som servern får anropa. Driftens tak.
-  inloggningTillatna = process.env.INLOGGNING_TILLATNA ?? '' } = {}) {
+  inloggningTillatna = process.env.INLOGGNING_TILLATNA ?? '',
+  // Runda 15, r3: reservserver ger en reservserver som läser den senaste verifierade kopian på kopiornas platser
+  // ({ katalog, andraKatalog, nyckel, loggKatalog }, där det som saknas tas ur kopieKatalog, kopieAndra,
+  // RESERV_SANDLADA och RESERV_LOGG). Inställningen RESERVSERVER=1 gör samma sak.
+  reservserver = process.env.RESERVSERVER === '1' ? {} : null } = {}) {
   if (maxSessioner) maxSandlador = maxSessioner;
+  // Runda 15, r3: reservservern har en databas för alla som loggar in, ur kopian, och tar inga egna kopior, sparar inga
+  // sandlådor och flyttar inget till disk. Den läser platserna men skriver aldrig där.
+  const reserv = reservserver ? reservserverMod.oppna({ katalog: reservserver.katalog ?? kopieKatalog, andraKatalog: reservserver.andraKatalog ?? kopieAndra,
+    nyckel: reservserver.nyckel ?? (process.env.RESERV_SANDLADA || null), loggKatalog: reservserver.loggKatalog ?? (process.env.RESERV_LOGG || null) }) : null;
+  if (reserv) { kopieKatalog = null; kopieAndra = null; kopieMinuter = 0; sessionFil = ''; vilaKatalog = null; }
   const sessioner = new Map();
   // Runda 12, r3: nyckeln som krypterar nycklarna för engångskoder, bredvid sessionsfilen så att den följer med en omstart.
   flerfaktor.satNyckel({ fil: sessionFil ? join(dirname(sessionFil), 'flerfaktor.nyckel') : null });
@@ -417,12 +428,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // personalId och invanareId är aldrig satta samtidigt: personalens och invånarens inloggning utesluter varandra.
   // Runda 12, r2: kopieId är sandlådans stabila id för säkerhetskopiorna. Det skapas med sandlådan och roteras aldrig,
   // till skillnad från sessionskakan, så att kopiorna hittas efter en ny inloggning.
-  const nySession = () => medVila({ db: nySessionsDb(), personalId: null, invanareId: null, val: {}, sist: Date.now(), matning: new Matning(200), lasnyckel: null, oppnade: new Set(), kopior: new Map(), kopieId: slumpId() });
+  // Runda 15, r3: på reservservern delar alla sessioner reservserverns databas.
+  const nySession = () => medVila({ db: reserv ? reserv.db : nySessionsDb(), personalId: null, invanareId: null, val: {}, sist: Date.now(), matning: new Matning(200), lasnyckel: null, oppnade: new Set(), kopior: new Map(), kopieId: slumpId() });
   // Runda 12, r2: en sandlåda som försvinner tar sina säkerhetskopior med sig. Runda 13, r2: och sin fil på disken.
   function taBortSandlada(sid) {
     const s = sessioner.get(sid);
     if (!s) return;
-    s.dbOmVaken?.close();
+    // Runda 15, r3: reservserverns databas delas av alla sessioner och stängs aldrig med en av dem.
+    if (!reserv) s.dbOmVaken?.close();
     s.db = null;
     sessioner.delete(sid);
     pagande.delete(s);
@@ -517,6 +530,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   const kopiorFranJson = (a) => new Map((a ?? []).map(([id, k]) => [id, { ...k, patienter: new Map(k.patienter), loggIds: new Set(k.loggIds) }]));
   // Skriver sandlådan till disk och släpper den ur minnet. Gör inget med en sandlåda som har ett pågående anrop.
   function vilaSandlada(s, { tvinga = false } = {}) {
+    // Runda 15, r3: reservserverns databas flyttas aldrig till disk.
+    if (reserv) return false;
     const db = s.dbOmVaken;
     if (!db || (!tvinga && pagande.get(s))) return false;
     try {
@@ -836,6 +851,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const p = personalRad(s.db, s.personalId);
     const inv = p ? null : minJournal.invanareRad(s.db, s.invanareId);
     const ut = { inloggad: Boolean(p || inv), demoDatum: installning(s.db, 'seed_datum') ?? idag() };
+    // Runda 15, r3: på reservservern säger varje svar om sessionen att det är en reservserver och hur gamla uppgifterna är.
+    if (reserv) ut.reservserver = reservserverMod.info(reserv);
     // Runda 9, r5 (KD1.1.1.5): vilken miljö sandlådan är, så att gränssnittet kan märka den.
     ut.miljo = miljoer.miljoFor(s.db);
     // Runda 7, r2: när inloggningen går ut utan aktivitet, så att gränssnittet kan varna.
@@ -2559,7 +2576,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       // Runda 12, r2: programmets schemaversion, den högsta migreringen det känner till (releaser.js).
       schemaversion: Math.max(0, ...r12r2Migreringar.map(m => m.id)),
       // Runda 11, r1: bara i en testcontainer med falsk klocka, så att Playwright kan ställa webbläsarens klocka lika.
-      ...(TESTKLOCKA ? { testklocka: new Date().toISOString() } : {}) });
+      ...(TESTKLOCKA ? { testklocka: new Date().toISOString() } : {}),
+      // Runda 15, r3: reservservern säger att den är en reservserver och hur gamla uppgifterna är, också före inloggningen.
+      ...(reserv ? { reservserver: reservserverMod.info(reserv) } : {}) });
     // Runda 9, r5: länken till en ny miljö byter session utan att skapa en sandlåda.
     if (req.method === 'GET' && /^\/api\/miljoer\/oppna\/[A-Za-z0-9_-]{32}$/.test(url.pathname)) return oppnaMiljo(req, url);
     // Runda 10, r7: kalenderprenumerationen hämtas av ett kalenderprogram utan session (r10r7-rutter.js).
@@ -2580,18 +2599,20 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     }
     if (!traff) throw new Fel(404, 'Okänd adress.', 'saknas');
     if (traff === 'metod') throw new Fel(405, 'Metoden stöds inte.', 'ogiltig');
+    // Runda 15, r3: reservservern kan bara läsas. Inloggningen, ett aktivt val och loggen från läsläget görs som vanligt.
+    if (reserv && metod !== 'GET' && metod !== 'HEAD' && !reservserverMod.tillatenSkrivning(url.pathname)) throw reservserverMod.skrivningNekad(reserv);
     let sess = hamtaSession(req);
     // Runda 13, r2: sandlådans tidsbudget, som följer sandlådan också när den har vilat.
     if (sess) kravBudget(c, sess.s);
     if (!sess && !UTAN_SESSION.has(url.pathname)) sess = skapaSession(req, server);
     // Runda 7, r4: en förberedd omorganisation genomförs av systemet den dag den gäller, före allt annat i anropet.
-    if (sess) systemforvaltningEfterDatum(sess.s.db);
+    if (sess && !reserv) systemforvaltningEfterDatum(sess.s.db);
     // Runda 8, r1: det simulerade laboratoriet svarar på det som har hunnit bli klart.
-    if (sess) labbEfterTid(sess.s.db);
+    if (sess && !reserv) labbEfterTid(sess.s.db);
     // Runda 9, r2: den simulerade utrustningen skickar det som har hunnit mätas.
-    if (sess) mtEfterTid(sess.s.db);
+    if (sess && !reserv) mtEfterTid(sess.s.db);
     // Runda 9, r4: masterdatan läses in från källorna efter schemat.
-    if (sess) masterdataEfterTid(sess.s.db);
+    if (sess && !reserv) masterdataEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, sid: sess.sid, ny: sess.ny, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare && url.pathname.startsWith('/api/min/')) avvisaFranAnnanWebbplats(req);
     c.body = metod === 'GET' ? {} : await lasKropp(req);
@@ -2669,10 +2690,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     // Runda 13, r2: tidsbudgeten gäller också FHIR-API:t.
     kravBudget(c, sess?.s ?? null);
     // Runda 7, r4: förberedda omorganisationer som gäller i dag genomförs först.
-    if (sess) systemforvaltningEfterDatum(sess.s.db);
+    if (sess && !reserv) systemforvaltningEfterDatum(sess.s.db);
     // Runda 8, r1: det simulerade laboratoriet svarar på det som har hunnit bli klart.
-    if (sess) labbEfterTid(sess.s.db);
-    if (sess) mtEfterTid(sess.s.db);
+    if (sess && !reserv) labbEfterTid(sess.s.db);
+    if (sess && !reserv) mtEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     const base = origin || `${url.protocol}//${url.host}`;
@@ -2698,6 +2719,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       const c = url.pathname === '/api/health' ? {} : { adress: adressHmac(klientIp(req, srv)) };
       let svar;
       try {
+        // Runda 15, r3: på reservservern tas inget emot från utrustning, producentsystem eller skrivningar genom FHIR.
+        if (reserv && req.method !== 'GET' && req.method !== 'HEAD' && !url.pathname.startsWith('/api/')) throw reservserverMod.skrivningNekad(reserv);
         if (url.pathname.startsWith('/api/')) svar = await api(req, srv, url, c);
         else if (url.pathname.startsWith('/fhir/') && req.method === 'PATCH') svar = await fhirIncheckning(req, url, c);
         else if (url.pathname === '/fhir' || url.pathname.startsWith('/fhir/')) svar = await fhirSvar(req, url, c);
@@ -2753,12 +2776,16 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
         if (vdb) { try { c.s.dbByte = vdb.query('PRAGMA page_count').get().page_count * vdb.query('PRAGMA page_size').get().page_size; } catch { /* stängd */ } }
       }
       slappa(req);
+      // Runda 15, r3: reservserverns nya loggrader skrivs till dess loggfil efter varje anrop.
+      if (reserv) { try { reservserverMod.sparaLogg(reserv); } catch (e) { console.error('Reservserverns logg:', e.message); } }
       return svar;
     },
   });
 
   return {
     server, sessioner, port: server.port, url: `http://127.0.0.1:${server.port}`, spara, oppetApi,
+    // Runda 15, r3.
+    reservserver: reserv ? reservserverMod.info(reserv) : null, reservDb: reserv?.db ?? null, sparaReservlogg: () => (reserv ? reservserverMod.sparaLogg(reserv) : 0),
     kopior, stadaKopior,
     // Runda 13, r1.
     synpunkter,

@@ -93,6 +93,11 @@ export const KODSYSTEM = [
     ['konsultation', 'Konsultation', 'Mottagaren svarar med råd, och vårdansvaret stannar hos remittenten.'],
   ]),
 ];
+// Runda 15, r3 (Sussa 5.4.2.2): var en journalhandling finns. En resurs ur mellanarkivet har koden mellanarkiv i
+// meta.tag, så att mottagaren ser att den kommer därifrån, och meta.source pekar på paketet den kom i.
+KODSYSTEM.push(kodsystem('lagring', 'Lagring', 'Lagring', 'Var journalhandlingen finns. En handling utan kod finns i den aktiva journalen.', [
+  ['mellanarkiv', 'Ur mellanarkivet', 'Journalhandlingen har förts över till mellanarkivet efter ett beslut om överföring. Den ändras inte där, och den lämnas ut med samma behörighet och loggning som den aktiva journalen.'],
+]));
 export const VARDEMANGDER = KODSYSTEM.map(vardemangd);
 
 export const TILLAGG = [

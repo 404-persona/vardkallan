@@ -1,0 +1,181 @@
+// Runda 15, r3 (Sussa 11.2.1.8, KD1.1.3.3, KD1.1.3.6, KD1.1.1.11 och KD1.2.1.4): en fristående reservserver.
+//
+// Reservservern är samma program som kärnsystemet, startat på en annan plats med en inställning (RESERVSERVER=1) eller
+// med kommandot `bun src/reservserver.js`. Den läser den senaste verifierade säkerhetskopian från platserna där
+// kärnsystemet lägger sina kopior (sakerhetskopior.js), kontrollerar den på samma sätt som vid en återställning
+// (kontrollsumman, att databasen är hel och att loggarnas hashkedjor håller) och läser den från den andra platsen om den
+// första är skadad. Den ändrar aldrig något på platserna.
+//
+// Den kan bara läsas. Varje anrop som skulle ändra journalen nekas med en förklaring på vanlig svenska (skrivningNekad),
+// och de viktigaste tabellerna i journalen har dessutom triggrar som stoppar en ändring i databasen, så att inte heller
+// ett fel i koden kan registrera något på reservservern. Det som går att göra är att logga in, göra ett aktivt val och
+// läsa. Varje läsning loggas i åtkomstloggen precis som i kärnsystemet, och loggraderna skrivs också till en fil på
+// reservserverns egen disk när de skrivs (RESERV_LOGG), så att de finns kvar om reservservern stannar. När kärnsystemet
+// är i drift igen läses filen in i kärnsystemets logg med kommandot `bun src/reservserver.js --las-in-logg <fil>
+// --databas <fil>` (lasInLogg).
+//
+// Reservservern säger tydligt att den är en reservserver och hur gamla uppgifterna är: i varje svar om sessionen, i
+// hälsokontrollen och i en rad överst på varje sida.
+import { Database } from 'bun:sqlite';
+import { existsSync, readFileSync, readdirSync, appendFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { Fel, iso } from './db.js';
+import { verifieraKopia } from './sakerhetskopior.js';
+import { loggaRad, hashFor } from './logg.js';
+
+// Tabellerna i journalen som aldrig får ändras på reservservern. Läsningar som håller härledda uppgifter aktuella
+// (till exempel en dosändring vars datum har kommit) ändrar andra tabeller och stoppas inte.
+export const SKYDDADE = ['patienter', 'anteckningar', 'matvarden', 'diagnoser', 'administreringar', 'remisser', 'overkanslighet', 'uppmarksamhet',
+  'sparrar', 'vardkontakter', 'mellanarkiv_handlingar', 'mellanarkiv_paket', 'sammanhallen_samtycken', 'identiteter'];
+const TEXT = 'Reservservern kan bara läsas.';
+
+// Anrop som ändrar något och som ändå görs på reservservern: inloggningen och utloggningen, förlängningen av
+// inloggningen, ett aktivt val och loggen från läsläget. Allt annat nekas.
+const TILLATNA = [/^\/api\/login(\/|$)/, /^\/api\/logout$/, /^\/api\/session\/forlang$/, /^\/api\/patient\/[^/]+\/val$/, /^\/api\/lasekopia\/(logg|krypterad-logg)$/];
+export const tillatenSkrivning = (vag) => TILLATNA.some(r => r.test(vag));
+
+const nycklar = (katalog) => (katalog && existsSync(katalog) ? readdirSync(katalog).filter(x => /^[0-9a-f]{32}$/.test(x)) : []);
+const lasIndex = (platser, k) => {
+  for (const p of platser) {
+    try { return JSON.parse(readFileSync(join(p, k, 'index.json'), 'utf8')); } catch { /* nästa plats */ }
+  }
+  return [];
+};
+const packaUpp = (b) => {
+  if (!b) return null;
+  if (b[0] !== 0x28 || b[1] !== 0xb5 || b[2] !== 0x2f || b[3] !== 0xfd) return b;
+  try { return Buffer.from(Bun.zstdDecompressSync(b)); } catch { return null; }
+};
+const lasFil = (p, k, fil) => { try { return packaUpp(readFileSync(join(p, k, fil))); } catch { return null; } };
+
+// Den senaste verifierade kopian på platserna. nyckel väljer en sandlåda (katalogen med kopiorna, som sidan
+// Säkerhetskopior visar); utan nyckel tas den senaste kopian av alla. Ger kopians data och vad som är känt om den, eller
+// kastar Fel om ingen kopia håller.
+export function senasteKopia({ katalog, andraKatalog = null, nyckel = null } = {}) {
+  const platser = [katalog, andraKatalog].filter(Boolean);
+  if (!platser.length) throw new Fel(500, 'Reservservern vet inte var säkerhetskopiorna finns. Ange KOPIOR_KATALOG och KOPIOR_ANDRA.', 'fel');
+  if (nyckel && !/^[0-9a-f]{32}$/.test(nyckel)) throw new Fel(500, 'Nyckeln för sandlådan ska vara 32 tecken 0 till 9 och a till f.', 'fel');
+  const kandidater = [];
+  for (const k of nyckel ? [nyckel] : [...new Set(platser.flatMap(nycklar))]) {
+    for (const post of lasIndex(platser, k)) if (post.verifierad) kandidater.push({ k, post });
+  }
+  kandidater.sort((a, b) => String(b.post.tid).localeCompare(String(a.post.tid)));
+  const forsok = [];
+  for (const { k, post } of kandidater) {
+    for (let i = 0; i < platser.length; i++) {
+      const data = lasFil(platser[i], k, post.fil);
+      const v = verifieraKopia(data, post.sha256);
+      forsok.push({ kopia: post.id, plats: i + 1, ok: v.ok });
+      if (v.ok) return { data, nyckel: k, kopia: { id: post.id, tid: post.tid, sha256: post.sha256, byte: post.byte, plats: i + 1, kontroller: v.kontroller }, forsok };
+    }
+  }
+  throw new Fel(500, kandidater.length ? 'Ingen av säkerhetskopiorna håller på någon av platserna. Reservservern startar inte.' : 'Det finns ingen verifierad säkerhetskopia på platserna. Reservservern startar inte.', 'fel', { forsok });
+}
+
+// Triggrar som gör de viktigaste tabellerna omöjliga att ändra. Åtkomstloggen och säkerhetsloggen skrivs som vanligt.
+export function lasEndast(db) {
+  const finns = new Set(db.query("SELECT name FROM sqlite_master WHERE type = 'table'").all().map(r => r.name));
+  for (const t of SKYDDADE.filter(x => finns.has(x))) {
+    for (const h of ['INSERT', 'UPDATE', 'DELETE']) db.exec(`CREATE TRIGGER IF NOT EXISTS reservserver_${t}_${h.toLowerCase()} BEFORE ${h} ON "${t}" BEGIN SELECT RAISE(ABORT, '${TEXT}'); END;`);
+  }
+}
+
+// Öppnar reservserverns databas ur den senaste verifierade kopian.
+export function oppna({ katalog, andraKatalog = null, nyckel = null, loggKatalog = null, nu = new Date() } = {}) {
+  const k = senasteKopia({ katalog, andraKatalog, nyckel });
+  const db = Database.deserialize(k.data);
+  lasEndast(db);
+  const reserv = { db, kopia: k.kopia, nyckel: k.nyckel, startad: iso(nu), loggKatalog, loggFil: null, sistaLoggId: db.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m };
+  if (loggKatalog) {
+    mkdirSync(loggKatalog, { recursive: true, mode: 0o700 });
+    reserv.loggFil = join(loggKatalog, `reservserver-logg-${reserv.startad.replace(/[:.]/g, '-')}.ndjson`);
+  }
+  return reserv;
+}
+
+// Det reservservern säger om sig själv i sessionen, hälsokontrollen och raden överst på sidan.
+export function info(reserv, nu = new Date()) {
+  const minuter = Math.max(0, Math.floor((nu.getTime() - Date.parse(reserv.kopia.tid)) / 60_000));
+  const alder = minuter < 60 ? `${minuter} ${minuter === 1 ? 'minut' : 'minuter'}` : minuter < 2880 ? `${Math.floor(minuter / 60)} timmar och ${minuter % 60} minuter` : `${Math.floor(minuter / 1440)} dygn`;
+  return {
+    kopia: reserv.kopia.tid, alderMinuter: minuter, plats: reserv.kopia.plats, startad: reserv.startad,
+    text: `Reservserver. Uppgifterna kommer från säkerhetskopian från ${reserv.kopia.tid.slice(0, 16).replace('T', ' kl. ')} (UTC) och är ${alder} gamla. Det som har registrerats efter det finns inte här.`,
+    gor: 'Du kan läsa journalen men inte registrera något. Anteckna på papper och för in uppgifterna i journalen när kärnsystemet är i drift igen. Varje läsning loggas som vanligt.',
+  };
+}
+
+// Svaret på ett anrop som skulle ändra något.
+export function skrivningNekad(reserv) {
+  const i = info(reserv);
+  return new Fel(423, `${TEXT} Den visar journalen som den var i säkerhetskopian från ${i.kopia.slice(0, 16).replace('T', ' kl. ')} (UTC). Anteckna på papper och för in uppgifterna i journalen när kärnsystemet är i drift igen.`, 'reservserver', { reservserver: i });
+}
+
+// Skriver loggraderna som har tillkommit sedan förra gången till reservserverns loggfil, en rad per åtkomst.
+export function sparaLogg(reserv) {
+  if (!reserv.loggFil) return 0;
+  const rader = reserv.db.query('SELECT * FROM atkomstlogg WHERE id > ? ORDER BY id').all(reserv.sistaLoggId);
+  if (!rader.length) return 0;
+  appendFileSync(reserv.loggFil, rader.map(r => `${JSON.stringify({ ...r, reservserver: { kopia: reserv.kopia.id, kopiaTid: reserv.kopia.tid } })}\n`).join(''), { mode: 0o600 });
+  reserv.sistaLoggId = rader.at(-1).id;
+  return rader.length;
+}
+
+// Läser in reservserverns logg i kärnsystemets åtkomstlogg när kärnsystemet är i drift igen. Varje rad läggs till sist i
+// kärnsystemets kedja med sin ursprungliga tid och person och med syftet märkt, så att loggen visar att åtkomsten
+// gjordes på reservservern. Rader som redan är inlästa och rader som fanns i säkerhetskopian läses inte in igen. Ger
+// antalet inlästa rader.
+export function lasInLogg(db, rader) {
+  const finns = new Set(db.query("SELECT tid, personal_id, patient_id, handling, resurs FROM atkomstlogg WHERE syfte LIKE 'Reservservern:%'").all().map(r => JSON.stringify([r.tid, r.personal_id, r.patient_id, r.handling, r.resurs])));
+  let n = 0;
+  db.transaction(() => {
+    for (const r of rader) {
+      if (!r || typeof r !== 'object' || typeof r.handling !== 'string' || typeof r.tid !== 'string' || !r.reservserver) continue;
+      if (Date.parse(r.tid) < Date.parse(r.reservserver.kopiaTid)) continue;
+      const nyckel = JSON.stringify([r.tid, r.personal_id ?? null, r.patient_id ?? null, r.handling, r.resurs ?? null]);
+      if (finns.has(nyckel)) continue;
+      loggaRad(db, { tid: r.tid, personal_id: r.personal_id ?? null, enhet_id: r.enhet_id ?? null, patient_id: r.patient_id ?? null, handling: r.handling, resurs: r.resurs ?? null,
+        grund: r.grund, resultat: r.resultat, invanare_id: r.invanare_id ?? null,
+        syfte: `Reservservern: ${r.syfte ?? 'Åtkomst'} (säkerhetskopian från ${r.reservserver.kopiaTid})`.slice(0, 500) });
+      finns.add(nyckel);
+      n++;
+    }
+  })();
+  return n;
+}
+
+// Kontrollerar att en loggfil från reservservern hänger ihop: raderna följer på varandra, och varje rads hash stämmer
+// med raden och föregående rads hash, från den sista raden i säkerhetskopian. Ger { hel, antal, felRad }.
+export function kontrolleraLogg(rader) {
+  for (let i = 0; i < rader.length; i++) {
+    const r = rader[i];
+    if (i && (r.id !== rader[i - 1].id + 1 || r.prev_hash !== rader[i - 1].hash)) return { hel: false, antal: rader.length, felRad: r.id };
+    const { reservserver: _, prev_hash: prev, hash, ...rad } = r;
+    if (hashFor(prev, rad) !== hash) return { hel: false, antal: rader.length, felRad: r.id };
+  }
+  return { hel: true, antal: rader.length, felRad: null };
+}
+
+// Kommandot. Utan argument startar det reservservern med samma inställningar som kärnsystemet (KOPIOR_KATALOG,
+// KOPIOR_ANDRA, PORT) och RESERV_SANDLADA och RESERV_LOGG. Med --las-in-logg läser det in en loggfil i en databas.
+if (import.meta.main) {
+  const arg = process.argv.slice(2);
+  const varde = (namn) => { const i = arg.indexOf(namn); return i >= 0 ? arg[i + 1] : null; };
+  if (varde('--las-in-logg')) {
+    const fil = varde('--las-in-logg');
+    const dbFil = varde('--databas');
+    if (!dbFil) { console.error('Ange databasen med --databas <fil>.'); process.exit(2); }
+    const rader = readFileSync(fil, 'utf8').split('\n').filter(Boolean).map(x => JSON.parse(x));
+    const db = new Database(dbFil);
+    const n = lasInLogg(db, rader);
+    db.close();
+    console.log(`Läste in ${n} rader från reservserverns logg i ${dbFil}.`);
+    process.exit(0);
+  }
+  process.env.RESERVSERVER = '1';
+  const { starta } = await import('./server.js');
+  const app = starta();
+  console.log(`Reservservern lyssnar på ${app.port}. ${app.reservserver.text}`);
+  const avsluta = () => { try { app.sparaReservlogg(); } catch (e) { console.error('Loggen kunde inte sparas:', e.message); } process.exit(0); };
+  process.on('SIGTERM', avsluta);
+  process.on('SIGINT', avsluta);
+}

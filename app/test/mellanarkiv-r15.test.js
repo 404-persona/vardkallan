@@ -239,3 +239,164 @@ describe('Mellanarkiv för läkemedel', () => {
     expect(personal(db(k), 'ssk-kard')).toBeTruthy();
   });
 });
+
+// Runda 15, r3 (Sussa 11.2.1.8): läskopian vid avbrott har det som behövs oavsett ålder och inget ur mellanarkivet.
+const LASKOPIA_PER_PATIENT = 128 * 1024;
+const LASKOPIA_TOTALT = 1024 * 1024;
+describe('Läskopian och mellanarkivet', () => {
+  test('läskopian har uppmärksamhetsinformationen, de aktuella läkemedlen och de senaste mätvärdena oavsett ålder, men inget ur mellanarkivet', async () => {
+    const k = await inloggad('lak-kard');
+    const d = db(k);
+    // Ett mätvärde av en typ som bara mättes för länge sedan är patientens senaste och följer med.
+    d.query("INSERT INTO matvarden (patient_id, enhet_id, typ, varde, varde_num, matt_enhet, tid) VALUES ('p01', 'uso-kard', 'langd', '176', 176, 'cm', '2009-04-02T09:00:00.000Z')").run();
+    await k.get('/api/patient/p01');
+    const kopia = (await k.get('/api/lasekopia')).data;
+    const p = kopia.patienter.p01;
+    expect(p).toBeTruthy();
+    // Uppmärksamhetsinformationen i huvudet, som i journalen.
+    const huvud = (await k.get('/api/patient/p01')).data;
+    expect(p.huvud.uppmarksamhet.poster.length).toBeGreaterThan(0);
+    expect(p.huvud.uppmarksamhet.poster.map(x => x.term)).toEqual(huvud.uppmarksamhet.poster.map(x => x.term));
+    // De aktuella läkemedlen, också de som är många år gamla.
+    const aktuella = p.lakemedel.ordinationer.filter(o => o.aktuell);
+    expect(aktuella.length).toBeGreaterThan(0);
+    expect(aktuella.some(o => o.start < '2016-01-01')).toBe(true);
+    // Det senaste mätvärdet av varje typ, också längden från 2009.
+    expect(p.oversikt.matvarden.find(m => m.typ === 'langd')).toBeTruthy();
+    // Inget ur mellanarkivet: inte i översiktens tidslinje, inte i läkemedelslistan och inte i anteckningarna.
+    const text = JSON.stringify(p);
+    for (const x of ['Ur mellanarkivet', 'Troligen extraslag', 'Livsstilsråd. Ny kontroll om tre månader', 'Lågt vätskeintag under dagen', 'Feber och muskelvärk vid influensa']) expect(text).not.toContain(x);
+    expect(p.oversikt.tidslinje.some(t => t.typ === 'mellanarkiv')).toBe(false);
+    // I den vanliga översikten finns de.
+    expect((await k.get('/api/patient/p01/oversikt')).data.tidslinje.some(t => t.typ === 'mellanarkiv')).toBe(true);
+  });
+
+  test('läskopian ryms inom sitt tak per patient och totalt, och den blir inte större av det som förs till mellanarkivet', async () => {
+    const k = await inloggad('ark');
+    const d = db(k);
+    // En lång utsatt behandling med doser tre gånger om dagen i ett halvår, som förs till mellanarkivet.
+    const { id } = gammalOrdination(d, { enhet: 'uso-kard' });
+    const ins = d.query(`INSERT INTO administreringar (patient_id, enhet_id, ordination_id, lakemedel_id, planerad, status, dos, dos_enhet, antal, tid, utford_av, registrerad, registrerad_av)
+      VALUES ('p01', 'uso-kard', ?, 'VK-NPL-0033', ?, 'given', 1, 'g', 1, ?, 'ssk-kard', ?, 'ssk-kard')`);
+    for (let i = 0; i < 540; i++) { const t = new Date(Date.parse('2011-11-01T08:00:00.000Z') + i * 8 * 3600_000).toISOString(); ins.run(id, t, t, t); }
+    const lak = await inloggad('lak-kard');
+    sandlada(app, lak).db = d;
+    await lak.get('/api/patient/p01');
+    const fore = (await lak.get('/api/lasekopia')).data;
+    await foverfor(k);
+    expect(d.query('SELECT 1 FROM ordinationer WHERE id = ?').get(id)).toBeNull();
+    const efter = (await lak.get('/api/lasekopia')).data;
+    const storlek = (x) => Buffer.byteLength(JSON.stringify(x));
+    expect(storlek(efter.patienter.p01)).toBeLessThanOrEqual(storlek(fore.patienter.p01));
+    // Taken: 128 kB per patient och 1 MB för hela kopian, med marginal mot det som demon ger i dag.
+    for (const [pid, post] of Object.entries(efter.patienter)) expect([pid, storlek(post) <= LASKOPIA_PER_PATIENT]).toEqual([pid, true]);
+    expect(storlek(efter)).toBeLessThanOrEqual(LASKOPIA_TOTALT);
+    // Doserna ur mellanarkivet finns i den vanliga läkemedelslistan, märkta, men inte i läskopian.
+    expect((await lak.get('/api/patient/p01/lakemedel')).data.mellanarkiv.some(o => o.ordinationsorsak === 'Halsfluss')).toBe(true);
+    expect(JSON.stringify(efter.patienter.p01)).not.toContain('Halsfluss');
+  }, 30_000);
+});
+
+// Runda 15, r3: handlingarna i mellanarkivet i FHIR-API:t, med samma behörighet och loggning som den aktiva journalen.
+const LAGRING = 'https://vardkallan.404haven.se/fhir/CodeSystem/lagring';
+const urMellanarkivet = (r) => (r.meta?.tag ?? []).some(t => t.system === LAGRING && t.code === 'mellanarkiv');
+const resurser = (b) => (b.entry ?? []).map(e => e.resource);
+
+describe('FHIR ur mellanarkivet', () => {
+  test('sökningen på patient tar med handlingarna ur mellanarkivet märkta med meta.tag och meta.source, och läsningen på id loggas', async () => {
+    const k = await inloggad('lak-kard');
+    const d = db(k);
+    const mr = resurser((await k.get('/fhir/MedicationRequest?patient=p01')).data);
+    const ur = mr.filter(urMellanarkivet);
+    expect(ur).toHaveLength(1);
+    expect(ur[0].id).toMatch(/^ma-\d+$/);
+    expect(ur[0].meta.source).toMatch(/^urn:vardkallan:mellanarkiv:IP_/);
+    expect(ur[0].meta.tag).toContainEqual({ system: LAGRING, code: 'mellanarkiv', display: 'Ur mellanarkivet' });
+    // Taggarna som bara behövs i paketet följer inte med, och källan står kvar.
+    expect(JSON.stringify(ur[0].meta)).not.toContain('urn:vardkallan:vardenhet');
+    expect(ur[0].meta.tag.some(t => t.code === 'migrerad:VAS')).toBe(true);
+    // Resurserna i den aktiva journalen har ingen sådan tagg.
+    expect(mr.filter(r => !urMellanarkivet(r)).length).toBeGreaterThan(0);
+    // Doserna pekar på ordinationen i mellanarkivet.
+    const ma = resurser((await k.get('/fhir/MedicationAdministration?patient=p01')).data).filter(urMellanarkivet);
+    expect(ma).toHaveLength(4);
+    expect(ma.every(a => a.request.reference === `MedicationRequest/${ur[0].id}`)).toBe(true);
+    expect(ma.find(a => a.status === 'not-done').statusReason[0].text).toContain('Patienten avböjde');
+    // Läsningen på id.
+    const las = await k.get(`/fhir/MedicationRequest/${ur[0].id}`);
+    expect(las.status).toBe(200);
+    expect(las.data.id).toBe(ur[0].id);
+    expect(d.query('SELECT * FROM atkomstlogg WHERE resurs = ? ORDER BY id DESC').get(`fhir/MedicationRequest/${ur[0].id}`)).toMatchObject({ personal_id: 'lak-kard', patient_id: 'p01', handling: 'las_lakemedel', resultat: 'tillaten' });
+    // Fel resurstyp är som en som inte finns.
+    expect((await k.get(`/fhir/Composition/${ur[0].id}`)).status).toBe(404);
+    // Anteckningarna: den egna vårdenheten direkt och andra vårdenheter efter ett aktivt val.
+    const fore = resurser((await k.get('/fhir/Composition?patient=p01')).data).filter(urMellanarkivet);
+    expect(fore.map(c => c.custodian.reference)).toEqual(['Organization/uso-kard']);
+    await k.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Vården av patienten' });
+    const efter = resurser((await k.get('/fhir/Composition?patient=p01')).data).filter(urMellanarkivet);
+    expect(efter.map(c => c.custodian.reference).sort()).toEqual(['Organization/uso-kard', 'Organization/uso-med', 'Organization/vc-tybble']);
+    expect(resurser((await k.get('/fhir/Observation?patient=p01')).data).filter(urMellanarkivet)).toHaveLength(1);
+  });
+
+  test('FHIR lämnar inte ut handlingar ur mellanarkivet från en spärrad vårdenhet, och en sådan resurs på id lämnas inte ut', async () => {
+    const k = await inloggad('lak-kard');
+    const d = db(k);
+    await k.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Vården av patienten' });
+    d.query("INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES ('p01', 'vc-tybble', ?, 1)").run(new Date().toISOString());
+    const c = resurser((await k.get('/fhir/Composition?patient=p01')).data).filter(urMellanarkivet);
+    expect(JSON.stringify(c)).not.toContain('vc-tybble');
+    expect(resurser((await k.get('/fhir/Observation?patient=p01')).data).filter(urMellanarkivet)).toEqual([]);
+    const id = d.query("SELECT id FROM mellanarkiv_handlingar WHERE enhet_id = 'vc-tybble' AND slag = 'anteckning'").get().id;
+    const dold = await k.get(`/fhir/Composition/ma-${id}`);
+    expect(dold.status).toBe(403);
+    expect(JSON.stringify(dold.data)).not.toContain('Tybble');
+    expect(JSON.stringify(dold.data)).not.toContain('hypertoni');
+    // Det nekade försöket loggas.
+    expect(d.query("SELECT count(*) AS n FROM atkomstlogg WHERE resurs = ? AND resultat = 'nekad'").get(`fhir/Composition/ma-${id}`).n).toBe(1);
+    // Med patientens samtycke nu lämnas den ut.
+    await k.post('/api/patient/p01/val', { typ: 'samtycke_sparr', syfte: 'Patienten samtycker' });
+    expect((await k.get(`/fhir/Composition/ma-${id}`)).status).toBe(200);
+  });
+
+  test('skyddad identitet: resurserna ur mellanarkivet bär inga personuppgifter och pekar på journalens id', async () => {
+    const k = await inloggad('lak-kard');
+    const d = db(k);
+    const p = d.query("SELECT * FROM patienter WHERE id = 'p01'").get();
+    d.query("UPDATE patienter SET skyddad = 1 WHERE id = 'p01'").run();
+    for (const t of ['Composition', 'Observation', 'MedicationRequest', 'MedicationAdministration']) {
+      const svar = await k.get(`/fhir/${t}?patient=p01`);
+      const ur = resurser(svar.data).filter(urMellanarkivet);
+      if (t !== 'Observation') expect(ur.length).toBeGreaterThan(0);
+      const text = JSON.stringify(ur);
+      for (const x of [p.personnummer, p.personnummer.replace('-', ''), p.fornamn, p.efternamn]) expect(text).not.toContain(x);
+      expect(ur.every(r => (r.subject?.reference ?? 'Patient/p01') === 'Patient/p01')).toBe(true);
+    }
+  });
+
+  test('en roll utan läkemedel får inga ordinationer ur mellanarkivet, och undantag från FHIR gäller handlingarna där', async () => {
+    const k = await inloggad('adm-kard');
+    const d = db(k);
+    const id = d.query("SELECT id FROM mellanarkiv_handlingar WHERE slag = 'ordination'").get().id;
+    const r = await k.get(`/fhir/MedicationRequest/ma-${id}`);
+    expect(r.status).toBe(403);
+    expect(d.query("SELECT count(*) AS n FROM atkomstlogg WHERE resurs = ? AND resultat = 'nekad' AND personal_id = 'adm-kard'").get(`fhir/MedicationRequest/ma-${id}`).n).toBe(1);
+    // Systemförvaltningens undantag av vårdcentralen från FHIR gäller också handlingarna i mellanarkivet.
+    const lak = await inloggad('lak-kard');
+    const d2 = db(lak);
+    await lak.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Vården av patienten' });
+    d2.query(`INSERT INTO konfig_andringar (slag, nyckel, varde, giltig_fran, motivering, foreslagen_av, foreslagen, status, beslutad_av, beslutad, galler_fran)
+      VALUES ('undantag', 'enhet:vc-tybble', ?, '2020-01-01', 'Test av undantag', 'sysf', '2020-01-01', 'godkand', 'sysf2', '2020-01-01', '2020-01-01')`).run(JSON.stringify({ kanaler: ['fhir'] }));
+    const c = resurser((await lak.get('/fhir/Composition?patient=p01')).data).filter(urMellanarkivet);
+    expect(c.length).toBe(2);
+    expect(JSON.stringify(c)).not.toContain('vc-tybble');
+    const ut = d2.query("SELECT id FROM mellanarkiv_handlingar WHERE enhet_id = 'vc-tybble' AND slag = 'anteckning'").get().id;
+    expect((await lak.get(`/fhir/Composition/ma-${ut}`)).status).toBe(404);
+  });
+
+  test('hela journalen ($everything) tar med handlingarna ur mellanarkivet', async () => {
+    const k = await inloggad('lak-kard');
+    const b = (await k.get('/fhir/Patient/p01/$everything')).data;
+    const ur = resurser(b).filter(urMellanarkivet);
+    expect(ur.map(r => r.resourceType).sort()).toEqual(expect.arrayContaining(['Composition', 'MedicationAdministration', 'MedicationRequest']));
+  });
+});

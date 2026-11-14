@@ -58,10 +58,17 @@ describe('Läskopia', () => {
     expect(Object.keys(kopia.patienter).sort()).toEqual(lista.map(p => p.id).sort());
     expect(Date.parse(kopia.giltigTill)).toBeGreaterThan(Date.now());
     // Varje del är identisk med vad det vanliga anropet ger.
+    // Runda 15, r3: utom handlingarna i mellanarkivet, som läskopian inte tar med (mellanarkiv-r15.test.js). De som kräver
+    // ett aktivt val räknas då inte heller bland de dolda.
+    const utanMa = async (id, ov) => {
+      const ma = (await k.get(`/api/patient/${id}/mellanarkiv`)).data;
+      return { ...ov, tidslinje: ov.tidslinje.filter(t => t.typ !== 'mellanarkiv'), dolda: { ...ov.dolda, kraverVal: ov.dolda.kraverVal - (ma.dolda?.kraverVal ?? 0) } };
+    };
     for (const [id, post] of Object.entries(kopia.patienter)) {
       expect(post.huvud).toEqual((await k.get(`/api/patient/${id}`)).data);
-      expect(post.oversikt).toEqual((await k.get(`/api/patient/${id}/oversikt`)).data);
-      expect(post.lakemedel).toEqual((await k.get(`/api/patient/${id}/lakemedel`)).data);
+      expect(post.oversikt).toEqual(await utanMa(id, (await k.get(`/api/patient/${id}/oversikt`)).data));
+      const { mellanarkiv: _, ...lm } = (await k.get(`/api/patient/${id}/lakemedel`)).data;
+      expect(post.lakemedel).toEqual(lm);
       const ant = (await k.get(`/api/patient/${id}/anteckningar`)).data;
       expect(post.anteckningar.anteckningar).toEqual(ant.anteckningar.slice(0, 5));
       expect(post.anteckningar.totalt).toBe(ant.anteckningar.length);
@@ -77,7 +84,7 @@ describe('Läskopia', () => {
     await k.post('/api/patient/p01/val', { typ: 'andra_enheter', syfte: 'Läkemedelsgenomgång' });
     const efter = (await k.get('/api/lasekopia')).data.patienter.p01;
     expect(efter.oversikt.dolda.kraverVal).toBe(0);
-    expect(efter.oversikt).toEqual((await k.get('/api/patient/p01/oversikt')).data);
+    expect(efter.oversikt).toEqual(await utanMa('p01', (await k.get('/api/patient/p01/oversikt')).data));
   });
 
   test('spärrade uppgifter och skyddad identitet följer samma regler i läskopian', async () => {

@@ -95,6 +95,11 @@ code, pre { font-family: ui-monospace, 'DejaVu Sans Mono', Menlo, Consolas, mono
 }
 .miljorad[hidden] { display: none; }
 .miljorad p { margin: 0; }
+/* Runda 15, r3: raden överst på reservservern, med kopians ålder och vad som går att göra. */
+.reservrad { padding: 8px 20px; background: var(--larm-bg); border-bottom: 3px solid var(--larm); color: var(--blak); font-size: var(--f-s); }
+.reservrad[hidden] { display: none; }
+.reservrad p { margin: 0; overflow-wrap: anywhere; }
+.reservrad p + p { margin-top: 2px; }
 .demoknapp { flex: none; }
 
 /* Toppen */
