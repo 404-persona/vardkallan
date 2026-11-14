@@ -16,6 +16,9 @@ export const TYPER = {
   // Runda 14, r5: incidenter som systemförvaltaren registrerar, avslutar och följer upp, och incidentrapporten till
   // beställaren (servicenivaer.js).
   incident: 'Incident', incidentrapport: 'Incidentrapport till beställaren',
+  // Säkerhetsgranskningen efter sammanslagningen av runda 15: en makulering eller flytt som stoppades och som
+  // systemförvaltningen behöver se på (vardkontakt-makulering.js).
+  flytt_hindrad: 'Makulering eller flytt som behöver systemförvaltningen',
 };
 
 const kanonisk = (r) => JSON.stringify(Object.fromEntries(FALT.map(f => [f, r[f] ?? null])));

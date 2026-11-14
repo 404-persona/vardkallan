@@ -90,6 +90,10 @@ export function tillhor(db, o) {
   const meta = new Map(alla.filter(t => !UTAN.has(t)).map(t => [t, kolumner(db, t)]).filter(([, k]) => k.includes('patient_id')));
   const idFor = (t) => (meta.get(t).includes('id') ? 'id' : 'rowid');
   const ut = new Map();
+  // Säkerhetsgranskningen efter sammanslagningen: varje rad som hittas genom en annan rad får sin förälder, så att
+  // synligheten kan följa beroendekedjan (synligt).
+  const foraldrar = new Map();
+  Object.defineProperty(ut, 'foraldrar', { value: foraldrar, enumerable: false });
   const lagg = (t, ids) => {
     const fore = new Set(ut.get(t) ?? []);
     const nya = ids.filter(i => !fore.has(i));
@@ -114,8 +118,13 @@ export function tillhor(db, o) {
         if (!mal || mal === t || !ut.has(mal)) continue;
         const malIds = ut.get(mal);
         const extra = t === 'kallelser' ? " AND status <> 'skickad'" : '';
-        const ids = db.query(`SELECT ${idFor(t)} AS id FROM ${t} WHERE ${kol} IN (${ph(malIds)}) AND patient_id = ?${extra}`).all(...malIds, o.patientId).map(r => r.id);
-        if (lagg(t, ids)) ny = true;
+        const rader = db.query(`SELECT ${idFor(t)} AS id, ${kol} AS foralder FROM ${t} WHERE ${kol} IN (${ph(malIds)}) AND patient_id = ?${extra}`).all(...malIds, o.patientId);
+        for (const r of rader) {
+          const k = `${t}:${r.id}`;
+          if (!foraldrar.has(k)) foraldrar.set(k, new Set());
+          foraldrar.get(k).add(`${mal}:${r.foralder}`);
+        }
+        if (lagg(t, rader.map(r => r.id))) ny = true;
       }
     }
     if (!ny) break;
@@ -125,17 +134,39 @@ export function tillhor(db, o) {
 // Säkerhetsgranskningen efter sammanslagningen: det som visas för användaren räknas bara på rader som användaren får se.
 // En rad från en vårdenhet som användaren inte får se (till exempel en spärrad) flyttas ändå med, men räknas inte och
 // nämns inte, så att antalen aldrig röjer att den finns.
+// Synligheten följer beroendekedjan: en rad är synlig bara om dess egna vårdenheter får ses och alla rader den hittades
+// genom är synliga, så att en rad utan vårdenhet som hör till en dold rad inte heller räknas.
 export function synligt(atk, foljer) {
+  const db = atk.db;
+  const foraldrar = foljer.foraldrar ?? new Map();
+  const egen = new Map();
+  for (const [t, ids] of foljer) {
+    const kol = kolumner(db, t).filter(k => k.endsWith('enhet_id'));
+    const har = kolumner(db, t).includes('id') ? 'id' : 'rowid';
+    const rader = kol.length && ids.length ? db.query(`SELECT ${har} AS id, ${kol.join(', ')} FROM ${t} WHERE ${har} IN (${ph(ids)})`).all(...ids) : ids.map(id => ({ id }));
+    for (const r of rader) egen.set(`${t}:${r.id}`, kol.every(k => !r[k] || r[k] === 'extern' || atk.prova('registrera_vardkontakt', { enhet_id: r[k] }).tillaten));
+  }
+  const minne = new Map();
+  const syns = (k) => {
+    if (minne.has(k)) return minne.get(k);
+    minne.set(k, false);
+    const v = (egen.get(k) ?? false) && [...(foraldrar.get(k) ?? [])].every(syns);
+    minne.set(k, v);
+    return v;
+  };
   const ut = new Map();
   for (const [t, ids] of foljer) {
-    const kol = kolumner(atk.db, t).filter(k => k.endsWith('enhet_id'));
-    if (!kol.length) { ut.set(t, ids); continue; }
-    const har = kolumner(atk.db, t).includes('id') ? 'id' : 'rowid';
-    const rader = ids.length ? atk.db.query(`SELECT ${har} AS id, ${kol.join(', ')} FROM ${t} WHERE ${har} IN (${ph(ids)})`).all(...ids) : [];
-    const kvar = rader.filter(r => kol.every(k => !r[k] || r[k] === 'extern' || atk.prova('registrera_vardkontakt', { enhet_id: r[k] }).tillaten)).map(r => r.id);
+    const kvar = ids.filter(id => syns(`${t}:${id}`));
     if (kvar.length) ut.set(t, kvar);
   }
   return ut;
+}
+// Säkerhetsgranskningen efter sammanslagningen: när något hindrar en makulering eller flytt får användaren samma svar
+// oavsett om det är något som användaren ser eller något dolt, utan antal, och systemförvaltningen får samma meddelande.
+export const HINDRAD = 'Vårdkontakten har dokumentation, som aldrig förstörs, så den kan inte makuleras utan rätt patient. Ange rätt patient, så flyttas den dit. Systemförvaltningen har fått ett meddelande om något annat behöver rättas.';
+function meddelaForvaltningen(atk, o) {
+  require('./sakerhetslogg.js').logga(atk.db, { typ: 'flytt_hindrad', personal_id: atk.personal.id, enhet_id: atk.personal.enhet_id, metod: 'POST', vag: `/api/${o.slag}/:id/makulera`, status: 409,
+    beskrivning: `En makulering eller flytt av ${o.slag === 'vardtillfalle' ? 'vårdtillfälle' : 'vårdkontakt'} ${o.id} stoppades och kan behöva rättas av systemförvaltningen.` });
 }
 const sammanfattning = (foljer) => [...foljer].map(([t, ids]) => `${ids.length} ${BENAMNING[t] ?? t.replace(/_/g, ' ')}`).join(', ');
 
@@ -169,11 +200,11 @@ export function forhandsvisa(atk, o) {
   return {
     slag: o.slag, id: o.id, start: o.start, orsak: o.orsak,
     foljer: [...foljer].map(([t, ids]) => ({ tabell: t, text: BENAMNING[t] ?? t.replace(/_/g, ' '), antal: ids.length })),
-    kanMakuleras: o.slag === 'vardkontakt' && !harDokumentation(alla),
+    kanMakuleras: o.slag === 'vardkontakt' && !harDokumentation(foljer),
     vantar: Boolean(pagaende(atk.db, o)),
     text: foljer.size || kontakter ? `Det här följer med till rätt patient: ${kontakter}${sammanfattning(foljer) || 'inga andra uppgifter'}.` : `Inga uppgifter hör till ${ord.namn}.`,
     utanPatientText: o.slag === 'vardtillfalle' ? VT_UTAN
-      : harDokumentation(alla) ? 'Vårdkontakten har dokumentation, som aldrig förstörs. Ange rätt patient, så flyttas den dit.' : 'Utan rätt patient makuleras vårdkontakten. Den finns kvar som makulerad med din motivering.',
+      : harDokumentation(foljer) ? 'Vårdkontakten har dokumentation, som aldrig förstörs. Ange rätt patient, så flyttas den dit.' : 'Utan rätt patient makuleras vårdkontakten. Den finns kvar som makulerad med din motivering.',
     fyraOgonText: FYRA_OGON_TEXT,
   };
 }
@@ -286,7 +317,7 @@ function enheterFor(db, o, foljer) {
 function provaEnheter(atk, till, o, foljer, valFor) {
   const { Atkomst } = require('./atkomst.js');
   const a = new Atkomst(atk.db, atk.personal, till, valFor(till) ?? {}, 'registrera_vardkontakt');
-  for (const e of enheterFor(atk.db, o, foljer)) if (!a.prova('registrera_vardkontakt', { enhet_id: e }).tillaten) throw new Fel(409, ANNAN_ENHET, 'ogiltig');
+  for (const e of enheterFor(atk.db, o, foljer)) if (!a.prova('registrera_vardkontakt', { enhet_id: e }).tillaten) { meddelaForvaltningen(atk, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
 }
 
 // Gör rättelsen i en transaktion. aktor är den som utför den (vid fyra ögon den som godkänner), av den som makulerade
@@ -358,8 +389,8 @@ export function makulera(atk, o, body = {}, { nu = new Date(), valFor = () => ({
   const foljer = tillhor(db, o);
   if (!till && o.slag === 'vardtillfalle') throw new Fel(409, VT_UTAN, 'ogiltig', { falt: ['rattPatient'] });
   if (!till && harDokumentation(foljer)) {
-    const syns = sammanfattning(new Map([...synligt(atk, foljer)].filter(([t]) => !DOKUMENTATION_UTAN.has(t))));
-    throw new Fel(409, `Vårdkontakten har dokumentation${syns ? ` (${syns})` : ''}, som aldrig förstörs. Ange rätt patient, så flyttas den dit.`, 'ogiltig', { falt: ['rattPatient'] });
+    meddelaForvaltningen(atk, o);
+    throw new Fel(409, HINDRAD, 'ogiltig', { falt: ['rattPatient'] });
   }
   if (!till && db.query("SELECT 1 FROM sqlite_master WHERE name = 'betalningar'").get() && (foljer.get('bokningar') ?? []).some(b => db.query('SELECT 1 FROM betalningar WHERE bokning_id = ?').get(b))) {
     throw new Fel(409, 'Besöket är betalt. Återbetala avgiften i kassan först, sedan kan vårdkontakten makuleras.', 'ogiltig');
@@ -449,7 +480,7 @@ export function godkann(db, personal, forslagId, { nu = new Date(), valFor = () 
   }
   const foljer = tillhor(db, o);
   const ve = vardenhetFor(db, o.enhetId);
-  if ([...enheterFor(db, o, foljer)].some(e => e !== ve)) throw new Fel(409, ANNAN_ENHET, 'ogiltig');
+  if ([...enheterFor(db, o, foljer)].some(e => e !== ve)) { meddelaForvaltningen(atkG, o); throw new Fel(409, ANNAN_ENHET, 'ogiltig'); }
   const syns = synligt(atkG, foljer);
   const id = genomfor(db, {
     aktor: personal, av: f.foreslagen_av, godkandAv: personal.id, forslagId: f.id, o, till, orsak: f.orsak, foljer, nu, behallRelation: true, grund: 'administrativ',

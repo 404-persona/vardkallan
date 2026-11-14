@@ -394,22 +394,55 @@ describe('Säkerhetsgranskningen efter runda 15: samtycket och den skyddade iden
 
 describe('Säkerhetsgranskningen efter runda 15: flytten och det som inte syns', () => {
   const pers = (db, id) => db.query('SELECT * FROM personal WHERE id = ?').get(id);
-  test('förhandsvisningen räknar inte en anteckning från en spärrad vårdenhet, och svaret är detsamma utan den', () => {
-    const db = nyDb();
-    const v = db.query(`SELECT v.* FROM vardkontakter v WHERE v.enhet_id LIKE 'uso-kard%' AND v.kalla = 'vardkallan' AND v.vardtillfalle_id IS NULL
-      AND v.typ <> 'slutenvard' AND coalesce(v.planerad, 0) = 0 AND v.patient_id NOT IN ('p05', 'p12') AND EXISTS (SELECT 1 FROM anteckningar a WHERE a.vardkontakt_id = v.id) ORDER BY v.id LIMIT 1`).get();
-    const atkFor = () => new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt');
-    const svar = () => JSON.stringify(makuleringMod.forhandsvisa(atkFor(), makuleringMod.objekt(db, 'vardkontakt', v.id)));
-    const fore = svar();
+  // Lägger in en rad med de värden som ges och enkla värden i övriga obligatoriska kolumner.
+  const lagIn = (db, tabell, varden) => {
+    const kol = db.query(`PRAGMA table_info(${tabell})`).all();
+    const v = { ...varden };
+    for (const k of kol) if (k.notnull && k.dflt_value == null && !k.pk && !(k.name in v)) v[k.name] = /INT/i.test(k.type) ? 1 : 'x';
+    const n = Object.keys(v);
+    return Number(db.query(`INSERT INTO ${tabell} (${n.join(', ')}) VALUES (${n.map(() => '?').join(', ')}) RETURNING rowid AS id`).get(...n.map(x => v[x])).id);
+  };
+  const kontakt = (db) => db.query(`SELECT v.* FROM vardkontakter v WHERE v.enhet_id LIKE 'uso-kard%' AND v.kalla = 'vardkallan' AND v.vardtillfalle_id IS NULL
+    AND v.typ <> 'slutenvard' AND coalesce(v.planerad, 0) = 0 AND v.patient_id NOT IN ('p05', 'p12') AND EXISTS (SELECT 1 FROM anteckningar a WHERE a.vardkontakt_id = v.id) ORDER BY v.id LIMIT 1`).get();
+  const doljAnteckning = (db, v) => {
     const a = db.query('SELECT * FROM anteckningar WHERE vardkontakt_id = ? LIMIT 1').get(v.id);
     const kol = Object.keys(a).filter(k => k !== 'id');
     db.query(`INSERT INTO anteckningar (${kol.join(', ')}) VALUES (${kol.map(() => '?').join(', ')})`).run(...kol.map(k => (k === 'enhet_id' ? 'kkoga-ane' : a[k])));
-    db.query('INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES (?, ?, ?, 1)').run(v.patient_id, 'kkoga-ane', new Date().toISOString());
-    expect(svar()).toBe(fore);
-    // Flytten stoppas, men texten nämner ingen vårdenhet.
-    let fel = null;
-    try { makuleringMod.makulera(atkFor(), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.', rattPatient: '196503143254' }, { valFor: () => ({}) }); } catch (e) { fel = e; }
-    if (fel?.status === 409) { expect(fel.message).not.toMatch(/Be den vårdenheten|annan vårdenhet än din/); expect(fel.message).toContain('systemförvaltningen'); }
+  };
+  const doljRemissMedBilaga = (db, v) => {
+    const r = lagIn(db, 'remisser', { patient_id: v.patient_id, fran_enhet_id: 'kkoga-ane', till_enhet_id: 'kkoga-ane', vardkontakt_id: v.id, status: 'skickad' });
+    lagIn(db, 'remiss_bilagor', { remiss_id: r, patient_id: v.patient_id });
+  };
+  const sparr = (db, v) => db.query('INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES (?, ?, ?, 1)').run(v.patient_id, 'kkoga-ane', new Date().toISOString());
+  const forhandsvisning = (db, v) => JSON.stringify(makuleringMod.forhandsvisa(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id)));
+  const vagran = (db, v) => { try { makuleringMod.makulera(new AtkomstKlass(db, pers(db, 'adm-kard'), v.patient_id, {}, 'registrera_vardkontakt'), makuleringMod.objekt(db, 'vardkontakt', v.id), { orsak: 'Besöket registrerades på fel patient i receptionen.' }); return 'lyckades'; } catch (e) { return JSON.stringify([e.status, e.message, e.kod, e.extra]); } };
+
+  test('förhandsvisningen är densamma med och utan en dold anteckning på en spärrad vårdenhet', () => {
+    const utan = nyDb(); const med = nyDb();
+    const v = kontakt(utan); sparr(utan, v);
+    sparr(med, v); doljAnteckning(med, v);
+    expect(forhandsvisning(med, v)).toBe(forhandsvisning(utan, v));
+  });
+
+  test('förhandsvisningen är densamma också när den dolda raden bara har barn utan vårdenhet', () => {
+    const utan = nyDb(); const med = nyDb();
+    const v = kontakt(utan); sparr(utan, v);
+    sparr(med, v); doljRemissMedBilaga(med, v);
+    expect(forhandsvisning(med, v)).toBe(forhandsvisning(utan, v));
+  });
+
+  test('vägran är densamma med och utan en dold rad, utan antal, och systemförvaltningen får samma meddelande', () => {
+    const utan = nyDb(); const med = nyDb(); const barn = nyDb();
+    const v = kontakt(utan); sparr(utan, v);
+    sparr(med, v); doljAnteckning(med, v);
+    sparr(barn, v); doljRemissMedBilaga(barn, v);
+    const a = vagran(utan, v);
+    expect(a).not.toBe('lyckades');
+    expect(vagran(med, v)).toBe(a);
+    expect(vagran(barn, v)).toBe(a);
+    expect(a).not.toMatch(/\d+ anteckning/);
+    const rad = (db) => db.query("SELECT beskrivning FROM sakerhetslogg WHERE typ = 'flytt_hindrad' ORDER BY id DESC").get()?.beskrivning;
+    expect(rad(med)).toBe(rad(utan));
+    expect(rad(utan)).toBeTruthy();
   });
 });
-
