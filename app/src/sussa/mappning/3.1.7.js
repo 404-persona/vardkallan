@@ -2,6 +2,8 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST } from '../../krav.js';
 import { medR10r3 } from '../runda10-r3.js';
+// Runda 15, r4: anteckningsvyn (sussa/runda15-r4.js).
+import { medR15r4 } from '../runda15-r4.js';
 
 const { A, M, MJ } = TEST;
 const VK = 'Vårdkontakt > ';
@@ -24,4 +26,4 @@ const POSTERNA = [
   },
 ];
 // Runda 10, r3: förifyllnaden och formulärmotorn (sussa/runda10-r3.js).
-export default medR10r3(POSTERNA);
+export default medR15r4(medR10r3(POSTERNA));

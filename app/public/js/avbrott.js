@@ -279,7 +279,8 @@ export async function skickaKo({ fraga = true } = {}) {
       }
     }
   } finally { skickar = false; }
-  if (res.sparade) notis(`${res.sparade === 1 ? 'En registrering' : `${res.sparade} registreringar`} från avbrottet är nu sparade i journalen med tiden då de gjordes.`);
+  // Runda 15, r4: rätt böjning för en registrering.
+  if (res.sparade) notis(res.sparade === 1 ? 'En registrering från avbrottet är nu sparad i journalen med tiden då den gjordes.' : `${res.sparade} registreringar från avbrottet är nu sparade i journalen med tiden då de gjordes.`);
   for (const a of res.avvisade) notis(`En registrering från avbrottet kunde inte sparas: ${a.text} ${a.vad ? `Det gällde ${a.vad}. ` : ''}Registrera den på nytt om den gjordes.`, 'fel', { kvar: true });
   await uppdateraKo();
   if (fraga) for (const k of res.konflikter) await avgorKonflikt(k);

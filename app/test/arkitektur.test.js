@@ -134,8 +134,12 @@ describe('Nationellt fackspråk', () => {
     await k.logga('lak-kard');
     const r = await k.get('/api/fackssprak');
     expect(r.status).toBe(200);
-    // Runda 15, r5: Aktivitet och de nya sökorden utan exakt motsvarighet i Snomed CT.
-    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Aktivitet', 'Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Mål', 'Resultat', 'Andning och cirkulation', 'Hud och sår', 'Observation']);
+    // Runda 15, r5: Aktivitet och de nya sökorden utan exakt motsvarighet i Snomed CT. Runda 15, r4: undersökorden i
+    // läkarmallarnas varianter (mallvarianter.js) har ingen kod förrän de är kontrollerade.
+    expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Aktivitet', 'Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Mål', 'Resultat', 'Andning och cirkulation', 'Hud och sår', 'Observation',
+      'Råd och egenvård', 'Psykiskt status', 'Suicidriskbedömning', 'Diabetes', 'Astma och KOL', 'Hypertoni', 'Hjärtsvikt',
+      // Beslut 2026-11-14: de nya varianternas undersökord.
+      'Observerat i videosamtalet', 'Tillväxt', 'Vaccinationer', 'Utveckling', 'Läkemedelsgenomgång', 'Fallrisk', 'Brytpunktssamtal', 'Symtomskattning', 'Graviditet', 'Läkemedel under graviditet']);
   });
 
   test(namn(T.nfAtgard), () => {

@@ -8,6 +8,11 @@
 //   fältbyte   varje gång användaren måste flytta sig till ett textfält. Ett fält som gränssnittet redan har satt
 //              fokus i räknas inte. Texten som skrivs räknas inte tecken för tecken.
 //   tangent    tangenter som inte är text, till exempel Enter för att skicka en sökning.
+//   tecken     (runda 15, r4) tecknen som användaren skriver, tecknen som systemet skriver när användaren för in ett
+//              värde ur underlaget, och tecknen som användaren skrev fast systemet redan visste dem (ett värde ur
+//              underlaget som skrivs för hand). Ett flöde med tecken.hogst får inte kräva fler skrivna tecken, och ett
+//              flöde med underlag kräver att värdena av de slagen kommer ur underlaget och att inget skrivs för hand som
+//              systemet hade kunnat skriva. Det som tar tid i journalen är att skriva och läsa, inte bara att klicka.
 //
 // Budgeten är antalet steg som flödet behöver: ett steg för att komma dit, ett fältbyte för varje fält som måste
 // fyllas i, två klick för en lista som måste ändras och ett klick för att spara eller bekräfta. Obligatoriska fält
@@ -15,7 +20,7 @@
 // lagen eller NLL kräver dem. Budgeten är alltså ett tak som gränssnittet ska klara, inte ett mål att trimma mot.
 // Mätningen görs med ett skript, inte med verkliga användare.
 
-export const REGLER = 'Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte tecken för tecken. Tangenter som Enter räknas.';
+export const REGLER = 'Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.';
 
 export const FLODEN = [
   {
@@ -27,8 +32,11 @@ export const FLODEN = [
     motivering: 'Ett klick på den senaste anteckningen i översikten, som då visas i sin helhet.',
   },
   {
-    id: 'daganteckning', namn: 'Skriva och signera en daganteckning', roll: 'lak-kard', start: 'Patientens översikt', budget: 4,
-    motivering: 'Ett klick för att öppna en ny anteckning, ett fältbyte för vart och ett av de två sökord som skrivs (Aktuellt och Bedömning) och ett klick för att signera. Mallen Daganteckning och den pågående vårdkontakten ska vara förvalda.',
+    // Runda 15, r4 (F6): anteckningen har demons medianlängd för en daganteckning och för in blodtrycket och en
+    // läkemedelsändring ur underlaget i stället för att skriva dem.
+    id: 'daganteckning', namn: 'Skriva och signera en daganteckning', roll: 'lak-kard', start: 'Patientens översikt', budget: 5,
+    tecken: { hogst: 70 }, underlag: ['matvarde', 'ordination'],
+    motivering: 'Ett klick för att öppna en ny anteckning, där fokus står i Aktuellt, ett klick på blodtrycket i underlaget, ett fältbyte till Bedömning, ett klick på läkemedelsändringen i underlaget och ett klick för att signera. Mallen Daganteckning och den pågående vårdkontakten är förvalda. Anteckningen har ungefär demons medianlängd för en daganteckning, men användaren skriver bara drygt hälften av tecknen: blodtrycket och ändringen av metoprolol skriver systemet med datum, som referenser, och inget som systemet redan vet får skrivas för hand. Utkastet sparas av sig självt under tiden.',
   },
   {
     id: 'ordinera', namn: 'Ordinera ett läkemedel utan varning', roll: 'lak-kard', start: 'Patientens översikt', budget: 7,
@@ -588,5 +596,25 @@ FLODEN.push(
   {
     id: 'inloggning-extern', namn: 'Logga in genom vårdgivarens inloggningstjänst', roll: 'lak-kard', start: 'Inloggningssidan med en inkopplad inloggningstjänst', budget: 2,
     motivering: 'Sussa 5.2.1.1. Ett klick på tjänsten på inloggningssidan och ett på Logga in i tjänsten. Uppdraget, vårdenheten och behörigheten kommer ur biljetten och katalogen, så personen väljer ingenting i Vårdkällan. I en verklig tjänst ersätts klicket i tjänsten av SITHS-kortet.',
+  },
+);
+// Runda 15, r4 (F6): dokumentationsarbetet. Sjuksköterskans anteckning för in syremättnaden ur underlaget, och läsflödet
+// hittar den senaste bedömningen i en journal med 30 anteckningar, där den senaste anteckningen inte har någon bedömning.
+FLODEN.push(
+  {
+    id: 'omvardnadsanteckning', namn: 'Skriva och signera en omvårdnadsanteckning', roll: 'ssk-kard', start: 'Patientens översikt', budget: 4,
+    tecken: { hogst: 45 }, underlag: ['matvarde'],
+    motivering: 'Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning/cirkulation, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.',
+  },
+  {
+    id: 'senaste-bedomning', namn: 'Hitta den senaste bedömningen i en journal med 30 anteckningar', roll: 'lak-kard', start: 'Översikten för en patient med 30 anteckningar', budget: 2,
+    motivering: 'Ett klick på fliken Journal och ett på Senaste bedömning, som systemet har räknat fram bland de anteckningar som läkaren får se. Anteckningen öppnas med bedömning och åtgärd först. Ingen behöver bläddra förbi de nyare omvårdnadsanteckningarna.',
+  },
+  // Sammanslagningen av runda 15: undersköterskans anteckning med den smala behörigheten skriv_observation (r5,
+  // atkomst.js) och mallen Observationsanteckning. Flödet finns i test/flodessteg.cjs (GOR['usk-anteckning']).
+  {
+    id: 'usk-anteckning', namn: 'Skriva och signera undersköterskans anteckning', roll: 'usk-kard', start: 'Patientens översikt', budget: 4,
+    tecken: { hogst: 45 }, underlag: ['matvarde'],
+    motivering: 'Ett klick för att öppna en ny anteckning, där Observationsanteckning är förvald eftersom det är yrkets mall, ett klick på det senaste mätvärdet i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och undersköterskan skriver bara det hon har sett.',
   },
 );

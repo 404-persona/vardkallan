@@ -70,6 +70,9 @@ export const TACKNING = {
   'godkanna-mt': nej('Godkännandet görs i gränssnittet eller med personalens API. Klassen läses i FHIR som status preliminary eller final i Observation.', [a('POST', '/api/patient/{id}/mt/godkann'), a('GET', '/fhir/Observation?patient={id}')]),
   'iva-oversikt': nej('Översikten och övervakningen hämtas med personalens API. Mätvärdena läses också som Observation och doserna som MedicationAdministration.', [a('GET', '/api/iva'), a('GET', '/api/patient/{id}/iva'), a('GET', '/fhir/Observation?patient={id}')]),
   'egen-matning': nej('Patienten lämnar mätningen i Min journal. Invånarens FHIR-API kan bara läsa, och mätningen läses som Observation med patienten som utförare.', [a('POST', '/api/min/journal/{id}/egenmatning')]),
+  // Runda 15, r4: underlaget och den senaste bedömningen finns i personalens API, och referenserna läses i FHIR.
+  omvardnadsanteckning: delvis([a('GET', '/api/patient/{id}/anteckningsmall?typ=Omvårdnadsanteckning'), a('POST', '/fhir/Composition', 'med status final')], 'Anteckningen skrivs som Composition. Underlaget och referenserna till det finns i personalens API, och en signerad anteckning visar referenserna som section.entry för den som får se resursen.'),
+  'senaste-bedomning': delvis([a('GET', '/api/patient/{id}/anteckningar'), a('GET', '/fhir/Composition?patient={id}')], 'Den senaste bedömningen räknas i personalens API. I FHIR läser tillämpningen själv avsnittet Bedömning i Composition.'),
 };
 
 // Täckningen för alla flöden i klickbudgeten, i samma ordning.

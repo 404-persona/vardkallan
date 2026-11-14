@@ -6,6 +6,58 @@
       "datum": "2026-11-14",
       "nyheter": [
         {
+          "id": "anteckning-fraser-1-5-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "underskoterska",
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Egna fraser och egen ordning på sökorden",
+          "text": "Under Mina fraser sparar du egna korta texter och skriver in dem med punkt, kortnamnet och tabbtangenten, till exempel .ub. Där väljer du också i vilken ordning sökorden står när du själv skriver. Fraserna är bara dina och får inte innehålla värden ur journalen."
+        },
+        {
+          "id": "anteckning-lasordning-1-5-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "underskoterska",
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Bedömning och åtgärd först, och varianter ur kontakten",
+          "text": "När du läser en anteckning står bedömning och åtgärd först, utan att något ändras i det sparade, och journalen visar den senaste bedömningen överst i listan. När du skriver väljer systemet variant ur kontakten: en telefonkontakt ger råd och egenvård i stället för status, psykiatrin och suicidtankar ger psykiskt status och suicidriskbedömning, på vårdcentralen fälls sökorden för patientens kroniska sjukdomar ut, och videosamtal, barn, äldre med många läkemedel, palliativ vård och graviditet ger några korta undersökord med en förklaring. Högst fem mallar visas som förslag och resten under Fler mallar."
+        },
+        {
+          "id": "anteckning-underlag-1-5-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "underskoterska",
+            "fysioterapeut"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Underlaget bredvid sökorden",
+          "text": "När du skriver en anteckning visar systemet underlaget bredvid sökorden: kontaktorsaken, prioriteten ur triagen, mätvärden och provsvar sedan förra anteckningen av samma slag med en pil för förändringen, läkemedel som är nya, ändrade eller utsatta och aktuella diagnoser. Ett klick för in värdet med datum där du senast skrev, så att du inte skriver om det som redan finns. Kontaktorsak och prioritet fyller systemet i med källan, och du kan ändra dem."
+        },
+        {
+          "id": "anteckning-utkast-1-5-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "underskoterska",
+            "fysioterapeut"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Utkastet sparas av sig självt",
+          "text": "Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Klickar du på en annan anteckning i listan öppnas den i en läsruta ovanför, och din text står kvar. Under ett avbrott sparas utkastet krypterat på datorn och förs till journalen när servern svarar igen."
+        },
+        {
           "id": "formular-1-5-0",
           "roller": [
             "sjukskoterska",

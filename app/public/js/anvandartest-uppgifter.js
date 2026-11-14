@@ -101,7 +101,8 @@ export const UPPGIFTER = [
   },
   {
     id: 'daganteckning', namn: 'Skriva och signera en daganteckning', roll: 'lak-kard', start: 'Patientens översikt',
-    text: 'Du har träffat Gunnar på ronden. Han är pigg, äter bra och har inga bröstsmärtor. Du bedömer honom som stabil och planen fortsätter. Dokumentera det som en daganteckning och signera den.',
+    // Runda 15, r4: anteckningen tar också med dagens blodtryck och den ändrade dosen av metoprolol.
+    text: 'Du har träffat Gunnar på ronden. Han är pigg, äter bra och har inga bröstsmärtor. Ta med dagens blodtryck och att dosen av metoprolol höjdes. Du bedömer honom som stabil och planen fortsätter. Dokumentera det som en daganteckning och signera den.',
     kontroll: { notis: 'Anteckningen är signerad' },
   },
   {
@@ -741,6 +742,21 @@ UPPGIFTER.push({
   text: 'Din vårdgivare har kopplat in sin egen inloggningstjänst. Logga in som Sara Lindqvist genom den.',
   kontroll: { sel: '.vem', text: 'Sara Lindqvist' },
 });
+
+// Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen i en journal med 30 anteckningar.
+STARTPUNKT['Översikten för en patient med 30 anteckningar'] = { hash: '#/patient/p01', klar: '.tidslinje', forbered: 'journal-30' };
+UPPGIFTER.push(
+  {
+    id: 'omvardnadsanteckning', namn: 'Skriva och signera en omvårdnadsanteckning', roll: 'ssk-kard', start: 'Patientens översikt',
+    text: 'Gunnar andas lugnt i vila. Dokumentera det under andning och cirkulation tillsammans med dagens syremättnad, och signera anteckningen.',
+    kontroll: { notis: 'Anteckningen är signerad' },
+  },
+  {
+    id: 'senaste-bedomning', namn: 'Hitta den senaste bedömningen i en journal med 30 anteckningar', roll: 'lak-kard', start: 'Översikten för en patient med 30 anteckningar',
+    text: 'Gunnars journal har många anteckningar. Läs den senaste läkarbedömningen.',
+    kontroll: { sel: '.anteckning .sokord', text: 'Bedömning nummer' },
+  },
+);
 
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [

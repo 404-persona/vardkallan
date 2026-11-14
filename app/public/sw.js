@@ -65,7 +65,9 @@ const FILER = [
   '/js/vyer/testprotokoll.js',
   '/js/vyer/servicenivaer.js',
   '/js/vyer/inloggningstjanster.js',
+  '/js/anteckningsstod.js', '/js/aktivitet-regler.js',
 ];
+// Runda 15, r4: listan har stödet i anteckningsvyn (anteckningsstod.js).
 // Runda 14, r3: listan har intygen, den simulerade intygsapplikationen och e-remissen (patient-intyg.js, intygsapplikation.js och eremiss-ui.js).
 // Runda 14, r4: listan har testprotokollet (testprotokoll.js).
 // Runda 14, r4: listan har reservdatorn för läkemedel (reservdator.js), som ska kunna öppnas också när kärnsystemet inte svarar.

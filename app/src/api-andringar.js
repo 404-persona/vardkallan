@@ -30,6 +30,9 @@ export const ANDRINGAR = [
       'GET /api/mallar ger bara de mallar som personens yrke skriver med, yrkets huvudmall först (huvudmall), och de nya mallarna Observationsanteckning, Fysioterapianteckning, Arbetsterapianteckning, Kuratorsanteckning och Dietistanteckning',
       'Formulärens förifyllnad har läkemedel som ökar risken för fall, NEWS2 och förra svaret, och ett svarsalternativ kan ha ett antal',
       'Sökorden Status och Planering har nya koder i Snomed CT, och Aktivitet har ingen kod',
+      // Runda 15, r4: anteckningsvyn.
+      'Composition: ett sökord med värden ur underlaget har section.entry med referenser till Observation, MedicationRequest, Condition och Encounter, bara till resurser som läsaren får se',
+      'Nya rutter i det interna API:t: mallen med underlag, varianter och förslag för en patient (GET /api/patient/:id/anteckningsmall), utkastet som sparas av sig självt (PUT och DELETE /api/patient/:id/anteckningsutkast), egna fraser och egen ordning på sökorden (/api/egna-fraser) och den senaste bedömningen i listan över anteckningar (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

@@ -74,7 +74,8 @@ export function koppla(form, d) {
     if (!varfor.has(s)) continue;
     const falt = t.closest('.falt');
     if (falt) falt.hidden = false;
-    if (!falt?.querySelector('[data-op-varfor]')) t.insertAdjacentHTML('beforebegin', `<p class="hjalp" data-op-varfor>${esc(varfor.get(s))}</p>`);
+    // Sammanslagningen av runda 15: anteckningsvyn har redan skrivit varför (data-foreslaget), och då skrivs det inte igen.
+    if (!falt?.querySelector('[data-op-varfor], [data-foreslaget]')) t.insertAdjacentHTML('beforebegin', `<p class="hjalp" data-op-varfor>${esc(varfor.get(s))}</p>`);
   }
   if (form.querySelector('[data-op-fler]')) form.__opRakna?.();
   form.querySelectorAll('[data-valj-mall]').forEach(b => b.addEventListener('click', () => {

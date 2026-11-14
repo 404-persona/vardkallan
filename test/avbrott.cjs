@@ -934,6 +934,34 @@ const undersok = (page, kod, nyckelB64) => page.evaluate(async ({ kod, nyckelB64
       anta(await antalGivna(oid) === 2, `dosen sparades ändå: ${await antalGivna(oid)}`);
       anta((await p.evaluate(async () => (await (await import('/js/lasekopia.js')).koRader()).length)) === 0, 'kön är inte tom');
     });
+
+    // Runda 15, r4 (F2): utkastet till en anteckning som skrivs när avbrottet börjar sparas krypterat i skrivkön och blir
+    // ett utkast i journalen när servern svarar igen. Avbrottet startas utan att fokus lämnar rutan, som när servern
+    // slutar svara mitt i skrivandet.
+    await test('ett utkast som skrivs när avbrottet börjar sparas krypterat i kön och blir ett utkast i journalen när servern svarar', async () => {
+      await loggaIn(p, 'lak-kard');
+      await p.goto(`${BAS}/#/patient/p01`);
+      await p.waitForSelector('.tidslinje');
+      const kopiaFore = await vantaPaKopia(p, '');
+      await p.evaluate(async () => (await import('/js/avbrott.js')).fornyaNu());
+      await vantaPaKopia(p, kopiaFore);
+      await p.goto(`${BAS}/#/patient/p01/journal/ny`);
+      await p.waitForSelector('#ant-form textarea[data-sokord="Aktuellt"]');
+      await p.fill('textarea[data-sokord="Aktuellt"]', 'Skrivet när servern slutade svara.');
+      await p.evaluate(() => document.querySelector('[data-a="avbrott"]').click());
+      await synlig(p, '#avbrott h2', 'Avbrott: läsläge');
+      await p.waitForFunction(async () => (await (await import('/js/lasekopia.js')).koRader()).length === 1, null, { timeout: 10000 });
+      const klartext = await p.evaluate(async () => {
+        const rader = await (await import('/js/lasekopia.js')).koRader();
+        return rader.map(r => new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(r.data))).join(' ').includes('Skrivet när');
+      });
+      anta(!klartext, 'utkastet ligger i klartext i kön');
+      await p.click('[data-avbrott="avsluta"]');
+      await synlig(p, '.notis', 'från avbrottet är nu sparad');
+      const ant = await (await req.get(`${BAS}/api/patient/p01/anteckningar`)).json();
+      anta(ant.anteckningar.some(a => a.status === 'utkast' && /Skrivet när servern slutade svara/.test(a.sammanfattning)), 'utkastet från kön finns inte i journalen');
+      anta((await p.evaluate(async () => (await (await import('/js/lasekopia.js')).koRader()).length)) === 0, 'kön är inte tom');
+    });
     await c.close();
   }
 

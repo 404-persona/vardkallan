@@ -1882,6 +1882,7 @@ body.testlage-aktivt.har-testare #notiser { bottom: calc(var(--testlage-hojd, 64
   .testare-panel { width: auto; max-width: none; border-radius: 10px 10px 0 0; max-height: 60vh; margin: 0; }
   body.har-testare #notiser { bottom: calc(var(--testare-hojd, 52px) + 12px); }
   .testa-roller { grid-template-columns: 1fr; }
+}
 /* Runda 13, r4: mobil i 390 px (E3-41 och E3-44). Sidhuvudet tar mindre plats: skannern, reservkoden, flerfaktorn och
    svarstiden visas när menyn är öppen, och titeln under namnet döljs. Flikraden i Min journal bryts på flera rader så
    att alla delar syns utan att rulla i sidled. Arbetslistan visas som ett kort per patient. */
@@ -1947,3 +1948,33 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .ovningstjanst { max-width: 40rem; }
 .ot-form select { max-width: 100%; }
 .extern-inloggning { margin-bottom: 1.25rem; }
+
+/* Runda 15, r4: anteckningsvyn med underlaget, läsrutan, varianterna, de egna fraserna och läsordningen. */
+.ant-skriv { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1200px) { .ant-skriv { grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); } }
+.ant-underlag { background: var(--yta-2); border: 1px solid var(--linje); border-radius: var(--r); padding: 10px 12px; min-width: 0; }
+.ant-underlag h2 { font-size: var(--f-l); margin: 0 0 4px; }
+.underlag-grupp h3 { font-size: var(--f-m); margin: 10px 0 2px; }
+.underlag-grupp ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px; }
+.underlag-post { display: block; width: 100%; text-align: left; font: inherit; font-size: var(--f-s); color: var(--blak); background: var(--yta); border: 1px solid var(--linje); border-radius: var(--r); padding: 5px 8px; cursor: pointer; overflow-wrap: anywhere; }
+.underlag-post:hover { border-color: var(--kalla); background: var(--kalla-ljus); }
+.underlag-post:focus-visible { outline: 3px solid var(--fokus); outline-offset: 1px; }
+.underlag-pil { font-weight: 600; color: var(--kalla-mork); }
+.sokord-verktyg { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+.sokord-verktyg .diktat { margin: 0; }
+.fraser { position: relative; }
+.fraser-lista { background: var(--yta); border: 1px solid var(--linje); border-radius: var(--r); padding: 8px 10px; margin-top: 4px; max-width: 34rem; }
+.fraser-lista ul, .fras-tabell { list-style: none; margin: 0 0 6px; padding: 0; }
+.fras-tabell li { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--linje); }
+.fras-kort { font-family: ui-monospace, monospace; font-size: var(--f-s); color: var(--kalla-mork); }
+.fler-sokord { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 4px 0 8px; }
+.ordning-lista li { padding: 2px 0; }
+.lasruta { border: 2px solid var(--kalla-mellan); border-radius: var(--r); padding: 10px 12px; margin-bottom: 14px; background: var(--yta-2); }
+.lasruta-huvud { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.lasruta-huvud h2 { font-size: var(--f-l); margin: 0; }
+.senaste-bedomning { margin: 0 0 10px; padding: 8px 10px; background: var(--kalla-ljus); border: 1px solid var(--kalla-mellan); border-radius: var(--r); }
+.senaste-bedomning a { font-weight: 600; }
+.senaste-bedomning .under-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ant-ref { background: var(--kalla-ljus); border-bottom: 1px dotted var(--kalla); }
+.lasordning-rad { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.fraser-dialog { max-width: min(40rem, calc(100vw - 32px)); }
