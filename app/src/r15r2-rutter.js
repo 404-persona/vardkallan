@@ -50,10 +50,10 @@ export function registreraRutter({ rutt, kravInloggad }) {
   });
 }
 
-// Körs vid varje anrop med en sandlåda och av en timer.
-export function efterTid(db, nu = new Date()) {
+// Körs vid varje anrop med en sandlåda (fåtal patienter åt gången) och av en timer varje minut.
+export function efterTid(db, nu = new Date(), { anrop = true } = {}) {
   samtycke.efterTid(db, nu);
-  ei.efterTid(db, nu);
+  ei.efterTid(db, nu, { maxPatienter: anrop ? 5 : null });
 }
 
 // Rader i systemförvaltarens inkorg när något inte har kommit fram, utan patientuppgifter.

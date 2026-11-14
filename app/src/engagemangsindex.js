@@ -79,10 +79,14 @@ function triggrar(db) {
   return ut.filter(([namn]) => !finns.has(namn));
 }
 
-// Säkrar tabellerna och triggrarna. Tabeller som skapas senare får sina triggrar vid nästa anrop.
+// Säkrar tabellerna och triggrarna. Tabeller som skapas senare får sina triggrar inom en minut.
+const sakrad = new WeakMap();
 export function sakra(db) {
+  const nu = Date.now();
+  if (sakrad.has(db) && nu - sakrad.get(db) < 60_000) return;
   db.exec(SCHEMA);
   for (const [, sql] of triggrar(db)) db.exec(sql);
+  sakrad.set(db, nu);
 }
 
 const status = (db, nyckel, varde) => {
@@ -183,7 +187,7 @@ export const vantetidMs = (forsok) => Math.min(30, 2 ** Math.max(0, forsok - 1))
 // ---------------------------------------------------------------------------------------------------------------
 // Skickar det som väntar. tvinga: utan att vänta på fördröjningen eller nästa försök. patientId: bara den patienten.
 // Ger { skickade, poster, fel } där fel är en text när indexet inte tog emot omgången.
-export function skicka(db, { nu = new Date(), tvinga = false, patientId = null } = {}) {
+export function skicka(db, { nu = new Date(), tvinga = false, patientId = null, maxPatienter = null } = {}) {
   sakra(db);
   const inst = installningar(db);
   const t = iso(nu);
@@ -193,7 +197,7 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null }
   const grans = new Date(nu.getTime() - inst.fordrojningSekunder * 1000).toISOString();
   const urval = patientId
     ? db.query('SELECT patient_id, min(id) AS forsta FROM ei_markerade WHERE patient_id = ? GROUP BY patient_id').all(patientId)
-    : db.query(`SELECT patient_id, min(id) AS forsta FROM ei_markerade ${tvinga ? '' : 'WHERE markerad <= ?'} GROUP BY patient_id ORDER BY forsta LIMIT ?`).all(...(tvinga ? [] : [grans]), tvinga ? 100_000 : inst.patienterPerOmgang);
+    : db.query(`SELECT patient_id, min(id) AS forsta FROM ei_markerade ${tvinga ? '' : 'WHERE markerad <= ?'} GROUP BY patient_id ORDER BY forsta LIMIT ?`).all(...(tvinga ? [] : [grans]), tvinga ? 100_000 : Math.min(inst.patienterPerOmgang, maxPatienter ?? Infinity));
   if (patientId && !urval.length) urval.push({ patient_id: patientId });
   if (!urval.length) return { skickade: 0, poster: 0, fel: null };
   const vg = require('./rivta/konsumenter.js').vardgivare(db);
@@ -255,12 +259,13 @@ export function skicka(db, { nu = new Date(), tvinga = false, patientId = null }
 
 // Körs vid varje anrop med en sandlåda och av en timer: grundladdning och daglig avstämning, och sändning när det är dags.
 // Ett fel stoppar aldrig anropet.
-export function efterTid(db, nu = new Date()) {
+// maxPatienter begränsar hur mycket ett anrop från en användare får räkna, så att svarstiden inte märks.
+export function efterTid(db, nu = new Date(), { maxPatienter = null } = {}) {
   try {
     sakra(db);
     const dag = iso(nu).slice(0, 10);
     if (status(db, 'avstamd') !== dag) { markeraPatienter(db); status(db, 'avstamd', dag); }
-    return skicka(db, { nu });
+    return skicka(db, { nu, maxPatienter });
   } catch (e) {
     console.error('Engagemangsindex:', e.message);
     return null;

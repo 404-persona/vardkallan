@@ -291,6 +291,14 @@ Rätt svar: Räknar NEWS2, skriver vad som ska göras och när nästa kontroll s
 
 NEWS2 räknas ur vitalparametrarna. En summa som kräver åtgärd larmar i inkorgen. Reglerna är demoregler.
 
+### Övning 9
+
+Patienten berättar att samtycket till sammanhållen journalföring redan är givet i ett annat system hos vårdgivaren. Vad gör du?
+
+Rätt svar: Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.
+
+Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -382,4 +390,4 @@ Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har 
 - Registrera en delegering för en undersköterska.
 - Skriva och signera en omvårdnadsanteckning.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 8 övningar och få intyget.
+- Svara rätt på alla 9 övningar och få intyget.

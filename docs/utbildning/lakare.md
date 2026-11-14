@@ -487,6 +487,14 @@ Nödåtkomst kräver syfte och intyg om att patienten inte kan samtycka. Den syn
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sok).
 
+### Övning 8
+
+Patienten berättar att samtycket till sammanhållen journalföring redan är givet i ett annat system hos vårdgivaren. Vad gör du?
+
+Rätt svar: Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.
+
+Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -613,4 +621,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 7 övningar och få intyget.
+- Svara rätt på alla 8 övningar och få intyget.

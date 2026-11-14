@@ -115,4 +115,15 @@ export const OVNINGAR_V1 = [
     ['b', 'När en annan systemförvaltare har godkänt den, från det giltighetsdatum som står i förslaget.'],
     ['c', 'När du själv har godkänt den.'],
   ], 'b', 'Fyra ögon: ingen godkänner sina egna ändringar. Systemet visar effekten i förväg, kontrollerar att värdet är rimligt och sparar historiken, som inte går att ändra.', '#/regler'),
+  // Runda 15, r2: samtycket i samtyckestjänsten och köerna till de nationella tjänsterna.
+  o('samtycke-annat-system', ['lakare', 'sjukskoterska'], 'Patienten berättar att samtycket till sammanhållen journalföring redan är givet i ett annat system hos vårdgivaren. Vad gör du?', [
+    ['a', 'Registrerar samtycket en gång till i Vårdkällan.'],
+    ['b', 'Inget extra. Systemet hittar samtycket i samtyckestjänsten och skriver att det gäller här också. Du gör bara det aktiva valet med syftet.'],
+    ['c', 'Ber patienten återkalla samtycket i det andra systemet först.'],
+  ], 'b', 'Ett samtycke för vårdenheten gäller i alla system hos vårdgivaren. Systemet prövar samtycket både i Vårdkällan och i samtyckestjänsten, som är simulerad i demon.', null),
+  o('nationella-koer', ['systemforvaltare'], 'Samtyckestjänsten har inte svarat på en timme. Vad händer med samtyckena som registreras under tiden?', [
+    ['a', 'De går förlorade och måste registreras igen.'],
+    ['b', 'De gäller i Vårdkällan och ligger i kön. Systemet skickar dem när tjänsten svarar, och sidan Nationella tjänster visar det som inte har kommit fram, utan patientuppgifter.'],
+    ['c', 'Ingen kan registrera samtycke förrän tjänsten svarar.'],
+  ], 'b', 'Köerna till samtyckestjänsten och engagemangsindex försöker igen av sig själva, med allt längre mellan försöken. Du kan skicka det som väntar direkt.', '#/nationella-tjanster'),
 ];

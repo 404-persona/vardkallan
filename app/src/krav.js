@@ -261,8 +261,11 @@ export const KRAV = [
     ['RIVTA-grunden > ett anrop som inte följer profilen ger SOAP Fault på svenska med HTTP-status 500',
       'RIVTA-grunden > ömsesidig TLS med testcertifikat: organisationen fastställs ur certifikatet eller tjänsteplattformens huvud',
       'Tjänstekontrakt i RIVTA, journalen > journalens producenter lämnar aldrig ut skyddade personuppgifter eller spärrade uppgifter',
-      'Tjänstekontrakt i RIVTA, tjänsteplattform > alla producenter och konsumenter i Vårdkällan går genom den lokala tjänsteplattformen'],
-    'Tjänstekontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA och PU-tjänsten är byggda och validerade mot sina scheman i RIVTA och testade lokalt genom en lokal tjänsteplattform som följer profilen, men inte anslutna till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). De nationella tjänsterna är simulerade i demon. Intyg, e-remiss och Webcert hör till andra delar. Vårdkällan har en egen e-tjänst för patienten, Min journal (L4 och L5).'),
+      'Tjänstekontrakt i RIVTA, tjänsteplattform > alla producenter och konsumenter i Vårdkällan går genom den lokala tjänsteplattformen',
+      // Runda 15, r2: samtycket i samtyckestjänsten med kö och engagemangsindex av sig självt.
+      'Samtycke här och i samtyckestjänsten > samtyckestjänsten nere: samtycket här gäller, registreringen köas och skickas när tjänsten svarar, och systemförvaltaren får en rad',
+      'Engagemangsindex av sig självt > indexet svarar inte: ändringarna väntar, försöks igen och skickas när indexet svarar, och systemförvaltaren får en rad'],
+    'Samtycket prövas här och i samtyckestjänsten med en kö när tjänsten inte svarar, och engagemangsindex uppdateras av sig självt när journalen ändras (runda 15). Tjänstekontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA och PU-tjänsten är byggda och validerade mot sina scheman i RIVTA och testade lokalt genom en lokal tjänsteplattform som följer profilen, men inte anslutna till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). De nationella tjänsterna är simulerade i demon. Intyg, e-remiss och Webcert hör till andra delar. Vårdkällan har en egen e-tjänst för patienten, Min journal (L4 och L5).'),
   k('L9', 'HSA, SITHS, Säker digital kommunikation, patientregistret och kvalitetsregister', 'Inera, Socialstyrelsen', 'planerat', null,
     [`${KV}varje diagnos i seeden har en ICD-10-SE-kod med Socialstyrelsens titel`],
     'HSA-id i demon är påhittade. Ingen rapportering till patientregistret byggs. Diagnoserna har ICD-10-SE 2026, som rapporteringen kräver, kontrollerade mot Socialstyrelsens kodfil.'),

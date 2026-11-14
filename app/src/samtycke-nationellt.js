@@ -27,11 +27,14 @@ CREATE TABLE IF NOT EXISTS samtycke_utkorg (
 CREATE INDEX IF NOT EXISTS ix_samtycke_utkorg_patient ON samtycke_utkorg (patient_id, status);
 CREATE TABLE IF NOT EXISTS samtycke_aterkallanden (id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, tid TEXT NOT NULL, av TEXT);
 `;
+const sakrad = new WeakSet();
 export function sakra(db) {
+  if (sakrad.has(db)) return;
   db.exec(SCHEMA);
   const kol = db.query('PRAGMA table_info(sammanhallen_samtycken)').all().map(k => k.name);
   // Varifrån återkallelsen kom: vardkallan (här) eller annat_system (samtyckestjänsten sa att patienten hade återkallat).
   if (kol.length && !kol.includes('aterkallat_kalla')) db.exec('ALTER TABLE sammanhallen_samtycken ADD COLUMN aterkallat_kalla TEXT');
+  if (kol.length) sakrad.add(db);
 }
 
 const OID_PNR = '1.2.752.129.2.1.3.1';
