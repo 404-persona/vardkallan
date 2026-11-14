@@ -4,6 +4,8 @@ import { Fel } from './db.js';
 import * as tjanster from './inloggningstjanster.js';
 import * as ovning from './ovningstjanst-oidc.js';
 import * as sakerhetslogg from './sakerhetslogg.js';
+// Runda 15, r1: inloggningens metod och tillitsnivå i säkerhetsloggen.
+import * as tillit from './tillitsniva.js';
 
 export const UTAN_SESSION = ['/api/inloggning/rp-jwks', `${ovning.SOKVAG}/.well-known/openid-configuration`, `${ovning.SOKVAG}/jwks`];
 const RESULTAT = '/#/inloggning/extern';
@@ -41,9 +43,13 @@ export function registreraRutter({ rutt, kravInloggad, loggaInMedUppdrag, origin
     try {
       const r = await tjanster.tillbaka(c.s, c.db, c.url.searchParams, ctxFor(c));
       const ut = loggaInMedUppdrag(c, r.personal, r.uppdrag);
+      // Runda 15, r1: loggen säger metod och tillitsnivå, och om nivån redan var flerfaktor.
+      const b = tillit.forUppdrag(r.uppdrag);
+      const nivaText = `${b.niva ? `tillitsnivå ${b.niva}` : 'okänd tillitsnivå'}${b.flerfaktor ? ', flerfaktor' : ', en faktor'}`;
       sakerhetslogg.logga(c.db, { typ: ut?.flerfaktor?.kravs ? 'flerfaktor' : 'inloggning', personal_id: r.personal.id, enhet_id: r.personal.enhet_id, metod: 'GET', vag: tjanster.REDIRECT, status: 302,
-        beskrivning: `Inloggning genom ${r.tjanst.namn} (OpenID Connect).${ut?.flerfaktor?.kravs ? ' Inloggningen väntar på den andra faktorn.' : ''}` });
-      c.s.externtResultat = { ok: true, tjanst: r.tjanst.namn, flerfaktor: Boolean(ut?.flerfaktor?.kravs) };
+        beskrivning: `Inloggning genom ${r.tjanst.namn} (OpenID Connect), ${nivaText}.${ut?.flerfaktor?.kravs ? ' Inloggningen väntar på den andra faktorn.' : ''}` });
+      // Runda 15, r1: utmaningen för den andra faktorn följer med till resultatsidan, så att inloggningen slutförs där.
+      c.s.externtResultat = { ok: true, tjanst: r.tjanst.namn, ...(ut?.flerfaktor?.kravs ? { flerfaktor: ut.flerfaktor, namn: r.personal.namn } : {}) };
     } catch (e) {
       if (!(e instanceof Fel)) throw e;
       sakerhetslogg.logga(c.db, { typ: 'inloggning_misslyckad', metod: 'GET', vag: tjanster.REDIRECT, status: e.status,
@@ -64,6 +70,8 @@ export function registreraRutter({ rutt, kravInloggad, loggaInMedUppdrag, origin
   rutt('POST', '/api/inloggningstjanster/forhandsvisa', (c) => { const p = kravInloggad(c); return forhand(async () => ({ ok: true, ...(await tjanster.forhandsvisa(c.db, p, c.body, ctxFor(c))) })); });
   rutt('POST', '/api/inloggningstjanster', async (c) => [201, await tjanster.foresla(c.db, kravInloggad(c), c.body, ctxFor(c))]);
   rutt('POST', '/api/inloggningstjanster/:tjanst/nycklar', async (c, t) => [201, await tjanster.foreslaNycklar(c.db, kravInloggad(c), t, c.body, ctxFor(c))]);
+  // Runda 15, r1: lägsta tillitsnivå för tjänsten, med fyra ögon.
+  rutt('POST', '/api/inloggningstjanster/:tjanst/tillitsniva', (c, t) => [201, tjanster.foreslaTillitsniva(c.db, kravInloggad(c), t, c.body, ctxFor(c))]);
   rutt('POST', '/api/inloggningstjanster/:tjanst/aktiv', (c, t) => [201, tjanster.foreslaAktiv(c.db, kravInloggad(c), t, c.body, ctxFor(c))]);
   rutt('POST', '/api/inloggningstjanster/andring/:id/godkann', (c, id) => tjanster.godkann(c.db, kravInloggad(c), id, c.body, ctxFor(c)));
   rutt('POST', '/api/inloggningstjanster/andring/:id/avsluta', (c, id) => tjanster.avsluta(c.db, kravInloggad(c), id, c.body));

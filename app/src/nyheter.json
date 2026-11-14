@@ -58,6 +58,26 @@
           "text": "Utkastet sparas en kort stund efter att du har slutat skriva och när du lämnar rutan, och syns bara för dig. Klickar du på en annan anteckning i listan öppnas den i en läsruta ovanför, och din text står kvar. Under ett avbrott sparas utkastet krypterat på datorn och förs till journalen när servern svarar igen."
         },
         {
+          "id": "e-legitimation-flerfaktor-1-5-0",
+          "roller": [
+            "invanare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "E-legitimationen räcker som flerfaktor",
+          "text": "När du loggar in i Min journal med en e-legitimation med tillitsnivå 3, till exempel BankID, är inloggningen redan flerfaktor, och systemet frågar inte efter din passkey eller en kod från appen. Loggar du in med en e-legitimation med lägre tillitsnivå ber systemet om passkey eller kod. I demon är e-legitimationen simulerad."
+        },
+        {
+          "id": "flerfaktor-regel-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/regler",
+          "rubrik": "Flerfaktor är en regel, inte längre en parameter",
+          "text": "Parametern Flerfaktor krävs vid inloggning är ersatt av en regel som systemet avgör: inloggningen är alltid flerfaktor, och den sista faktorn får tas bort bara efter en inloggning med tillitsnivå 3. Under Regler och parametrar står parametern kvar i historiken, märkt Ersatt av en regel, tillsammans med regeln och varför."
+        },
+        {
           "id": "formular-1-5-0",
           "roller": [
             "sjukskoterska",
@@ -150,6 +170,26 @@
           "text": "Vid ett längre avbrott kan driften starta en reservserver på en annan plats. Den visar journalen ur den senaste säkerhetskopian och säger överst på varje sida hur gamla uppgifterna är. Den kan bara läsas, så det som behöver registreras antecknas på papper och förs in när kärnsystemet är i drift igen. Varje läsning loggas som vanligt."
         },
         {
+          "id": "sista-faktorn-1-5-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/flerfaktor",
+          "rubrik": "Den sista faktorn tas bort efter en stark inloggning",
+          "text": "Din sista passkey eller app för engångskoder går att ta bort när du har loggat in med tillitsnivå 3, till exempel SITHS-kortet eller en e-legitimation som BankID. Efter en inloggning med lägre nivå behålls den, eftersom det är den som gör inloggningen stark, och sidan Flerfaktor säger varför."
+        },
+        {
+          "id": "siths-flerfaktor-1-5-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "SITHS-kortet räcker som flerfaktor",
+          "text": "När du loggar in med SITHS-kortet eller SITHS eID i mobilen och PIN-koden, tillitsnivå 3, är inloggningen redan flerfaktor. Systemet frågar inte efter din passkey eller en kod från appen, också när vårdgivaren kräver flerfaktor. Loggar du in på ett sätt med lägre tillitsnivå säger systemet varför och ber om passkey eller kod. I demon är kortet simulerat, och du kan pröva en inloggning utan kort på inloggningssidan."
+        },
+        {
           "id": "tillfalliga-diagnoser-1-5-0",
           "roller": [
             "systemforvaltare"
@@ -158,6 +198,16 @@
           "var": null,
           "rubrik": "Vilka diagnoser som är tillfälliga är en parameter",
           "text": "Under Regler och parametrar finns parametern Diagnoser som är tillfälliga och får föras till mellanarkivet. Den ändras med fyra ögon, och förhandsvisningen säger hur många diagnoser som påverkas. Grundinställningen är försiktig och är en demoregel som en läkare ska granska. Kroniska diagnoser och diagnoser som ett beslutsstöd läser stannar alltid i journalen."
+        },
+        {
+          "id": "tillitsniva-tjanst-1-5-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/inloggningstjanster",
+          "rubrik": "Lägsta tillitsnivå per inloggningstjänst",
+          "text": "För varje inloggningstjänst anger du lägsta tillitsnivå, med fyra ögon som andra ändringar. Systemet förklarar vad varje nivå betyder. Nivå 3 är förvald och rekommenderas. Med en lägre nivå bekräftar personalen inloggningen med passkey eller kod från appen innan de får behörighet. Säkerhetsloggen visar metod och tillitsnivå för varje inloggning."
         },
         {
           "id": "yrkesmallar-1-5-0",

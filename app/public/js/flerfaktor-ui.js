@@ -47,7 +47,8 @@ export function andraFaktorn(utmaning, namn) {
     const kod = u.metoder.includes('totp');
     dl.innerHTML = `<div class="dialog-inre">
       <h2 id="ff-rubrik">${ikon.skold} Bekräfta att det är du</h2>
-      <p>${esc(namn ?? 'Personen')} har flerfaktor påslagen i den här sandlådan. ${pk ? 'Använd din passkey' : 'Skriv koden från appen'}${pk && kod ? ', eller skriv koden från appen för engångskoder' : ''}.</p>
+      ${/* Runda 15, r1: servern säger varför den andra faktorn behövs, till exempel att tillitsnivån är under 3. */ ''}
+      <p>${u.orsak ? esc(u.orsak) : `${esc(namn ?? 'Personen')} har flerfaktor påslagen i den här sandlådan. ${pk ? 'Använd din passkey' : 'Skriv koden från appen'}${pk && kod ? ', eller skriv koden från appen för engångskoder' : ''}.`}</p>
       ${pk ? `<div class="knapprad"><button type="button" class="knapp" data-ff="passkey">${ikon.nyckel}<span>Använd passkey</span></button></div>` : ''}
       ${kod ? `<form class="ff-kod" novalidate><label for="ff-kod">Kod från appen</label>
         <input id="ff-kod" name="kod" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" aria-describedby="ff-kod-hjalp" ${pk ? '' : 'autofocus'}>

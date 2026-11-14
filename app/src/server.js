@@ -154,6 +154,8 @@ import { registreraRutter as r12r1Rutter } from './r12r1-rutter.js';
 import { mallarFor as strukturMallar } from './journalstruktur.js';
 // Runda 12, r3 (vårt L5): flerfaktorsinloggning med passkeys och engångskoder.
 import * as flerfaktor from './flerfaktor.js';
+// Runda 15, r1: tillitsnivån i inloggningen. SITHS och annan inloggning med tillitsnivå 3 räknas som flerfaktor.
+import * as tillit from './tillitsniva.js';
 // Runda 12, r2: uppgraderingar med återgång och säkerhetskopior (runda12-r2-rutter.js och releaser.js).
 import { registreraRutter as r12r2Rutter } from './runda12-r2-rutter.js';
 import { MIGRERINGAR as r12r2Migreringar } from './releaser.js';
@@ -739,7 +741,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
         if (x.v === SPARVERSION_VILA) {
           if (typeof x.kopieId !== 'string' || !vilolager.finns(x.kopieId)) continue;
           sessioner.set(x.sid, medVila({
-            personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, anvand: x.anvand ?? x.sist,
+            personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, anvand: x.anvand ?? x.sist,
             lasnyckel: x.lasnyckel ?? null, oppnade: new Set(x.oppnade ?? []), kopieId: x.kopieId, kopiaIds: x.kopiaIds ?? [], vilaIndex: x.vilaIndex ?? { kalender: [], konton: [] },
             harLoggatIn: Boolean(x.harLoggatIn), kopior: null, matning: null,
             adress: typeof x.adress === 'string' ? x.adress : null, dbByte: Number(x.dbByte) || null,
@@ -748,7 +750,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
           continue;
         }
         const s = {
-          db: lasSandlada(x.db), personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, matning: new Matning(200),
+          db: lasSandlada(x.db), personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.personalId ? null : x.invanareId ?? null, val: x.val ?? {}, sist: x.sist, aktiv: x.aktiv ?? x.sist, matning: new Matning(200),
           lasnyckel: x.lasnyckel ?? null, oppnade: new Set(x.oppnade ?? []),
           // Runda 12, r2: en session som sparades före kopieId har sina kopior under sitt sid.
           kopieId: x.kopieId ?? x.sid,
@@ -780,7 +782,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (vilolager.typ === 'katalog') {
       for (const x of [...vakna]) vilaSandlada(x, { tvinga: true });
       const lista = [...sessioner].filter(([, x]) => x.vilar).map(([sid, x]) => ({
-        v: SPARVERSION_VILA, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, anvand: x.anvand,
+        v: SPARVERSION_VILA, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, anvand: x.anvand,
         lasnyckel: x.lasnyckel, oppnade: [...x.oppnade], kopieId: x.kopieId, kopiaIds: x.kopiaIds, vilaIndex: x.vilaIndex, harLoggatIn: Boolean(x.harLoggatIn),
         adress: x.adress ?? null, dbByte: x.dbByte ?? null,
       }));
@@ -790,7 +792,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     }
     for (const x of sessioner.values()) if (x.vilar) vaknaSandlada(x);
     const lista = [...sessioner].map(([sid, x]) => ({
-      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(x.db.serialize()).toString('base64'),
+      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(x.db.serialize()).toString('base64'),
       lasnyckel: x.lasnyckel, oppnade: [...x.oppnade], kopieId: x.kopieId,
       kopior: [...x.kopior].map(([id, k]) => [id, { ...k, patienter: [...k.patienter], loggIds: [...k.loggIds] }]),
     }));
@@ -871,6 +873,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (p || inv) ut.flerfaktor = { aktiv: flerfaktor.kravs(s.db, p ? 'personal' : 'invanare', p ? p.id : inv.id), metod: s.flerfaktorMetod ?? null };
     else if (s.vantande && s.vantande.utgar > Date.now()) ut.flerfaktorVantar = { typ: s.vantande.typ, namn: s.vantande.namn, metoder: flerfaktor.metoder(s.db, s.vantande.typ, s.vantande.id), ...(s.vantande.registrera ? { registrera: true } : {}) };
     if (inv) Object.assign(ut, { roll: 'invanare' }, minJournal.sessionDel(s.db, inv));
+    // Runda 15, r1: invånarens tillitsnivå, som för personalen.
+    if (inv) ut.inloggningsniva = s.invanareInloggning ? tillit.ut(s.invanareInloggning) : null;
     if (p) {
       const ve = vardenhetFor(s.db, p.enhet_id);
       ut.roll = 'personal';
@@ -879,6 +883,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       ut.behorigheter = ROLLER[p.yrke] ?? [];
       // Runda 9, r5: medarbetaruppdraget ur biljetten från autentiseringstjänsten.
       ut.uppdrag = idp.uppdragUt(s.db, s.uppdrag);
+      // Runda 15, r1: inloggningens metod och tillitsnivå, och om den är flerfaktor.
+      ut.inloggningsniva = tillit.ut(s.uppdrag);
       // Undersköterskan har behörigheten att ge läkemedel bara med en giltig delegering i dag (runda 5).
       if (p.yrke === 'underskoterska' && !delegering.giltigNu(s.db, p).giltig) ut.behorigheter = ut.behorigheter.filter(h => h !== 'ge_lakemedel');
       // Runda 6, r3: om personalen arbetar på en vårdenhet med psykiatrisk tvångsvård.
@@ -1376,18 +1382,26 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 9, r5 (Sussa 5.2.1.6 och 5.2.1.8): inloggningen går genom den simulerade autentiseringstjänsten (idp.js). Valet
   // av demoroll är det simulerade SITHS-kortet: tjänsten utfärdar en signerad biljett, och personen, medarbetaruppdraget
   // och behörigheten tas ur biljettens attribut, på samma sätt som för en biljett som kommer utifrån (/api/login/biljett).
-  function loggaInMedBiljett(c, biljett, { forbruka = true, demo = false } = {}) {
-    const { personal: p, uppdrag } = idp.loggaIn(c.db, idp.verifiera(biljett, { forbruka }));
+  function loggaInMedBiljett(c, biljett, { forbruka = true, demo = false, lagsta = 3 } = {}) {
+    const { personal: p, uppdrag } = idp.loggaIn(c.db, idp.verifiera(biljett, { forbruka, lagsta }));
     return loggaInMedUppdrag(c, p, uppdrag, { demo });
   }
   // Runda 14, r1: samma fortsättning för en inloggning genom beställarens inloggningstjänst (inloggningstjanster.js).
   function loggaInMedUppdrag(c, p, uppdrag, { demo = false } = {}) {
+    // Runda 15, r1 (beslut från Jonas): en inloggning med tillitsnivå 3 eller högre, ur en signerad biljett från en tjänst
+    // med pinnad nyckel eller det simulerade SITHS-kortet, är redan flerfaktor. Den ger åtkomst direkt, också när
+    // personen har en faktor och när vårdgivaren kräver flerfaktor, och räknas som en färsk bekräftelse.
+    const niva = tillit.forUppdrag(uppdrag);
+    if (niva.flerfaktor) return slutforPersonal(c, p, uppdrag, { demo, stark: true });
+    // Under nivå 3 är inloggningen en faktor, och den ger aldrig åtkomst ensam (HSLF-FS 2016:40 3 kap. 15 §). Personen
+    // bekräftar med sin faktor, eller registrerar en, oavsett vårdgivarens parameter. Systemet säger varför.
     // Runda 12, r3: har personen en passkey eller en app för engångskoder i sandlådan väntar inloggningen på den.
     stoppaOprovbarFaktor(c, 'personal', p.id, p.enhet_id);
-    if (flerfaktor.kravs(c.db, 'personal', p.id)) return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo });
-    // Runda 13, r3: kräver vårdgivaren flerfaktor leds den som saknar en faktor till att registrera en.
-    if (flerfaktorKravs(c.db)) return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, registrera: true });
-    return slutforPersonal(c, p, uppdrag, { demo });
+    const har = flerfaktor.kravs(c.db, 'personal', p.id);
+    const orsak = tillit.andraFaktorText(uppdrag, { harFaktor: har });
+    if (har) return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, orsak });
+    // Runda 13, r3: den som saknar en faktor leds till att registrera en.
+    return borjaFlerfaktor(c, { typ: 'personal', id: p.id, namn: p.namn, enhet: p.enhet_id, uppdrag, demo, registrera: true, orsak });
   }
   // Runda 13, r3 (E2-5): bekräftelserna av patienters identitet i sessionen, per person och patient.
   const IDENTITET_RUNDA_MS = 15 * 60_000;
@@ -1403,13 +1417,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   }
   const glomIdentiteter = (s) => { s.identitetBekraftad = new Map(); };
 
-  function slutforPersonal(c, p, uppdrag, { demo = false, metod = null } = {}) {
+  function slutforPersonal(c, p, uppdrag, { demo = false, metod = null, stark = false } = {}) {
     glomIdentiteter(c.s);
     // Runda 6, r5: tillämpningarnas åtkomstbiljetter gäller inte efter en ny inloggning.
     oppetApi.aterkalla(c.s, 'Åtkomstbiljetten återkallades vid en ny inloggning.');
     avslutaKopia(c.s, aktuellKopia(c.s), 'inloggning');
     c.s.personalId = p.id;
-    c.s.uppdrag = uppdrag;
+    // Runda 15, r1: den andra faktorn sparas i uppdraget, som följer sessionen också när sandlådan vilar.
+    c.s.uppdrag = metod ? { ...uppdrag, andraFaktor: metod } : uppdrag;
     c.s.utloggadOrsak = null;
     c.s.invanareId = null;
     c.s.val = {};
@@ -1419,8 +1434,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     c.s.oppnade = new Set();
     c.s.vantande = null;
     c.s.flerfaktorMetod = metod;
-    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor.
-    c.s.flerfaktorTid = metod ? Date.now() : null;
+    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor. Runda 15, r1: en inloggning med
+    // tillitsnivå 3 räknas också, eftersom den redan är flerfaktor.
+    c.s.flerfaktorTid = metod || stark ? Date.now() : null;
     sakraKopia(c.s);
     c.rotera = true;
     // Runda 11, r3: demopatienterna för förlossningen vid barnmorskans första inloggning i sandlådan.
@@ -1430,8 +1446,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('POST', '/api/login', (c) => {
     const p = typeof c.body.personalId === 'string' ? c.db.query('SELECT * FROM personal WHERE id = ? AND demo = 1').get(c.body.personalId) : null;
     if (!p) throw new Fel(400, 'Välj en av demorollerna.', 'ogiltig', { falt: ['personalId'] });
+    // Runda 15, r1: tillitsniva 2 är demons inloggning utan SITHS-kort. Standard är kortet med PIN-kod, tillitsnivå 3.
+    const niva = c.body.tillitsniva === undefined ? 3 : c.body.tillitsniva;
     // Biljetten skapas och prövas i samma anrop och lämnar aldrig servern, så den behöver inte sparas som använd.
-    return loggaInMedBiljett(c, idp.autentisera(c.db, p), { forbruka: false, demo: true });
+    return loggaInMedBiljett(c, idp.autentisera(c.db, p, { niva }), { forbruka: false, demo: true, lagsta: niva });
   });
   // En biljett från en betrodd autentiseringstjänst. Personen behöver inte vara en demoroll, men måste vara aktiv i
   // masterdata, och uppdraget i biljetten måste stämma med masterdata.
@@ -1473,14 +1491,23 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('GET', '/api/demo/invanare', (c) => minJournal.demoInvanare(c.db));
   rutt('POST', '/api/login/invanare', (c) => {
     const inv = minJournal.provaInloggning(c.db, c.body.invanareId);
+    // Runda 15, r1 (beslut från Jonas): den simulerade e-legitimationen ger en signerad biljett med tillitsnivå, som
+    // prövas som personalens. Tillitsnivå 3 är redan flerfaktor. En lägre nivå kompletteras alltid med passkey eller kod,
+    // eftersom invånarens elektroniska tillgång kräver flerfaktorsautentisering (HSLF-FS 2016:40 4 kap. 11 §).
+    const niva = c.body.tillitsniva === undefined ? 3 : c.body.tillitsniva;
+    const p = idp.verifiera(idp.autentiseraInvanare(inv, { niva }), { forbruka: false, lagsta: niva, mottagare: idp.MOTTAGARE_MIN_JOURNAL, attribut: idp.INVANARENS_ATTRIBUT });
+    if (p.sub !== inv.id) throw new Fel(403, 'Biljetten gäller en annan person.', 'nekad');
+    const inloggning = { invanare: true, tillitsniva: p.acr, amr: Array.isArray(p.amr) ? p.amr.slice(0, 8) : [] };
+    const namn = minJournal.sessionDel(c.db, inv).invanare.namn;
+    if (tillit.forUppdrag(inloggning).flerfaktor) return slutforInvanare(c, inv, { inloggning, stark: true });
     // Runda 12, r3: med en passkey eller en app för engångskoder väntar inloggningen på den.
     stoppaOprovbarFaktor(c, 'invanare', inv.id, null);
-    if (flerfaktor.kravs(c.db, 'invanare', inv.id)) return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn: minJournal.sessionDel(c.db, inv).invanare.namn });
-    // Runda 13, r3: kräver vårdgivaren flerfaktor leds invånaren till att registrera en faktor.
-    if (flerfaktorKravs(c.db)) return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn: minJournal.sessionDel(c.db, inv).invanare.namn, registrera: true });
-    return slutforInvanare(c, inv);
+    const har = flerfaktor.kravs(c.db, 'invanare', inv.id);
+    const orsak = tillit.andraFaktorText(inloggning, { harFaktor: har });
+    // Runda 13, r3: den som saknar en faktor leds till att registrera en.
+    return borjaFlerfaktor(c, { typ: 'invanare', id: inv.id, namn, inloggning, orsak, ...(har ? {} : { registrera: true }) });
   });
-  function slutforInvanare(c, inv, { metod = null } = {}) {
+  function slutforInvanare(c, inv, { metod = null, inloggning = null, stark = false } = {}) {
     glomIdentiteter(c.s);
     oppetApi.aterkalla(c.s, 'Åtkomstbiljetten återkallades när någon loggade in i Min journal i samma webbläsare.');
     c.s.invanareId = inv.id;
@@ -1494,8 +1521,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     c.s.oppnade = new Set();
     c.s.vantande = null;
     c.s.flerfaktorMetod = metod;
-    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor.
-    c.s.flerfaktorTid = metod ? Date.now() : null;
+    // Runda 15, r1: inloggningens tillitsnivå och en eventuell andra faktor.
+    c.s.invanareInloggning = inloggning ? { ...inloggning, ...(metod ? { andraFaktor: metod } : {}) } : null;
+    // Runda 13, r2 (fynd 8): när inloggningen senast bekräftades med en faktor. Runda 15: också med tillitsnivå 3.
+    c.s.flerfaktorTid = metod || stark ? Date.now() : null;
     c.rotera = true;
     return sessionUt(c.s);
   }
@@ -1512,10 +1541,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       metod: 'POST', vag: c.url.pathname, status: 403, beskrivning: 'Inloggningen stoppades: en aktiv faktor kan inte prövas, eftersom nyckeln för engångskoder inte går att dekryptera.' });
     throw new Fel(403, 'Din app för engångskoder kan inte prövas i den här sandlådan, så inloggningen stoppas för att skydda kontot. Återställ demon för att börja om utan faktor.', 'nekad');
   }
-  // Runda 13, r3 (vårt L5): om vårdgivaren kräver flerfaktor vid inloggning (konfiguration.js). Läses vid varje
-  // inloggning, så att den som redan är inloggad inte loggas ut när värdet ändras. Kan värdet inte läsas krävs flerfaktor
-  // inte, eftersom en sandlåda utan konfiguration har standardvärdet nej.
-  const flerfaktorKravs = (db) => { try { return konfiguration.varde(db, 'sakerhet.flerfaktor_kravs') === true; } catch { return false; } };
+  // Runda 15, r1: parametern Flerfaktor krävs vid inloggning är ersatt av en regel (konfiguration.ERSATTA). Den
+  // pågående inloggningen är stark när den har tillitsnivå 3 eller högre; bara då får den sista faktorn tas bort.
+  const starkInloggning = (c) => (tillit.forUppdrag(c.personal ? c.s.uppdrag : c.invanare ? c.s.invanareInloggning : null).niva ?? 0) >= tillit.FLERFAKTOR_NIVA;
   function borjaFlerfaktor(c, agare) {
     glomIdentiteter(c.s);
     oppetApi.aterkalla(c.s, 'Åtkomstbiljetten återkallades vid en ny inloggning.');
@@ -1526,9 +1554,13 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     // Runda 13, r3: den som ska registrera en faktor får dubbelt så lång tid, eftersom appen ska läggas in först.
     c.s.vantande = { ...agare, utgar: Date.now() + flerfaktor.UTMANING_S * 1000 * (agare.registrera ? 2 : 1), forsok: 0 };
     c.rotera = true;
+    // Runda 15, r1: för personalen säger loggen tillitsnivån som gjorde att den andra faktorn behövs.
+    const forstaU = agare.uppdrag ?? agare.inloggning;
+    const forsta = forstaU ? `Den första faktorn är godkänd (${tillit.forUppdrag(forstaU).metod}).` : 'Den första faktorn är godkänd.';
     sakerhetslogg.logga(c.db, { typ: 'flerfaktor', personal_id: agare.typ === 'personal' ? agare.id : null, invanare_id: agare.typ === 'invanare' ? agare.id : null, enhet_id: agare.enhet ?? null,
-      metod: 'POST', vag: c.url.pathname, status: 200, beskrivning: agare.registrera ? 'Den första faktorn är godkänd. Vårdgivaren kräver flerfaktor, och inloggningen väntar på att en faktor registreras.' : 'Den första faktorn är godkänd. Inloggningen väntar på den andra faktorn.' });
-    return { ...sessionUt(c.s), flerfaktor: { kravs: true, ...flerfaktor.inloggningsutmaning(c.db, c.s, agare, webbplats(c)) } };
+      metod: 'POST', vag: c.url.pathname, status: 200, beskrivning: agare.registrera ? `${forsta} ${agare.orsak ? 'Tillitsnivån räcker inte ensam' : 'Vårdgivaren kräver flerfaktor'}, och inloggningen väntar på att en faktor registreras.` : `${forsta} Inloggningen väntar på den andra faktorn.` });
+    const u = flerfaktor.inloggningsutmaning(c.db, c.s, agare, webbplats(c));
+    return { ...sessionUt(c.s), flerfaktor: { kravs: true, ...u, ...(agare.orsak ? { orsak: agare.orsak, ...(u.registrera ? { text: agare.orsak } : {}) } : {}) } };
   }
   rutt('POST', '/api/login/flerfaktor', (c) => {
     const v = c.s.vantande;
@@ -1559,7 +1591,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       if (orsak) throw new Fel(403, orsak, 'nekad');
       return slutforPersonal(c, p, v.uppdrag, { demo: v.demo, metod });
     }
-    return slutforInvanare(c, minJournal.provaInloggning(c.db, v.id), { metod });
+    return slutforInvanare(c, minJournal.provaInloggning(c.db, v.id), { metod, inloggning: v.inloggning ?? null });
   }
   rutt('POST', '/api/login/flerfaktor/avbryt', (c) => { c.s.vantande = null; c.s.flerfaktorUtmaning = null; return sessionUt(c.s); });
   // Den inloggade registrerar och tar bort sina faktorer. Personalen och invånaren har var sina, i sandlådan.
@@ -1611,7 +1643,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   };
   const loggaFaktor = (c, a, text) => sakerhetslogg.logga(c.db, { typ: 'flerfaktor', personal_id: a.typ === 'personal' ? a.id : null, invanare_id: a.typ === 'invanare' ? a.id : null,
     enhet_id: a.enhet ?? null, metod: 'POST', vag: c.url.pathname.replace(/\/\d+\//, '/:id/'), status: 200, beskrivning: text });
-  const oversiktFor = (c, a) => flerfaktor.oversikt(c.db, a.typ, a.id, { metod: c.s.flerfaktorMetod ?? null, kravsAvVardgivaren: flerfaktorKravs(c.db) });
+  // Runda 15, r1: för personalen också inloggningens tillitsnivå, så att sidan kan säga om en faktor alls behövs.
+  const oversiktFor = (c, a) => ({ ...flerfaktor.oversikt(c.db, a.typ, a.id, { metod: c.s.flerfaktorMetod ?? null, starkInloggning: starkInloggning(c) }),
+    ...(a.typ === 'personal' && c.personal ? { inloggning: tillit.ut(c.s.uppdrag) } : {}),
+    ...(a.typ === 'invanare' && c.invanare && c.s.invanareInloggning ? { inloggning: tillit.ut(c.s.invanareInloggning) } : {}) });
   rutt('GET', '/api/flerfaktor', (c) => oversiktFor(c, agareFor(c, { vantande: true })));
   // Runda 13, r2 (säkerhetsgranskningen av runda 12, fynd 8): en faktor läggs till eller tas bort bara efter en färsk
   // bekräftelse med en faktor som redan var aktiv: inloggningen med faktor de senaste fem minuterna, eller en kod från
@@ -1660,7 +1695,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('POST', '/api/flerfaktor/:id/ta-bort', (c, id) => {
     const a = agareFor(c);
     kravFarskBekraftelse(c, a, c.body.bekraftelse ?? c.body.kod);
-    const r = flerfaktor.taBort(c.db, a, id, { kravsAvVardgivaren: flerfaktorKravs(c.db) });
+    const r = flerfaktor.taBort(c.db, a, id, { starkInloggning: starkInloggning(c) });
     loggaFaktor(c, a, r.aktiv ? 'En faktor togs bort. Flerfaktor är fortfarande på.' : 'Den sista faktorn togs bort. Flerfaktor är av.');
     return { ...r, metod: c.s.flerfaktorMetod ?? null };
   });
@@ -2637,6 +2672,12 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (c.invanare && url.pathname.startsWith('/api/min/')) avvisaFranAnnanWebbplats(req);
     c.body = metod === 'GET' ? {} : await lasKropp(req);
     c.url = url;
+    // Runda 15, r1: känsliga handlingar kräver en inloggning med flerfaktor (tillitsniva.KANSLIGA). Prövas på servern före
+    // rutten, så att samma regel gäller oavsett vilken vy eller tillämpning anropet kommer från.
+    if (c.personal) {
+      const k = tillit.kanslig(metod, url.pathname, c.body);
+      if (k && !tillit.forUppdrag(c.s.uppdrag).flerfaktor) throw new Fel(403, tillit.kanslighetsText(k, c.s.uppdrag), 'kraver_flerfaktor');
+    }
     // Runda 11, r5: en rutt kan svara med ett löfte (avkodning och miniatyrer av bilder görs asynkront i bildmedia.js).
     let ut = await traff[0](c, ...traff[1]);
     // En fil, till exempel exportpaketet eller datauttaget, går ut som den är.
@@ -2669,6 +2710,14 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // invånaren att göra åtkomster i sitt namn. Klienter utanför webbläsaren skickar inte rubriken.
   function avvisaFranAnnanWebbplats(req) {
     if (req.headers.get('sec-fetch-site') === 'cross-site') throw new Fel(403, 'Anropet kom från en annan webbplats.', 'nekad');
+  }
+
+  // Runda 15, r1: hur personalen loggade in, med tillitsnivån, för säkerhetsloggen.
+  function inloggningsTextFor(s) {
+    const u = s?.personalId ? s.uppdrag : s?.invanareId ? s.invanareInloggning : null;
+    if (!u) return {};
+    const b = tillit.forUppdrag(u);
+    return { inloggningText: `${b.metod}, ${b.flerfaktor ? 'flerfaktor' : 'en faktor'}` };
   }
 
   // Den inloggade personalen eller invånaren, aldrig båda. Skulle båda vara satta räknas ingen som inloggad.
@@ -2780,7 +2829,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       // Runda 6, r1: säkerhetshändelser i sandlådans säkerhetslogg (Sussa 5.3.1.12). Ett fel i loggningen stoppar aldrig svaret.
       if (c.s) {
         try {
-          sakerhetslogg.efterAnrop(c.s.db, { nyckel, status: svar.status, kod: c.felkod ?? null, fel: c.feltext ?? null, fore: { personal: c.personal, invanare: c.invanare }, efter: inloggade(c.s) });
+          sakerhetslogg.efterAnrop(c.s.db, { nyckel, status: svar.status, kod: c.felkod ?? null, fel: c.feltext ?? null, fore: { personal: c.personal, invanare: c.invanare }, efter: { ...inloggade(c.s), ...inloggningsTextFor(c.s) } });
         } catch (e) { console.error('Säkerhetsloggen:', e.message); }
       }
       // Runda 6, r5: ändringarna i sandlådan ger meddelanden till prenumerationerna.

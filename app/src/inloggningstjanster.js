@@ -35,6 +35,8 @@ import * as sakerhetslogg from './sakerhetslogg.js';
 import { uppdragFor } from './idp.js';
 import * as jwt from './oidc-jwt.js';
 import * as ovning from './ovningstjanst-oidc.js';
+// Runda 15, r1: tillitsnivån tolkas och jämförs med tjänstens lägsta nivå (tillitsniva.js).
+import * as tillit from './tillitsniva.js';
 
 export const SCHEMA = `
 -- Runda 14, r1: ändringar av de betrodda inloggningstjänsterna. konfiguration är JSON med publika uppgifter och pinnade
@@ -76,8 +78,10 @@ export const ATTRIBUTKALLA = {
   oidcProfil: 'https://inera.atlassian.net/wiki/spaces/ST/pages/6044651944/3.3+SAD+-+IdP+-+Medarbetare+Bas+OIDC-Profil',
 };
 export const SCOPE = 'openid commission';
-// Tillitsnivå 3 eller 4. Lägre godtas aldrig för personalens inloggning, och det går inte att ändra här.
-export const TILLITSNIVAER = ['http://id.sambi.se/loa/loa3', 'http://id.sambi.se/loa/loa4', 'http://id.elegnamnden.se/loa/1.0/loa3', 'http://id.elegnamnden.se/loa/1.0/loa4'];
+// Runda 15, r1: tillitsnivån tolkas i tillitsniva.js mot Ineras och DIGG:s identifierare. Varje tjänst har en lägsta nivå
+// (lagstaTillitsniva, standard 3) som ändras med fyra ögon. En biljett under den godtas inte, och en biljett under nivå 3
+// är en faktor som kompletteras med passkey eller engångskod i server.js innan personen får behörighet.
+export const TILLITSNIVAER = [...tillit.IDENTIFIERARE].filter(([, v]) => v.niva >= tillit.FLERFAKTOR_NIVA && !v.sjalvdeklarerad).map(([k]) => k);
 // Den legitimerade yrkesgrupp (tvåställig kod i Socialstyrelsens HOSP-register) som en roll kräver. Roller utan
 // legitimationskrav finns inte här.
 export const LEGITIMATION = { lakare: ['LK'], sjukskoterska: ['SJ', 'BM'], fysioterapeut: ['FT', 'SG'], farmaceut: ['AP', 'RC'] };
@@ -219,6 +223,11 @@ export function prova(db, konf, ctx) {
     throw new Fel(400, 'Med flera nycklar måste varje nyckel ha ett eget id (kid).', 'ogiltig', { falt: ['jwks'] });
   }
   k.aktiv = konf.aktiv !== false;
+  // Runda 15, r1: lägsta tillitsnivå. En konfiguration från före runda 15 saknar fältet och har nivå 3, som förut.
+  k.lagstaTillitsniva = tillit.lagstaNiva(konf.lagstaTillitsniva);
+  if (k.lagstaTillitsniva === null) throw new Fel(400, 'Välj lägsta tillitsnivå 1, 2, 3 eller 4.', 'ogiltig', { falt: ['lagstaTillitsniva'] });
+  // Tjänstens tillitsnivåer ur metadata (acr_values_supported), eller null när tjänsten inte anger dem.
+  k.acrStodda = Array.isArray(konf.acrStodda) ? konf.acrStodda.filter(a => typeof a === 'string' && a.length <= 200).slice(0, 30) : null;
   return k;
 }
 
@@ -235,7 +244,9 @@ function lasMetadata(m, utfardare, klientautentisering) {
   if (lista(m.token_endpoint_auth_methods_supported) && !m.token_endpoint_auth_methods_supported.includes(klientautentisering)) {
     throw new Fel(400, `Tjänsten stödjer inte ${KLIENTAUTENTISERING[klientautentisering] ?? klientautentisering}. Välj ett annat sätt att autentisera Vårdkällan.`, 'ogiltig', { falt: ['klientautentisering'] });
   }
-  return { authorizationEndpoint: m.authorization_endpoint, tokenEndpoint: m.token_endpoint, jwksUri: m.jwks_uri ?? null };
+  // Runda 15, r1: tjänstens tillitsnivåer, så att Vårdkällan begär en nivå som tjänsten stödjer.
+  const acr = lista(m.acr_values_supported) ? m.acr_values_supported.filter(a => typeof a === 'string' && a.length <= 200).slice(0, 30) : null;
+  return { authorizationEndpoint: m.authorization_endpoint, tokenEndpoint: m.token_endpoint, jwksUri: m.jwks_uri ?? null, acrStodda: acr };
 }
 
 // Hämtar metadata och nycklar: för övningstjänsten direkt, annars från en godkänd adress. Det som systemförvaltaren har
@@ -325,7 +336,7 @@ export async function forhandsvisa(db, personal, inp = {}, ctx) {
   const konf = prova(db, {
     id: `t-${randomBytes(4).toString('hex')}`, namn: ovningen ? ovning.NAMN : inp.namn, vardgivareHsaId: vg.hsa_id,
     protokoll: inp.protokoll ?? 'oidc', utfardare, ...u, klientId: ovningen ? ovning.KLIENT_ID : inp.klientId, klientautentisering,
-    hemlighetMiljo: inp.hemlighetMiljo, attributprofil: inp.attributprofil,
+    hemlighetMiljo: inp.hemlighetMiljo, attributprofil: inp.attributprofil, lagstaTillitsniva: inp.lagstaTillitsniva,
   }, ctx);
   return { konfiguration: konfUt(db, konf, ctx), varningar: varningar(konf) };
 }
@@ -334,6 +345,10 @@ function varningar(konf) {
   const v = [];
   if (konf.klientautentisering === 'client_secret_basic' && !process.env[konf.hemlighetMiljo]) {
     v.push(`Hemligheten finns inte i serverns miljö (${konf.hemlighetMiljo}). Inloggningen fungerar först när driften har lagt in den.`);
+  }
+  // Runda 15, r1: tjänsten anger tillitsnivåer, men ingen som räcker för den lägsta nivån.
+  if (konf.acrStodda?.length && konf.lagstaTillitsniva > 1 && !tillit.begardaNivaer(konf.lagstaTillitsniva, konf.acrStodda)) {
+    v.push(`Tjänsten anger inga tillitsnivåer som når lägsta tillitsnivå ${konf.lagstaTillitsniva}. Personalen kommer inte in genom den förrän tjänsten erbjuder en sådan nivå, till exempel SITHS eID.`);
   }
   if (konf.klientautentisering === 'private_key_jwt' && !konf.simulerad) {
     v.push(`Tjänsten behöver Vårdkällans publika nyckel för att godta klientens intyg. Nyckelns tumavtryck är ${rp.tumavtryck}, och den publiceras på /api/inloggning/rp-jwks.`);
@@ -399,6 +414,20 @@ export async function nyckellage(ctx, konf) {
   } catch { return { andrad: null }; }
 }
 
+// Runda 15, r1: lägsta tillitsnivå för tjänsten, med fyra ögon. Systemet förklarar vad nivån betyder (tillitsniva.LAGSTA).
+export function foreslaTillitsniva(db, personal, tjanst, { niva, motivering: mot } = {}, ctx, nu = new Date()) {
+  kravRoll(personal);
+  const n = tillit.lagstaNiva(niva, { standard: null });
+  if (!n) throw new Fel(400, 'Välj lägsta tillitsnivå 1, 2, 3 eller 4.', 'ogiltig', { falt: ['niva'] });
+  const m = motivering(mot);
+  const g = gallandeFor(db, tjanst);
+  kravIngenVantande(db, g.konf.id);
+  const forra = tillit.lagstaNiva(g.konf.lagstaTillitsniva);
+  if (forra === n) throw new Fel(400, `Tjänsten har redan lägsta tillitsnivå ${n}.`, 'ogiltig', { falt: ['niva'] });
+  const konf = prova(db, { ...g.konf, lagstaTillitsniva: n }, ctx);
+  return { andring: spara(db, personal, g.konf.id, 'andring', konf, g.konf, m, nu) };
+}
+
 export function foreslaAktiv(db, personal, tjanst, { aktiv, motivering: mot } = {}, ctx, nu = new Date()) {
   kravRoll(personal);
   const m = motivering(mot);
@@ -423,8 +452,10 @@ export function godkann(db, personal, id, { kommentar } = {}, ctx, nu = new Date
   db.query("UPDATE inloggningstjanst_andringar SET status = 'godkand', beslutad_av = ?, beslutad = ?, beslut_kommentar = ? WHERE id = ?")
     .run(personal.id, iso(nu), typeof kommentar === 'string' && kommentar.trim() ? kommentar.trim().slice(0, 500) : null, a.id);
   loggaAtgard(db, personal, `inloggningstjanst:${a.id}`);
+  const ut = andringUt(db, a, personal);
+  const niva = ut.forraLagstaTillitsniva !== null && ut.forraLagstaTillitsniva !== ut.lagstaTillitsniva ? `, från tillitsnivå ${ut.forraLagstaTillitsniva} till tillitsnivå ${ut.lagstaTillitsniva}` : '';
   sakerhetslogg.logga(db, { typ: 'andrad_installning', personal_id: personal.id, enhet_id: personal.enhet_id,
-    beskrivning: `${ATGARD[a.atgard]}: ${konf.namn}, föreslagen av ${personnamn(db, a.foreslagen_av)} och godkänd av ${personal.namn}.` });
+    beskrivning: `${ut.atgardText}: ${konf.namn}${niva}, föreslagen av ${personnamn(db, a.foreslagen_av)} och godkänd av ${personal.namn}.` });
   return { andring: andringUt(db, hamta(db, a.id), personal) };
 }
 
@@ -448,6 +479,8 @@ function konfUt(db, k, ctx) {
   return {
     ...k, vardgivare: vg?.namn ?? k.vardgivareHsaId, klientautentiseringText: KLIENTAUTENTISERING[k.klientautentisering],
     attributprofilText: ATTRIBUTPROFIL[k.attributprofil], hemlighetFinns: k.hemlighetMiljo ? Boolean(process.env[k.hemlighetMiljo]) : null,
+    // Runda 15, r1.
+    lagstaTillitsniva: tillit.lagstaNiva(k.lagstaTillitsniva), lagstaTillitsnivaText: tillit.LAGSTA[tillit.lagstaNiva(k.lagstaTillitsniva)]?.rubrik ?? null,
     redirectUri: `${ctx?.bas ?? ''}${REDIRECT}`,
   };
 }
@@ -457,8 +490,13 @@ export function andringUt(db, a, personal = null) {
   const f = a.forra ? JSON.parse(a.forra) : null;
   const fore = new Set((f?.nycklar ?? []).map(n => n.tumavtryck));
   const efter = new Set(k.nycklar.map(n => n.tumavtryck));
+  // Runda 15, r1: en ändring av lägsta tillitsnivån visas som det den är.
+  const lagsta = tillit.lagstaNiva(k.lagstaTillitsniva);
+  const forraLagsta = f ? tillit.lagstaNiva(f.lagstaTillitsniva) : null;
+  const nivaAndrad = a.atgard === 'andring' && forraLagsta !== null && forraLagsta !== lagsta;
   return {
-    id: a.id, tjanst: a.tjanst, atgard: a.atgard, atgardText: ATGARD[a.atgard], namn: k.namn, utfardare: k.utfardare, simulerad: Boolean(k.simulerad),
+    id: a.id, tjanst: a.tjanst, atgard: a.atgard, atgardText: nivaAndrad ? 'Ändrad lägsta tillitsnivå' : ATGARD[a.atgard], namn: k.namn, utfardare: k.utfardare, simulerad: Boolean(k.simulerad),
+    lagstaTillitsniva: lagsta, forraLagstaTillitsniva: forraLagsta, lagstaTillitsnivaText: tillit.LAGSTA[lagsta]?.text ?? null,
     nycklar: k.nycklar.map(n => ({ kid: n.kid ?? null, kty: n.kty, alg: n.alg ?? null, tumavtryck: n.tumavtryck, ny: Boolean(f) && !fore.has(n.tumavtryck) })),
     borttagnaNycklar: (f?.nycklar ?? []).filter(n => !efter.has(n.tumavtryck)).map(n => ({ kid: n.kid ?? null, tumavtryck: n.tumavtryck })),
     aktiv: k.aktiv, motivering: a.motivering, foreslagenAv: personnamn(db, a.foreslagen_av), foreslagen: a.foreslagen,
@@ -483,6 +521,8 @@ export async function oversikt(db, personal, ctx) {
     historik: alla.filter(a => a.status !== 'vantar').reverse().slice(0, 50).map(a => andringUt(db, a, personal)),
     vardkallan: { redirectUri: `${ctx.bas}${REDIRECT}`, rpJwksUri: `${ctx.bas}/api/inloggning/rp-jwks`, rpTumavtryck: rp.tumavtryck, scope: SCOPE },
     tillatna: [...ctx.tillatna], ovningFinns: true, attributkalla: ATTRIBUTKALLA,
+    // Runda 15, r1: vad varje lägsta tillitsnivå betyder.
+    tillitsnivaer: tillit.LAGSTA, flerfaktorNiva: tillit.FLERFAKTOR_NIVA,
     simulerad: 'Den simulerade autentiseringstjänsten med demorollerna finns kvar. Övningstjänsten är en simulerad extern inloggningstjänst i samma server. Ingen verklig regions inloggningstjänst är inkopplad i demon.',
   };
 }
@@ -512,6 +552,9 @@ export function borja(s, db, tjanstId, ctx, nu = Date.now()) {
   for (const [n, v] of Object.entries({ response_type: 'code', client_id: k.klientId, redirect_uri: `${ctx.bas}${REDIRECT}`, scope: k.scope, state, nonce, code_challenge: s256(verifier), code_challenge_method: 'S256' })) {
     u.searchParams.set(n, v);
   }
+  // Runda 15, r1: tjänsten ombeds själv välja en legitimation med minst den lägsta nivån. Svaret prövas ändå.
+  const acr = tillit.begardaNivaer(k.lagstaTillitsniva, k.acrStodda);
+  if (acr) u.searchParams.set('acr_values', acr.join(' '));
   return u.href;
 }
 
@@ -564,7 +607,10 @@ export function provaIdBiljett(idBiljett, k, { nonce, nu = Date.now(), atkomstbi
   if (typeof p.nbf === 'number' && p.nbf > s + KLOCKMARGINAL_S) avvisa('den gäller inte ännu.');
   if (typeof p.nonce !== 'string' || p.nonce !== nonce) avvisa('den hör inte till den här inloggningen (nonce).');
   if (atkomstbiljett && p.at_hash !== undefined && p.at_hash !== jwt.atHash(atkomstbiljett, v.huvud.alg)) avvisa('den hör inte ihop med åtkomstbiljetten (at_hash).');
-  if (!TILLITSNIVAER.includes(p.acr)) avvisa('tillitsnivån räcker inte. Personalen ska logga in med tillitsnivå 3 eller högre, till exempel SITHS.');
+  // Runda 15, r1: nivån jämförs med tjänstens lägsta nivå. En okänd eller saknad nivå räknas som nivå 1.
+  const t = tillit.tolka(p.acr);
+  const lagsta = tillit.lagstaNiva(k.lagstaTillitsniva) ?? tillit.STANDARD_LAGSTA;
+  if (tillit.underLagsta(t, lagsta)) avvisa(tillit.forLagText(t, lagsta, k.namn));
   if (typeof p.sub !== 'string' || !p.sub) avvisa('den saknar subjekt (sub).');
   const jti = typeof p.jti === 'string' && p.jti ? `${k.utfardare} ${p.jti}` : null;
   if (jti) {
@@ -601,7 +647,7 @@ export function tolka(p) {
     andamal: str(p.commissionPurpose, 'commissionPurpose'), vardenhetHsaId: str(attribut(p, 'healthCareUnitHsaId', 'healthcareUnitHsaId'), 'healthCareUnitHsaId'),
     vardgivareHsaId: str(attribut(p, 'healthCareProviderHsaId', 'healthcareProviderHsaId'), 'healthCareProviderHsaId'),
     legitimation: lista.map(x => x.trim().toUpperCase()).filter(x => /^[A-Z]{2}$/.test(x)),
-    fornamn: str(p.given_name, 'given_name'), efternamn: str(p.family_name, 'family_name'), tillitsniva: p.acr,
+    fornamn: str(p.given_name, 'given_name'), efternamn: str(p.family_name, 'family_name'), tillitsniva: typeof p.acr === 'string' ? p.acr.slice(0, 200) : null,
   };
 }
 
@@ -634,7 +680,7 @@ export function provaMotMasterdata(db, k, a, p) {
     uppdrag: {
       utfardare: k.utfardare, extern: true, tjanst: k.id, tjanstNamn: k.namn, simulerad: Boolean(k.simulerad), personHsaId: a.personHsaId,
       uppdragHsaId: a.uppdragHsaId, andamal: a.andamal, vardenhetHsaId: a.vardenhetHsaId, vardgivareHsaId: a.vardgivareHsaId, yrke: pers.yrke,
-      legitimation: a.legitimation, tillitsniva: a.tillitsniva, autentiserad: new Date(((typeof p.auth_time === 'number' ? p.auth_time : p.iat)) * 1000).toISOString(),
+      legitimation: a.legitimation, tillitsniva: a.tillitsniva, amr: tillit.amrLista(p.amr), autentiserad: new Date(((typeof p.auth_time === 'number' ? p.auth_time : p.iat)) * 1000).toISOString(),
       biljett: typeof p.jti === 'string' ? p.jti.slice(0, 100) : null,
     },
   };

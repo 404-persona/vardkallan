@@ -225,21 +225,26 @@ export const metoder = (db, typ, id) => [...new Set(aktiva(db, typ, id).map(r =>
 const faktorUt = (r) => ({ id: r.id, typ: r.typ, typText: TYPER[r.typ], namn: r.namn, skapad: r.skapad, senastAnvand: r.senast_anvand, aktiv: Boolean(r.aktiv) });
 
 // Översikten för den inloggade. metod är hur inloggningen i sessionen bekräftades.
-// Runda 13, r3: kravsAvVardgivaren är parametern sakerhet.flerfaktor_kravs, som servern läser och skickar in.
-export function oversikt(db, typ, id, { metod = null, kravsAvVardgivaren = false } = {}) {
+// Runda 15, r1 (beslut från Jonas): starkInloggning är om den pågående inloggningen har tillitsnivå 3 eller högre, som
+// servern räknar ut. Bara då får den sista faktorn tas bort. Parametern sakerhet.flerfaktor_kravs är ersatt av regeln.
+export function oversikt(db, typ, id, { metod = null, starkInloggning = false } = {}) {
   const a = aktiva(db, typ, id);
+  // Runda 15, r1: för personalen är en inloggning med tillitsnivå 3, som SITHS-kortet, redan flerfaktor, så faktorn
+  // används bara vid en inloggning med lägre nivå.
+  // Runda 15, r1: invånarens e-legitimation med tillitsnivå 3 räknas på samma sätt (beslut från Jonas).
+  const kort = typ === 'personal' ? 'SITHS-kortet och PIN-koden' : 'e-legitimationen';
+  const lagre = typ === 'personal' ? 'till exempel utan SITHS-kortet' : 'till exempel med en e-legitimation med lägre nivå';
+  const sista = a.length <= 1 ? (starkInloggning ? ' Du loggade in med tillitsnivå 3, så du kan ta bort den sista faktorn.' : ` Den sista faktorn kan du ta bort när du har loggat in med ${kort} (tillitsnivå 3).`) : '';
+  const text = `${a.length
+    ? `Flerfaktor är på. Din faktor används när du loggar in med lägre tillitsnivå än 3, ${lagre}. Med ${kort} behövs den inte, eftersom den inloggningen redan är flerfaktor.${sista}`
+    : `Flerfaktor är av, men med ${kort} (tillitsnivå 3) är inloggningen ändå flerfaktor. Registrera en passkey eller en app för engångskoder om du ibland loggar in med lägre tillitsnivå.`}`;
   return {
     aktiv: a.length > 0,
     faktorer: a.map(faktorUt),
     metod,
     max: MAX_FAKTORER,
-    kravsAvVardgivaren,
-    text: kravsAvVardgivaren
-      ? (a.length ? 'Vårdgivaren kräver flerfaktor. Varje inloggning bekräftas med en av faktorerna nedan, och den sista faktorn går inte att ta bort.'
-        : 'Vårdgivaren kräver flerfaktor. Registrera en passkey eller en app för engångskoder för att logga in.')
-      : a.length
-        ? 'Flerfaktor är på för dig i den här sandlådan. Varje inloggning bekräftas med en av faktorerna nedan.'
-        : 'Flerfaktor är av. Registrera en passkey eller en app för engångskoder, så krävs den vid varje inloggning som du i den här sandlådan.',
+    sistaFaktorKanTasBort: Boolean(starkInloggning),
+    text,
   };
 }
 
@@ -359,15 +364,17 @@ export function bekraftaTotp(db, { typ, id }, kod, { nu = Date.now() } = {}) {
   return faktorUt(db.query('SELECT * FROM flerfaktorer WHERE id = ?').get(r.id));
 }
 
-export function taBort(db, { typ, id }, fid, { kravsAvVardgivaren = false } = {}) {
+export function taBort(db, { typ, id }, fid, { starkInloggning = false } = {}) {
   const r = db.query('SELECT * FROM flerfaktorer WHERE id = ? AND agare_typ = ? AND agare_id = ?').get(Number(fid) || 0, typ, id);
   if (!r) throw new Fel(404, 'Faktorn finns inte.', 'saknas');
-  // Runda 13, r3: när vårdgivaren kräver flerfaktor går den sista faktorn inte att ta bort.
-  if (kravsAvVardgivaren && anvandbar(r) && aktiva(db, typ, id).length <= 1) {
-    throw new Fel(400, 'Vårdgivaren kräver flerfaktor, så den sista faktorn går inte att ta bort. Lägg till en ny faktor först, och ta sedan bort den gamla.', 'ogiltig');
+  // Runda 15, r1 (beslut från Jonas): den sista faktorn tas bort bara när den pågående inloggningen har tillitsnivå 3.
+  // Annars är faktorn det som gör inloggningen stark, och den behålls.
+  if (!starkInloggning && anvandbar(r) && aktiva(db, typ, id).length <= 1) {
+    const kort = typ === 'personal' ? 'Logga in med SITHS-kortet och PIN-koden' : 'Logga in med en e-legitimation med tillitsnivå 3, till exempel BankID,';
+    throw new Fel(400, `Den sista faktorn går inte att ta bort nu, eftersom du loggade in med lägre tillitsnivå än 3 och faktorn är det som gör inloggningen stark. ${kort} om du vill ta bort den, eller lägg till en ny faktor först och ta sedan bort den gamla.`, 'ogiltig');
   }
   db.query('DELETE FROM flerfaktorer WHERE id = ?').run(r.id);
-  return { borttagen: faktorUt(r), ...oversikt(db, typ, id) };
+  return { borttagen: faktorUt(r), ...oversikt(db, typ, id, { starkInloggning })};
 }
 
 // Inloggningens andra steg: vad klienten behöver för att be om faktorn.

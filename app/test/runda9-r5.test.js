@@ -57,7 +57,7 @@ describe('Inloggning med biljett', () => {
     const r2 = await k2.post('/api/login/biljett', { biljett: b });
     expect(r2.status).toBe(200);
     expect(r2.data.personal.id).toBe('ssk-kard');
-    expect(sakerhet(k2).at(-1)).toMatchObject({ typ: 'inloggning', personal_id: 'ssk-kard', beskrivning: 'Inloggning med biljett från autentiseringstjänsten.' });
+    expect(sakerhet(k2).at(-1)).toMatchObject({ typ: 'inloggning', personal_id: 'ssk-kard', beskrivning: 'Inloggning med biljett från autentiseringstjänsten: SITHS-kort med PIN-kod (simulerat), tillitsnivå 3, flerfaktor.' });
     // Rollerna med andra ändamål får uppdrag för sitt ändamål.
     expect((await klient(app).logga('logg')).data.uppdrag.andamal).toBe('Kvalitetssäkring');
     expect((await klient(app).logga('uppf')).data.uppdrag.andamal).toBe('Statistik');

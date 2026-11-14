@@ -33,6 +33,8 @@ export const ANDRINGAR = [
       // Runda 15, r4: anteckningsvyn.
       'Composition: ett sökord med värden ur underlaget har section.entry med referenser till Observation, MedicationRequest, Condition och Encounter, bara till resurser som läsaren får se',
       'Nya rutter i det interna API:t: mallen med underlag, varianter och förslag för en patient (GET /api/patient/:id/anteckningsmall), utkastet som sparas av sig självt (PUT och DELETE /api/patient/:id/anteckningsutkast), egna fraser och egen ordning på sökorden (/api/egna-fraser) och den senaste bedömningen i listan över anteckningar (docs/api-avvikelser.md)',
+      // Runda 15, r1: SITHS och tillitsnivå 3 som flerfaktor, och lägsta tillitsnivå per inloggningstjänst.
+      'Inloggningens tillitsnivå i sessionen, lägsta tillitsnivå per inloggningstjänst med fyra ögon och demons inloggning med tillitsnivå 2 för personalen och invånaren i det interna API:t, och inloggningsbegäran till en inloggningstjänst ber om tjänstens lägsta nivå. Känsliga handlingar svarar 403 med en egen felkod när inloggningen inte är flerfaktor (docs/api-avvikelser.md)',
     ],
   },
   // Runda 14: version 1.4. Varje del lägger sina rader i annat i ett eget block.

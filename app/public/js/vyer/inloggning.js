@@ -87,6 +87,12 @@ export async function visa(main, _param, q) {
       </section>
       <section class="roller" aria-labelledby="roll-rubrik">
         <h2 id="roll-rubrik">Välj demoroll</h2>
+        ${/* Runda 15, r1: SITHS-kortet med PIN-kod är tillitsnivå 3 och räknas som flerfaktor. Utan kortet är inloggningen en faktor, och systemet ber om passkey eller kod. */ ''}
+        <fieldset class="kryssgrupp inloggningssatt" id="inloggningssatt">
+          <legend>Hur loggar du in?</legend>
+          <div class="kryssfalt"><input type="radio" id="inl-niva-3" name="tillitsniva" value="3" checked><label for="inl-niva-3">Med SITHS-kortet och PIN-koden (tillitsnivå 3). Det är redan flerfaktor.</label></div>
+          <div class="kryssfalt"><input type="radio" id="inl-niva-2" name="tillitsniva" value="2"><label for="inl-niva-2">Utan SITHS-kort (tillitsnivå 2, en faktor). Systemet ber om passkey eller kod från appen.</label></div>
+        </fieldset>
         <ul class="rollista" id="rollista"><li class="tom">Hämtar demorollerna.</li></ul>
       </section>
     </div>
@@ -99,6 +105,12 @@ export async function visa(main, _param, q) {
       </section>
       <section class="roller" aria-labelledby="pat-rubrik">
         <h2 id="pat-rubrik">Välj patient</h2>
+        ${/* Runda 15, r1: e-legitimationen är tillitsnivå 3 och räknas som flerfaktor. Med lägre nivå ber systemet om passkey eller kod. */ ''}
+        <fieldset class="kryssgrupp inloggningssatt" id="inloggningssatt-invanare">
+          <legend>Hur loggar du in?</legend>
+          <div class="kryssfalt"><input type="radio" id="inv-niva-3" name="tillitsniva-invanare" value="3" checked><label for="inv-niva-3">Med e-legitimation (tillitsnivå 3). Det är redan flerfaktor.</label></div>
+          <div class="kryssfalt"><input type="radio" id="inv-niva-2" name="tillitsniva-invanare" value="2"><label for="inv-niva-2">Med en e-legitimation med lägre tillitsnivå (2, en faktor). Systemet ber om passkey eller kod från appen.</label></div>
+        </fieldset>
         <ul class="rollista" id="patientlista"><li class="tom">Hämtar patienterna.</li></ul>
       </section>
     </div>
@@ -159,7 +171,9 @@ export async function visa(main, _param, q) {
   </li>`).join('');
   lista.addEventListener('click', (e) => {
     const b = e.target.closest('[data-roll]');
-    if (b) loggaIn(b.dataset.roll, b).catch(() => {});
+    // Runda 15, r1: utan SITHS-kort loggar demorollen in med tillitsnivå 2.
+    const niva = main.querySelector('input[name="tillitsniva"]:checked')?.value === '2' ? 2 : null;
+    if (b) loggaIn(b.dataset.roll, b, niva ? { tillitsniva: niva } : {}).catch(() => {});
   });
 
   const plista = main.querySelector('#patientlista');
@@ -181,7 +195,9 @@ export async function visa(main, _param, q) {
   }).join('');
   plista.addEventListener('click', (e) => {
     const b = e.target.closest('[data-invanare]');
-    if (b) loggaInInvanare(b.dataset.invanare, b).catch(() => {});
+    // Runda 15, r1: med lägre tillitsnivå loggar invånaren in med tillitsnivå 2.
+    const niva = main.querySelector('input[name="tillitsniva-invanare"]:checked')?.value === '2' ? 2 : null;
+    if (b) loggaInInvanare(b.dataset.invanare, b, niva ? { tillitsniva: niva } : {}).catch(() => {});
   });
 }
 

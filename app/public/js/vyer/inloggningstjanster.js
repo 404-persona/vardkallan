@@ -4,6 +4,8 @@
 // nycklarnas tumavtryck. Systemförvaltaren skriver bara in adressen och klient-id.
 import { esc, api, tidpunkt, notis, medKnapp, dialog, vyRubrik } from '../ui.js';
 import { efterExternInloggning } from '../app.js';
+// Runda 15, r1: den andra faktorn efter en inloggning med lägre tillitsnivå än 3.
+import { andraFaktorn } from '../flerfaktor-ui.js';
 
 const tyst = (vag, data) => api(vag, { metod: 'POST', data, tyst: true });
 const nycklarHtml = (nycklar) => `<ul class="it-nycklar">${nycklar.map(n => `<li>${n.ny ? '<span class="tagg">Ny</span> ' : ''}${esc(n.kty)}${n.alg ? `, ${esc(n.alg)}` : ''}${n.kid ? `, id ${esc(n.kid)}` : ''}<br><span class="dampad liten">Tumavtryck (SHA-256)</span> <code class="tumavtryck">${esc(n.tumavtryck)}</code></li>`).join('')}</ul>`;
@@ -12,7 +14,9 @@ function andringRad(a) {
   return `<li class="ik-ater it-andring"><div class="ik-text"><span class="ik-rubrik">${esc(a.atgardText)}: ${esc(a.namn)}${a.simulerad ? ' <span class="tagg">Simulerad</span>' : ''}</span>
     <span class="under-text">Utfärdare <code class="tumavtryck">${esc(a.utfardare)}</code>. Föreslagen av ${esc(a.foreslagenAv)} ${esc(tidpunkt(a.foreslagen))}.</span>
     <span class="under-text">Motivering: ${esc(a.motivering)}</span>
-    ${a.atgard === 'avstangning' || a.atgard === 'ateraktivering' ? '' : `<span class="under-text">Jämför tumavtrycket med det som tjänsten publicerar innan du godkänner.</span>${nycklarHtml(a.nycklar)}`}
+    ${/* Runda 15, r1: en ändrad lägsta tillitsnivå visas med vad den nya nivån betyder. */ ''}
+    ${a.forraLagstaTillitsniva !== null && a.forraLagstaTillitsniva !== a.lagstaTillitsniva ? `<span class="under-text">Lägsta tillitsnivå ändras från ${esc(a.forraLagstaTillitsniva)} till ${esc(a.lagstaTillitsniva)}. ${esc(a.lagstaTillitsnivaText ?? '')}</span>` : ''}
+    ${a.atgard === 'avstangning' || a.atgard === 'ateraktivering' || (a.forraLagstaTillitsniva !== null && a.forraLagstaTillitsniva !== a.lagstaTillitsniva) ? '' : `<span class="under-text">Jämför tumavtrycket med det som tjänsten publicerar innan du godkänner.</span>${nycklarHtml(a.nycklar)}`}
     ${a.borttagnaNycklar?.length ? `<span class="under-text">Nycklar som tas bort: ${a.borttagnaNycklar.map(n => `<code class="tumavtryck">${esc(n.tumavtryck)}</code>`).join(', ')}</span>` : ''}</div>
     <div class="ik-knappar">${a.kanGodkanna ? `<button type="button" class="knapp liten" data-godkann="${a.id}">Godkänn</button><button type="button" class="knapp liten sekundar" data-avsla="${a.id}">Avslå</button>` : ''}${a.egen ? `<button type="button" class="knapp liten sekundar" data-aterkalla="${a.id}">Återkalla</button>` : ''}</div></li>`;
 }
@@ -21,9 +25,11 @@ function tjanstRad(t) {
   return `<li class="ik-ater it-tjanst"><div class="ik-text"><span class="ik-rubrik">${esc(t.namn)}${t.simulerad ? ' <span class="tagg">Simulerad</span>' : ''}${t.aktiv ? '' : ' <span class="tagg tagg-utkast">Avstängd</span>'}</span>
     <span class="under-text">Utfärdare <code class="tumavtryck">${esc(t.utfardare)}</code>, klient-id <code class="tumavtryck">${esc(t.klientId)}</code>. Vårdgivare ${esc(t.vardgivare)}.</span>
     <span class="under-text">${esc(t.klientautentiseringText)}${t.hemlighetFinns === false ? '. Hemligheten finns inte i serverns miljö, så inloggningen fungerar inte förrän driften har lagt in den' : ''}. ${esc(t.attributprofilText)}.</span>
+    <span class="under-text" data-lagsta="${esc(t.lagstaTillitsniva)}">Lägsta tillitsnivå: ${esc(t.lagstaTillitsnivaText ?? '')}.</span>
     ${t.nyckellage?.andrad ? '<p class="ruta ruta-larm liten" role="status">Tjänsten publicerar nu andra nycklar än de inlagda. Inloggningen stängs tills de nya nycklarna är inlagda. Föreslå ett byte, så godkänner en annan systemförvaltare det.</p>' : ''}
     ${nycklarHtml(t.nycklar)}</div>
     <div class="ik-knappar">${t.vantar ? '<span class="under-text">En ändring väntar på godkännande.</span>' : `${t.aktiv && t.nyckellage?.andrad ? `<button type="button" class="knapp liten" data-nycklar="${esc(t.id)}">Föreslå byte av nyckel</button>` : ''}
+      <button type="button" class="knapp liten sekundar" data-tillitsniva="${esc(t.id)}" data-nu="${esc(t.lagstaTillitsniva)}">Ändra lägsta tillitsnivå</button>
       <button type="button" class="knapp liten sekundar" data-aktiv="${esc(t.id)}" data-pa="${t.aktiv ? 'nej' : 'ja'}">${t.aktiv ? 'Stäng av' : 'Slå på igen'}</button>`}</div></li>`;
 }
 
@@ -60,7 +66,8 @@ export const tjanster = {
         <ul class="sf-lasta">
           <li>Svaret ska höra till inloggningen som började i samma webbläsare (state och nonce), och koden byts mot biljetten med PKCE. Ett svar används en gång.</li>
           <li>Biljetten ska vara signerad med en av de inlagda nycklarna och en asymmetrisk algoritm. En nyckel som tjänsten har bytt till godtas först när en andra systemförvaltare har godkänt den.</li>
-          <li>Utfärdaren, mottagaren och tiden ska stämma, och tillitsnivån ska vara minst 3.</li>
+          <li>Utfärdaren, mottagaren och tiden ska stämma, och tillitsnivån ska vara minst tjänstens lägsta nivå (förvalt 3).</li>
+          <li>Tillitsnivå 3 eller högre, till exempel SITHS-kortet eller SITHS eID i mobilen, räknas som flerfaktor och ger åtkomst utan extra steg. En lägre nivå är en faktor, och personen bekräftar då med en passkey eller en kod från appen innan någon behörighet ges.</li>
           <li>Attributen tolkas enligt ${esc(o.attributkalla.titel)} (version ${esc(o.attributkalla.version)}): personens HSA-id, medarbetaruppdraget med ändamål och vårdenhet, vårdgivaren och den legitimerade yrkesgruppen.</li>
           <li>Attributen prövas mot katalogen. Saknas ett attribut, eller motsäger det katalogen, blir det ingen inloggning, och personen får veta vad som är fel och vem som kan rätta det. Prövningen görs igen i varje anrop.</li>
         </ul></section>
@@ -72,11 +79,11 @@ export const tjanster = {
         <p class="liten">Adresser som driften har godkänt: ${o.tillatna.length ? o.tillatna.map(t => `<code class="tumavtryck">${esc(t)}</code>`).join(', ') : 'inga, så bara övningstjänsten går att koppla in'}.</p></section>
       <section class="lm-sektion" aria-labelledby="it-historik"><h2 id="it-historik">Historik</h2>${historik(o.historik)}</section>
       <p class="demoregel">${esc(o.simulerad)}</p>`;
-    el.addEventListener('click', (e) => klick(main, e));
+    el.addEventListener('click', (e) => klick(main, e, o));
   },
 };
 
-async function klick(main, e) {
+async function klick(main, e, o = {}) {
   const k = (s) => e.target.closest(s);
   try {
     if (k('[data-godkann]')) { await medKnapp(k('[data-godkann]'), () => api(`/api/inloggningstjanster/andring/${k('[data-godkann]').dataset.godkann}/godkann`, { metod: 'POST', data: {} })); notis('Ändringen är godkänd och gäller nu.'); }
@@ -99,6 +106,13 @@ async function klick(main, e) {
       if (!svar) return;
       await medKnapp(b, () => api(`/api/inloggningstjanster/${b.dataset.nycklar}/nycklar`, { metod: 'POST', data: svar }));
       notis('Bytet av nyckel väntar på att en annan systemförvaltare godkänner det.');
+    } else if (k('[data-tillitsniva]')) {
+      // Runda 15, r1: lägsta tillitsnivå, med vad varje nivå betyder. Gäller efter fyra ögon.
+      const b = k('[data-tillitsniva]');
+      const svar = await valjTillitsniva(o.tillitsnivaer ?? {}, Number(b.dataset.nu));
+      if (!svar) return;
+      await medKnapp(b, () => api(`/api/inloggningstjanster/${b.dataset.tillitsniva}/tillitsniva`, { metod: 'POST', data: svar }));
+      notis('Den nya lägsta tillitsnivån väntar på att en annan systemförvaltare godkänner den.');
     } else if (k('[data-aktiv]')) {
       const b = k('[data-aktiv]');
       const pa = b.dataset.pa === 'ja';
@@ -109,6 +123,17 @@ async function klick(main, e) {
     } else return;
   } catch { /* notis visad */ }
   tjanster.visa(main);
+}
+
+// Runda 15, r1: dialogen för lägsta tillitsnivå. Systemet förklarar varje nivå, och nuvarande nivå är förvald.
+async function valjTillitsniva(nivaer, nu) {
+  const svar = await dialog(`<form><h2 id="dlg-rubrik">Lägsta tillitsnivå för tjänsten</h2>
+    <fieldset class="kryssgrupp"><legend>Biljetter under nivån godtas inte</legend>
+      ${Object.entries(nivaer).map(([n, v]) => `<div class="kryssfalt"><input type="radio" id="it-niva-${esc(n)}" name="niva" value="${esc(n)}"${Number(n) === nu ? ' checked' : ''}><label for="it-niva-${esc(n)}"><strong>${esc(v.rubrik)}</strong><br><span class="hjalp" id="it-niva-${esc(n)}-text">${esc(v.text)}</span></label></div>`).join('')}
+    </fieldset>
+    <div class="falt"><label for="it-niva-mot">Varför ska nivån ändras? <span class="obl">(obligatoriskt)</span></label><textarea id="it-niva-mot" name="motivering" rows="2" required maxlength="1000"></textarea></div>
+    <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Skicka för godkännande</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div></form>`, { klass: 'dialog-bred' });
+  return svar ? { niva: Number(svar.data.niva), motivering: svar.data.motivering } : null;
 }
 
 async function motivera(rubrik, forval) {
@@ -209,8 +234,13 @@ export const resultat = {
     const el = main.querySelector('#ie-sida');
     if (!el) return;
     if (r?.ok && !r.flerfaktor) { await efterExternInloggning(); return; }
+    // Runda 15, r1: inloggningen räcker inte ensam, till exempel med tillitsnivå 2. Den andra faktorn bekräftas här, och
+    // servern slutför inloggningen när den är godkänd.
     if (r?.ok) {
-      el.innerHTML = '<p class="ruta ruta-info" role="status">Inloggningen väntar på din andra faktor, som vårdgivaren kräver. Logga in med demorollen och bekräfta med faktorn.</p><p><a class="knapp" href="#/">Till inloggningen</a></p>';
+      el.innerHTML = `<p class="ruta ruta-info" role="status">${esc(r.flerfaktor.orsak ?? 'Inloggningen väntar på din andra faktor.')}</p>`;
+      const klar = await andraFaktorn(r.flerfaktor, r.namn);
+      if (klar?.inloggad) { await efterExternInloggning(); return; }
+      el.innerHTML = '<p class="ruta ruta-info" role="status">Du är inte inloggad, eftersom den andra faktorn inte bekräftades.</p><p><a class="knapp" href="#/">Till inloggningen</a></p>';
       return;
     }
     el.innerHTML = r

@@ -106,7 +106,7 @@ describe('Flerfaktor', () => {
 
   test('med en passkey väntar inloggningen på den andra faktorn och ger varken behörighet eller läskopia förrän den är godkänd', async () => {
     const { k, aut } = await medPasskey('lak-kard');
-    const forsta = await k.post('/api/login', { personalId: 'lak-kard' });
+    const forsta = await k.post('/api/login', { personalId: 'lak-kard', tillitsniva: 2 });
     expect(forsta.status).toBe(200);
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.lasnyckel).toBeUndefined();
@@ -126,7 +126,7 @@ describe('Flerfaktor', () => {
 
   test('en signatur från fel nyckel, fel ursprung, en gammal utmaning eller utan användarverifiering godtas inte', async () => {
     const { k, aut } = await medPasskey('fys-kard');
-    let u = (await k.post('/api/login', { personalId: 'fys-kard' })).data.flerfaktor;
+    let u = (await k.post('/api/login', { personalId: 'fys-kard', tillitsniva: 2 })).data.flerfaktor;
     const annan = generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey;
     const forsok = [
       [{ nyckel: annan }, /Signaturen/],
@@ -165,7 +165,7 @@ describe('Flerfaktor', () => {
     expect(ok.status).toBe(201);
     expect(ok.data.faktorer.map(f => f.typ)).toEqual(['totp']);
     await k.post('/api/logout');
-    const forsta = await k.post('/api/login', { personalId: 'adm-kard' });
+    const forsta = await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 });
     expect(forsta.data.flerfaktor.metoder).toEqual(['totp']);
     expect(forsta.data.flerfaktor.passkey).toBeUndefined();
     // Koden som bekräftade appen har redan använts.
@@ -177,7 +177,7 @@ describe('Flerfaktor', () => {
     expect(r.data.inloggad).toBe(true);
     expect(r.data.flerfaktor.metod).toBe('totp');
     await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'adm-kard' });
+    await k.post('/api/login', { personalId: 'adm-kard', tillitsniva: 2 });
     const igen = await k.post('/api/login/flerfaktor', { typ: 'totp', kod: nasta });
     expect(igen.status).toBe(400);
     expect(igen.data.fel).toContain('redan använts');
@@ -190,7 +190,7 @@ describe('Flerfaktor', () => {
     const h = ff.fran32(b.nyckel);
     expect((await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) })).status).toBe(201);
     await k.post('/api/logout');
-    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01' });
+    const forsta = await k.post('/api/login/invanare', { invanareId: 'inv-p01', tillitsniva: 2 });
     expect(forsta.data.inloggad).toBe(false);
     expect(forsta.data.flerfaktor.metoder).toEqual(['totp']);
     expect((await k.get('/api/min/journal/p01')).status).toBe(401);
@@ -211,14 +211,14 @@ describe('Flerfaktor', () => {
     const h = ff.fran32(b.nyckel);
     await k.post('/api/flerfaktor/totp', { kod: ff.totp(h, Date.now()) });
     await k.post('/api/logout');
-    await k.post('/api/login', { personalId: 'usk-kard' });
+    await k.post('/api/login', { personalId: 'usk-kard', tillitsniva: 2 });
     const giltiga = new Set([-1, 0, 1].map(d => ff.totp(h, Date.now() + d * 30_000)));
     const fel = ['123456', '234567', '345678', '456789', '567890', '678901'].filter(x => !giltiga.has(x));
     let sista;
     for (let i = 0; i < ff.MAX_FORSOK; i++) sista = await k.post('/api/login/flerfaktor', { typ: 'totp', kod: fel[i] });
     expect(sista.data.fel).toContain('För många felaktiga försök');
     expect((await k.post('/api/login/flerfaktor', { typ: 'totp', kod: ff.totp(h, Date.now() + 30_000) })).data.fel).toContain('Välj rollen igen');
-    // Sandlådan återställs: faktorn och allt annat i den försvinner, och rollen loggar in utan flerfaktor.
+    // Sandlådan återställs: faktorn och allt annat i den försvinner, och rollen loggar in med SITHS-kortet utan faktor.
     expect((await k.post('/api/reset')).status).toBe(200);
     const ny = await k.post('/api/login', { personalId: 'usk-kard' });
     expect(ny.data.inloggad).toBe(true);
@@ -237,7 +237,7 @@ describe('Flerfaktor', () => {
 
   test('säkerhetsloggen visar registrering, väntande inloggning, misslyckad och lyckad andra faktor', async () => {
     const { k, aut } = await medPasskey('far-kard');
-    const u = (await k.post('/api/login', { personalId: 'far-kard' })).data.flerfaktor;
+    const u = (await k.post('/api/login', { personalId: 'far-kard', tillitsniva: 2 })).data.flerfaktor;
     const fel = await k.post('/api/login/flerfaktor', { typ: 'passkey', svar: aut.hamta(u.passkey, { uv: false }) });
     await k.post('/api/login/flerfaktor', { typ: 'passkey', svar: aut.hamta(fel.data.flerfaktor.passkey) });
     const rader = sandlada(app, k).db.query("SELECT typ, beskrivning FROM sakerhetslogg WHERE personal_id = 'far-kard' ORDER BY id").all();
@@ -250,10 +250,14 @@ describe('Flerfaktor', () => {
 
   test('en faktor tas bort av den inloggade, och utan faktorer är flerfaktor av igen', async () => {
     const { k, aut } = await medPasskey('vch-kard');
-    const u = (await k.post('/api/login', { personalId: 'vch-kard' })).data.flerfaktor;
+    const u = (await k.post('/api/login', { personalId: 'vch-kard', tillitsniva: 2 })).data.flerfaktor;
     await k.post('/api/login/flerfaktor', { typ: 'passkey', svar: aut.hamta(u.passkey) });
     const o = (await k.get('/api/flerfaktor')).data;
     expect(o.metod).toBe('passkey');
+    // Runda 15, r1: efter en inloggning med tillitsnivå 2 behålls den sista faktorn. Efter SITHS-kortet går den att ta bort.
+    expect((await k.post(`/api/flerfaktor/${o.faktorer[0].id}/ta-bort`)).status).toBe(400);
+    await k.post('/api/logout');
+    await k.logga('vch-kard');
     const r = await k.post(`/api/flerfaktor/${o.faktorer[0].id}/ta-bort`);
     expect(r.data.aktiv).toBe(false);
     // Ingen annan än den inloggade kan ta bort faktorn.
@@ -261,6 +265,7 @@ describe('Flerfaktor', () => {
     await annan.logga('lak-kard');
     expect((await annan.post(`/api/flerfaktor/${o.faktorer[0].id}/ta-bort`)).status).toBe(404);
     await k.post('/api/logout');
+    // Runda 15, r1: utan faktor och med SITHS-kortet (tillitsnivå 3) loggar personen in direkt.
     expect((await k.post('/api/login', { personalId: 'vch-kard' })).data.inloggad).toBe(true);
   });
 });

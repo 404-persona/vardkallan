@@ -15,6 +15,13 @@ function oversiktHtml(o) {
       <p data-ff-text>${esc(o.text)}</p>
       ${o.metod ? `<p class="dampad">${esc(METOD[o.metod] ?? '')}</p>` : ''}
     </section>
+    ${/* Runda 15, r1: personalens inloggning med tillitsnivå 3, som SITHS-kortet, är redan flerfaktor. */ ''}
+    ${o.inloggning ? `<section class="ruta ff-inloggning" aria-labelledby="ff-inloggning-rubrik">
+      <h2 id="ff-inloggning-rubrik">${o.inloggning.flerfaktor ? ikon.bock : ikon.info} Din inloggning</h2>
+      <p data-ff-inloggning="${o.inloggning.niva ?? ''}">${esc(o.inloggning.text)}</p>
+      <p class="dampad liten">${esc(o.inloggning.metod)}.</p>
+      ${(o.inloggning.niva ?? 0) >= 3 ? '<p class="liten">En passkey eller en app för engångskoder används bara när du loggar in med lägre tillitsnivå än 3.</p>' : ''}
+    </section>` : ''}
     <section aria-labelledby="ff-faktorer">
       <h2 id="ff-faktorer">Dina faktorer</h2>
       ${o.faktorer.length ? `<ul class="lista-enkel" data-ff-lista>${o.faktorer.map(f => `<li>
@@ -35,7 +42,8 @@ function oversiktHtml(o) {
     <section class="ruta ruta-info" aria-labelledby="ff-demo">
       <h2 id="ff-demo">Så fungerar det i demon</h2>
       <p>SITHS-kortet och e-legitimationen är simulerade i demon, men flerfaktorn är riktig: passkeys enligt WebAuthn och engångskoder enligt RFC 6238, utan någon extern tjänst. Servern sparar bara passkeyns publika nyckel och appens nyckel krypterad.</p>
-      <p>${o.kravsAvVardgivaren ? 'Vårdgivaren kräver flerfaktor i den här sandlådan, så alla bekräftar sin inloggning med en andra faktor.' : 'Vårdgivaren kan kräva flerfaktor av alla med parametern Flerfaktor krävs vid inloggning under Regler och parametrar. I den publika demon står den på nej, så att ingen besökare låses ute.'}</p>
+      <p>SITHS-kortet med PIN-kod och invånarens e-legitimation har tillitsnivå 3 och räknas som flerfaktor, så ingen får en extra fråga efter en sådan inloggning. Pröva en inloggning med lägre tillitsnivå på inloggningssidan för att se hur systemet ber om passkey eller kod.</p>
+      <p>Systemet avgör själv när en andra faktor behövs: alltid vid en inloggning med lägre tillitsnivå än 3, aldrig efter SITHS-kortet eller en e-legitimation med tillitsnivå 3. Den sista faktorn går att ta bort bara när du har loggat in med tillitsnivå 3, så att ingen tar bort den faktor som just gjorde inloggningen stark.</p>
       <p>Flerfaktorn gäller bara i din sandlåda och bara för den du är inloggad som. Tappar du bort din faktor återställer du sandlådan med knappen överst. Då försvinner faktorn och allt annat du har gjort, så återställningen ger aldrig åtkomst till något som faktorn skyddade.</p>
       <p>Läsläget vid ett avbrott fungerar som förut: läskopian lämnas ut när inloggningen är klar, alltså efter den andra faktorn.</p>
     </section>`;
@@ -74,7 +82,7 @@ async function medBekraftelse(anrop, knapptext) {
 }
 
 export async function visa(main) {
-  main.innerHTML = vyRubrik('Inloggning och flerfaktor', 'Skydda din inloggning med en passkey eller en app för engångskoder. Systemet frågar efter den vid varje inloggning.') + '<div id="ff"><p class="tom">Hämtar.</p></div>';
+  main.innerHTML = vyRubrik('Inloggning och flerfaktor', 'Skydda din inloggning med en passkey eller en app för engångskoder. Systemet frågar efter den när inloggningen inte redan är flerfaktor, som med SITHS-kortet.') + '<div id="ff"><p class="tom">Hämtar.</p></div>';
   const yta = main.querySelector('#ff');
   const rita = (o) => { yta.innerHTML = oversiktHtml(o); };
   rita(await api('/api/flerfaktor', { direkt: true }));

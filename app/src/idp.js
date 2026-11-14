@@ -28,6 +28,10 @@ export const ALG = 'ES256';
 export const GILTIG_SEKUNDER = 300;
 // Tillitsnivå 3 i e-legitimationsnämndens ramverk, som SITHS-kortet motsvarar. amr enligt RFC 8176: smartkort och PIN.
 export const TILLITSNIVA = 'http://id.elegnamnden.se/loa/1.0/loa3';
+// Runda 15, r1: i demon kan personalen också logga in utan SITHS-kortet, med tillitsnivå 2 (som med ett lösenord). Den
+// inloggningen är en faktor, och servern kräver då en passkey eller en kod från appen innan personen får behörighet.
+export const TILLITSNIVA_2 = 'http://id.elegnamnden.se/loa/1.0/loa2';
+const AMR_FOR = { 3: ['sc', 'pin'], 2: ['pwd'] };
 const KLOCKMARGINAL_S = 60;
 
 // Ändamålet med behandlingen (medarbetaruppdragets syfte i HSA) per yrkesroll. Rollen avgör ändamålet, så att
@@ -95,7 +99,8 @@ export function uppdragFor(db, p) {
 
 // Den simulerade autentiseringstjänsten: autentiserar personen med det simulerade SITHS-kortet och utfärdar biljetten.
 // Personen måste vara aktiv i masterdata, annars utfärdas ingen biljett.
-export function autentisera(db, p, { nu = Date.now(), nonce = null } = {}) {
+export function autentisera(db, p, { nu = Date.now(), nonce = null, niva = 3 } = {}) {
+  if (niva !== 3 && niva !== 2) throw new Fel(400, 'I demon loggar personalen in med SITHS-kortet (tillitsnivå 3) eller utan kortet (tillitsnivå 2).', 'ogiltig', { falt: ['tillitsniva'] });
   if (!p) throw new Fel(400, 'Personen finns inte i katalogen.', 'ogiltig');
   if (!p.aktiv) throw new Fel(403, `${p.namn} finns inte som aktiv personal i katalogen och kan inte logga in. Kontakta din chef om du ska ha åtkomst.`, 'nekad');
   const u = uppdragFor(db, p);
@@ -103,9 +108,24 @@ export function autentisera(db, p, { nu = Date.now(), nonce = null } = {}) {
   const iat = Math.floor(nu / 1000);
   return utfarda({
     iss: UTFARDARE, aud: MOTTAGARE, sub: p.hsa_id, employeeHsaId: p.hsa_id, name: p.namn, ...u,
-    acr: TILLITSNIVA, amr: ['sc', 'pin'], auth_time: iat, iat, exp: iat + GILTIG_SEKUNDER, jti: randomUUID(), ...(nonce ? { nonce } : {}),
+    acr: niva === 3 ? TILLITSNIVA : TILLITSNIVA_2, amr: AMR_FOR[niva], auth_time: iat, iat, exp: iat + GILTIG_SEKUNDER, jti: randomUUID(), ...(nonce ? { nonce } : {}),
   });
 }
+// Runda 15, r1 (beslut från Jonas): invånarens simulerade e-legitimation i Min journal ger också en signerad biljett med
+// tillitsnivå, så att samma regler gäller som för personalen: nivån läses ur den signerade biljetten, och en okänd nivå
+// räknas som en faktor. Biljetten har en egen mottagare, så att den aldrig godtas som personalens. Tillitsnivå 3 motsvarar
+// en e-legitimation som BankID (nyckel i programvara och PIN-kod), och tillitsnivå 2 en e-legitimation med lägre nivå.
+export const MOTTAGARE_MIN_JOURNAL = 'vardkallan-min-journal';
+export const PERSONALENS_ATTRIBUT = ['employeeHsaId', 'commissionHsaId', 'commissionPurpose', 'healthCareUnitHsaId', 'professionCode', 'jti'];
+export const INVANARENS_ATTRIBUT = ['sub', 'jti'];
+const AMR_INVANARE = { 3: ['swk', 'pin'], 2: ['pwd'] };
+export function autentiseraInvanare(inv, { nu = Date.now(), niva = 3 } = {}) {
+  if (niva !== 3 && niva !== 2) throw new Fel(400, 'I demon loggar invånaren in med e-legitimation (tillitsnivå 3) eller med en lägre tillitsnivå (2).', 'ogiltig', { falt: ['tillitsniva'] });
+  const iat = Math.floor(nu / 1000);
+  return utfarda({ iss: UTFARDARE, aud: MOTTAGARE_MIN_JOURNAL, sub: inv.id, acr: niva === 3 ? TILLITSNIVA : TILLITSNIVA_2, amr: AMR_INVANARE[niva],
+    auth_time: iat, iat, exp: iat + GILTIG_SEKUNDER, jti: randomUUID() });
+}
+
 // Utfärdarens signering av attributen. Bara servern når den. Testerna använder den för biljetter med fel attribut men
 // rätt signatur, för att visa att attributen prövas för sig.
 export const utfarda = (pastaende) => signera({ alg: ALG, typ: 'JWT', kid: nyckel.kid }, pastaende, nyckel.privateKey);
@@ -121,7 +141,9 @@ const avvisa = (skal) => { throw new Fel(401, `Biljetten godtogs inte: ${skal}`,
 function las(del) { try { return JSON.parse(Buffer.from(del, 'base64url').toString('utf8')); } catch { return null; } }
 
 // Verifierar biljetten och ger dess attribut. Kastar Fel med orsaken på vanlig svenska. forbruka: false prövar bara.
-export function verifiera(biljett, { nu = Date.now(), forbruka = true } = {}) {
+// Runda 15, r1: lagsta 2 godtar också tillitsnivå 2, bara för demons inloggning utan kort, där biljetten skapas och prövas
+// i samma anrop. En biljett utifrån (/api/login/biljett) ska ha tillitsnivå 3.
+export function verifiera(biljett, { nu = Date.now(), forbruka = true, lagsta = 3, mottagare = MOTTAGARE, attribut = PERSONALENS_ATTRIBUT } = {}) {
   if (typeof biljett !== 'string' || biljett.length > 8000) avvisa('den saknas eller är för lång.');
   const delar = biljett.split('.');
   if (delar.length !== 3) avvisa('den är inte en signerad JWT.');
@@ -138,13 +160,13 @@ export function verifiera(biljett, { nu = Date.now(), forbruka = true } = {}) {
   const ok = sig.length === 64 && verify('sha256', Buffer.from(`${delar[0]}.${delar[1]}`), { key: nyck, dsaEncoding: 'ieee-p1363' }, sig);
   if (!ok) avvisa('signaturen stämmer inte.');
   const aud = Array.isArray(p.aud) ? p.aud : [p.aud];
-  if (!aud.includes(MOTTAGARE)) avvisa('den är utfärdad till en annan tjänst.');
+  if (!aud.includes(mottagare)) avvisa('den är utfärdad till en annan tjänst.');
   const s = Math.floor(nu / 1000);
   if (typeof p.exp !== 'number' || p.exp <= s) avvisa('den har gått ut.');
   if (typeof p.iat !== 'number' || p.iat > s + KLOCKMARGINAL_S) avvisa('den är utfärdad i framtiden.');
   if (typeof p.nbf === 'number' && p.nbf > s + KLOCKMARGINAL_S) avvisa('den gäller inte ännu.');
-  if (p.acr !== TILLITSNIVA) avvisa('tillitsnivån räcker inte.');
-  for (const f of ['employeeHsaId', 'commissionHsaId', 'commissionPurpose', 'healthCareUnitHsaId', 'professionCode', 'jti']) {
+  if (p.acr !== TILLITSNIVA && !(lagsta <= 2 && p.acr === TILLITSNIVA_2)) avvisa('tillitsnivån räcker inte.');
+  for (const f of attribut) {
     if (typeof p[f] !== 'string' || !p[f]) avvisa(`attributet ${f} saknas.`);
   }
   stadaAnvanda(nu);
@@ -172,6 +194,8 @@ export function loggaIn(db, attribut) {
       utfardare: attribut.iss, personHsaId: attribut.employeeHsaId, uppdragHsaId: attribut.commissionHsaId, andamal: attribut.commissionPurpose,
       vardenhetHsaId: attribut.healthCareUnitHsaId, vardgivareHsaId: attribut.healthCareProviderHsaId ?? null, yrke: attribut.professionCode,
       tillitsniva: attribut.acr, autentiserad: new Date((attribut.auth_time ?? attribut.iat) * 1000).toISOString(), biljett: attribut.jti,
+      // Runda 15, r1: hur personen loggade in, bara för visning (tillitsniva.js).
+      amr: Array.isArray(attribut.amr) ? attribut.amr.filter(x => typeof x === 'string').slice(0, 8) : [],
     },
   };
 }
@@ -208,6 +232,6 @@ export function uppdragUrMasterdata(db, p) {
 // Runda 14, r1: en inloggning genom beställarens inloggningstjänst visar tjänstens namn (inloggningstjanster.js).
 export const uppdragUt = (db, u) => (u ? {
   utfardare: u.extern ? u.tjanstNamn : BETRODDA.get(u.utfardare)?.namn ?? u.utfardare,
-  metod: u.extern ? `${u.simulerad ? 'Simulerad extern inloggningstjänst' : 'Beställarens inloggningstjänst'}, OpenID Connect med authorization code och PKCE` : 'SITHS-kort (simulerat), OpenID Connect', andamal: u.andamal,
+  metod: u.extern ? `${u.simulerad ? 'Simulerad extern inloggningstjänst' : 'Beställarens inloggningstjänst'}, OpenID Connect med authorization code och PKCE` : u.tillitsniva === TILLITSNIVA_2 ? 'Simulerad inloggning utan SITHS-kort, OpenID Connect' : 'SITHS-kort med PIN-kod (simulerat), OpenID Connect', andamal: u.andamal,
   uppdragHsaId: u.uppdragHsaId, vardenhet: db.query('SELECT namn FROM enheter WHERE hsa_id = ?').get(u.vardenhetHsaId)?.namn ?? null, tillitsniva: u.tillitsniva,
 } : null);

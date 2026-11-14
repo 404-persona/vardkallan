@@ -32,6 +32,8 @@ export function startaTestutfardare({ klientId = 'vardkallan-test', hemlighet = 
       if (u.pathname === '/jwks') return Response.json({ keys: ut.nycklar.map(n => n.jwk) });
       if (u.pathname === '/authorize') {
         const q = u.searchParams;
+        // Runda 15, r1: den senaste inloggningsbegäran, så att testerna kan se acr_values.
+        ut.begaran = Object.fromEntries(q);
         if (q.get('client_id') !== klientId || q.get('response_type') !== 'code' || q.get('code_challenge_method') !== 'S256') return new Response('fel begäran', { status: 400 });
         const kod = randomBytes(16).toString('base64url');
         ut.koder.set(kod, { redirect: q.get('redirect_uri'), challenge: q.get('code_challenge'), nonce: q.get('nonce'), scope: q.get('scope'), anvand: false });
