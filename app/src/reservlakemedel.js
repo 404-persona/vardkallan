@@ -53,7 +53,8 @@ const lmNamn = (l) => (l ? [l.namn, l.styrka].filter(Boolean).join(' ') : 'Läke
 
 // Det som en patient har på listan: aktuella ordinationer och dagens doser, ur samma svar som de vanliga anropen.
 function patientDel(atk, p, plats, nu) {
-  const lm = lakemedel.lista(atk);
+  // Runda 15, r3: reservdatorn behöver bara det aktuella, inte avslutade ordinationer i mellanarkivet.
+  const lm = lakemedel.lista(atk, { medMellanarkiv: false });
   const adm = administrering.lista(atk);
   return {
     id: p.id, namn: visningsnamn(p, atk.val.visa_identitet), personnummer: visningsPnr(p, atk.val.visa_identitet), skyddad: Boolean(p.skyddad), plats, tid: iso(nu),

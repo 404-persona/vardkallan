@@ -212,7 +212,8 @@ const LASKOPIA_LAKEMEDEL_MAX_MS = 10 * 60_000;
 // som ger samma svar som det vanliga anropet. Läsläget svarar på /api/patient/:id/<namn> ur kopian och loggar läsningen
 // med handlingen.
 const LASKOPIA_LAKEMEDEL = {
-  lakemedel: { handling: 'las_lakemedel', hamta: (atk) => lakemedel.lista(atk) },
+  // Runda 15, r3: läskopian tar inte med avslutade ordinationer i mellanarkivet, som inte behövs vid ett avbrott.
+  lakemedel: { handling: 'las_lakemedel', hamta: (atk) => lakemedel.lista(atk, { medMellanarkiv: false }) },
   // Dagens administreringar med givna doser (administrering.js).
   administreringar: { handling: 'las_lakemedel', hamta: (atk) => administrering.lista(atk) },
 };
@@ -891,7 +892,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const enheter = new Set(db.query(`SELECT enhet_id FROM anteckningar WHERE patient_id = ?1 UNION SELECT enhet_id FROM diagnoser WHERE patient_id = ?1
       UNION SELECT enhet_id FROM matvarden WHERE patient_id = ?1 UNION SELECT enhet_id FROM vardkontakter WHERE patient_id = ?1`).all(p.id).map(x => vardenhetFor(db, x.enhet_id)));
     // Runda 14, r4: vårdenheter med handlingar i mellanarkivet räknas också, så att det aktiva valet erbjuds för dem.
-    if (mellanarkiv.finnsTabell(db)) for (const x of db.query('SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ?').all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
+    // Runda 15, r3: bara anteckningar och mätvärden, eftersom läkemedelslistan är gemensam och inte kräver ett aktivt val.
+    if (mellanarkiv.finnsTabell(db)) for (const x of db.query("SELECT DISTINCT enhet_id FROM mellanarkiv_handlingar WHERE patient_id = ? AND slag IN ('anteckning', 'matvarde')").all(p.id)) enheter.add(vardenhetFor(db, x.enhet_id));
     const andra = [...enheter].filter(e => e !== min && !sparrar.includes(e));
     const visad = p.skyddad ? val.visa_identitet : true;
     const listning = db.query('SELECT * FROM listningar WHERE patient_id = ?').get(p.id);
@@ -929,7 +931,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     };
   }
 
-  function oversikt(c, atk, p) {
+  // Runda 15, r3: utanMellanarkiv för läskopian vid avbrott, som inte tar med handlingar ur mellanarkivet.
+  function oversikt(c, atk, p, { utanMellanarkiv = false } = {}) {
     const db = c.db;
     const pers = c.personal;
     atk.krav(kanRoll(pers, 'las_oversikt') ? 'las_oversikt' : 'las_admin');
@@ -955,7 +958,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       // Runda 10, r4: in- och utfarter och skannade restjournaler, med samma behörighet som deras egna vyer.
       ...r10r4Tidslinje(atk),
       // Runda 14, r4: handlingar i mellanarkivet, med samma behörighet som journalen.
-      ...mellanarkiv.tidslinje(atk),
+      ...(utanMellanarkiv ? [] : mellanarkiv.tidslinje(atk)),
     ].sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
     // Vårdkontakter, vårdtillfällen och hälsoärenden (vardkontakt.js), byggt av det som redan är filtrerat ovan.
     const vardstruktur = vardkontakt.oversiktDel(atk, { vk, ant, dia, mv, ord, rem });
@@ -1170,7 +1173,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       if (!ny().prova(handling).tillaten) continue;
       // Runda 10, r2: översikten i läskopian har samma vy som i appen (presentationsvyer.js).
       const ovAtk = ny();
-      const post = { handling, huvud: patientHuvud(c, ny(), pat), oversikt: presentationsvyer.medVy(ovAtk, oversikt(c, ovAtk, pat)), lakemedel: null, lakemedelsdel: null, anteckningar: null, anteckning: {} };
+      // Runda 15, r3: översikten i läskopian utan handlingar ur mellanarkivet, som inte behövs vid ett avbrott.
+      const post = { handling, huvud: patientHuvud(c, ny(), pat), oversikt: presentationsvyer.medVy(ovAtk, oversikt(c, ovAtk, pat, { utanMellanarkiv: true })), lakemedel: null, lakemedelsdel: null, anteckningar: null, anteckning: {} };
       // Läkemedelsdelen har en egen tid per patient, så att läsläget kan visa hur gammal den är.
       const lmTid = new Date().toISOString();
       const lmDelar = Object.entries(LASKOPIA_LAKEMEDEL).filter(([, d]) => kanRoll(pers, d.handling));

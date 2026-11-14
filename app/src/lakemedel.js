@@ -109,7 +109,16 @@ export function synligaOrdinationer(atk) {
   return atk.filtrera(rader, 'las_lakemedel', { gemensam: true });
 }
 
-export function lista(atk) {
+// Runda 15, r3 (Sussa 5.4.2.2): avslutade ordinationer i mellanarkivet står med i listan, märkta Ur mellanarkivet, med
+// samma prövning som de andra (mellanarkiv.js). Läskopian vid avbrott tar inte med dem (medMellanarkiv: false).
+export function lista(atk, { medMellanarkiv = true } = {}) {
+  const ut = listaAktiva(atk);
+  if (!medMellanarkiv) return ut;
+  const ur = require('./mellanarkiv.js').lakemedel(atk);
+  if (ur.length) atk.logga('las_lakemedel', atk.grund(), 'mellanarkiv');
+  return { ...ut, mellanarkiv: ur };
+}
+function listaAktiva(atk) {
   atk.krav('las_lakemedel');
   const rader = synligaOrdinationer(atk);
   // Vårdhändelsen ur tidboken visas med namn och tid bara för den ordinerande vårdenheten eller efter aktivt val.
