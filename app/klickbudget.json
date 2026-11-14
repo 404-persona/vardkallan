@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-14T11:28:07.520Z",
+  "tid": "2026-11-14T14:36:11.814Z",
   "bas": "http://127.0.0.1:18153",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "6bd87fe476c133b09304ab6d174ccf5cf113208923f178a63becb018cb4223df",
+  "gransnittHash": "5590877680c4ddb4bfad86929995c984398253a9a857e5115b9486a1bfd9b97c",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte tecken för tecken. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2234,6 +2234,22 @@
       ]
     },
     {
+      "id": "las-in-reservlogg",
+      "namn": "Läsa in loggen från reservservern",
+      "roll": "sysf",
+      "start": "Lagring med en logg från reservservern",
+      "budget": 1,
+      "motivering": "Sussa 11.2.1.8 och KD1.1.3.6. Ett klick på Läs in vid loggen. Systemet har själv hittat loggen, säger hur många rader den har, för vilken period och ur vilken kopia, kontrollerar kedjan och läser in varje rad en gång.",
+      "klick": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "steg": [
+        "klick: Läs in"
+      ]
+    },
+    {
       "id": "registrera-incident",
       "namn": "Registrera en incident",
       "roll": "sysf",
@@ -2761,6 +2777,10 @@
     },
     {
       "namn": "Gränssnitt > Klickbudget > Läsa en utsatt ordination ur mellanarkivet inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Läsa in loggen från reservservern inom budget",
       "status": "grön"
     },
     {
