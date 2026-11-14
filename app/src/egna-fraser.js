@@ -14,7 +14,8 @@ import { Fel, iso } from './db.js';
 export const TAK = 20;
 export const MAX_TEXT = 400;
 const KORT = /^[a-zåäö0-9]{1,12}$/;
-const PERSONNUMMER = /\b(?:19|20)?\d{6}[-+]?\d{4}\b/;
+// Säkerhetsgranskningen efter runda 15: också med mellanslag eller tankstreck som skiljetecken (ÅÅMMDD NNNN, ÅÅMMDD–NNNN).
+const PERSONNUMMER = /\b(?:19|20)?\d{6}\s?[-+\u2010-\u2015]?\s?\d{4}\b/;
 // Systemets format för ett värde ur journalen, till exempel (14 nov 07.00). Sådana värden förs in med underlaget.
 const VARDE_MED_TID = /\d{1,2} (?:jan|feb|mars|april|maj|juni|juli|aug|sep|okt|nov|dec) \d{2}\.\d{2}/i;
 

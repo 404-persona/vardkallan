@@ -39,6 +39,9 @@ const vaccinNamn = (v) => { try { return require('./bhv-program.js').vaccinRad(v
 const vaccinText = (v) => `${vaccinNamn(v) ?? `Vaccin ${v.atc}, dos ${v.dos}`} ${datumText(v.tid)} ${new Date(v.tid).getUTCFullYear()}`;
 const synligaVaccinationer = (atk) => { try { return atk.filtrera(atk.db.query('SELECT * FROM vaccinationer WHERE patient_id = ? ORDER BY tid DESC, id DESC').all(atk.patientId), 'las_oversikt'); } catch { return []; } };
 const MAX_REFERENSER = 30;
+// Säkerhetsgranskningen efter runda 15: högst så många referenser i en hel anteckning, så att ett anrop med många sökord
+// inte kan hålla servern sysselsatt.
+export const MAX_REFERENSER_TOTALT = 60;
 
 const tal = (v) => String(v).replace('.', ',');
 function matvardeText(db, m) {
@@ -206,41 +209,43 @@ export function underlag(atk, { typ, utkastId = null, kontakt = undefined, nu = 
 
 // Texten som systemet skriver för en referens, prövad med behörigheten i atk. null om resursen inte finns för
 // patienten eller inte syns för den som skriver.
-export function referensText(atk, typ, id) {
+// minne: en Map som håller de synliga raderna under ett anrop, så att de räknas en gång när många referenser prövas.
+export function referensText(atk, typ, id, minne = null) {
   const db = atk.db;
   const pid = atk.patientId;
+  const en = (nyckel, fn) => { if (!minne) return fn(); if (!minne.has(nyckel)) minne.set(nyckel, fn()); return minne.get(nyckel); };
   if (typ === 'matvarde') {
     if (!kanRoll(atk.personal, 'las_matvarden')) return null;
     const m = db.query('SELECT * FROM matvarden WHERE id = ? AND patient_id = ?').get(id, pid);
-    return m && journal.synligaMatvarden(atk).some(x => x.id === m.id) ? matvardeText(db, m) : null;
+    return m && en('matvarden', () => new Set(journal.synligaMatvarden(atk).map(x => x.id))).has(m.id) ? matvardeText(db, m) : null;
   }
   if (typ === 'ordination') {
     if (!kanRoll(atk.personal, 'las_lakemedel')) return null;
-    const synliga = lakemedel.synligaOrdinationer(atk);
+    const synliga = en('ordinationer', () => lakemedel.synligaOrdinationer(atk));
     const o = synliga.find(x => x.id === id);
     return o ? ordinationText(db, o, synliga) : null;
   }
   if (typ === 'dosandring') {
     if (!kanRoll(atk.personal, 'las_lakemedel')) return null;
     const d = db.query('SELECT d.* FROM dosandringar d JOIN ordinationer o ON o.id = d.ordination_id WHERE d.id = ? AND o.patient_id = ?').get(id, pid);
-    return d && lakemedel.synligaOrdinationer(atk).some(o => o.id === d.ordination_id) && atk.prova('las_lakemedel', { enhet_id: d.enhet_id, gemensam: true }).tillaten ? dosandringText(db, d) : null;
+    return d && en('ordinationer', () => lakemedel.synligaOrdinationer(atk)).some(o => o.id === d.ordination_id) && atk.prova('las_lakemedel', { enhet_id: d.enhet_id, gemensam: true }).tillaten ? dosandringText(db, d) : null;
   }
   if (typ === 'diagnos') {
     if (!kanRoll(atk.personal, 'las_diagnoser')) return null;
-    const d = journal.synligaDiagnoser(atk).find(x => x.id === id);
+    const d = en('diagnoser', () => journal.synligaDiagnoser(atk)).find(x => x.id === id);
     return d ? diagnosText(d) : null;
   }
   if (typ === 'vardkontakt') {
-    const v = kontaktFor(atk)?.vardkontakt;
+    const v = en('kontakt', () => kontaktFor(atk))?.vardkontakt;
     return v && !v.dold && v.id === id && kontaktText(v) ? kontaktText(v) : null;
   }
   if (typ === 'akutbesok') {
-    const a = akutbesokFor(atk, kontaktFor(atk)?.vardkontakt);
+    const a = akutbesokFor(atk, en('kontakt', () => kontaktFor(atk))?.vardkontakt);
     return a && a.id === id ? akutText(a) : null;
   }
   if (typ === 'vaccination') {
     if (!kanRoll(atk.personal, 'las_oversikt')) return null;
-    const v = synligaVaccinationer(atk).find(x => x.id === id);
+    const v = en('vaccinationer', () => synligaVaccinationer(atk)).find(x => x.id === id);
     return v ? vaccinText(v) : null;
   }
   return null;
@@ -249,6 +254,10 @@ export function referensText(atk, typ, id) {
 // Prövar referenserna i sökorden från klienten. Ger sökorden med de referenser som håller, i formen { typ, id, text }.
 // En referens som inte håller tas bort utan fel, eftersom texten då är personens egen.
 export function provaReferenser(atk, sokord) {
+  // Säkerhetsgranskningen efter runda 15: de synliga raderna räknas en gång per anrop, texten prövas innan raden slås
+  // upp, och hela anteckningen har ett tak.
+  const minne = new Map();
+  let kvar = MAX_REFERENSER_TOTALT;
   return sokord.map(s => {
     const ref = Array.isArray(s.referenser) ? s.referenser.slice(0, MAX_REFERENSER) : [];
     const { referenser, ...utan } = s; // eslint-disable-line no-unused-vars
@@ -257,10 +266,12 @@ export function provaReferenser(atk, sokord) {
     for (const r of ref) {
       const typ = REFERENSTYPER.includes(r?.typ) ? r.typ : null;
       const id = Number.isInteger(r?.id) && r.id > 0 ? r.id : null;
-      if (!typ || !id || sett.has(`${typ}:${id}`)) continue;
-      const text = referensText(atk, typ, id);
+      if (!typ || !id || sett.has(`${typ}:${id}`) || kvar <= 0) continue;
+      if (typeof r.text !== 'string' || !r.text || typeof utan.text !== 'string' || !utan.text.includes(r.text)) continue;
+      const text = referensText(atk, typ, id, minne);
       if (!text || r.text !== text || !utan.text.includes(text)) continue;
       sett.add(`${typ}:${id}`);
+      kvar--;
       goda.push({ typ, id, text });
     }
     return goda.length ? { ...utan, referenser: goda } : utan;

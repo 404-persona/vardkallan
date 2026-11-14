@@ -38,7 +38,7 @@ function patientUppgifter(atk) {
 
 export function forPatient(atk, mall, { utkastId = null } = {}) {
   if (!mall) throw new Fel(404, 'Mallen finns inte.', 'saknas');
-  atk.krav(journal.skrivHandling(mall.kategori));
+  atk.krav(journal.skrivHandling(mall.kategori, atk.personal));
   const db = atk.db;
   const kontakt = (() => { try { return kanRoll(atk.personal, 'las_admin') ? require('./vardkontakt.js').aktuell(atk) : null; } catch (e) { if (e instanceof Fel) return null; throw e; } })();
   const strukt = Boolean(mall.strukturerad || mall.formular);

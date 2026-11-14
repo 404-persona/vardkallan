@@ -757,6 +757,12 @@ UPPGIFTER.push(
     kontroll: { sel: '.anteckning .sokord', text: 'Bedömning nummer' },
   },
 );
+// Sammanslagningen av runda 15: undersköterskans anteckning med sin egen mall och behörighet (r5) i anteckningsvyn (r4).
+UPPGIFTER.push({
+  id: 'usk-anteckning', namn: 'Skriva och signera undersköterskans anteckning', roll: 'usk-kard', start: 'Patientens översikt',
+  text: 'Gunnar är pigg och har ätit frukost. Skriv det som din observation tillsammans med det senaste mätvärdet, och signera anteckningen.',
+  kontroll: { notis: 'Anteckningen är signerad' },
+});
 
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [

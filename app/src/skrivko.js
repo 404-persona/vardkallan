@@ -26,7 +26,8 @@ import * as anteckningsutkast from './anteckningsutkast.js';
 export const TYPER = { matvarde: 'registrera_matvarde', dos: 'ge_lakemedel' };
 // Runda 15, r4: ett utkast prövas med skrivhandlingen för anteckningens kategori, som räknas fram när raden tas emot.
 TYPER.utkast = 'skriv_journal';
-const handlingFor = (db, rad) => (rad.typ === 'utkast' ? journal.skrivHandling(anteckningsutkast.kategori(db, rad.patientId, rad.data ?? {}) ?? 'lakare') : TYPER[rad.typ]);
+// Säkerhetsgranskningen efter runda 15: med personens yrke (undersköterskans skriv_observation) och bara egna utkast.
+const handlingFor = (db, rad, personal) => (rad.typ === 'utkast' ? journal.skrivHandling(anteckningsutkast.kategori(db, rad.patientId, rad.data ?? {}, personal) ?? 'lakare', personal) : TYPER[rad.typ]);
 export const MAX_RADER = 50;
 // Så långt bakåt en registrering i kön får vara gjord: läskopians giltighet, 8 timmar, och marginal för klockan.
 const MAX_ALDER_MS = 8 * 3600_000 + 5 * 60_000;
@@ -93,7 +94,7 @@ export function taEmot(c, medPatient, { kopiaId, rader, kvitteringar = {}, kasta
     if (finns) { resultat.push({ id, status: finns.status, resultatId: finns.resultat_id, text: finns.status === 'sparad' ? 'Registreringen var redan sparad.' : 'Registreringen var redan borttagen ur kön.' }); continue; }
     const rad = dekryptera(nyckel, koAad(kopiaId, kopia.personalId, id), r.iv, r.data);
     if (!rad || rad.id !== id) { resultat.push({ id, status: 'avvisad', text: 'Raden kunde inte verifieras med läskopians nyckel.' }); continue; }
-    const handling = Object.hasOwn(TYPER, rad.typ) ? handlingFor(db, rad) : null;
+    const handling = Object.hasOwn(TYPER, rad.typ) ? handlingFor(db, rad, c.personal) : null;
     if (!handling) { resultat.push({ id, status: 'avvisad', text: 'Bara givna doser, mätvärden och utkast till anteckningar kan registreras under ett avbrott.' }); continue; }
     if (typeof rad.patientId !== 'string' || !kopia.patienter.has(rad.patientId)) { resultat.push({ id, status: 'avvisad', text: 'Patienten fanns inte i din läskopia.' }); continue; }
     const gjord = typeof rad.gjord === 'string' ? Date.parse(rad.gjord) : NaN;

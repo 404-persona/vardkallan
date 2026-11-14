@@ -95,9 +95,10 @@ describe('Anteckningsvyn: underlaget', () => {
 
   test('fel roll: vårdadministratören får inte mallen eller underlaget, och en okänd mall ger 404', async () => {
     const adm = await inloggad('adm-kard');
-    expect((await mall(adm, 'p01', 'Daganteckning')).status).toBe(403);
+    // Sammanslagningen av runda 15: en mall som yrket inte skriver med finns inte för personen (r5, mallar-yrken.js).
+    expect((await mall(adm, 'p01', 'Daganteckning')).status).toBe(404);
     const ssk = await inloggad('ssk-kard');
-    expect((await mall(ssk, 'p01', 'Daganteckning')).status).toBe(403);
+    expect((await mall(ssk, 'p01', 'Daganteckning')).status).toBe(404);
     expect((await mall(ssk, 'p01', 'Omvårdnadsanteckning')).status).toBe(200);
     const lak = await inloggad('lak-kard');
     expect((await mall(lak, 'p01', 'Finns inte')).status).toBe(404);

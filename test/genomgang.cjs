@@ -2885,7 +2885,7 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.
         'inloggning-extern',
         // Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen.
-        'omvardnadsanteckning', 'senaste-bedomning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

@@ -22,11 +22,13 @@ function egetUtkast(atk, id) {
   return a;
 }
 
-// Kategorin som utkastet prövas med: det befintliga utkastets eller mallens.
-export function kategori(db, patientId, { anteckningId, typ } = {}) {
+// Kategorin som utkastet prövas med: det befintliga utkastets eller mallens. Säkerhetsgranskningen efter runda 15: ett
+// befintligt utkast slås upp bara bland den inloggades egna anteckningar, och ett id som inte är personens eget ger null, så
+// att svaret aldrig röjer att någon annans anteckning finns.
+export function kategori(db, patientId, { anteckningId, typ } = {}, personal = null) {
   if (anteckningId != null) {
-    const a = Number.isInteger(anteckningId) ? db.query('SELECT kategori FROM anteckningar WHERE id = ? AND patient_id = ?').get(anteckningId, patientId) : null;
-    if (a) return a.kategori;
+    const a = Number.isInteger(anteckningId) && personal ? db.query("SELECT kategori FROM anteckningar WHERE id = ? AND patient_id = ? AND forfattare_id = ?").get(anteckningId, patientId, personal.id) : null;
+    return a ? a.kategori : null;
   }
   return journal.kategoriFor(db, typ);
 }
@@ -56,7 +58,7 @@ const svar = (a) => ({ id: a.id, typ: a.typ, status: a.status, skapad: a.skapad,
 // till den nya mallen i vyn. Ett utkast i en mall med svar (tobak, levnadsvanor, formulär) tas inte bort här.
 export function taBort(atk, id) {
   const a = egetUtkast(atk, id);
-  atk.krav(journal.skrivHandling(a.kategori));
+  atk.krav(journal.skrivHandling(a.kategori, atk.personal));
   if (['Tobaksvanor', 'Levnadsvanor'].includes(a.typ) || formularFor(atk.db, a.id)) throw new Fel(400, 'Utkastet har svar i en mall och tas inte bort här.', 'ogiltig');
   atk.db.query("DELETE FROM anteckningar WHERE id = ? AND status = 'utkast' AND forfattare_id = ?").run(a.id, atk.personal.id);
   return { borttaget: a.id };
