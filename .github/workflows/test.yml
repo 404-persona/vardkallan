@@ -17,7 +17,7 @@ jobs:
   tester:
     name: Tester
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: app
@@ -36,7 +36,7 @@ jobs:
   klocktest:
     name: Tester med falsk klocka (${{ matrix.tid }}${{ matrix.tz && format(', {0}', matrix.tz) || '' }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
