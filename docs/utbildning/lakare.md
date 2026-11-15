@@ -403,6 +403,18 @@ Börjar i: Översikten för en patient med 30 anteckningar. Klickbudget: högst 
 
 Ett klick på fliken Journal och ett på Senaste bedömning, som systemet har räknat fram bland de anteckningar som läkaren får se. Anteckningen öppnas med bedömning och åtgärd först. Ingen behöver bläddra förbi de nyare omvårdnadsanteckningarna.
 
+### Skriva och signera ett läkarintyg för sjukpenning
+
+Börjar i: Journalen för patienten på vårdcentralen. Klickbudget: högst 10 steg. I demon gör Per Holm flödet.
+
+Sussa 2.2.1.9. Ett klick på fliken Intyg och ett på Skriv intyget, där systemet har föreslagit läkarintyget för sjukpenning. Underlaget (den senaste vårdkontakten), diagnosen och funktionsnedsättningen ur anteckningens status har systemet fyllt i med källa. Läkaren kryssar nuvarande arbete, skriver yrket och aktivitetsbegränsningen (två fältbyten), kryssar graden, där systemet fyller i perioden från i dag i två veckor, väljer prognos och signerar. Vem som signerar, vårdenheten och patienten behöver ingen ange.
+
+### Byta ett ersatt intyg mot det som gäller nu
+
+Börjar i: Journalen för Mikael Svensson på vårdcentralen. Klickbudget: högst 2 steg. I demon gör Per Holm flödet.
+
+Sussa 2.2.1.9 och 3.1.4.2. Ett klick på fliken Intyg och ett på Skriv TS 8071 i stället vid det ersatta läkarintyget för högre körkortsbehörigheter. Systemet vet att TSTRK1007 ersattes av TS8071, skapar det nya utkastet med de svar som får följa med och öppnar det. Ingen behöver veta vilken blankett som gäller.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -537,6 +549,34 @@ Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
+### Övning 12
+
+Demopatienten Mikael Svensson har ett läkarintyg för högre körkortsbehörigheter (TSTRK1007) från 2024. Han behöver ett nytt. Hur gör du?
+
+Rätt svar: Klickar på Skriv TS 8071 i stället vid det gamla intyget. Systemet vet att TS8071 har ersatt TSTRK1007 och tar med de svar som får följa med.
+
+TSTRK1007 kan inte utfärdas sedan den 31 januari 2025. Systemet visar bara de intyg som gäller nu, säger vad som ersatte det gamla och byter med ett klick.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
+
+### Övning 13
+
+Du förnyar ett läkarintyg för sjukpenning som skrevs i version 1 av blanketten. Vad följer med till det nya utkastet?
+
+Rätt svar: Svaren på frågor som inte har ändrats i version 2. Grad och period, underlag och prognos tar du ställning till på nytt.
+
+Bara svar på oförändrade frågor följer med, som Inera beskriver för FK 7804 och AG7804. Det du ska bedöma på nytt följer aldrig med, och systemet säger hur många frågor det gäller.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
+
+### Övning 14
+
+Patienten vill ha ett läkarintyg till sin arbetsgivare men vill inte att arbetsgivaren får veta diagnosen. Vad gäller?
+
+Rätt svar: Intyget skrivs ut och lämnas av patienten. Svarar patienten nej på frågan om att förmedla diagnosen finns den inte med, och patienten kan dölja den på utskriften.
+
+Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan inte skickas digitalt. Diagnosen är patientens att dela.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -663,4 +703,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 11 övningar och få intyget.
+- Svara rätt på alla 14 övningar och få intyget.

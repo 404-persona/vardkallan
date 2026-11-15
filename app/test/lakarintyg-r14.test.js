@@ -28,13 +28,14 @@ describe('Intyg genom intygsapplikationen', () => {
     expect(r.intyg.status).toBe('utkast');
     expect(r.forifyllt[0]).toContain('J06.9');
     expect(r.oppna).toMatch(/^#\/intygsapplikation\/[0-9a-f-]{36}$/);
-    const sim = db.query('SELECT * FROM sim_intygsapplikation').get();
+    const sim = db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(r.oppna.split('/').pop());
     expect(sim.personnummer).toBe(db.query("SELECT personnummer FROM patienter WHERE id = 'p11'").get().personnummer);
     expect(sim.personal_hsa).toBe(personal(db, 'lak-vc').hsa_id);
-    expect(JSON.parse(sim.svar).diagnosKod).toBe('J069');
+    // Runda 16, r1: svaren sparas per fråga i blanketten (fråga 6 är diagnosen).
+    expect(JSON.parse(sim.svar)['6'][0].kod).toBe('J069');
     // Händelsen SKAPAT kom tillbaka med CertificateStatusUpdateForCare.
     expect(r.intyg.handelser.map(h => h.kod)).toEqual(['SKAPAT']);
-    const h = db.query('SELECT kod FROM lakarintyg_handelser').all().map(x => x.kod);
+    const h = db.query('SELECT kod FROM lakarintyg_handelser WHERE intyg_id = ?').all(r.intyg.id).map(x => x.kod);
     expect(h).toEqual(['SKAPAT']);
     const logg = rivta.anropslogg(db).map(x => ({ kontrakt: x.kontrakt, riktning: x.riktning, resultat: x.resultat }));
     expect(logg).toEqual(expect.arrayContaining([{ kontrakt: 'CreateDraftCertificate', riktning: 'ut', resultat: 'ok' }, { kontrakt: 'CertificateStatusUpdateForCare', riktning: 'in', resultat: 'ok' }]));
@@ -48,9 +49,12 @@ describe('Intyg genom intygsapplikationen', () => {
     const id = r.oppna.split('/').pop();
     const lak = personal(db, 'lak-vc');
     expect((await fel(() => app.atgard(db, lak, id, 'signera'))).message).toContain('Fyll i');
-    await app.spara(db, lak, id, { sysselsattning: 'nuvarande_arbete', nedsattning: 'halften', fran: DAG, till: '2026-11-26' });
+    // Runda 16, r1: version 2 av FK 7804 kräver också underlaget, yrket, funktionsnedsättningen, aktivitetsbegränsningen,
+    // arbetstidens förläggning och prognosen. Fälten från runda 14 tas emot som förut.
+    await app.spara(db, lak, id, { sysselsattning: 'nuvarande_arbete', nedsattning: 'halften', fran: DAG, till: '2026-11-26',
+      svar: { '1': { FYSISKUNDERSOKNING: DAG }, '29': 'Lagerarbetare', '35': 'Feber och hosta.', '17': 'Kan inte arbeta fysiskt.', '33': false, '39': 'STOR_SANNOLIKHET' } });
     await app.atgard(db, lak, id, 'signera');
-    await app.atgard(db, lak, id, 'skicka');
+    await app.atgard(db, lak, id, 'skicka', {}, { samrad: true });
     const u = intyg.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), db.query("SELECT * FROM patienter WHERE id = 'p11'").get(), DAG);
     expect(u.intyg[0].status).toBe('skickat');
     expect(u.intyg[0].signerad).toBeTruthy();
@@ -82,10 +86,11 @@ describe('Intyg genom intygsapplikationen', () => {
     expect(t.find(x => x.kod === 'LISJP').mojlig).toBe(true);
     expect(t.find(x => x.kod === 'DB').mojlig).toBe(false);
     expect(intyg.forslag(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), p, DAG).kod).toBe('LISJP');
-    // En patient med skyddade personuppgifter: intyg till Transportstyrelsen kan inte skrivas.
+    // En patient med skyddade personuppgifter: intyg till Transportstyrelsen kan inte skrivas. Runda 16, r1: TS8071
+    // ersatte TSTRK1007 den 3 februari 2025.
     const s = db.query("SELECT * FROM patienter WHERE id = 'p03'").get();
-    expect(intyg.typerFor(db, s, DAG).find(x => x.kod === 'TSTRK1007').mojlig).toBe(false);
-    const f = await fel(() => intyg.skapa(atk(db, 'lak-vc', 'p03', {}, 'skriv_intyg'), s, { typ: 'TSTRK1007' }, DAG));
+    expect(intyg.typerFor(db, s, DAG).find(x => x.kod === 'TS8071').mojlig).toBe(false);
+    const f = await fel(() => intyg.skapa(atk(db, 'lak-vc', 'p03', {}, 'skriv_intyg'), s, { typ: 'TS8071' }, DAG));
     expect(f.status).toBe(400);
     expect(f.message).toContain('skyddade personuppgifter');
     // Ett val som inte finns ger ett fel på svenska.
@@ -157,14 +162,14 @@ describe('Intyg genom intygsapplikationen', () => {
     await expect(skicka(begaran(id), hsa, 'SE0000000000-OKAND')).rejects.toThrow('anropsbehörighet');
     await expect(skicka(begaran(id), 'SE-INTE-EN-ENHET')).rejects.toThrow('logiska adressen');
     expect(db.query('SELECT count(*) AS n FROM lakarintyg_handelser').get().n).toBe(fore);
-    expect(db.query('SELECT status FROM lakarintyg').get().status).toBe('utkast');
+    expect(db.query('SELECT status FROM lakarintyg WHERE intygs_id = ?').get(id).status).toBe('utkast');
     // Ett korrekt meddelande tas emot, och samma händelse en gång till läggs inte in igen.
     expect((await skicka(begaran(id))).result.resultCode).toBe('OK');
     expect((await skicka(begaran(id))).result.resultCode).toBe('OK');
-    expect(db.query("SELECT count(*) AS n FROM lakarintyg_handelser WHERE kod = 'SIGNAT'").get().n).toBe(1);
+    expect(db.query("SELECT count(*) AS n FROM lakarintyg_handelser WHERE kod = 'SIGNAT' AND intyg_id = (SELECT id FROM lakarintyg WHERE intygs_id = ?)").get(id).n).toBe(1);
     // En sen händelse flyttar aldrig tillbaka statusen.
     await skicka(begaran(id, 'ANDRAT'));
-    expect(db.query('SELECT status FROM lakarintyg').get().status).toBe('signerat');
+    expect(db.query('SELECT status FROM lakarintyg WHERE intygs_id = ?').get(id).status).toBe('signerat');
   });
 
   test(`${T}intygsapplikationen nekar den som inte har uppdrag på vårdenheten, och loggar försöket`, async () => {

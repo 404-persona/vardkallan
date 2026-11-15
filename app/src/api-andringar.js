@@ -11,6 +11,16 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 16: version 1.6. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.6.0', datum: '2026-11-15',
+    text: 'Intygen, stödet vid sjukskrivning och nya roller.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 16, r1: intygen (docs/api-avvikelser.md).
+      'Intygstyperna har version och blankett, och svaren i intygsapplikationen ligger per fråga i fältet "svar" med frågans id som nyckel i GET och POST /api/intygsapplikation/:id. Fälten från version 1.5 tas emot som förut för sjukpenningen (docs/api-avvikelser.md)',
+      'Nya rutter för förnyelse och byte från ett ersatt intyg, utskrift och åtgärderna för klart för signering och byte (docs/api-avvikelser.md). Sändning kräver att patienten har bekräftat den, och makulering en orsak',
+    ],
+  },
   // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.5.0', datum: '2026-11-14',

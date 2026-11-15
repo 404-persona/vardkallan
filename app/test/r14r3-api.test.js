@@ -23,10 +23,12 @@ describe('Intyg och e-remiss i API:t', () => {
     expect(s.status).toBe(201);
     const iid = s.data.oppna.split('/').pop();
     const v = await k.get(`/api/intygsapplikation/${iid}`);
-    expect(v.data.svar.diagnosKod).toBe('J069');
+    expect(v.data.svar['6'][0].kod).toBe('J069');
     expect(v.data.saknas.length).toBeGreaterThan(0);
     expect((await k.post(`/api/intygsapplikation/${iid}/signera`)).status).toBe(400);
     expect((await k.post(`/api/intygsapplikation/${iid}`, { sysselsattning: 'nuvarande_arbete', nedsattning: 'halften', fran: '2026-11-12', till: '2026-11-26' })).status).toBe(200);
+    // Runda 16, r1: resten av frågorna som version 2 av FK 7804 kräver.
+    expect((await k.post(`/api/intygsapplikation/${iid}`, { svar: { '1': { FYSISKUNDERSOKNING: '2026-11-12' }, '29': 'Lagerarbetare', '35': 'Feber.', '17': 'Kan inte lyfta.', '33': false, '39': 'STOR_SANNOLIKHET' } })).status).toBe(200);
     expect((await k.post(`/api/intygsapplikation/${iid}/signera`)).data.status).toBe('signerat');
     const efter = await k.get('/api/patient/p11/intyg');
     expect(efter.data.intyg[0].status).toBe('signerat');

@@ -2,6 +2,52 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.6.0",
+      "datum": "2026-11-15",
+      "nyheter": [
+        {
+          "id": "intyg-alla-1-6-0",
+          "roller": [
+            "lakare"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Alla intyg i Webcert, och de nya versionerna",
+          "text": "Under fliken Intyg finns nu alla intyg som går att skriva i Webcert, med blankettens frågor. TS8071 har ersatt TSTRK1007, och läkarintyget för sjukpenning är i version 2. Ett äldre intyg förnyar du med ett klick: svaren på oförändrade frågor följer med, och det du ska ta ställning till på nytt fyller du i själv. Systemet föreslår intyget som passar patienten och fyller i diagnoser, graviditet, läkemedel och underlag ur journalen med källa."
+        },
+        {
+          "id": "intyg-arbetsgivare-1-6-0",
+          "roller": [
+            "lakare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Intyg till arbetsgivaren skrivs ut",
+          "text": "Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan bara skrivas ut, och patienten kan välja att dölja diagnosen på utskriften. Ur läkarintyget för sjukpenning skapar du intyget till arbetsgivaren med ett klick. Dödsbevis och dödsorsaksintyg skickas när de signeras, och övriga intyg skickas i samråd med patienten."
+        },
+        {
+          "id": "intyg-vardadministrator-1-6-0",
+          "roller": [
+            "vardadministrator"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Utkast till intyg",
+          "text": "Du kan skapa och fylla i utkast till intyg under fliken Intyg och markera dem klara för signering. Läkaren signerar. För en patient med skyddade personuppgifter skapar den som signerar intyget."
+        },
+        {
+          "id": "intyg-graviditet-1-6-0",
+          "roller": [
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Intyg om graviditet och tillfällig föräldrapenning",
+          "text": "På mödrahälsovården skriver och signerar du intyg om graviditet. Beräknad förlossning fylls i ur graviditetsjournalen. Du kan också skriva intyg om tillfällig föräldrapenning för ett barn under 12 år."
+        }
+      ]
+    },
+    {
       "version": "1.5.0",
       "datum": "2026-11-14",
       "nyheter": [

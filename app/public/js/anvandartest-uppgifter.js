@@ -763,6 +763,20 @@ UPPGIFTER.push({
   text: 'Gunnar är pigg och har ätit frukost. Skriv det som din observation tillsammans med det senaste mätvärdet, och signera anteckningen.',
   kontroll: { notis: 'Anteckningen är signerad' },
 });
+// Runda 16, r1: ett läkarintyg för sjukpenning i version 2, och bytet från ett ersatt intyg till TS8071.
+STARTPUNKT['Journalen för Mikael Svensson på vårdcentralen'] = { hash: '#/patient/p14', klar: '.patientband h1' };
+UPPGIFTER.push(
+  {
+    id: 'skriv-sjukintyg', namn: 'Skriva och signera ett läkarintyg för sjukpenning', roll: 'lak-vc', start: 'Journalen för patienten på vårdcentralen',
+    text: 'Patienten arbetar som lagerarbetare och kan inte arbeta alls de närmaste två veckorna. Skriv och signera läkarintyget för sjukpenning.',
+    kontroll: { notis: 'Journalen har fått statusen' },
+  },
+  {
+    id: 'byt-ersatt-intyg', namn: 'Byta ett ersatt intyg mot det som gäller nu', roll: 'lak-vc', start: 'Journalen för Mikael Svensson på vårdcentralen',
+    text: 'Mikael behöver ett nytt läkarintyg för sin högre körkortsbehörighet. Hans förra intyg är från 2024. Börja skriva det nya.',
+    kontroll: { sel: '.ruta-info', text: 'TS 8071' },
+  },
+);
 
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [
