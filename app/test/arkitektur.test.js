@@ -139,7 +139,9 @@ describe('Nationellt fackspråk', () => {
     expect(r.data.sokordUtanKod.map(s => s.sokord)).toEqual(['Aktivitet', 'Stöd', 'Kommentar', 'Andning/cirkulation', 'Hud/vävnad', 'Närstående', 'Mål', 'Resultat', 'Andning och cirkulation', 'Hud och sår', 'Observation',
       'Råd och egenvård', 'Psykiskt status', 'Suicidriskbedömning', 'Diabetes', 'Astma och KOL', 'Hypertoni', 'Hjärtsvikt',
       // Beslut 2026-11-14: de nya varianternas undersökord.
-      'Observerat i videosamtalet', 'Tillväxt', 'Vaccinationer', 'Utveckling', 'Läkemedelsgenomgång', 'Fallrisk', 'Brytpunktssamtal', 'Symtomskattning', 'Graviditet', 'Läkemedel under graviditet']);
+      'Observerat i videosamtalet', 'Tillväxt', 'Vaccinationer', 'Utveckling', 'Läkemedelsgenomgång', 'Fallrisk', 'Brytpunktssamtal', 'Symtomskattning', 'Graviditet', 'Läkemedel under graviditet',
+      // Runda 16, r3: psykologens och logopedens mallar.
+      'Psykologisk utredning', 'Sväljning']);
   });
 
   test(namn(T.nfAtgard), () => {

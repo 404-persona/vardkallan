@@ -33,6 +33,8 @@ import { LAB, LABORATORIER, ROR, ANALYSER, ANALYS, PAKET, PAKETEN, SVARSVARDEN, 
 import { blodgruppFor, blodgruppText } from './labb-katalog.js';
 // Runda 10, r6: producentsystem som är anslutna genom det öppna gränssnittet (Sussa 5.1.4.5).
 import * as ps from './produktionssystem.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 // Runda 11, r6: krokar för undersökningarna, de rättade svaren, underlagen och de patientnära analyserna
 // (undersokningar.js, labb-svarsversioner.js, labb-underlag.js och patientnara.js), som lägger till det de behöver utan
@@ -960,7 +962,7 @@ export function inkorg(db, personal, valFor, nu = new Date()) {
     ut.provsvarAttVidimera.sort((x, y) => Number(y.kritisk) - Number(x.kritisk) || Number(y.avvikande) - Number(x.avvikande) || x.besvarad.localeCompare(y.besvarad));
   }
   const minVe = vardenhetFor(db, personal.enhet_id);
-  const sjukskoterska = personal.yrke === 'sjukskoterska';
+  const sjukskoterska = somYrke(personal.yrke) === 'sjukskoterska';
   for (const a of db.query("SELECT a.*, b.ansvarig_id, b.enhet_id AS b_enhet FROM labb_analyser a JOIN labb_bestallningar b ON b.id = a.bestallning_id WHERE a.kritisk = 1 AND a.vidimerad_tid IS NULL AND a.status = 'besvarad' AND b.makulerad_tid IS NULL ORDER BY a.besvarad_tid").all()) {
     const b = bestallningRad(db, a.bestallning_id);
     const mottagare = personal.id === b.ansvarig_id || (sjukskoterska && vardenhetFor(db, b.enhet_id) === minVe);

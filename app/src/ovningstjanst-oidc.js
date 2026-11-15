@@ -59,7 +59,10 @@ export const VARIANTER = [
   { id: 'niva2', text: 'Tillitsnivå 2, till exempel inloggning med lösenord' },
   { id: 'utan_niva', text: 'Utan uppgift om tillitsnivå' },
 ];
-const LEGITIMATION = { lakare: 'LK', sjukskoterska: 'SJ', fysioterapeut: 'FT', farmaceut: 'AP' };
+// Runda 16, r3: den första koden för varje roll i atkomst.js. Studenterna, undersköterskan och skötaren har ingen
+// legitimation.
+import { LEGITIMATION_FOR_ROLL } from './atkomst.js';
+const LEGITIMATION = Object.fromEntries(Object.entries(LEGITIMATION_FOR_ROLL).map(([r, k]) => [r, k[0]]));
 
 // Begäranden och koder. En begäran hör till sessionen som startade den, och en kod används en gång.
 const begaranden = new Map();

@@ -488,6 +488,20 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
   a.kod.push('src/mallar-yrken.js', 'src/omvardnadsprocess.js', 'src/mallforslag.js', 'src/fallrisklakemedel.js', 'src/r15r5-rutter.js', 'public/js/omvardnadsprocess.js');
   a.api.push('/api/patient/:id/omvardnadsprocess');
 }
+// Runda 16, r3: de nya yrkesrollerna och studenternas handledning hör till behörigheten, psykologens, logopedens och
+// barnmorskans mallar till journalanteckningarna, och barnmorskans förskrivning av preventivmedel till läkemedlen.
+{
+  const b = MODULER.find(x => x.id === 'behorighet');
+  b.beskrivning += ' Varje yrke har en egen roll med minsta åtkomst: läkare, sjuksköterska, barnmorska, undersköterska (också som skötare i psykiatrin), fysioterapeut, arbetsterapeut, dietist, logoped, hälso- och sjukvårdskurator och psykolog. Inloggningen genom en extern tjänst kräver legitimationen för yrket. Studenter dokumenterar under en namngiven handledare, bara under handledningen och på handledarens vårdenhet, och handledaren kontrasignerar det de signerar.';
+  b.rutter.push('#/handledning');
+  b.vyer.push('handledning.js');
+  b.kod.push('src/handledning.js', 'src/roller-r16r3.js', 'src/r16r3-rutter.js');
+  b.api.push('/api/handledning');
+  const l = MODULER.find(x => x.id === 'lakemedel');
+  l.beskrivning += ' Barnmorskan förskriver preventivmedel, och systemet visar bara de läkemedel som förskrivningsrätten omfattar.';
+  l.kod.push('src/preventivmedel.js', 'public/js/preventivmedel-ui.js');
+  l.api.push('/api/patient/:id/preventivmedel');
+}
 
 export function lasGransnitt({ rot = APP, text = null } = {}) {
   const las = (f) => text?.[f] ?? readFileSync(join(rot, f), 'utf8');

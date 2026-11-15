@@ -216,7 +216,8 @@ MENY.kardiologi = [...MENY.klinisk];
 MENY.kardiologi.splice(MENY.kardiologi.indexOf('Inkorg') + 1, 0, 'Intensivvård');
 // Runda 11, r2: operationskoordinatorn i Karlskoga har sjuksköterskans meny med Operation i stället för Intensivvård.
 // Menyn byggs först när den används, så att tillägg från andra delar i sjuksköterskans meny följer med.
-Object.defineProperty(MENY, 'operation', { get: () => MENY.sjukskoterska.map(x => (x === 'Intensivvård' ? 'Operation' : x)), enumerable: true });
+// Runda 16, r3: configurable, så att blocket för handledningen nedan kan definiera om den.
+Object.defineProperty(MENY, 'operation', { get: () => MENY.sjukskoterska.map(x => (x === 'Intensivvård' ? 'Operation' : x)), enumerable: true, configurable: true });
 // Runda 11: anestesiläkaren i Karlskoga har läkarens meny med Operation före Blodcentralen.
 Object.defineProperty(MENY, 'anestesi', { get: () => { const m = [...MENY.klinisk]; m.splice(m.indexOf('Blodcentralen'), 0, 'Operation'); return m; }, enumerable: true });
 // Runda 11, r3: Per Holm har Mödrahälsovård efter Barnhälsovård. Barnmorskan Sofia Ekdahl på förlossningen har
@@ -234,6 +235,20 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Servicenivåer och incidenter') + 1, 0, 'Nationella tjänster');
 // Runda 15, r2, tredje omgången: verksamhetschefen och vårdadministratören har Flyttar till rätt patient före Utbildning.
 for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k].indexOf('Utbildning'), 0, 'Flyttar till rätt patient');
+// Runda 16, r3: Handledning före Utbildning för handledarna på en vårdenhet med studenter (Sara Lindqvist, Johan Ek och
+// Sofia Ekdahl), och för studenterna. Operationskoordinatorn i Karlskoga har inga studenter, och barnmorskan på
+// vårdcentralen har Mödrahälsovård i stället för Förlossningen. Paramedicinarna har fysioterapeutens meny, och psykologen
+// också Tvångsvård.
+{
+  const nya = { kardiologi: MENY.kardiologi, sjukskoterska: MENY.sjukskoterska, barnmorska: MENY.barnmorska };
+  for (const m of Object.values(nya)) m.splice(m.indexOf('Utbildning'), 0, 'Handledning');
+  Object.defineProperty(MENY, 'operation', { get: () => MENY.sjukskoterska.filter(x => x !== 'Handledning').map(x => (x === 'Intensivvård' ? 'Operation' : x)), enumerable: true });
+  MENY.paramedicin = [...MENY.fysioterapeut];
+  MENY.psykolog = [...MENY.fysioterapeut];
+  MENY.psykolog.splice(MENY.psykolog.indexOf('Meddelanden') + 1, 0, 'Tvångsvård');
+  MENY.barnmorskaVc = MENY.barnmorska.filter(x => x !== 'Handledning').map(x => (x === 'Förlossningen' ? 'Mödrahälsovård' : x));
+  MENY.student = ['Arbetslista', 'Sök patient', 'Inkorg', 'Remisser', 'Handledning', 'Utbildning', 'Migreringsavstämning', 'Kravspårbarhet', 'Moduler', 'Öppet API', 'Svarstider'];
+}
 
 (async () => {
   // Runda 11, r1: klockan ställs innan testet räknar ut några datum.
@@ -247,7 +262,7 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
 
   try {
     // Utan inloggning
-    await s('inloggningssidan visar de tjugofem demorollerna och demoraden', async () => {
+    await s('inloggningssidan visar de trettiofyra demorollerna i grupper och demoraden', async () => {
       await page.goto(`${BAS}/`);
       await page.waitForSelector('.roll');
       const n = await page.locator('.roll').count();
@@ -258,7 +273,11 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       // Runda 11, r4: farmaceuten på cytostatikaberedningen, onkologen och onkologisjuksköterskan.
       // Runda 11, r6: röntgensjuksköterskan på röntgenkliniken.
       // Runda 11: anestesiläkaren Martin Ödman i Karlskoga.
-      if (n !== 25) throw new Error(`${n} roller`);
+      // Runda 16, r3: arbetsterapeuten, dietisten, logopeden, kuratorn, psykologen, barnmorskan på vårdcentralen och de
+      // tre studenterna, i fem grupper efter yrket.
+      if (n !== 34) throw new Error(`${n} roller`);
+      const grupper = await page.locator('#rollista .rollgrupp h3').allTextContents();
+      if (JSON.stringify(grupper) !== JSON.stringify(['Läkare, sjuksköterskor och barnmorskor', 'Rehabilitering, nutrition, psykologi och kurator', 'Studenter under handledning', 'Administration, ledning och kommunen', 'Logg, arkiv, uppföljning och systemförvaltning'])) throw new Error(`grupperna är ${JSON.stringify(grupper)}`);
       await forvanta(page, '.demorad', 'Demo med påhittade patienter och testpersonnummer från Skatteverket. Inte för vård av riktiga patienter.');
       await forvanta(page, '.sidfot', 'Vårdkällan är ett fristående demoprojekt med öppen källkod (EUPL 1.2). Det är inte en tjänst från Region Örebro län.');
       await forvanta(page, '#roll-lak-akut-visar', 'Nödåtkomst');
@@ -2509,7 +2528,8 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.waitForLoadState('networkidle');
     });
     {
-      const rontgen = MENY.sjukskoterska.filter(x => !['Prover och kontroller', 'Intensivvård'].includes(x));
+      // Runda 16, r3: röntgenkliniken har inga studenter, så ingen Handledning.
+      const rontgen = MENY.sjukskoterska.filter(x => !['Prover och kontroller', 'Intensivvård', 'Handledning'].includes(x));
       rontgen.splice(rontgen.indexOf('Läkemedel att ge') + 1, 0, 'Undersökningar');
       await allaVyer(page, 'Linnea Forsman', rontgen);
     }
@@ -2655,6 +2675,71 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await bild(page, '162-nyfodd-bb', true);
     });
     await allaVyer(page, 'Sofia Ekdahl', MENY.barnmorska);
+    // Runda 16, r3: de nya yrkesrollerna, barnmorskan på vårdcentralen och studenterna under handledning.
+    await s('Alice Persson ser sin handledare Sofia Ekdahl under Handledning och läser förlossningen som barnmorskestudent', async () => {
+      await loggaIn(page, 'stud-bm');
+      await gaTill(page, '#/handledning');
+      await forvanta(page, '#hl', 'Sofia Ekdahl');
+      await bild(page, '200-handledning-student', true);
+    });
+    await allaVyer(page, 'Alice Persson', MENY.student);
+    await s('Wilma Karlsson skriver en omvårdnadsanteckning, och anteckningen är märkt med handledaren och väntar på kontrasignering', async () => {
+      await loggaIn(page, 'stud-ssk');
+      await gaTill(page, '#/patient/p01');
+      await page.waitForSelector('.tidslinje');
+      await page.locator('.snabbval a', { hasText: 'Ny anteckning' }).click();
+      await page.waitForSelector('#ant-form #ny-sokord textarea');
+      await page.locator('#ny-sokord textarea').first().fill('Sov gott i natt enligt patienten.');
+      await page.click('.ant-form [data-signera]');
+      await forvanta(page, '.anteckning [data-handledd]', 'under handledning av Johan Ek');
+      await forvanta(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+      await page.waitForLoadState('networkidle');
+    });
+    await allaVyer(page, 'Wilma Karlsson', MENY.student);
+    await s('Johan Ek kontrasignerar studentens anteckning från inkorgen och ser sin student under Handledning', async () => {
+      await loggaIn(page, 'ssk-kard');
+      await gaTill(page, '#/inkorg');
+      await page.locator('.ik-ks a').first().click();
+      await page.click('[data-kontrasignera]');
+      await forvanta(page, '.notis', 'Anteckningen är kontrasignerad');
+      await forvanta(page, '.anteckning [data-handledd]', 'Kontrasignerad');
+      await gaTill(page, '#/handledning');
+      await forvanta(page, '#hl', 'Wilma Karlsson');
+      await bild(page, '201-handledning-handledare', true);
+    });
+    await s('Leo Andersson ser sin handledare och kan inte ordinera', async () => {
+      await loggaIn(page, 'stud-lak');
+      await gaTill(page, '#/handledning');
+      await forvanta(page, '#hl', 'Sara Lindqvist');
+      await gaTill(page, '#/patient/p01/lakemedel');
+      await forvanta(page, 'main', 'inte ordinera');
+    });
+    await allaVyer(page, 'Leo Andersson', MENY.student);
+    await s('Emma Lövgren förskriver preventivmedel, och systemet visar bara det som förskrivningsrätten omfattar', async () => {
+      await loggaIn(page, 'bm-vc');
+      await gaTill(page, '#/patient/p11/lakemedel');
+      await page.click('[data-preventivmedel]');
+      await forvanta(page, 'dialog[open]', 'Desogestrel');
+      await bild(page, '202-preventivmedel', true);
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'är förskrivet');
+      await page.waitForLoadState('networkidle');
+    });
+    await allaVyer(page, 'Emma Lövgren', MENY.barnmorskaVc);
+    for (const [id, namn, mall, meny] of [['at-kkoga', 'Camilla Hedin', 'Arbetsterapianteckning', 'paramedicin'], ['diet-lind', 'Hedvig Lund', 'Dietistanteckning', 'paramedicin'],
+      ['log-lind', 'Oskar Bergman', 'Logopedanteckning', 'paramedicin'], ['kur-vc', 'Malin Ekström', 'Kuratorsanteckning', 'paramedicin'], ['psy-psyk', 'David Sjöström', 'Psykologanteckning', 'psykolog']]) {
+      await s(`${namn} har sitt yrkes mall förvald när en ny anteckning skrivs`, async () => {
+        await loggaIn(page, id);
+        await gaTill(page, '#/arbetslista');
+        await page.locator('a.patientlank').first().click();
+        await page.waitForSelector('.tidslinje');
+        await page.locator('.snabbval a', { hasText: 'Ny anteckning' }).click();
+        await page.waitForSelector('#ant-form #ny-sokord textarea');
+        const mallVal = await page.locator('#ny-mall').evaluate(el => el.value ?? el.textContent);
+        if (mallVal !== mall) throw new Error(`mallen är ${mallVal}`);
+      });
+      await allaVyer(page, namn, MENY[meny]);
+    }
     await s('Hanna Lilja ställer frågorna om våld i inskrivningssamtalet, och svaren visas bara efter ett eget val', async () => {
       await loggaIn(page, 'ssk-vc');
       await page.evaluate(() => fetch('/api/demo/obstetrik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
@@ -3007,7 +3092,10 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         // Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen.
         'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning',
         // Runda 16, r1: läkarintyget för sjukpenning och bytet från ett ersatt intyg.
-        'skriv-sjukintyg', 'byt-ersatt-intyg']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'skriv-sjukintyg', 'byt-ersatt-intyg',
+        // Runda 16, r3: de nya rollernas uppgifter.
+        'arbetsterapianteckning', 'dietistanteckning', 'logopedanteckning', 'kuratorsanteckning', 'psykologanteckning', 'barnmorskeanteckning', 'forskriv-preventivmedel',
+        'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

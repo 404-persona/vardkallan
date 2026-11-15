@@ -24,6 +24,8 @@ import * as labb from './labb.js';
 import { ANALYS } from './labb-katalog.js';
 import { tolkaBlodgrupp } from './blod.js';
 import { tabell, finns, personNamn, enhetKort, iso, DAG, TIMME, kravRoll, vardkontaktFor, matvarde, lasRad, andraRad, textFalt, loggaPatient } from './specialist-hjalp.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 // Runda 11, r3: inskrivningssamtalets levnadsvanor blir en vanlig anteckning av typen Levnadsvanor (journal.js).
 const journal = () => require('./journal.js');
 // Säkerhetsgranskningen: varje graviditet och förlossning binds till patienten och prövas på sin vårdenhet.
@@ -712,7 +714,7 @@ function attGora(db, g, dagar, risk) {
 export const MHV_VARDENHETER = ['vc-tybble'];
 export const FORLOSSNING_VARDENHETER = ['uso-kk'];
 export function session(db, personal) {
-  if (!personal || !['lakare', 'sjukskoterska'].includes(personal.yrke) || !kanRoll(personal, 'las_graviditet')) return null;
+  if (!personal || !['lakare', 'sjukskoterska'].includes(somYrke(personal.yrke)) || !kanRoll(personal, 'las_graviditet')) return null;
   const ve = vardenhetFor(db, personal.enhet_id);
   const mhv = MHV_VARDENHETER.includes(ve), forlossning = FORLOSSNING_VARDENHETER.includes(ve);
   return mhv || forlossning ? { mhv, forlossning } : null;

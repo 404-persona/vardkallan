@@ -84,8 +84,10 @@ export const SCOPE = 'openid commission';
 export const TILLITSNIVAER = [...tillit.IDENTIFIERARE].filter(([, v]) => v.niva >= tillit.FLERFAKTOR_NIVA && !v.sjalvdeklarerad).map(([k]) => k);
 // Den legitimerade yrkesgrupp (tvåställig kod i Socialstyrelsens HOSP-register) som en roll kräver. Roller utan
 // legitimationskrav finns inte här.
-export const LEGITIMATION = { lakare: ['LK'], sjukskoterska: ['SJ', 'BM'], fysioterapeut: ['FT', 'SG'], farmaceut: ['AP', 'RC'] };
-export const LEGITIMATION_NAMN = { LK: 'läkare', SJ: 'sjuksköterska', BM: 'barnmorska', FT: 'fysioterapeut', SG: 'sjukgymnast', AP: 'apotekare', RC: 'receptarie' };
+// Runda 16, r3: koderna för varje roll står i atkomst.js, kontrollerade mot Ineras kodverk. Barnmorskan är en egen roll
+// och kräver BM. Sjuksköterskans roll kräver SJ, och en barnmorska som arbetar som sjuksköterska har båda.
+export { LEGITIMATION_FOR_ROLL as LEGITIMATION, LEGITIMATION_NAMN } from './atkomst.js';
+import { LEGITIMATION_FOR_ROLL as LEGITIMATION, LEGITIMATION_NAMN } from './atkomst.js';
 export const REDIRECT = '/api/inloggning/svar';
 const KLOCKMARGINAL_S = 60;
 const MAX_BILJETTALDER_S = 600;

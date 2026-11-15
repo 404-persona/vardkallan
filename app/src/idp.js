@@ -41,6 +41,10 @@ export const ANDAMAL = {
   farmaceut: 'Vård och behandling', vardadministrator: 'Vård och behandling', kommun: 'Vård och behandling',
   logggranskare: 'Kvalitetssäkring', uppfoljning: 'Statistik', arkivarie: 'Administration', ekonom: 'Administration',
   systemforvaltare: 'Administration', verksamhetschef: 'Administration',
+  // Runda 16, r3: de nya yrkesrollerna och studenterna arbetar i vården av patienten.
+  arbetsterapeut: 'Vård och behandling', dietist: 'Vård och behandling', logoped: 'Vård och behandling', kurator: 'Vård och behandling',
+  psykolog: 'Vård och behandling', barnmorska: 'Vård och behandling', lakarstudent: 'Vård och behandling', sjukskoterskestudent: 'Vård och behandling',
+  barnmorskestudent: 'Vård och behandling',
 };
 
 // Utfärdarens nyckelpar skapas när servern startar. Den privata nyckeln lämnar aldrig modulen.

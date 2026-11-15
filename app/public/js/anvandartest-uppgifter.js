@@ -778,6 +778,34 @@ UPPGIFTER.push(
   },
 );
 
+// Runda 16, r3: en uppgift för varje ny roll, med samma id som flödet i klickbudgeten.
+STARTPUNKT['Översikten för en patient på ortopeden i Karlskoga'] = { hash: '#/patient/p07', klar: '.tidslinje' };
+STARTPUNKT['Översikten för en patient på medicinkliniken i Lindesberg'] = { hash: '#/patient/p10', klar: '.tidslinje' };
+STARTPUNKT['Översikten för en patient på psykiatrin'] = { hash: '#/patient/p15', klar: '.tidslinje' };
+STARTPUNKT['Översikten för en patient på förlossningen'] = { hash: '#/patient/obs3', klar: '.tidslinje', forbered: 'obstetrik' };
+UPPGIFTER.push(
+  { id: 'arbetsterapianteckning', namn: 'Skriva och signera en arbetsterapianteckning', roll: 'at-kkoga', start: 'Översikten för en patient på ortopeden i Karlskoga',
+    text: 'Du är arbetsterapeut på ortopeden i Karlskoga. Margareta klarar påklädningen med strumppådragare och går med rollator inomhus. Dokumentera det och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'dietistanteckning', namn: 'Skriva och signera en dietistanteckning', roll: 'diet-lind', start: 'Översikten för en patient på medicinkliniken i Lindesberg',
+    text: 'Du är dietist på medicinkliniken i Lindesberg. Patienten äter hälften av portionerna och har gått ned två kilo på en månad. Dokumentera det och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'logopedanteckning', namn: 'Skriva och signera en logopedanteckning', roll: 'log-lind', start: 'Översikten för en patient på medicinkliniken i Lindesberg',
+    text: 'Du är logoped. Du har fått en remiss för att bedöma patientens sväljning. Dokumentera kontaktorsaken och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'kuratorsanteckning', namn: 'Skriva och signera en kuratorsanteckning', roll: 'kur-vc', start: 'Översikten för en patient på mottagningen',
+    text: 'Du är kurator på vårdcentralen. Anna bor ensam, dottern hjälper till med inköpen, och hon är orolig. Dokumentera samtalet och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'psykologanteckning', namn: 'Skriva och signera en psykologanteckning', roll: 'psy-psyk', start: 'Översikten för en patient på psykiatrin',
+    text: 'Du är psykolog på psykiatrin och har haft det andra samtalet med David. Sömnen har blivit bättre. Dokumentera samtalet och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'barnmorskeanteckning', namn: 'Skriva och signera en barnmorskeanteckning', roll: 'bm-vc', start: 'Översikten för en patient på mottagningen',
+    text: 'Du är barnmorska på barnmorskemottagningen. Anna har kommit för preventivmedelsrådgivning. Dokumentera kontaktorsaken och signera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'student-anteckning', namn: 'Skriva och signera en anteckning som sjuksköterskestudent', roll: 'stud-ssk', start: 'Patientens översikt',
+    text: 'Du är sjuksköterskestudent på avdelning 72. Gunnar säger att han har sovit gott i natt. Dokumentera det och signera, så att din handledare kan kontrasignera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'lakarstudent-anteckning', namn: 'Skriva och signera en anteckning som läkarstudent', roll: 'stud-lak', start: 'Patientens översikt',
+    text: 'Du är läkarstudent på kardiologen. Skriv en mottagningsanteckning för Gunnar om återbesöket efter hjärtsvikten och signera, så att din handledare kan kontrasignera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'barnmorskestudent-anteckning', namn: 'Skriva och signera en anteckning som barnmorskestudent', roll: 'stud-bm', start: 'Översikten för en patient på förlossningen',
+    text: 'Du är barnmorskestudent på förlossningen. Amanda har värkar var tredje minut och mår bra. Dokumentera det och signera, så att din handledare kan kontrasignera.', kontroll: { notis: 'Anteckningen är signerad' } },
+  { id: 'forskriv-preventivmedel', namn: 'Förskriva preventivmedel som barnmorska', roll: 'bm-vc', start: 'Översikten för en patient på mottagningen',
+    text: 'Du är barnmorska på barnmorskemottagningen. Anna vill börja med p-piller med bara gestagen. Förskriv dem.', kontroll: { notis: 'är förskrivet' } },
+);
+
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [
   ['lakare', 'Läkare'], ['sjukskoterska', 'Sjuksköterska'], ['underskoterska', 'Undersköterska'],

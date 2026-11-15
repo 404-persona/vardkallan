@@ -3,6 +3,8 @@
 // ordination och högsta dygnsdos visas innan något sparas, och en allvarlig varning kvitteras med motivering. Samma
 // delar används i avdelningens lista (#/administrering) och i patientens läkemedelsflik.
 import { esc, api, notis, felNotis, medKnapp, dialog, ikon, vyRubrik, tom, klockslag, tidpunkt, datum, idag, plusDagar, sessionNummer } from '../ui.js';
+// Runda 16, r3: barnmorskan kontrollerar som sjuksköterskan.
+import { somYrke } from '../ui.js';
 // Runda 7, r2: hjälp i sammanhanget.
 import { hjalpRuta } from '../hjalp.js';
 import { far, S } from '../app.js';
@@ -410,7 +412,7 @@ const r9Info = (d) => [
 const r9Status = (pid, a, kan) => {
   const b = a.beredning;
   const jag = S.session?.personal?.id;
-  const kanKontrollera = kan && ['sjukskoterska', 'lakare'].includes(S.session?.personal?.yrke) && b?.bereddAv?.id !== jag;
+  const kanKontrollera = kan && ['sjukskoterska', 'lakare'].includes(somYrke(S.session?.personal?.yrke)) && b?.bereddAv?.id !== jag;
   return `${b ? `<span class="under-text">Batch ${esc(b.batch)}, håller till ${esc(klockslag(b.hallbarTill))}.${b.kontroll.kravs ? b.kontroll.av ? ` Kontrollerad av ${esc(b.kontroll.av.namn)}.` : ' <span class="tagg tagg-larm">Väntar på kontroll</span>' : ''}</span>` : ''}
     ${kollegaStatus(pid, a, kan)}
     <span class="knapprad">${b?.kontroll?.kravs && !b.kontroll.av && kanKontrollera ? `<button type="button" class="knapp liten" data-kontroll-ber="${b.id}" data-pid="${esc(pid)}" data-text="${esc(b.text ?? '')}" data-varfor="${esc(b.kontroll.varfor ?? '')}">Kontrollera beredning</button>` : ''}
@@ -422,7 +424,7 @@ function kollegaStatus(pid, a, kan) {
   const k = a.kollegakontroll;
   if (!k) return '';
   const jag = S.session?.personal?.id;
-  const kanKontrollera = kan && ['sjukskoterska', 'lakare'].includes(S.session?.personal?.yrke) && k.iordningstalldAv?.id !== jag;
+  const kanKontrollera = kan && ['sjukskoterska', 'lakare'].includes(somYrke(S.session?.personal?.yrke)) && k.iordningstalldAv?.id !== jag;
   return `<span class="under-text">${k.av ? `Kollegakontroll av ${esc(k.av.namn)} ${esc(klockslag(k.tid))}.` : '<span class="tagg tagg-larm">Väntar på kollegakontroll</span>'}</span>
     ${!k.av && kanKontrollera ? `<button type="button" class="knapp liten" data-kollega="${k.id}" data-pid="${esc(pid)}" data-varfor="${esc(k.varfor)}" data-kod="${esc(a.iordningstalld?.kontrollkod ?? '')}">Kontrollera dosen</button>` : ''}`;
 }

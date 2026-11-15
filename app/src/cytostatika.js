@@ -653,7 +653,7 @@ const hallbarKvar = (d, l, nu) => {
 // behörighetsmotorn, aldrig den som iordningställde dosen. Förslaget ger ingen åtkomst som personen inte redan har.
 export function kontrollKandidater(db, d) {
   const ve = vardenhetFor(db, d.enhet_id);
-  return db.query("SELECT * FROM personal WHERE aktiv = 1 AND yrke IN ('sjukskoterska', 'lakare') ORDER BY namn").all()
+  return db.query("SELECT * FROM personal WHERE aktiv = 1 AND yrke IN ('sjukskoterska', 'barnmorska', 'lakare') ORDER BY namn").all()
     .filter(p => p.id !== d.iordningstalld_av && vardenhetFor(db, p.enhet_id) === ve && kanRoll(p, 'ge_cytostatika')
       && new Atkomst(db, p, d.patient_id, {}, 'las_cytostatika').prova('las_cytostatika', { enhet_id: d.enhet_id }).tillaten)
     .map(p => ({ id: p.id, namn: p.namn }));

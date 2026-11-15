@@ -1,10 +1,12 @@
 // Sussa 3.1.11 Signering: hur Vårdkällan möter posterna i avsnittet.
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST } from '../../krav.js';
+// Runda 16, r3: de nya yrkesrollerna, barnmorskan och studenterna (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
 
 const { J, GK } = TEST;
 
-export default [
+const POSTERNA_R16R3 = [
   {
     id: '3.1.11.1', kategori: 'system', egna: ['L1'], avsedd: 'uppfyllt_demo',
     tester: [
@@ -53,3 +55,4 @@ export default [
     anmarkning: 'Kontrasignering av mätvärden går bara att begära genom API:t. Krav på kontrasignering per yrkesgrupp, till exempel för underläkare, är inte konfigurerat.',
   },
 ];
+export default medR16r3(POSTERNA_R16R3);

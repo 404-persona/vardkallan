@@ -24,6 +24,8 @@ import { kvalitetssakrad, OBEDOMDA_KALLOR } from './mt-klass.js';
 // Runda 10, r4: SpO2 skala 2 när läkaren har beslutat det (syremattnad-skala.js), och urvalet i listan (matvarde-inmatning.js).
 import * as skala2 from './syremattnad-skala.js';
 import { lasUrval, tillampa, INMATNINGAR } from './matvarde-inmatning.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 const idagSv = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
 const WARFARIN = 'B01AA03';
@@ -171,7 +173,7 @@ export function berakna(body = {}) {
 // Runda 13, r3: dag och klockslag i svensk tid för larmtexten.
 const klockText = (t) => new Date(t).toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 export function larmForInkorg(db, personal, valFor = () => ({})) {
-  if (!['lakare', 'sjukskoterska'].includes(personal?.yrke) || !kanRoll(personal, 'las_matvarden')) return [];
+  if (!['lakare', 'sjukskoterska'].includes(somYrke(personal?.yrke)) || !kanRoll(personal, 'las_matvarden')) return [];
   const ve = vardenhetFor(db, personal.enhet_id);
   const enheter = enheterUnder(db, ve);
   const ph = enheter.map(() => '?').join(', ');

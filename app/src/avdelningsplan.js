@@ -59,6 +59,8 @@ export const TYPER = {
   ovrigt: { text: 'Övrigt', yrke: 'sjukskoterska', min: 30, ord: null },
 };
 export const YRKEN = { lakare: 'Läkare', sjukskoterska: 'Sjuksköterska', underskoterska: 'Undersköterska', fysioterapeut: 'Fysioterapeut' };
+// Runda 16, r3.
+YRKEN.barnmorska = 'Barnmorska';
 export const STATUS = { planerad: 'Planerad', utford: 'Utförd', struken: 'Struken' };
 
 // Systemet avgör typen ur texten. Ordningen i TYPER avgör när flera ord passar.
@@ -179,7 +181,7 @@ export function avdelningensDag(db, personal, valFor, { enhetId = null, datum = 
 export function avdelningensPersonal(db, personal) {
   const ve = vardenhetFor(db, personal.enhet_id);
   const enheter = enheterUnder(db, ve);
-  return db.query(`SELECT id, namn, titel, yrke FROM personal WHERE enhet_id IN (${enheter.map(() => '?').join(', ')}) AND coalesce(aktiv, 1) = 1 AND yrke IN ('lakare', 'sjukskoterska', 'underskoterska', 'fysioterapeut') ORDER BY yrke, namn`)
+  return db.query(`SELECT id, namn, titel, yrke FROM personal WHERE enhet_id IN (${enheter.map(() => '?').join(', ')}) AND coalesce(aktiv, 1) = 1 AND yrke IN ('lakare', 'sjukskoterska', 'barnmorska', 'underskoterska', 'fysioterapeut') ORDER BY yrke, namn`)
     .all(...enheter).map(p => ({ id: p.id, namn: p.namn, titel: p.titel, yrkeText: YRKEN[p.yrke] }));
 }
 

@@ -15,6 +15,8 @@ import * as lms from './lakemedelsstod.js';
 import { S } from '../app.js';
 // Runda 9, r1: förbrukningsartiklar.
 import * as forbrukning from './forbrukning.js';
+// Runda 16, r3: barnmorskans förskrivning av preventivmedel.
+import * as preventivmedel from '../preventivmedel-ui.js';
 
 let nastaOverforing = null;
 // Vätskebalansens val (dygnsbrytning, filter och sortering) gäller tills sidan laddas om (runda 6, r2).
@@ -51,7 +53,7 @@ export async function visa(el, ctx) {
   // och öppnas i journalen med dosering, historik och doser. Läsläget har dem inte.
   const ur = d.mellanarkiv ?? [];
   el.innerHTML = `<div class="flikhuvud"><h2>Läkemedel</h2>
-      <div class="knapprad">${kanOrdinera ? `<button type="button" class="knapp" data-ny aria-expanded="false" aria-controls="ordform">${ikon.plus}<span>Ordinera</span></button><button type="button" class="knapp sekundar" data-mall aria-expanded="false">Ordinera från mall</button>`
+      <div class="knapprad">${/* Runda 16, r3. */ far('forskriva_preventivmedel') ? preventivmedel.knapp() : ''}${kanOrdinera ? `<button type="button" class="knapp" data-ny aria-expanded="false" aria-controls="ordform">${ikon.plus}<span>Ordinera</span></button><button type="button" class="knapp sekundar" data-mall aria-expanded="false">Ordinera från mall</button>`
         : far('registrera_muntlig_ordination') ? '<button type="button" class="knapp sekundar" data-muntlig aria-expanded="false">Muntlig ordination</button><p class="dampad liten">Din yrkesroll kan läsa läkemedelslistan men inte ordinera. Dokumentera en muntlig ordination från en läkare, eller ordinera enligt ett generellt direktiv.</p>' : '<p class="dampad liten">Din yrkesroll kan läsa läkemedelslistan men inte ordinera.</p>'}</div></div>
     ${kanOrdinera ? hjalpRuta('ordinera') : ''}
     ${lakemedelsalderRad(ctx.id)}
@@ -125,6 +127,9 @@ export async function visa(el, ctx) {
   if (utsatt) setTimeout(() => utsatt.click(), 0);
   el.addEventListener('click', async (e) => {
     // Runda 6, r2: direktiv, utvärdering, signering, fördjupad genomgång och makulering av vätskebalans.
+    // Runda 16, r3.
+    const pvk = e.target.closest('[data-preventivmedel]');
+    if (pvk) return preventivmedel.forskriv(ctx, pvk);
     const r6 = e.target.closest('[data-direktiv],[data-utvardera],[data-signera-muntlig],[data-fg],[data-makulera-vb]');
     if (r6?.dataset.direktiv) return lms.ordineraDirektiv(ctx, dir, r6);
     if (r6?.dataset.utvardera) return lms.utvardera(ctx, r6.dataset.utvardera, () => ctx.ladda());

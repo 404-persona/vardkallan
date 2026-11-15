@@ -43,7 +43,7 @@ export const varde = (m) => `${esc(typeof m.varde === 'number' ? tal(m.varde, 2)
 // data-skriv döljer dem i läsläget vid avbrott.
 function snabbval(ctx) {
   const v = [];
-  if (pa('skriv_journal', 'skriv_omvardnad', 'skriv_observation')) v.push([ctx.href('journal', 'ny'), ikon.penna, 'Ny anteckning']);
+  if (pa('skriv_journal', 'skriv_omvardnad', 'skriv_observation', 'skriv_handledd')) v.push([ctx.href('journal', 'ny'), ikon.penna, 'Ny anteckning']);
   if (far('ordinera')) v.push([ctx.href('lakemedel', 'ny'), ikon.plus, 'Ordinera']);
   if (far('registrera_matvarde')) v.push([ctx.href('matvarden', 'ny'), ikon.plus, 'Registrera mätvärde']);
   if (far('remittera')) v.push([ctx.href('remisser', 'ny'), ikon.remiss, 'Skicka remiss']);

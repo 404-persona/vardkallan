@@ -23,6 +23,8 @@ import { administrationssatt as sattUrForm, tillatnaSatt } from './ordinationsma
 import { datumI } from './lakemedelsprocess.js';
 // Runda 7, r4: parametrar som systemförvaltningen kan ändra.
 import * as konfiguration from './konfiguration.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const FORESKRIFT = 'HSLF-FS 2017:37 9 kap.';
 export const DEMOREGLER_DELEGERING = 'Vilka läkemedelsformer som kan delegeras och att ett beslut gäller högst ett år är demoregler. En vårdgivare fastställer sina egna rutiner för delegering efter en riskanalys (HSLF-FS 2017:37 9 kap. 8 och 9 §§).';
@@ -260,7 +262,7 @@ export function paminnelser(db, personal) {
     }
     const kvar = Math.round((Date.parse(sista.till) - Date.parse(dag)) / 86400_000);
     if (kvar > paminnDagar) continue;
-    if (personal.yrke !== 'sjukskoterska' && sista.utfardad_av !== personal.id) continue;
+    if (somYrke(personal.yrke) !== 'sjukskoterska' && sista.utfardad_av !== personal.id) continue;
     ut.push({
       personalId: p.id, namn: p.namn, delegeringId: sista.id, till: sista.till, dagarKvar: kvar,
       text: `Delegeringen att ge läkemedel går ut ${kvar === 0 ? 'i dag' : kvar === 1 ? 'i morgon' : `om ${kvar} dagar`}, ${sista.till}. Följ upp den och registrera en ny om ${p.namn} ska fortsätta ge läkemedel.`,

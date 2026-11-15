@@ -120,7 +120,7 @@ describe('Seed', () => {
       // Runda 7, r1: paramedicinaren i Sussas testfall.
       ['fys-kard', 'Jenny Holmberg', 'fysioterapeut', 'uso-kard-mott'],
       // Runda 11, r3: barnmorskan på förlossningen och BB.
-      ['bm-uso', 'Sofia Ekdahl', 'sjukskoterska', 'uso-kk-forl'],
+      ['bm-uso', 'Sofia Ekdahl', 'barnmorska', 'uso-kk-forl'],
       // Runda 11, r2: operationskoordinatorn på Ortopediska kliniken Karlskoga lasarett.
       ['opk-kkoga', 'Therese Hedberg', 'sjukskoterska', 'kkoga-ort'],
       // Runda 11: anestesiläkaren på Anestesimottagningen Karlskoga lasarett.
@@ -132,6 +132,16 @@ describe('Seed', () => {
       ['ssk-onk', 'Elias Wickman', 'sjukskoterska', 'uso-onk-dag'],
       // Runda 11, r6: röntgensjuksköterskan på röntgenkliniken.
       ['rtg-ssk', 'Linnea Forsman', 'sjukskoterska', 'uso-rtg'],
+      // Runda 16, r3: de nya yrkesrollerna och studenterna.
+      ['at-kkoga', 'Camilla Hedin', 'arbetsterapeut', 'kkoga-ort'],
+      ['diet-lind', 'Hedvig Lund', 'dietist', 'lind-med'],
+      ['log-lind', 'Oskar Bergman', 'logoped', 'lind-med'],
+      ['kur-vc', 'Malin Ekström', 'kurator', 'vc-tybble'],
+      ['psy-psyk', 'David Sjöström', 'psykolog', 'uso-psyk'],
+      ['bm-vc', 'Emma Lövgren', 'barnmorska', 'vc-tybble'],
+      ['stud-lak', 'Leo Andersson', 'lakarstudent', 'uso-kard'],
+      ['stud-ssk', 'Wilma Karlsson', 'sjukskoterskestudent', 'uso-kard-72'],
+      ['stud-bm', 'Alice Persson', 'barnmorskestudent', 'uso-kk-forl'],
     ]);
   });
 

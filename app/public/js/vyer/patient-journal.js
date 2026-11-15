@@ -36,7 +36,8 @@ const filter = { enhet: '', typ: '' };
 
 // Runda 15, r5: undersköterskan skriver omvårdnadens anteckningar med den smala handlingen skriv_observation. Servern
 // ger bara de mallar som yrket skriver med.
-const kanSkriva = (kategori) => (kategori === 'omvardnad' ? far('skriv_omvardnad') || far('skriv_observation') : far('skriv_journal'));
+// Runda 16, r3: studenten skriver med skriv_handledd, och servern ger bara yrkets mallar.
+const kanSkriva = (kategori) => far('skriv_handledd') || (kategori === 'omvardnad' ? far('skriv_omvardnad') || far('skriv_observation') : far('skriv_journal'));
 
 export async function visa(el, ctx) {
   const [lista, , ur] = await Promise.all([
@@ -166,6 +167,7 @@ async function lasAnteckning(las, ctx, id) {
       ${anteckningHuvud(senaste, 'ant-rubrik', a.id !== senaste.id ? `<p class="ruta ruta-info liten">Du öppnade version ${a.version}. Här visas den gällande versionen ${senaste.version}.</p>` : '')}
       ${senaste.formular ? `<p class="under-text">Formuläret ${esc(senaste.formular.namn)}, version ${senaste.formular.version}. Texten är skriven av systemet ur svaren.</p>${formular.lasBild(senaste.formular)}` : ''}
       ${omvardnadsprocess.lasHtml(senaste.omvardnadsprocess)}
+      ${/* Runda 16, r3: en anteckning som en student har skrivit under handledning. */ senaste.handledning ? `<p class="ruta ruta-info liten" data-handledd>Skriven av ${esc(senaste.handledning.student?.namn ?? 'en student')} under handledning av ${esc(senaste.handledning.handledare?.namn ?? 'handledaren')}. ${senaste.handledning.kontrasignerad ? `Kontrasignerad ${esc(tidpunkt(senaste.handledning.kontrasignerad))}.` : 'Inte kontrasignerad av handledaren än.'}</p>` : ''}
       ${lasordningHtml(senaste.sokord)}
       ${kontrasignering.html(a, senaste)}
       ${word}
@@ -388,7 +390,8 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
     if (d) new MutationObserver(() => { if (!diktatAktiv() && ctrl) ctrl.schemalagg(); }).observe(d, { attributes: true, attributeFilter: ['aria-pressed'] });
     // Runda 15, r5: omvårdnadsprocessen under sökorden, med systemets förslag. Vilka statusområden som står utfällda
     // avgör anteckningsvyn (anteckningsstod.sokordLista) ur samma förslag, så att det bara finns ett sätt att fälla in.
-    if (mall().process) {
+    // Runda 16, r3: bara för den som skriver omvårdnadsanteckningar med processen, inte för studenten.
+    if (mall().process && far('skriv_omvardnad')) {
       const m = mall();
       omvardnadsprocess.hamta(ctx.id).then((d) => {
         if (!d || !form.isConnected || mall() !== m || form.querySelector('[data-omvardnadsprocess]')) return;

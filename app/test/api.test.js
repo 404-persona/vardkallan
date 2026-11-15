@@ -81,7 +81,9 @@ describe('API', () => {
       // Runda 11, r4: farmaceuten på cytostatikaberedningen.
       'far-bered', 'lak-onk', 'ssk-onk',
       // Runda 11, r6: röntgensjuksköterskan.
-      'rtg-ssk']);
+      'rtg-ssk',
+      // Runda 16, r3: de nya yrkesrollerna och studenterna.
+      'at-kkoga', 'diet-lind', 'log-lind', 'kur-vc', 'psy-psyk', 'bm-vc', 'stud-lak', 'stud-ssk', 'stud-bm']);
 
     expect(roller.data[0]).toMatchObject({ namn: 'Sara Lindqvist', yrke: 'lakare', enhet: { id: 'uso-kard', namn: 'Kardiologiska kliniken USÖ' } });
     expect((await k.post('/api/login', { personalId: 'lak-ort' })).status).toBe(400);

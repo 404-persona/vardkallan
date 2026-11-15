@@ -2000,3 +2000,9 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .ia-rad input[type="text"] { width: auto; flex: 1 1 10rem; min-width: 0; }
 .ia-form .falt-kryss label { display: flex; gap: 8px; align-items: flex-start; }
 .ia-form .falt-kryss input[type="checkbox"] { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; flex: none; }
+/* Runda 16, r3: demorollerna i grupper på inloggningssidan, och handledningen av studenter. */
+.rollgrupper { display: grid; gap: 18px; }
+.rollgrupp h3 { font-size: var(--f-m); margin: 0 0 8px; }
+.hl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hl-rad { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; background: var(--yta); border: 1px solid var(--linje); border-radius: 10px; padding: 10px 14px; }
+.hl-rad > span { min-width: 0; overflow-wrap: anywhere; }

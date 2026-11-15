@@ -16,6 +16,8 @@
 import { Fel, iso, datumAv } from './db.js';
 import { vardenhetFor } from './atkomst.js';
 import * as konfiguration from './konfiguration.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS kollegakontroller (
@@ -182,7 +184,7 @@ export function kontrollera(atk, kontrollId, { synligaAdministreringar, kravVard
   const resurs = `kollegakontroll:${k.id}`;
   kravVardande(atk, 'ge_lakemedel', { enhet_id: k.enhet_id }, resurs);
   const neka = (skal) => { atk.logga('ge_lakemedel', 'nekad', resurs, 'nekad'); throw new Fel(403, skal, 'nekad'); };
-  if (!['sjukskoterska', 'lakare'].includes(atk.personal.yrke)) neka('En kollegakontroll görs av en sjuksköterska eller läkare.');
+  if (!['sjukskoterska', 'lakare'].includes(somYrke(atk.personal.yrke))) neka('En kollegakontroll görs av en sjuksköterska eller läkare.');
   if (vardenhetFor(db, k.enhet_id) !== vardenhetFor(db, atk.personal.enhet_id)) neka('Kollegakontrollen görs på den vårdenhet där dosen iordningsställdes.');
   if (k.kontrollerad_tid) throw new Fel(400, `Dosen är redan kontrollerad av ${personNamn(db, k.kontrollerad_av)}.`, 'ogiltig');
   if (k.iordningstalld_av === atk.personal.id) throw new Fel(400, 'Du iordningsställde dosen själv. En annan sjuksköterska eller läkare kontrollerar den i sin egen inloggning.', 'ogiltig');
@@ -200,7 +202,7 @@ export function kontrollera(atk, kontrollId, { synligaAdministreringar, kravVard
 // Doser på den egna vårdenheten som väntar på kollegakontroll, för inkorgen: bara antal, utan patientuppgifter, och
 // aldrig den inloggades egna.
 export function vantarPaKontroll(db, personal) {
-  if (!['sjukskoterska', 'lakare'].includes(personal?.yrke)) return 0;
+  if (!['sjukskoterska', 'lakare'].includes(somYrke(personal?.yrke))) return 0;
   const ve = vardenhetFor(db, personal.enhet_id);
   return db.query(`SELECT k.enhet_id, k.iordningstalld_av FROM kollegakontroller k JOIN administreringar a ON a.id = k.administrering_id
     WHERE k.kontrollerad_tid IS NULL AND a.status = 'iordningstalld'`).all()

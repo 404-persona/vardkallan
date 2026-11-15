@@ -20,6 +20,8 @@ import { Fel, iso, idag, addDagar, lokalTid, giltigtDatum } from './db.js';
 import { kanRoll, vardenhetFor, enheterUnder, aktivaSparrar, harVardrelation, alder, visningsnamn, visningsPnr } from './atkomst.js';
 import { loggaRad } from './logg.js';
 import { sistaDag } from './tvangsvard-regler.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const KOMMUN = 'kommun-demo';
 export const SCHEMA = `
@@ -307,7 +309,7 @@ export function andra(atk, s, atgard, body = {}) {
     case 'fast-vardkontakt': {
       if (!oppen) neka('Verksamhetschefen vid den öppna vården som fick inskrivningsmeddelandet utser den fasta vårdkontakten (2 kap. 5 §).');
       const vem = db.query('SELECT * FROM personal WHERE id = ?').get(body.personal ?? pers.id);
-      if (!vem || vardenhetFor(db, vem.enhet_id) !== min || !['lakare', 'sjukskoterska'].includes(vem.yrke)) throw new Fel(400, 'Välj en läkare eller sjuksköterska på vårdenheten.', 'ogiltig', { falt: ['personal'] });
+      if (!vem || vardenhetFor(db, vem.enhet_id) !== min || !['lakare', 'sjukskoterska'].includes(somYrke(vem.yrke))) throw new Fel(400, 'Välj en läkare eller sjuksköterska på vårdenheten.', 'ogiltig', { falt: ['personal'] });
       ny(db, s, 'fast_vardkontakt', pers, { personal: vem.id });
       break;
     }

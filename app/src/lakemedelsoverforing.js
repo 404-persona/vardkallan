@@ -18,6 +18,8 @@ import { Atkomst, kanRoll, vardenhetFor, aktivaSparrar, harVardrelation, enheter
 import * as lakemedel from './lakemedel.js';
 import * as vidimering from './vidimering.js';
 import * as samordnad from './samordnad.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS lakemedelsoverforingar (
@@ -109,7 +111,7 @@ export function forPatient(atk) {
   const db = atk.db;
   const vt = vardtillfalle(db, atk.personal, atk.patientId);
   let forslag = null;
-  if (vt && ['lakare', 'sjukskoterska'].includes(atk.personal.yrke)) {
+  if (vt && ['lakare', 'sjukskoterska'].includes(somYrke(atk.personal.yrke))) {
     const m = mottagare(db, atk.personal, atk.patientId, vt);
     const ve = vardenhetFor(db, atk.personal.enhet_id);
     const sparr = aktivaSparrar(db, atk.patientId).includes(ve);
@@ -121,7 +123,7 @@ export function forPatient(atk) {
     };
   }
   const ve = vardenhetFor(db, atk.personal.enhet_id);
-  const kan = ['lakare', 'sjukskoterska'].includes(atk.personal.yrke);
+  const kan = ['lakare', 'sjukskoterska'].includes(somYrke(atk.personal.yrke));
   return { forslag, overforingar: synliga(db, atk.personal, atk.patientId).map(r => ({ ...overforingUt(db, r), kanKvittera: kan && !r.kvitterad && r.mottagare_typ === 'vardenhet' && vardenhetFor(db, r.mottagare) === ve })) };
 }
 
@@ -167,7 +169,7 @@ export function kvittera(atk, rad) {
     throw new Fel(404, 'Överföringen finns inte.', 'saknas');
   }
   atk.krav('las_lakemedel');
-  if (!['lakare', 'sjukskoterska'].includes(atk.personal.yrke)) throw new Fel(403, 'En läkare eller sjuksköterska på vårdenheten kvitterar överföringen.', 'nekad');
+  if (!['lakare', 'sjukskoterska'].includes(somYrke(atk.personal.yrke))) throw new Fel(403, 'En läkare eller sjuksköterska på vårdenheten kvitterar överföringen.', 'nekad');
   return kvitteraRad(db, rad, atk.personal, () => atk.logga('las_lakemedel', atk.grund(), `lakemedelsoverforing:${rad.id}:kvittens`));
 }
 function kvitteraRad(db, rad, pers, logga) {
@@ -193,7 +195,7 @@ export function kommunKvittera(db, pers, rad) {
 
 // Inkorgen: överföringar till användarens vårdenhet som inte är kvitterade, för patienter med vårdrelation.
 export function inkorg(db, personal, patientKort) {
-  if (!['lakare', 'sjukskoterska'].includes(personal?.yrke)) return [];
+  if (!['lakare', 'sjukskoterska'].includes(somYrke(personal?.yrke))) return [];
   const ve = vardenhetFor(db, personal.enhet_id);
   return db.query("SELECT * FROM lakemedelsoverforingar WHERE kvitterad IS NULL AND mottagare_typ = 'vardenhet' ORDER BY skickad").all()
     .filter(r => vardenhetFor(db, r.mottagare) === ve && harVardrelation(db, r.patient_id, ve))
