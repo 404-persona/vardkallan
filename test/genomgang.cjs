@@ -935,7 +935,8 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '.ruta-info', 'Journaltext, diagnoser och läkemedel visas inte');
       const flikar = await page.locator('.flikar a').allTextContents();
       // Runda 10, r4: vårdadministratören skannar in restjournaler men läser dem inte.
-      if (JSON.stringify(flikar) !== JSON.stringify(['Översikt', 'Restjournaler', 'Remisser', 'Logglista', 'Identitet', 'Utskrifter'])) throw new Error(`flikar ${flikar}`);
+      // Runda 16, r1: vårdadministratören skapar utkast till intyg under fliken Intyg.
+      if (JSON.stringify(flikar) !== JSON.stringify(['Översikt', 'Restjournaler', 'Remisser', 'Intyg', 'Logglista', 'Identitet', 'Utskrifter'])) throw new Error(`flikar ${flikar}`);
       if (await page.locator('.signal-overk').count()) throw new Error('överkänslighet visas för vårdadministratören');
       if (await page.locator('.signal-um, .um-forslag').count()) throw new Error('uppmärksamhetsinformation visas för vårdadministratören');
       await bild(page, '19-vardadministrator', true);

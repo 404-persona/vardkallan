@@ -1992,3 +1992,11 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
   body:has(.ia-utskrift:not([hidden])) .ia-form, body:has(.ia-utskrift:not([hidden])) .ruta, body:has(.ia-utskrift:not([hidden])) nav { display: none !important; }
   .ia-utskrift button, .ia-utskrift .falt-kryss { display: none !important; }
 }
+.ia-fraga fieldset { border: 0; padding: 0; margin: 8px 0; }
+.ia-fraga fieldset > legend { font-weight: 600; margin-bottom: 4px; }
+.ia-fraga label:has(> input[type="checkbox"]), .ia-fraga label:has(> input[type="radio"]) { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-weight: 400; }
+.ia-fraga label > input[type="checkbox"], .ia-fraga label > input[type="radio"] { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; flex: none; accent-color: var(--kalla); }
+.ia-rad input[type="date"] { width: auto; }
+.ia-rad input[type="text"] { width: auto; flex: 1 1 10rem; min-width: 0; }
+.ia-form .falt-kryss label { display: flex; gap: 8px; align-items: flex-start; }
+.ia-form .falt-kryss input[type="checkbox"] { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; flex: none; }

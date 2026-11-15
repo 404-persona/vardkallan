@@ -181,7 +181,9 @@ function senasteStatus(atk) {
   for (const a of atk.filtrera(rader, 'las_journal')) {
     let s = null;
     try { s = JSON.parse(a.sokord); } catch { s = null; }
-    const text = s && typeof s.Status === 'string' ? s.Status.trim() : '';
+    // Sökorden sparas som en lista med { sokord, text }; äldre data kan ha ett objekt med sökordet som nyckel.
+    const rad = Array.isArray(s) ? s.find(x => x?.sokord === 'Status') : null;
+    const text = (rad && typeof rad.text === 'string' ? rad.text : s && !Array.isArray(s) && typeof s.Status === 'string' ? s.Status : '').trim();
     if (text) return { text, rad: a, kalla: `Status i ${a.typ.toLowerCase()} ${datumText(a.skapad)}, ${enhetsnamn(atk.db, a.enhet_id)}` };
   }
   return null;

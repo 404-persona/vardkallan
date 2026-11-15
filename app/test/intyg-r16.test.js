@@ -166,7 +166,7 @@ describe('Intygen i Webcert, runda 16', () => {
     const db = nyDb();
     diagnos(db, 'p01', 'uso-kard-72', 'I48.9', 'Förmaksflimmer och förmaksfladder, ospecificerat');
     db.query("INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av) VALUES ('p01', 'uso-kard-72', 'Daganteckning', 'lakare', ?, 'lak-kard', ?, 'signerad', ?, 'lak-kard')")
-      .run(JSON.stringify({ Status: 'Ödem i båda underbenen till knäna.' }), iso(), iso());
+      .run(JSON.stringify([{ sokord: 'Status', text: 'Ödem i båda underbenen till knäna.' }]), iso(), iso());
     const lmNamn = db.query("SELECT k.namn FROM ordinationer o JOIN katalog k ON k.id = o.lakemedel_id WHERE o.patient_id = 'p01' AND o.status = 'aktiv' AND o.enhet_id LIKE 'uso-kard%'").all().map(x => x.namn);
     const ap = personal(db, 'adm-kard');
     const lp = personal(db, 'lak-kard');
@@ -313,6 +313,10 @@ describe('Intygen i Webcert, runda 16', () => {
     diagnos(db, 'p11', 'vc-tybble', 'J06.9', 'Akut övre luftvägsinfektion');
     const lak = personal(db, 'lak-vc');
     const r = await skapa(db, 'lak-vc', 'p11', 'LISJP');
+    // Funktionsnedsättningen fylls i ur statusen i den senaste läkaranteckningen på vårdenheten, med källa.
+    const fore = app.visa(db, lak, iid(r));
+    expect(fore.svar['35']).toContain('EKG i vila');
+    expect(fore.kallor['35']).toContain('Status i mottagningsanteckning');
     await app.spara(db, lak, iid(r), { svar: SJUKPENNING });
     await app.atgard(db, lak, iid(r), 'signera');
     expect(app.visa(db, lak, iid(r)).kan.arbetsgivare).toBe(true);
