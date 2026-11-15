@@ -115,7 +115,12 @@ function lasVarde(form, q) {
 }
 
 export async function visa(main, iid) {
+  // Runda 16, r2: vyn ritas bara om användaren fortfarande är på det här intyget. Annars kunde en sen omritning efter
+  // Signera skriva över vyn som användaren just gick till.
+  const har = () => location.hash.split('?')[0] === `#/intygsapplikation/${encodeURIComponent(iid)}`;
+  if (!har()) return;
   const d = await api(`/api/intygsapplikation/${encodeURIComponent(iid)}`);
+  if (!har()) return;
   const av = !d.kan.andra;
   const fragor = d.kategorier.flatMap(k => k.fragor);
   // Svar som den inloggade inte får se visas som ifyllda, utan värde, och skickas inte med när utkastet sparas.

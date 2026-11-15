@@ -64,8 +64,10 @@ export async function visa(el, iid, form = null) {
   if (v.perioder) q.set('perioder', JSON.stringify(v.perioder));
   if (v.diagnos) q.set('diagnos', v.diagnos);
   if (v.motivering) q.set('motivering', v.motivering);
+  const adress = location.hash;
   let b;
   try { b = await api(`/api/intygsapplikation/${encodeURIComponent(iid)}/beslutsstod${q.toString() ? `?${q}` : ''}`, { tyst: true, bakgrund: true }); } catch { el.innerHTML = ''; return; }
+  if (location.hash !== adress || !el.isConnected) return;
   el.innerHTML = html(b);
   el.querySelector('[data-fyll-period]')?.addEventListener('click', () => { if (fyllPeriod(form, b.forslagPeriod)) visa(el, iid, form); });
 }

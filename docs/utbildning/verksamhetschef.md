@@ -78,11 +78,11 @@ Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](h
 
 ### Övning 6
 
-Varför står det färre än 5 på flera rader i Sjukskrivningar på vårdenheten?
+Varför står det dolt på flera rader i Sjukskrivningar på vårdenheten?
 
 Rätt svar: Små antal visas inte, så att översikten inte pekar ut enskilda patienter. Patienter med skyddade personuppgifter räknas inte alls.
 
-Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 visas som färre än 5, och ibland döljs också en till ruta så att det dolda inte kan räknas fram ur totalen.
+Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 döljs, och fler rutor döljs när de dolda antalen annars skulle gå att räkna fram ur totalen.
 
 Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar/enhet).
 
