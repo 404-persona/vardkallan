@@ -50,7 +50,7 @@ export const T14 = {
   iBidra: `${I}CONTRIBUTING.md beskriver hur man bygger, kör, testar och bidrar under EUPL 1.2`,
   iSprak: `${I}innovationsrummet och CONTRIBUTING.md följer språkreglerna`,
   filmFloden: `${F}varje instruktionsfilm är ett flöde i klickbudgeten, och filmerna täcker läkaren, sjuksköterskan, undersköterskan, vårdadministratören, invånaren och systemförvaltaren`,
-  filmFiler: `${F}skriptet som spelar in filmerna finns i repot, och varje film i docs/filmer/ är en WebM på högst 2 MB`,
+  filmFiler: `${F}skriptet som spelar in filmerna finns i repot, och förteckningen över filmerna i releasen har varje film som en WebM på högst 2 MB med kontrollsumma`,
 };
 const DOK = [T14.sussaId, T14.filer, T14.sprak, T14.avsnitt];
 const DRIFTANSVARIG = 'Åtagandet kräver en driftansvarig organisation, till exempel regionen eller en driftleverantör, som arbetar efter dokumentet och kan visa det för beställaren.';
@@ -134,7 +134,7 @@ export const R14R5 = {
   '11.2.1.1': planerat('docs/drift/inforande.md'),
   '11.2.1.2': planerat('docs/drift/samverkansmodell.md'),
   '11.2.1.3': planerat('docs/drift/samverkansmodell.md'),
-  '11.2.1.4': delvis([T14.filmFloden, T14.filmFiler, T14.uOvningar], 'Instruktionsfilmer i docs/filmer/, en per vanligt arbetsflöde, med textade steg på svenska. De spelas in ur samma flöden som klickbudgeten mäter med test/instruktionsfilmer.cjs och kan göras om efter varje ändring. E-utbildningen är övningarna i systemet, och utbildningsmaterialet per roll länkar till filmerna.', 'Materialet är inte anpassat till en beställares verksamhet, och inget acceptanstest är påbörjat.'),
+  '11.2.1.4': delvis([T14.filmFloden, T14.filmFiler, T14.uOvningar], 'Instruktionsfilmer som bilagor till releasen för versionen på GitHub (förteckningen med kontrollsummor i app/src/instruktionsfilmer-manifest.json), en per vanligt arbetsflöde, med textade steg på svenska. De spelas in ur samma flöden som klickbudgeten mäter med test/instruktionsfilmer.cjs och kan göras om efter varje ändring. E-utbildningen är övningarna i systemet, och utbildningsmaterialet per roll länkar till filmerna.', 'Materialet är inte anpassat till en beställares verksamhet, och inget acceptanstest är påbörjat.'),
   '11.2.1.6': planerat('docs/drift/inforande.md'),
   '11.2.1.9': delvis([T14.inforande], 'En mall för projektplanen för grundimplementationen i docs/drift/inforande.md med organisation och kompetens, leveransobjekt, tid- och aktivitetsplan, milstolpar, roller och ansvar, testaktiviteter, utbildningsaktiviteter, risker och integrationerna i kategori B och C.', 'Planen är en mall från projektet och är inte överenskommen med någon beställare.'),
   '11.2.1.10': delvis([T14.inforande], 'En mall för projektplanen för grundimplementationen i docs/drift/inforande.md.', 'Planen är en mall från projektet och är inte överenskommen med någon beställare.'),

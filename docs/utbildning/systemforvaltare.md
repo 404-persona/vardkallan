@@ -59,7 +59,7 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Systemförvaltaren registrerar en driftstörning. Systemet sätter prioriteten enligt servicenivåavtalet och säger när beställaren ska ha rapporten.
 
-Flöde: Registrera en incident, klickbudget 4. [Se filmen](../filmer/registrera-incident.webm)
+Flöde: Registrera en incident, klickbudget 4. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/registrera-incident.webm)
 
 ## Övningar
 

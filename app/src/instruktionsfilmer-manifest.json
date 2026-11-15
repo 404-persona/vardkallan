@@ -1,0 +1,45 @@
+{
+  "version": "1.5.0",
+  "filer": {
+    "daganteckning": {
+      "sha256": "67c7396fcd0f89d1801879d1769018d113617a04c8a02f17833b20533cae22fd",
+      "byte": 1207492
+    },
+    "ordinera": {
+      "sha256": "a8cf5cd5f47c44664583206411de8199d9156d07bc3fb834a46c56482c487fd6",
+      "byte": 1169146
+    },
+    "remiss": {
+      "sha256": "eeca964b101c899330d8cba019b7e0de3da716f56d4a452887bc05862da5f095",
+      "byte": 1056076
+    },
+    "ge-dos": {
+      "sha256": "b24ef4997f2646029c1db96a054a3d841ffba0a90f6c05a31b2543ec1d60c953",
+      "byte": 978311
+    },
+    "news2": {
+      "sha256": "3273b2d362306faf3cbb62f27980ed2396dedaadff58d0dd54f97077e1895888",
+      "byte": 1081347
+    },
+    "ge-dos-delegering": {
+      "sha256": "ce6b60cb686a2259e602a0cd7a05587c81dbae6e2dfcf1e519650365e1692e1e",
+      "byte": 1044174
+    },
+    "boka-remiss": {
+      "sha256": "95b9c334637ed2047f8ced4f0b3abb812c897e4d7de3724669e8d54a1db407c2",
+      "byte": 784111
+    },
+    "nodatkomst": {
+      "sha256": "4d213e32d54028611634ee36be830e792459039e18f5b7a92560e395d2884dde",
+      "byte": 1670883
+    },
+    "egen-ombokning": {
+      "sha256": "f61e473977ec270dafb4b72d6a2e14793c07a976611a8339138a079fcaacd669",
+      "byte": 617347
+    },
+    "registrera-incident": {
+      "sha256": "352b0a86ee0d845368c7e68ae196f4c5b1b3b2b7bf102c8cf4ab1537fe92b644",
+      "byte": 1061576
+    }
+  }
+}

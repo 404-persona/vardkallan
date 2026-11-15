@@ -5,7 +5,7 @@ import { describe, test, expect } from 'bun:test';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { FLODEN } from '../src/klickbudget.js';
-import { FILMER } from '../src/instruktionsfilmer.js';
+import { FILMER, filmUrl } from '../src/instruktionsfilmer.js';
 import { OVNINGAR_V1 } from '../src/seed/ovningar.js';
 import { TESTROLLER } from '../src/testinbjudan.js';
 import * as material from '../src/utbildningsmaterial.js';
@@ -53,7 +53,7 @@ describe('Utbildningsmaterial', () => {
       }
       for (const f of d.filmer) {
         expect(md, `${y} ${f.id}`).toContain(`### ${f.rubrik}`);
-        expect(md, `${y} ${f.id}`).toContain(`](../filmer/${f.id}.webm)`);
+        expect(md, `${y} ${f.id}`).toContain(`](${filmUrl(f.id)})`);
         expect(md, `${y} ${f.id}`).toContain(f.beskrivning);
       }
       // Testinbjudans uppdrag för rollen finns med, utan facit för frågorna.
@@ -97,7 +97,8 @@ describe('Utbildningsmaterial', () => {
     let lankar = 0;
     for (const [, md] of material.filer()) {
       for (const m of md.matchAll(/\]\(([^)]*\.webm)\)/g)) {
-        const t = m[1].match(/^\.\.\/filmer\/([a-z0-9-]+)\.webm$/);
+        // Runda 15: länken går till filmen i releasen för den version som förteckningen gäller.
+        const t = m[1].match(/^https:\/\/github\.com\/SpankulatorX\/vardkallan\/releases\/download\/v\d+\.\d+\.\d+\/([a-z0-9-]+)\.webm$/);
         expect(t, m[1]).not.toBeNull();
         expect(id.has(t[1]), m[1]).toBe(true);
         expect(FLODEN.some(f => f.id === FILMER.find(x => x.id === t[1]).flode), m[1]).toBe(true);

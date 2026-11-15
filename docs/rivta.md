@@ -38,7 +38,7 @@ Koden ligger i `app/src/rivta/` och används av alla kontrakt.
 
 Status för alla: byggt och validerat mot tjänstekontraktet, testat lokalt, inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). Där Vårdkällan är konsument är den andra parten simulerad (`app/src/rivta/nationella.js` och `register.js`), med påhittade HSA-id och demons påhittade uppgifter. De simulerade tjänsterna har en egen kopia av spärrar, samtycken, personalkatalogen och folkbokföringen i sandlådan, tagen första gången de används, så att skillnader mellan Vårdkällan och tjänsten syns.
 
-K10 anger PU-tjänsten som LookupResidentsForProfile i masterdata:citizen:citizen. Den domänen finns inte bland de öppna domänerna på bitbucket.org/rivta-domains, så PU-tjänstens LookupResidentForFullProfile i riv.population.residentmaster är byggd i stället.
+K10 anger PU-tjänsten som LookupResidentsForProfile i masterdata:citizen:citizen. Den domänen finns på bitbucket.org/rivta-domains (riv.masterdata.citizen.citizen, taggarna 2.0 och 2.1_RC1, Apache 2.0 från Inera AB), men hittades inte när kontrakten hämtades i runda 14, så PU-tjänstens LookupResidentForFullProfile i riv.population.residentmaster är byggd i stället. Att bygga LookupResidentsForProfile 2.0 som K10 anger är kvar att göra.
 
 ## Testa genom tjänsteplattformen
 
@@ -136,7 +136,7 @@ Domänen finns bara i RIVTA Basic Profile 2.0, där den logiska adressen står i
 
 ### E-recept
 
-eHälsomyndighetens kontrakt för att skicka och makulera e-recept finns inte bland de publika tjänstedomänerna. Domänen riv.se.apotekensservice.or har bara hämtning av ordinationer, och dess filer saknar licensuppgift, så den är inte hämtad. Förskrivningen går som förut till den simulerade Nationella läkemedelslistan.
+E-hälsomyndighetens tjänstekontrakt finns på myndighetens samarbetsyta (handboken, versionspaket 21), och förskrivning och makulering går numera genom Nationella läkemedelslistans FHIR-gränssnitt. Bara RIVTA-filerna i paketen har en licens (Apache 2.0); för de övriga filerna och FHIR-paketet anges ingen licens, och myndigheten har fått frågan om villkoren för återanvändning (2026-11-14). Domänen riv.se.apotekensservice.or har bara hämtning av ordinationer, och dess filer saknar licensuppgift, så den är inte hämtad. Förskrivningen går som förut till den simulerade Nationella läkemedelslistan.
 
 ### Infektionsverktyget (riv.processdevelopment.infections 1.0.2)
 

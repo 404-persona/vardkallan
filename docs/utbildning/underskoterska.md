@@ -40,7 +40,7 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Undersköterskan ger en dos. Systemet prövar delegeringen för just den dosen och visar knappen Ge bara när delegeringen gäller.
 
-Flöde: Ge en dos med delegering, klickbudget 3. [Se filmen](../filmer/ge-dos-delegering.webm)
+Flöde: Ge en dos med delegering, klickbudget 3. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/ge-dos-delegering.webm)
 
 ## Övningar
 

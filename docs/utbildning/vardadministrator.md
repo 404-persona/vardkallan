@@ -142,7 +142,7 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Vårdadministratören bokar tid för en remiss från startsidan. Systemet föreslår en ledig tid som passar remissen.
 
-Flöde: Boka tid för en remiss, klickbudget 2. [Se filmen](../filmer/boka-remiss.webm)
+Flöde: Boka tid för en remiss, klickbudget 2. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/boka-remiss.webm)
 
 ## Övningar
 

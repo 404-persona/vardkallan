@@ -14,7 +14,7 @@ Utbildningen har sex delar, som bygger på varandra. Alla delar utom den lärarl
 
 2. Praktiska prov i en övningsjournal. Ett praktiskt prov är en uppgift som görs på riktigt i journalen för en påhittad patient, och systemet kontrollerar själv att det blev rätt. I dag finns 3 prov: ordinera paracetamol vid behov, skriva och signera en journalanteckning och registrera ett blodtryck.
 
-3. Instruktionsfilmer. 10 korta filmer visar de vanligaste arbetsflödena från början till slut, med textade steg på svenska. De ligger i docs/filmer/ och spelas in på nytt efter varje ändring i gränssnittet.
+3. Instruktionsfilmer. 10 korta filmer visar de vanligaste arbetsflödena från början till slut, med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet och ligger som bilagor till releasen för versionen på GitHub.
 
 4. Hjälp i sammanhanget och nyheter. Rutan Hjälp i de vanligaste flödena säger vad användaren gör och vad systemet gör, och länkar till övningarna. Efter en ny version visar systemet nyheterna för rollen, med ändrade arbetssätt först.
 

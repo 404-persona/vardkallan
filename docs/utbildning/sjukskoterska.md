@@ -213,13 +213,13 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Sjuksköterskan ger en dos från Läkemedel att ge. Systemet räknar fram dagens doser ur ordinationerna och varnar för dubbel dos.
 
-Flöde: Ge en dos, klickbudget 3. [Se filmen](../filmer/ge-dos.webm)
+Flöde: Ge en dos, klickbudget 3. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/ge-dos.webm)
 
 ### Registrera en NEWS2-kontroll
 
 Sjuksköterskan registrerar vitalparametrar. Systemet räknar NEWS2 och säger vad som ska göras och när nästa kontroll ska göras.
 
-Flöde: Registrera en NEWS2-kontroll, klickbudget 8. [Se filmen](../filmer/news2.webm)
+Flöde: Registrera en NEWS2-kontroll, klickbudget 8. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/news2.webm)
 
 ## Övningar
 

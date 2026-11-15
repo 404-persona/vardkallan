@@ -1,7 +1,11 @@
 // Runda 14, r5: instruktionsfilmerna (Sussa 11.2.1.4 och 10.1.1.3). Varje film är ett av de vanliga arbetsflödena i
 // klickbudgeten (klickbudget.js), inspelat av test/instruktionsfilmer.cjs mot en lokal container med textade steg på
-// svenska. Filmerna ligger i docs/filmer/ och spelas in på nytt efter varje ändring i gränssnittet, så att de alltid
-// visar det gränssnitt som finns. Registret beror inte på db.js.
+// svenska. Filmerna spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
+// Runda 15: filmerna läggs som bilagor till releasen för versionen på GitHub, och repot har bara förteckningen med
+// version, storlek och kontrollsumma (instruktionsfilmer-manifest.json), så att repot inte växer varje gång filmerna
+// spelas in. Registret beror inte på db.js.
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { FLODEN } from './klickbudget.js';
 
 // flode är id i FLODEN. Rollen och startpunkten hämtas därifrån, så att filmen gör exakt det flöde som klickbudgeten mäter.
@@ -20,8 +24,15 @@ export const FILMER = [
   F('registrera-incident', 'registrera-incident', 'Registrera en incident', 'Systemförvaltaren registrerar en driftstörning. Systemet sätter prioriteten enligt servicenivåavtalet och säger när beställaren ska ha rapporten.'),
 ];
 
-// Filen för en film, relativt repots rot.
+// Filen för en film när den spelas in, relativt repots rot. Katalogen är inte med i git.
 export const filmFil = (id) => `docs/filmer/${id}.webm`;
+// Förteckningen över filmerna i releasen: { version, filer: { <id>: { sha256, byte } } }.
+// Sökvägen räknas ur import.meta.url, så att registret fungerar både i Bun (servern) och i Node (inspelningsskriptet).
+export const MANIFEST = fileURLToPath(new URL('./instruktionsfilmer-manifest.json', import.meta.url));
+export const manifest = () => JSON.parse(readFileSync(MANIFEST, 'utf8'));
+export const RELEASER = 'https://github.com/SpankulatorX/vardkallan/releases/download';
+// Adressen till en film i releasen för den version som förteckningen gäller.
+export const filmUrl = (id, version = manifest().version) => `${RELEASER}/v${version}/${id}.webm`;
 // Största tillåtna storlek för en film, i byte.
 export const MAX_BYTE = 2 * 1024 * 1024;
 
@@ -32,6 +43,6 @@ export function filmer() {
   return FILMER.map((x) => {
     const f = perId.get(x.flode);
     if (!f) throw new Error(`Instruktionsfilmen ${x.id} pekar på ett flöde som inte finns i klickbudgeten: ${x.flode}`);
-    return { ...x, roll: f.roll, start: f.start, flodesnamn: f.namn, budget: f.budget, fil: filmFil(x.id) };
+    return { ...x, roll: f.roll, start: f.start, flodesnamn: f.namn, budget: f.budget, fil: filmFil(x.id), url: filmUrl(x.id) };
   });
 }

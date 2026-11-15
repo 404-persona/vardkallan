@@ -1,13 +1,16 @@
 // Instruktionsfilmerna (runda 14, r5, Sussa 11.2.1.4 och 10.1.1.3). Spelar in varje film i app/src/instruktionsfilmer.js
 // med Playwright mot en lokal server, med textade steg på svenska, och skriver den till docs/filmer/<id>.webm. Varje
 // film gör samma flöde som klickbudgeten mäter (test/flodessteg.cjs), så att filmen visar det gränssnitt som finns.
-// Kör om skriptet efter varje ändring i gränssnittet.
+// Kör om skriptet efter varje ändring i gränssnittet. Runda 15: skriptet skriver också förteckningen
+// app/src/instruktionsfilmer-manifest.json med version, storlek och sha256 för varje film. Filmerna läggs sedan som
+// bilagor till releasen för versionen (gh release create v<version> docs/filmer/*.webm), och docs/filmer/ är inte med i git.
 //
 // Användning (servern måste vara igång, och ffmpeg med libvpx-vp9 krymper filmerna om det finns):
 //   NODE_PATH=$(npm root -g) node test/instruktionsfilmer.cjs [bas-url] [film-id ...]
 
 const { chromium } = require('@playwright/test');
-const { mkdirSync, renameSync, rmSync, statSync, existsSync, mkdtempSync } = require('node:fs');
+const { mkdirSync, renameSync, rmSync, statSync, existsSync, mkdtempSync, readFileSync, writeFileSync } = require('node:fs');
+const { createHash } = require('node:crypto');
 const { join } = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { spawnSync } = require('node:child_process');
@@ -119,5 +122,16 @@ function krymp(fil) {
   await browser.close();
   rmSync(tmp, { recursive: true, force: true });
   if (fel.length) { console.log(`\nInspelningen misslyckades:\n  ${fel.join('\n  ')}`); process.exit(1); }
+  // Förteckningen gäller bara en hel inspelning av alla filmer, för versionen i package.json.
+  if (!BARA.length) {
+    const version = JSON.parse(readFileSync(join(ROT, 'app', 'package.json'), 'utf8')).version;
+    const filer = {};
+    for (const f of filmer()) {
+      const b = readFileSync(join(UT, `${f.id}.webm`));
+      filer[f.id] = { sha256: createHash('sha256').update(b).digest('hex'), byte: b.length };
+    }
+    writeFileSync(join(ROT, 'app', 'src', 'instruktionsfilmer-manifest.json'), JSON.stringify({ version, filer }, null, 2) + '\n');
+    console.log(`Förteckningen för version ${version} är skriven.`);
+  }
   console.log(`\nFilmerna finns i ${UT}`);
 })().catch(e => { console.error(e); process.exit(1); });

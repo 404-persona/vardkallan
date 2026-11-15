@@ -41,7 +41,7 @@ Utbildningen finns i systemet och i repot, och materialet skrivs ur systemets eg
 
 - Övningar under Utbildning för varje yrkesroll, med ett intyg som gäller i ett år, och praktiska prov i en övningsjournal.
 - Utbildningskonceptet, utbildningsplanen och materialet för varje roll i `docs/utbildning/`, med arbetsflödena och klickbudgeten, övningarna med rätt svar och förklaring och uppdragen i testinbjudan.
-- Instruktionsfilmer för de vanligaste arbetsflödena i `docs/filmer/`, inspelade på nytt efter varje ändring i gränssnittet.
+- Instruktionsfilmer för de vanligaste arbetsflödena, inspelade på nytt efter varje ändring i gränssnittet och lagda som bilagor till releasen för versionen på GitHub. Förteckningen med kontrollsummor står i `app/src/instruktionsfilmer-manifest.json`.
 - Hjälp i de vanligaste flödena och nyheterna efter varje ny version.
 
 För utvecklare är `CONTRIBUTING.md` och `docs/design.md` utbildningen: hur systemet byggs och testas, vilka regler koden följer och hur behörighetsmotorn fungerar.

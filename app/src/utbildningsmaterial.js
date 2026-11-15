@@ -12,7 +12,7 @@ import { YRKEN, PERSONAL } from './seed/personal.js';
 import { PATIENTER } from './seed/patienter.js';
 import { OVNINGAR_V1 } from './seed/ovningar.js';
 import { FLODEN } from './klickbudget.js';
-import { FILMER, filmFil } from './instruktionsfilmer.js';
+import { FILMER, filmFil, filmUrl } from './instruktionsfilmer.js';
 import { TESTROLLER, uppdragUt } from './testinbjudan.js';
 import { KURS, GILTIG_DAGAR } from './utbildning-schema.js';
 import { PROVA, GAR_UT_DAGAR } from './utbildning.js';
@@ -134,8 +134,8 @@ export function delar(yrke) {
   };
 }
 
-// Länken till en film från docs/utbildning/, där filmerna ligger i docs/filmer/.
-export const filmLank = (id) => filmFil(id).replace(/^docs\//, '../');
+// Länken till en film från docs/utbildning/. Runda 15: filmerna ligger som bilagor till releasen på GitHub.
+export const filmLank = (id) => filmUrl(id);
 
 const stycken = (...s) => s.filter(Boolean).join('\n\n');
 
@@ -259,7 +259,7 @@ export function index() {
     'Utbildningen har sex delar, som bygger på varandra. Alla delar utom den lärarledda utbildningen finns i systemet i dag.',
     `1. E-utbildning i systemet. Under Utbildning gör varje användare övningarna för sin yrkesroll: korta kunskapsfrågor om hur Vårdkällan fungerar, med demopatienter. Servern rättar och förklarar varje svar. Den som svarar rätt på alla får ett intyg i ${KURS} som gäller i ${GILTIG_DAGAR} dagar. Verksamhetschefen ser vilka på vårdenheten som har giltigt intyg, vilka vars intyg går ut inom ${GAR_UT_DAGAR} dagar och vilka som saknar intyg.`,
     `2. Praktiska prov i en övningsjournal. Ett praktiskt prov är en uppgift som görs på riktigt i journalen för en påhittad patient, och systemet kontrollerar själv att det blev rätt. I dag finns ${prov.length} prov: ${prov.map(p => p.titel.toLowerCase()).join(', ').replace(/, ([^,]*)$/, ' och $1')}.`,
-    `3. Instruktionsfilmer. ${alla.length} korta filmer visar de vanligaste arbetsflödena från början till slut, med textade steg på svenska. De ligger i docs/filmer/ och spelas in på nytt efter varje ändring i gränssnittet.`,
+    `3. Instruktionsfilmer. ${alla.length} korta filmer visar de vanligaste arbetsflödena från början till slut, med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet och ligger som bilagor till releasen för versionen på GitHub.`,
     '4. Hjälp i sammanhanget och nyheter. Rutan Hjälp i de vanligaste flödena säger vad användaren gör och vad systemet gör, och länkar till övningarna. Efter en ny version visar systemet nyheterna för rollen, med ändrade arbetssätt först.',
     '5. Lärarledd utbildning. En utbildare leder ett pass för en yrkesroll i demon, som är Vårdkällans utbildningsmiljö. Varje deltagare har en egen sandlåda och kan göra fel utan att något påverkas. Passet följer materialet för rollen: arbetsflödena, filmerna och uppdragen i testinbjudan, och slutar med övningarna och ett praktiskt prov. Den lärarledda utbildningen ordnas av den organisation som inför systemet.',
     '6. Superanvändare. På varje vårdenhet ska det finnas minst en superanvändare, som i Vårdkällan är en utbildare: någon som själv har ett giltigt intyg och som verksamhetschefen har gett ett utbildarintyg. Utbildaren ändrar vårdenhetens egna övningar, startar praktiska prov och följer upp vilka som har klarat dem. Det är ingen egen inloggningsroll, utan en behörighet för den som redan arbetar på vårdenheten.',
