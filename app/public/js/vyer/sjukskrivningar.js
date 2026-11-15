@@ -22,8 +22,8 @@ function rad(s) {
 }
 
 const fordelning = (rubrik, rader) => `<section class="ruta" aria-label="${esc(rubrik)}"><h2>${esc(rubrik)}</h2>
-  <table class="tabell"><thead><tr><th scope="col">Grupp</th><th scope="col" class="tal">Pågående sjukfall</th></tr></thead>
-  <tbody>${rader.length ? rader.map(r => `<tr><th scope="row">${esc(r.namn)}</th><td class="tal">${esc(r.text)}</td></tr>`).join('') : '<tr><td colspan="2">Inga.</td></tr>'}</tbody></table></section>`;
+  <div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Grupp</th><th scope="col" class="tal">Antal</th></tr></thead>
+  <tbody>${rader.length ? rader.map(r => `<tr><th scope="row">${esc(r.namn)}</th><td class="tal">${esc(r.text)}</td></tr>`).join('') : '<tr><td colspan="2">Inga.</td></tr>'}</tbody></table></div></section>`;
 
 async function enhet(main) {
   const d = await api('/api/sjukskrivningar/enhet');

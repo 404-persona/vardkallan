@@ -1993,7 +1993,10 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .sjk-forlang { border-left: 4px solid var(--kalla); }
 .sjk-rad { display: flex; flex-direction: column; gap: 2px; }
 .sjk-markeringar { display: flex; flex-wrap: wrap; gap: 4px; }
-.sjk-fordelningar { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 12px; }
+.sjk-fordelningar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: 12px; }
+.sjk-fordelningar .ruta { min-width: 0; }
+.sjk-fordelningar .tabellrulle { border: 0; }
+.sjk-fordelningar .tabell tbody th { overflow-wrap: break-word; hyphens: auto; }
 .sjk-fordelningar .ruta { margin: 0; }
 .fmb-panel h2 { font-size: var(--f-l); margin: 0 0 6px; }
 .fmb-panel details { margin: 6px 0; }
