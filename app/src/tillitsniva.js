@@ -111,6 +111,9 @@ export function amrText(amr) {
 }
 
 const ANDRA = { passkey: 'passkey', totp: 'kod från appen för engångskoder' };
+// Version 1.5.1: ett vanligt ord i början görs litet mitt i en mening, men inte en förkortning (SITHS) och aldrig namnet
+// på en inloggningstjänst.
+const iMening = (t, namn = false) => (namn || /^.[A-ZÅÄÖ0-9]/.test(t) ? t : t.charAt(0).toLocaleLowerCase('sv') + t.slice(1));
 
 // Inloggningens nivå för en session, ur medarbetaruppdraget som servern har sparat vid inloggningen. andraFaktor sätts
 // när personen har bekräftat inloggningen med en passkey eller en kod. Ger { niva, flerfaktor, metod, text }.
@@ -128,7 +131,7 @@ export function forUppdrag(uppdrag) {
   return {
     niva: t.niva, kand: t.kand, flerfaktor, andraFaktor: andra, metod,
     text: (t.niva ?? 0) >= FLERFAKTOR_NIVA
-      ? `Du loggade in med ${forsta.charAt(0).toLowerCase()}${forsta.slice(1)}, ${nivaText}. Det är redan flerfaktor, så ingen passkey eller kod behövs.`
+      ? `Du loggade in med ${iMening(forsta, uppdrag.extern)}, ${nivaText}. Det är redan flerfaktor, så ingen passkey eller kod behövs.`
       : andra
         ? `Du loggade in med ${nivaText} och bekräftade med en ${ANDRA[andra]}. Tillsammans är det flerfaktor.`
         : `Du loggade in med ${nivaText}. Det är en faktor.`,

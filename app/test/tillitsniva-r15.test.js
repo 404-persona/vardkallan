@@ -453,3 +453,18 @@ describe('E-legitimation i Min journal och acr_values', () => {
     expect(u.searchParams.get('acr_values')).toBe(SAMBI(3));
   });
 });
+
+// Version 1.5.1: texten om inloggningen gjorde första bokstaven liten också i en förkortning ("sITHS-kort") och i namnet
+// på en inloggningstjänst. Bara ett vanligt ord i början görs litet mitt i meningen.
+describe('Tillitsnivå, texten om inloggningen', () => {
+  test('förkortningar och namn på inloggningstjänster behåller sina stora bokstäver mitt i meningen', async () => {
+    const { forUppdrag } = await import('../src/tillitsniva.js');
+    const acr3 = 'http://id.elegnamnden.se/loa/1.0/loa3';
+    const siths = forUppdrag({ tillitsniva: acr3 });
+    expect(siths.text).toContain('Du loggade in med SITHS-kort med PIN-kod (simulerat)');
+    const invanare = forUppdrag({ invanare: true, tillitsniva: acr3 });
+    expect(invanare.text).toContain('Du loggade in med e-legitimation (simulerad)');
+    const extern = forUppdrag({ extern: true, tjanstNamn: 'Ineras IdP för medarbetare', tillitsniva: acr3 });
+    expect(extern.text).toContain('Du loggade in med Ineras IdP för medarbetare');
+  });
+});
