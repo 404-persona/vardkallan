@@ -22,9 +22,9 @@ Varje arbetsflöde har en klickbudget: det största antalet klick, fältbyten oc
 
 ### Skriva och signera en anteckning som läkarstudent
 
-Börjar i: Patientens översikt. Klickbudget: högst 3 steg. I demon gör Leo Andersson flödet.
+Börjar i: Patientens översikt. Klickbudget: högst 2 steg. I demon gör Leo Andersson flödet.
 
-Ett klick för att öppna en ny anteckning, där Mottagningsanteckning är förvald eftersom det är yrkets mall, ett fältbyte till det första sökordet om fokus inte redan står där och ett klick för att signera. Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.
+Ett klick för att öppna en ny anteckning, där Mottagningsanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.
 
 ## Övningar
 

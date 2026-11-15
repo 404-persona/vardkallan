@@ -768,7 +768,7 @@ UPPGIFTER.push({
 STARTPUNKT['Översikten för en patient på ortopeden i Karlskoga'] = { hash: '#/patient/p07', klar: '.tidslinje' };
 STARTPUNKT['Översikten för en patient på medicinkliniken i Lindesberg'] = { hash: '#/patient/p10', klar: '.tidslinje' };
 STARTPUNKT['Översikten för en patient på psykiatrin'] = { hash: '#/patient/p15', klar: '.tidslinje' };
-STARTPUNKT['Översikten för en patient på förlossningen'] = { hash: '#/patient/obs3', klar: '.tidslinje' };
+STARTPUNKT['Översikten för en patient på förlossningen'] = { hash: '#/patient/obs3', klar: '.tidslinje', forbered: 'obstetrik' };
 UPPGIFTER.push(
   { id: 'arbetsterapianteckning', namn: 'Skriva och signera en arbetsterapianteckning', roll: 'at-kkoga', start: 'Översikten för en patient på ortopeden i Karlskoga',
     text: 'Du är arbetsterapeut på ortopeden i Karlskoga. Margareta klarar påklädningen med strumppådragare och går med rollator inomhus. Dokumentera det och signera.', kontroll: { notis: 'Anteckningen är signerad' } },

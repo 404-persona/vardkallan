@@ -1501,7 +1501,11 @@ function skapa(BAS) {
   startI['Översikten för en patient på ortopeden i Karlskoga'] = oversikt('p07');
   startI['Översikten för en patient på medicinkliniken i Lindesberg'] = oversikt('p10');
   startI['Översikten för en patient på psykiatrin'] = oversikt('p15');
-  startI['Översikten för en patient på förlossningen'] = oversikt('obs3');
+  startI['Översikten för en patient på förlossningen'] = async (page) => {
+    await gaTill(page, '#/arbetslista');
+    await page.evaluate(() => fetch('/api/demo/obstetrik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
+    await oversikt('obs3')(page);
+  };
   const yrkesanteckning = (text) => async (m, page) => {
     await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
     await page.waitForSelector('#ant-form #ny-sokord textarea');

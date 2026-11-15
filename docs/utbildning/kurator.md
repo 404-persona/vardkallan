@@ -22,9 +22,9 @@ Varje arbetsflöde har en klickbudget: det största antalet klick, fältbyten oc
 
 ### Skriva och signera en kuratorsanteckning
 
-Börjar i: Översikten för en patient på mottagningen. Klickbudget: högst 3 steg. I demon gör Malin Ekström flödet.
+Börjar i: Översikten för en patient på mottagningen. Klickbudget: högst 2 steg. I demon gör Malin Ekström flödet.
 
-Ett klick för att öppna en ny anteckning, där Kuratorsanteckning är förvald eftersom det är yrkets mall, ett fältbyte till det första sökordet om fokus inte redan står där och ett klick för att signera. Kuratorn ser bara sitt yrkes mallar och behöver inte välja.
+Ett klick för att öppna en ny anteckning, där Kuratorsanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Kuratorn ser bara sitt yrkes mallar och behöver inte välja.
 
 ## Övningar
 

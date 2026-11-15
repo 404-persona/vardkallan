@@ -622,8 +622,8 @@ FLODEN.push(
 // finns i test/flodessteg.cjs (GOR med samma id). Yrkets mall är förvald, eftersom systemet väljer den efter yrket.
 {
   const yrkesanteckning = (id, namn, roll, start, mall, vem) => ({
-    id, namn, roll, start, budget: 3,
-    motivering: `Ett klick för att öppna en ny anteckning, där ${mall} är förvald eftersom det är yrkets mall, ett fältbyte till det första sökordet om fokus inte redan står där och ett klick för att signera. ${vem}`,
+    id, namn, roll, start, budget: 2,
+    motivering: `Ett klick för att öppna en ny anteckning, där ${mall} är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. ${vem}`,
   });
   FLODEN.push(
     yrkesanteckning('arbetsterapianteckning', 'Skriva och signera en arbetsterapianteckning', 'at-kkoga', 'Översikten för en patient på ortopeden i Karlskoga', 'Arbetsterapianteckning', 'Arbetsterapeuten ser bara sitt yrkes mallar och behöver inte välja.'),
