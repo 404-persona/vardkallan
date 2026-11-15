@@ -6,7 +6,7 @@
 import { esc, api, notis, felNotis, medKnapp, tidpunkt } from '../ui.js';
 
 const STATUSKLASS = { utkast: 'tagg-obs', klart_for_signering: 'tagg-obs', signerat: '', skickat: '', makulerat: 'tagg-varning', raderat: '', fel: 'tagg-varning' };
-const SANDNING = { utskrift: 'Skrivs ut och lämnas av patienten.', vid_signering: 'Skickas när det signeras.', samrad: 'Skickas i samråd med patienten.' };
+const SANDNING = { utskrift: 'Skrivs ut och lämnas av patienten.', vid_signering: 'Skickas när det signeras.', samrad: 'Skickas i samråd med patienten.', post: 'Skrivs ut och skickas med post.' };
 
 export async function visa(el, ctx) {
   const pid = encodeURIComponent(ctx.id);

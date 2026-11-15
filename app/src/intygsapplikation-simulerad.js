@@ -7,7 +7,8 @@
 // signerar, och barnmorskan och sjuksköterskan signerar de intyg som de får utfärda (intyg om graviditet och intyg om
 // tillfällig föräldrapenning). Vårdadministratören skapar och fyller i utkast och markerar dem klara för signering, men
 // signerar aldrig. Intyg till arbetsgivaren skrivs bara ut, och patienten kan välja att dölja diagnosen. Dödsbevis,
-// dödsorsaksintyg och anmälan till Transportstyrelsen skickas när de signeras, övriga i samråd med patienten. Ett utkast
+// dödsorsaksintyg skickas när de signeras, läkarens anmälan till Transportstyrelsen skrivs ut och skickas med post, och
+// övriga skickas i samråd med patienten. Ett utkast
 // av en version eller blankett som inte längre gäller kan inte signeras; systemet byter det mot den som gäller och tar med
 // de svar som får följa med. Ett signerat intyg förnyas med den version som gäller nu.
 //
@@ -266,6 +267,7 @@ const SANDNING = {
   samrad: 'Skickas till mottagaren i samråd med patienten. Patienten kan också skicka intyget själv.',
   utskrift: 'Kan inte skickas digitalt. Intyget skrivs ut och patienten lämnar det till arbetsgivaren. Patienten kan välja att dölja diagnosen på utskriften.',
   vid_signering: 'Skickas till mottagaren när intyget signeras.',
+  post: 'Skrivs ut när det är signerat och skickas med post till mottagaren. Det är inget intyg i Webcert.',
 };
 const efterfoljare = (t, nu = new Date()) => {
   if (IT.galler(t, nu)) return null;
@@ -488,7 +490,7 @@ export async function atgard(db, personal, intygsId, atgardNamn, val = {}, body 
     if (f.length) throw new Fel(400, IT.saknasText(f), 'ogiltig', { saknas: f.map(x => x.fraga), falt: f.map(x => `q-${x.fraga}`) });
     db.query("UPDATE sim_intygsapplikation SET status = 'signerat', signerad = ?, signerad_av = ? WHERE intygs_id = ?").run(tid, personal.hsa_id, r.intygs_id);
     await handelse(db, r.intygs_id, 'SIGNAT');
-    // Dödsbevis, dödsorsaksintyg och anmälan till Transportstyrelsen skickas när de signeras (simulerat).
+    // Dödsbevis och dödsorsaksintyg skickas när de signeras (simulerat).
     if (t.sandning === 'vid_signering') {
       db.query("UPDATE sim_intygsapplikation SET status = 'skickat', skickad = ? WHERE intygs_id = ?").run(iso(), r.intygs_id);
       await handelse(db, r.intygs_id, 'SKICKA');
@@ -500,6 +502,7 @@ export async function atgard(db, personal, intygsId, atgardNamn, val = {}, body 
     await handelse(db, r.intygs_id, 'KFSIGN');
   } else if (atgardNamn === 'skicka') {
     if (t.sandning === 'utskrift') throw new Fel(409, 'Intyget kan inte skickas digitalt. Skriv ut det, så lämnar patienten det till arbetsgivaren.', 'konflikt');
+    if (t.sandning === 'post') throw new Fel(409, 'Anmälan skickas inte digitalt. Skriv ut den och skicka den med post till Transportstyrelsen.', 'konflikt');
     if (t.sandning === 'vid_signering') throw new Fel(409, 'Intyget skickades när det signerades.', 'konflikt');
     if (r.status !== 'signerat') throw new Fel(409, 'Bara ett signerat intyg som inte är skickat kan skickas.', 'konflikt');
     if (body?.samrad !== true) throw new Fel(400, 'Intyget skickas i samråd med patienten. Bekräfta att patienten vill att intyget skickas.', 'ogiltig', { falt: ['samrad'] });

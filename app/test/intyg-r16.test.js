@@ -240,6 +240,13 @@ describe('Intygen i Webcert, runda 16', () => {
     await app.spara(db, lak, iid(l), { svar: SJUKPENNING });
     await app.atgard(db, lak, iid(l), 'signera');
     expect((await fel(() => app.atgard(db, lak, iid(l), 'skicka'))).message).toContain('samråd');
+    // Läkarens anmälan till Transportstyrelsen är inget intyg i Webcert: den skrivs ut och skickas med post.
+    const a1009 = await skapa(db, 'lak-vc', 'p11', 'TSTRK1009');
+    await app.spara(db, lak, iid(a1009), { svar: { '2': 'IDK4', '46': 'OLAMPLIGHET', '1': ['B'], '47': 'Demens med nedsatt omdöme.', '48': DAG } });
+    await app.atgard(db, lak, iid(a1009), 'signera');
+    expect((await fel(() => app.atgard(db, lak, iid(a1009), 'skicka', {}, { samrad: true }))).message).toContain('med post');
+    expect(db.query('SELECT status FROM lakarintyg WHERE intygs_id = ?').get(iid(a1009)).status).toBe('signerat');
+    expect(app.utskrift(db, lak, iid(a1009)).rader.length).toBeGreaterThan(3);
   });
 
   test(`${T}systemet föreslår intyget för barnets sjukdom efter ålder och allvar, och körkortsintyget när besöket gäller körkortet`, async () => {

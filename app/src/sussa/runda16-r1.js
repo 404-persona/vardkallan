@@ -24,7 +24,7 @@ export const T16R1 = {
 const T = T16R1;
 const INTE_ANSLUTET = 'inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat)';
 const SIMULERAT = 'Intygsapplikationen är simulerad och är inte Webcert, och inget intyg skickas till Försäkringskassan, Transportstyrelsen, Skatteverket, Socialstyrelsen eller någon arbetsgivare.';
-const INTYGEN = 'Intygen är de som finns i Webcert i dag enligt Ineras sidor (hämtade 2026-11-15): läkarintyg för sjukpenning (FK 7804) i version 1 och 2, AG7804 i version 1 och 2, AG1-14, läkarutlåtanden för sjukersättning och aktivitetsersättning (FK 7800, 7801 och 7802), merkostnadsersättning (FK 7809), omvårdnadsbidrag eller merkostnadsersättning (FK 3221), assistansersättning (FK 7810), närståendepenning (FK 3226), intyg om graviditet (FK 7210), intyg om tillfällig föräldrapenning (FK 7472), läkarutlåtanden för tillfällig föräldrapenning (FK 7426 och 7427), TS8071, TSTRK1031, läkares anmälan till Transportstyrelsen (TSTRK1009), dödsbevis och dödsorsaksintyg. TSTRK1007 kan läsas men inte skapas. Koderna är Intygstjänstens koder i kodverket för intygstyper ur Ineras öppna källkod.';
+const INTYGEN = 'Intygen är de som finns i Webcert i dag enligt Ineras sidor (hämtade 2026-11-15): läkarintyg för sjukpenning (FK 7804) i version 1 och 2, AG7804 i version 1 och 2, AG1-14, läkarutlåtanden för sjukersättning och aktivitetsersättning (FK 7800, 7801 och 7802), merkostnadsersättning (FK 7809), omvårdnadsbidrag eller merkostnadsersättning (FK 3221), assistansersättning (FK 7810), närståendepenning (FK 3226), intyg om graviditet (FK 7210), intyg om tillfällig föräldrapenning (FK 7472), läkarutlåtanden för tillfällig föräldrapenning (FK 7426 och 7427), TS8071, TSTRK1031, dödsbevis och dödsorsaksintyg. TSTRK1007 kan läsas men inte skapas. Läkarens anmälan till Transportstyrelsen (TSTRK1009) är inget intyg i Webcert utan skrivs ut och skickas med post; demon har den i intygsapplikationen. Att LUAE_FS och TSTRK1031 fortfarande finns i Webcert är inte bekräftat på Ineras sidor. Koderna är Intygstjänstens koder i kodverket för intygstyper ur Ineras öppna källkod.';
 
 const POSTER = {
   '2.2.1.9': {
@@ -35,13 +35,13 @@ const POSTER = {
   },
   '3.1.4.1': {
     tester: [T.sandning, T.graviditet, T.ersatt, T.arbetsgivare],
-    losning: 'Intygen till myndigheter och andra mottagare skrivs genom den integrerade intygsapplikationen: dödsbevis till Skatteverket och dödsorsaksintyg till Socialstyrelsen skickas när de signeras, intyg till Försäkringskassan och Transportstyrelsen skickas i samråd med patienten, och läkarens anmälan till Transportstyrelsen skickas när den signeras. Intyg till arbetsgivaren skrivs bara ut.',
+    losning: 'Intygen till myndigheter och andra mottagare skrivs genom den integrerade intygsapplikationen: dödsbevis till Skatteverket och dödsorsaksintyg till Socialstyrelsen skickas när de signeras, intyg till Försäkringskassan och Transportstyrelsen skickas i samråd med patienten, och läkarens anmälan till Transportstyrelsen skrivs ut och skickas med post. Intyg till arbetsgivaren skrivs bara ut.',
     expert: 'Systemet vet vem mottagaren är och hur intyget ska nå den, och visar bara de val som gäller för intyget.',
     anmarkning: `${SIMULERAT} Sändningen till mottagaren är simulerad, och kontrakten för att skicka (SendCertificateToRecipient med flera) ligger i intygsapplikationen och är inte byggda i journalen.`,
   },
   '3.1.4.2': {
     tester: [T.sandning, T.graviditet, T.ersatt, T.giltighet, T.arbetsgivare, T.forslag, flode('byt-ersatt-intyg')],
-    losning: 'Omfattningen är alla intyg i Webcert i dag, med blankettens frågor och svarsalternativ, giltighet i tid och överföring mellan versioner. Dödsbevis, dödsorsaksintyg, körkortsintygen (TS8071 och TSTRK1031) och anmälan till Transportstyrelsen finns med, liksom Försäkringskassans intyg och utlåtanden och arbetsgivarnas intyg.',
+    losning: 'Omfattningen är alla intyg i Webcert i dag, med blankettens frågor och svarsalternativ, giltighet i tid och överföring mellan versioner. Dödsbevis, dödsorsaksintyg, körkortsintygen (TS8071 och TSTRK1031) och läkarens anmälan till Transportstyrelsen finns med, liksom Försäkringskassans intyg och utlåtanden och arbetsgivarnas intyg.',
     expert: 'Systemet väljer själv rätt blankett och version, säger när ett intyg har ersatts och byter det med ett klick, och fyller i det journalen vet med källa. Den som skriver behöver aldrig veta vilken blankett som gäller.',
     anmarkning: `${SIMULERAT} ${INTYGEN} Elektroniskt utbyte med myndigheter utanför intygen (till exempel smittskyddsanmälan och patientregistret) ingår inte här.`,
   },

@@ -437,7 +437,8 @@ const DOI = [
 ];
 
 // sandning: samrad (skickas i samråd med patienten, som också kan skicka det själv), utskrift (kan bara skrivas ut och
-// lämnas av patienten, och patienten kan välja att dölja diagnosen) eller vid_signering (skickas av sig självt när
+// lämnas av patienten, och patienten kan välja att dölja diagnosen), post (skrivs ut och skickas med post till mottagaren)
+// eller vid_signering (skickas av sig självt när
 // intyget signeras). utfardare: handlingar som får signera. utkast: handlingar som får skapa och fylla i men inte signera.
 // alder: [lägst, högst] år, eventuellt med en regel från en viss tid (alderFran). sekretess: får skrivas för en patient
 // med skyddade personuppgifter (då bara av den som får signera). kraver: graviditet (en pågående graviditet i
@@ -465,7 +466,7 @@ export const INTYGSTYPER = [
   rad({ kod: 'TSTRK1007', blankett: 'TSTRK 1007', version: '1.0', text: 'Läkarintyg för högre körkortsbehörigheter', mottagare: 'Transportstyrelsen', part: 'TRANSP', sekretess: false, alder: [16, 130], giltig: { till: T.tstrk1007Slut }, ersattsAv: { kod: 'TS8071', version: '1.0' }, fragor: TSTRK1007, anmarkning: 'Ersatt av TS8071. Ett skrivet intyg kan läsas men inget nytt kan skapas.' }),
   rad({ kod: 'TS8071', blankett: 'TS 8071', version: '1.0', text: 'Läkarintyg för högre körkortsbehörigheter, taxiförarlegitimation och på begäran av Transportstyrelsen', mottagare: 'Transportstyrelsen', part: 'TRANSP', sekretess: false, alder: [16, 130], giltig: { fran: T.ts8071Start }, fragor: TS8071, anmarkning: 'Synskärpan är en fråga med fritext i demon. Följdfrågorna i varje område är sammanförda i beskrivningen.' }),
   rad({ kod: 'TSTRK1031', blankett: 'TSTRK 1031', version: '1.0', text: 'Läkarintyg diabetes, lämplighet att inneha körkort', mottagare: 'Transportstyrelsen', part: 'TRANSP', sekretess: false, alder: [16, 130], fragor: TSTRK1031, anmarkning: 'Frågetexterna är förenklade ur Intygstjänstens version 4 av intyget.' }),
-  rad({ kod: 'TSTRK1009', blankett: 'TSTRK 1009', version: '1.0', text: 'Läkares anmälan till Transportstyrelsen om olämplighet att ha körkort', mottagare: 'Transportstyrelsen', part: 'TRANSP', sekretess: false, alder: [16, 130], sandning: 'vid_signering', fragor: TSTRK1009, anmarkning: 'Läkaren är skyldig att anmäla och ska informera patienten om anmälan. Anmälan skickas när den signeras.' }),
+  rad({ kod: 'TSTRK1009', blankett: 'TSTRK 1009', version: '1.0', text: 'Läkares anmälan till Transportstyrelsen om olämplighet att ha körkort', mottagare: 'Transportstyrelsen, med post', part: 'TRANSP', sekretess: false, alder: [16, 130], sandning: 'post', fragor: TSTRK1009, anmarkning: 'Läkaren är skyldig att anmäla och ska informera patienten om anmälan. Anmälan är inget intyg i Webcert: den signeras, skrivs ut och skickas med post (en regions rutin 2026). Demon har den i intygsapplikationen för att systemet ska kunna fylla i den.' }),
   rad({ kod: 'DB', blankett: 'Dödsbevis', version: '1.0', text: 'Dödsbevis', mottagare: 'Skatteverket', part: 'SKV', avliden: true, sandning: 'vid_signering', fragor: DB }),
   rad({ kod: 'DOI', blankett: 'Dödsorsaksintyg', version: '1.0', text: 'Dödsorsaksintyg', mottagare: 'Socialstyrelsen', part: 'SOS', avliden: true, sandning: 'vid_signering', fragor: DOI }),
 ];
