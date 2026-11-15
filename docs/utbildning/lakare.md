@@ -557,6 +557,8 @@ Rätt svar: Klickar på Skriv TS 8071 i stället vid det gamla intyget. Systemet
 
 TSTRK1007 kan inte utfärdas sedan den 31 januari 2025. Systemet visar bara de intyg som gäller nu, säger vad som ersatte det gamla och byter med ett klick.
 
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
+
 ### Övning 13
 
 Du förnyar ett läkarintyg för sjukpenning som skrevs i version 1 av blanketten. Vad följer med till det nya utkastet?
@@ -564,6 +566,8 @@ Du förnyar ett läkarintyg för sjukpenning som skrevs i version 1 av blankette
 Rätt svar: Svaren på frågor som inte har ändrats i version 2. Grad och period, underlag och prognos tar du ställning till på nytt.
 
 Bara svar på oförändrade frågor följer med, som Inera beskriver för FK 7804 och AG7804. Det du ska bedöma på nytt följer aldrig med, och systemet säger hur många frågor det gäller.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
 
 ### Övning 14
 

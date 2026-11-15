@@ -146,13 +146,99 @@ describe('Intygen i Webcert, runda 16', () => {
     expect(app.visa(db, ap, id).kan).toMatchObject({ andra: true, klar: true, signera: false });
     await app.atgard(db, ap, id, 'klar');
     expect(db.query('SELECT status FROM lakarintyg WHERE intygs_id = ?').get(id).status).toBe('klart_for_signering');
-    // Läkaren öppnar utkastet från journalen, och systemet fyller i diagnosen ur det läkaren får se.
+    // Läkaren öppnar utkastet från journalen. Inget sparas för att det öppnas; diagnosen står som förslag med källa.
     const lak = atk(db, 'lak-kard', 'p01', {}, 'las_intyg');
     await intyg.oppna(lak, r.intyg.id);
+    expect(JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(id).svar)['58']).toBeUndefined();
+    const vy = app.visa(db, personal(db, 'lak-kard'), id);
+    expect(vy.forslag.svar['58'][0].kod).toBe('I489');
+    expect(vy.forslag.kallor['58']).toContain('I48.9');
+    expect(vy.kan.signera).toBe(true);
+    // Läkaren sparar förslaget, som då får sin källa.
+    await app.spara(db, personal(db, 'lak-kard'), id, { svar: { '58': vy.forslag.svar['58'] } });
     const svar = JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(id).svar);
     expect(svar['58'][0].kod).toBe('I489');
     expect(svar['52']).toBe('ENDAST_PALLIATIV');
-    expect(app.visa(db, personal(db, 'lak-kard'), id).kan.signera).toBe(true);
+    expect(app.visa(db, personal(db, 'lak-kard'), id).kallor['58']).toContain('I48.9');
+  });
+
+  test(`${T}vårdadministratören ser aldrig diagnoser, läkemedel eller journaltext i ett utkast, inte heller efter att läkaren har öppnat och sparat det`, async () => {
+    const db = nyDb();
+    diagnos(db, 'p01', 'uso-kard-72', 'I48.9', 'Förmaksflimmer och förmaksfladder, ospecificerat');
+    db.query("INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av) VALUES ('p01', 'uso-kard-72', 'Daganteckning', 'lakare', ?, 'lak-kard', ?, 'signerad', ?, 'lak-kard')")
+      .run(JSON.stringify({ Status: 'Ödem i båda underbenen till knäna.' }), iso(), iso());
+    const lmNamn = db.query("SELECT k.namn FROM ordinationer o JOIN katalog k ON k.id = o.lakemedel_id WHERE o.patient_id = 'p01' AND o.status = 'aktiv' AND o.enhet_id LIKE 'uso-kard%'").all().map(x => x.namn);
+    const ap = personal(db, 'adm-kard');
+    const lp = personal(db, 'lak-kard');
+    const adm = atk(db, 'adm-kard', 'p01', {}, 'utkast_intyg');
+    const luas = iid(await intyg.skapa(adm, pat(db, 'p01'), { typ: 'LUAS' }));
+    const ts = iid(await intyg.skapa(atk(db, 'adm-kard', 'p01', {}, 'utkast_intyg'), pat(db, 'p01'), { typ: 'TS8071' }));
+    await app.spara(db, ap, luas, { svar: { '3': false } });
+    // Läkaren öppnar båda och sparar alla förslag.
+    for (const id of [luas, ts]) {
+      await intyg.oppna(atk(db, 'lak-kard', 'p01', {}, 'las_intyg'), db.query('SELECT id FROM lakarintyg WHERE intygs_id = ?').get(id).id);
+      const f = app.visa(db, lp, id).forslag;
+      await app.spara(db, lp, id, { svar: f.svar });
+      // Det läkaren skrev finns kvar i utkastet.
+      expect(Object.keys(JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(id).svar)).length).toBeGreaterThan(1);
+    }
+    expect(JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(luas).svar)['8']).toContain('Ödem');
+    const hemligt = ['I48', 'I489', 'Förmaksflimmer', 'Ödem i båda underbenen', ...lmNamn];
+    for (const [id, tomma] of [[luas, { '58': null, '8': null }], [ts, { '21.2': null, '11': null }]]) {
+      const text = JSON.stringify(app.visa(db, ap, id));
+      for (const h of hemligt) expect(text).not.toContain(h);
+      // Vårdadministratörens eget svar syns, och det som är dolt kan personen inte ändra.
+      await app.spara(db, ap, id, { svar: tomma });
+    }
+    expect(app.visa(db, ap, luas).svar['3']).toBe(false);
+    expect(JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(luas).svar)['58'][0].kod).toBe('I489');
+    expect((await fel(() => app.utskrift(db, ap, luas))).status).toBe(403);
+    // Ett utkast som någon annan har skapat når vårdadministratören inte alls.
+    const annat = iid(await skapa(db, 'lak-kard', 'p01', 'LUNSP'));
+    const a = await fel(() => app.visa(db, ap, annat));
+    expect(a.status).toBe(404);
+    expect(intyg.forPatient(adm, pat(db, 'p01')).intyg.find(i => i.id === db.query('SELECT id FROM lakarintyg WHERE intygs_id = ?').get(annat).id).kanOppnas).toBe(false);
+  });
+
+  test(`${T}ett nytt utkast ur ett intyg prövas med samma regler som när ett utkast skapas`, async () => {
+    const db = nyDb();
+    // Ett signerat intyg läggs in direkt i journalen och intygsapplikationen, som om det hade skrivits tidigare.
+    const signerat = (pid, enhet, lakId, typ, version, svar = {}) => {
+      const id = crypto.randomUUID();
+      const p = pat(db, pid);
+      const l = personal(db, lakId);
+      db.query("INSERT INTO sim_intygsapplikation (intygs_id, patient_id, enhet_id, typ, version, personnummer, personal_hsa, personal_namn, status, skapad, signerad, svar, kallor, handelser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'signerat', ?, ?, ?, '{}', '[]')")
+        .run(id, pid, enhet, typ, version, p.personnummer, l.hsa_id, l.namn, '2024-11-20T10:00:00.000Z', '2024-11-20T10:30:00.000Z', JSON.stringify(svar));
+      const jid = Number(db.query("INSERT INTO lakarintyg (patient_id, enhet_id, typ, version, intygs_id, ref, skapad_av, skapad_tid, status, signerad_tid, andrad_tid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'signerat', ?, ?)")
+        .run(pid, enhet, typ, version, id, `VK-INTYG-TEST-${id}`, lakId, '2024-11-20T10:00:00.000Z', '2024-11-20T10:30:00.000Z', '2024-11-20T10:30:00.000Z').lastInsertRowid);
+      return { id, jid };
+    };
+    const antal = () => db.query('SELECT count(*) AS n FROM lakarintyg').get().n;
+    // Skyddade personuppgifter: TS8071, som ersatte TSTRK1007, kan inte skrivas för patienten.
+    const s = signerat('p03', 'vc-tybble', 'lak-vc', 'TSTRK1007', '1.0', { '2': 'IDK3' });
+    const fore = antal();
+    const f1 = await fel(() => app.atgard(db, personal(db, 'lak-vc'), s.id, 'fornya'));
+    expect(f1.status).toBe(400);
+    expect(f1.message).toContain('skyddade personuppgifter');
+    // Ålder: läkarintyget för sjukpenning gäller till 69 år.
+    const g = signerat('p01', 'uso-kard', 'lak-kard', 'LISJP', '2.0', { '6': [{ kod: 'I489', text: 'Förmaksflimmer' }] });
+    const f2 = await fel(() => app.atgard(db, personal(db, 'lak-kard'), g.id, 'fornya'));
+    expect(f2.status).toBe(400);
+    expect(f2.message).toContain('mellan 16 och 69 år');
+    expect((await fel(() => app.atgard(db, personal(db, 'lak-kard'), g.id, 'arbetsgivare'))).message).toContain('mellan 16 och 69 år');
+    // Avliden: ett läkarintyg för sjukpenning förnyas inte för en avliden patient.
+    const d = signerat('p11', 'vc-tybble', 'lak-vc', 'LISJP', '2.0');
+    db.query("INSERT INTO avlidna (patient_id, datum, registrerad, registrerad_av) VALUES ('p11', ?, ?, 'lak-vc')").run(DAG, iso());
+    const f3 = await fel(() => app.atgard(db, personal(db, 'lak-vc'), d.id, 'fornya'));
+    expect(f3.message).toContain('avliden');
+    expect(antal()).toBe(fore + 2);
+    // Skyddade personuppgifter och den som inte signerar: vårdadministratören når inte intyget alls.
+    expect((await fel(() => app.atgard(db, personal(db, 'adm-kard'), s.id, 'fornya'))).status).toBe(404);
+    // Graviditeten och åldern prövas av samma funktion som listan och utkastet.
+    const t = IT.aktuell('IGRAV');
+    expect(intyg.provaRegler(db, pat(db, 'p11'), t, personal(db, 'lak-vc'))).toContain('avliden');
+    expect(intyg.provaRegler(db, pat(db, 'p14'), t, personal(db, 'lak-vc'))).toContain('graviditet');
+    expect(intyg.provaRegler(db, pat(db, 'p14'), t, personal(db, 'adm-kard'))).toContain('ser graviditetsjournalen');
   });
 
   test(`${T}för en patient med skyddade personuppgifter skapar bara den som signerar intyget, och vårdadministratören når inte utkastet`, async () => {
@@ -302,10 +388,45 @@ describe('Intygen i Webcert, runda 16', () => {
     // En diagnos på en annan vårdenhet utan spärr säger inte att det finns dolda intyg.
     diagnos(utan, 'p11', 'uso-med', 'I48.9', 'Förmaksflimmer');
     expect(intyg.forPatient(atk(utan, 'lak-vc', 'p11', {}, 'las_intyg'), pat(utan, 'p11')).dolda).toBeNull();
-    // Med patientens samtycke till den spärrade vårdenheten föreslår systemet ja med diagnosen och källan.
-    const s = intyg.forifyllnad(atk(med, 'lak-vc', 'p11', { andra_enheter: true, samtycke_sparr: true }, 'skriv_intyg'), ts, pat(med, 'p11'));
+    // Med patientens samtycke till den spärrade vårdenheten sparas diagnosen ändå aldrig i utkastet, men den kan visas
+    // som förslag med källa och källans vårdenhet.
+    const val = { andra_enheter: true, samtycke_sparr: true };
+    expect(intyg.forifyllnad(atk(med, 'lak-vc', 'p11', val, 'skriv_intyg'), ts, pat(med, 'p11')).svar['14']).toBeUndefined();
+    const s = intyg.forifyllnad(atk(med, 'lak-vc', 'p11', val, 'skriv_intyg'), ts, pat(med, 'p11'), new Date(), { endastEgen: false });
     expect(s.svar['14']).toBe(true);
     expect(s.svar['14.2']).toContain('G40.9');
+    expect(s.meta['14'].enheter).toEqual(['uso-kard']);
+  });
+
+  test(`${T}en diagnos som läkaren ser genom aktivt val eller samtycke hamnar aldrig i det sparade utkastet, och en annan läsare ser den inte`, async () => {
+    const db = nyDb();
+    diagnos(db, 'p11', 'uso-med', 'G40.9', 'Epilepsi, ospecificerad');
+    db.query("INSERT INTO sparrar (patient_id, enhet_id, registrerad, aktiv) VALUES ('p11', 'uso-kard', ?, 1)").run(iso());
+    diagnos(db, 'p11', 'uso-kard', 'G47.3', 'Sömnapné');
+    const val = { andra_enheter: true, samtycke_sparr: true };
+    const lak = personal(db, 'lak-vc');
+    const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', val, 'skriv_intyg'), pat(db, 'p11'), { typ: 'TS8071' });
+    const sparat = () => db.query('SELECT svar, kallor FROM sim_intygsapplikation WHERE intygs_id = ?').get(iid(r));
+    for (const h of ['G40', 'G47', 'Epilepsi, ospecificerad', 'Sömnapné', 'uso-med', 'uso-kard']) expect(JSON.stringify(sparat())).not.toContain(h);
+    // Läkaren ser förslagen med sitt aktiva val och samtycket, och sparar dem själv. De sparas med källornas vårdenheter.
+    const f = app.visa(db, lak, iid(r), val).forslag;
+    expect(f.svar['14']).toBe(true);
+    expect(f.svar['17']).toBe(true);
+    await app.spara(db, lak, iid(r), { svar: { '14': true, '14.2': f.svar['14.2'], '17': true, '17.2': f.svar['17.2'] } }, val);
+    expect(JSON.parse(sparat().kallor)._meta['14'].enheter).toEqual(['uso-med']);
+    expect(app.visa(db, lak, iid(r), val).svar['14.2']).toContain('G40.9');
+    // En annan läsare utan aktivt val och samtycke, och läkaren själv utan dem, ser varken svaren eller källorna.
+    for (const [p, v] of [[personal(db, 'ssk-vc'), {}], [lak, {}]]) {
+      const text = JSON.stringify(app.visa(db, p, iid(r), v));
+      for (const h of ['G40', 'G47', 'Epilepsi, ospecificerad', 'Sömnapné', 'uso-med', 'uso-kard']) expect(text).not.toContain(h);
+      // Svaret är detsamma som om frågorna inte hade besvarats: inget säger att det finns något dolt.
+      expect(JSON.parse(text).dolda).toEqual([]);
+      expect(JSON.parse(text).saknas.map(x => x.fraga)).toEqual(expect.arrayContaining(['14', '17']));
+    }
+    // Med aktivt val men utan samtycke syns diagnosen från den andra vårdenheten, men inte den spärrade.
+    const ssk = JSON.stringify(app.visa(db, personal(db, 'ssk-vc'), iid(r), { andra_enheter: true }));
+    expect(ssk).toContain('G40.9');
+    expect(ssk).not.toContain('G47');
   });
 
   test(`${T}åldersgränsen för FK 7809 gäller från 16 november 2026 kl. 00.01 och hänvisar till FK 3221 för barn`, () => {

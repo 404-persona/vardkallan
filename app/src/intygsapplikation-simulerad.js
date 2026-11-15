@@ -19,12 +19,11 @@
 import { randomUUID } from 'node:crypto';
 import { el } from './rivta/xml.js';
 import { Fel, iso, datumAv } from './db.js';
-import { vardenhetFor, prova, visningsnamn, visningsPnr, kanRoll } from './atkomst.js';
+import { vardenhetFor, prova, visningsnamn, visningsPnr, kanRoll, Atkomst } from './atkomst.js';
 import { loggaRad } from './logg.js';
-import { avlidenFor } from './avliden.js';
 import * as r3 from './rivta-r3.js';
 import * as IT from './intygstyper.js';
-import { KV, NS, LOGISK_ADRESS_INTYGSAPPLIKATION, DEF, personId, sattTransport, sattFyllUtkast, sattFornya, behorighet, delsvarId } from './lakarintyg.js';
+import { KV, NS, LOGISK_ADRESS_INTYGSAPPLIKATION, DEF, personId, sattTransport, sattFornya, behorighet, delsvarId, provaRegler, forslagForUtkast, synligForLasare } from './lakarintyg.js';
 
 export const NAMN = 'Intygsapplikation (simulerad, inte Webcert)';
 // Påhittade värden som kontraktet kräver men som demon inte har. Märkta som demo.
@@ -78,11 +77,17 @@ const typAv = (r) => IT.typFor(r.typ, r.version);
 
 // Förifyllnaden ur CreateDraftCertificate: diagnoser som cv, övriga svar som demons element. Varje svar prövas mot
 // frågan som om det kom från ett formulär, och ett svar som inte passar tas inte med.
+// Källornas vårdenheter och läsrätt för ett förifyllt svar, så att varje läsare prövas mot dem (synligForLasare).
+const rensaMeta = (m) => ({
+  enheter: Array.isArray(m?.enheter) ? m.enheter.filter(x => typeof x === 'string').slice(0, 20) : [],
+  krav: Array.isArray(m?.krav) ? m.krav.filter(x => typeof x === 'string').slice(0, 5) : [],
+});
 function lasForifyllnad(t, f) {
   const svar = {};
   const kallor = {};
   const fragor = new Map(IT.fragorFor(t).map(q => [q.id, q]));
   const diagnoser = new Map();
+  const meta = {};
   for (const sv of f?.svar ?? []) {
     for (const ds of sv.delsvar ?? []) {
       const id = ds['@id'] ?? '';
@@ -96,21 +101,26 @@ function lasForifyllnad(t, f) {
           const v = (n) => cv.barn.find(x => x.lokal === n)?.text ?? null;
           diagnoser.set(q.id, [...(diagnoser.get(q.id) ?? []), { kod: v('code')?.slice(0, 10) ?? '', text: v('displayName')?.slice(0, 200) ?? '' }]);
           const k = (ds.$any ?? []).find(x => x.lokal === 'kalla' && x.ns === NS.demo)?.text;
-          if (typeof k === 'string' && k) kallor[q.id] = k.slice(0, 300);
+          if (typeof k === 'string' && k && k.length < 5000) {
+            const o = JSON.parse(k);
+            if (typeof o.kalla === 'string') kallor[q.id] = o.kalla.slice(0, 300);
+            if (o.meta) meta[q.id] = rensaMeta(o.meta);
+          }
         } else {
           const e = (ds.$any ?? []).find(x => x.lokal === 'varde' && x.ns === NS.demo);
           if (!e || String(e.text ?? '').length > 20_000) continue;
-          const { v, kalla } = JSON.parse(e.text);
+          const { v, kalla, meta: m } = JSON.parse(e.text);
           const n = IT.normaliseraSvar(q, v);
-          if (n != null) { svar[q.id] = n; if (typeof kalla === 'string') kallor[q.id] = kalla.slice(0, 300); }
+          if (n != null) { svar[q.id] = n; if (typeof kalla === 'string') kallor[q.id] = kalla.slice(0, 300); if (m) meta[q.id] = rensaMeta(m); }
         }
       } catch { /* ett svar som inte passar frågan tas inte med */ }
     }
   }
   // Underlaget bredvid frågorna, som journalen skickar efter svaren.
   const u = (f?.$any ?? []).find(x => x.lokal === 'underlag' && x.ns === NS.demo);
-  if (u && String(u.text ?? '').length < 5000) { try { const l = JSON.parse(u.text); if (Array.isArray(l)) kallor._underlag = l.slice(0, 5).map(x => String(x).slice(0, 300)); } catch { /* tas inte med */ } }
+  if (u && String(u.text ?? '').length < 5000) { try { const l = JSON.parse(u.text); if (Array.isArray(l)) kallor._underlag = l.slice(0, 5).map(x => ({ text: String(x?.text ?? '').slice(0, 300), ...rensaMeta(x) })); } catch { /* tas inte med */ } }
   for (const [id, d] of diagnoser) { try { const n = IT.normaliseraSvar(fragor.get(id), d.slice(0, 3)); if (n) svar[id] = n; } catch { /* tas inte med */ } }
+  kallor._meta = Object.fromEntries(Object.entries(meta).filter(([id]) => Object.hasOwn(svar, id)));
   return { svar, kallor };
 }
 
@@ -134,15 +144,12 @@ function skapaUtkast(ctx, { begaran: m }) {
   // Personen ska ha ett uppdrag på vårdenheten, som medarbetaruppdraget i en intygsapplikation, och få skapa intygstypen.
   const pers = db.query('SELECT * FROM personal WHERE hsa_id = ? AND aktiv = 1').get(personalHsa);
   if (!pers || vardenhetFor(db, pers.enhet_id) !== enhet.id) return svaraSkapa('ERROR', 'Personen har inget uppdrag på vårdenheten.', 'VALIDATION_ERROR');
-  const b = behorighet(pers, t);
-  if (!b.signera && !b.utkast) return svaraSkapa('ERROR', 'Personen får inte skapa intygstypen.', 'APPLICATION_ERROR');
   // Personuppgifterna, som en intygsapplikation hämtar dem ur PU-tjänsten.
   const p = db.query('SELECT * FROM patienter WHERE personnummer = ?').get(pnr);
   if (!p) return svaraSkapa('ERROR', 'Personuppgiftstjänsten känner inte till personen.', 'APPLICATION_ERROR');
-  if (p.skyddad && !t.sekretess) return svaraSkapa('ERROR', 'Intygstypen kan inte skrivas för en patient med skyddade personuppgifter.', 'APPLICATION_ERROR');
-  if (p.skyddad && !b.signera) return svaraSkapa('ERROR', 'För en patient med skyddade personuppgifter skapas intyget av den som signerar det.', 'APPLICATION_ERROR');
-  const avliden = Boolean(avlidenFor(db, p.id));
-  if (avliden !== t.avliden) return svaraSkapa('ERROR', avliden ? 'Patienten är avliden. Bara dödsbevis och dödsorsaksintyg kan skrivas.' : 'Intygstypen gäller bara en avliden patient.', 'APPLICATION_ERROR');
+  // Samma regler som journalen och de nya utkasten ur ett intyg (provaRegler i lakarintyg.js).
+  const skal = provaRegler(db, p, t, pers);
+  if (skal) return svaraSkapa('ERROR', skal, 'APPLICATION_ERROR');
   const intygsId = randomUUID();
   const f = lasForifyllnad(t, i.forifyllnad);
   const tid = iso();
@@ -233,6 +240,29 @@ function lista(ctx, { begaran: m }) {
 // ---------------------------------------------------------------------------------------------------------------
 const vemSignerar = (t) => (t.utfardare.includes('intyg_graviditet') ? 'Läkare, barnmorska eller sjuksköterska signerar.' : t.utfardare.includes('intyg_tfp') ? 'Läkare eller sjuksköterska signerar.' : 'Läkaren signerar.');
 const NEKAD = 'Intyget finns inte, eller så har du inget uppdrag på den vårdenhet som äger det.';
+// Säkerhetsgranskningen av runda 16: den som får skriva utkast men inte signera, och som inte läser diagnoser och
+// journaltext (vårdadministratören), har en begränsad vy. Personen når bara de utkast och intyg som den själv har
+// skapat, ser bara de svar som den själv har skrivit, inga källor och inget underlag ur journalen, och kan inte skriva
+// ut. Svar som någon annan har skrivit eller som journalen har fyllt i ur den som signerar visas aldrig för personen,
+// och ändras inte när personen sparar. Vem som skrev varje svar sparas i kallor._av.
+export const begransad = (personal, t) => {
+  const b = behorighet(personal, t);
+  return !b.signera && !(kanRoll(personal, 'las_diagnoser') && kanRoll(personal, 'las_journal'));
+};
+const forfattare = (r) => JSON.parse(r.kallor || '{}')._av ?? {};
+// Frågorna med ett svar som personen inte får se: i den begränsade vyn allt som någon annan har skrivit, och för alla
+// läsare de förifyllda svar vars källor läsaren inte får se, prövat med läsarens egen Atkomst (läsrätt, spärr, aktivt
+// val och samtycke som i journalen).
+const lasare = (db, personal, r, val) => new Atkomst(db, personal, r.patient_id, val ?? {}, 'las_intyg');
+function doldaFor(db, r, personal, t, val = {}) {
+  const k = JSON.parse(r.kallor || '{}');
+  const av = k._av ?? {};
+  const meta = k._meta ?? {};
+  const ids = Object.keys(lasSvar(r));
+  if (begransad(personal, t)) return ids.filter(id => av[id] !== personal.id || (meta[id] && !synligForLasare(lasare(db, personal, r, val), meta[id])));
+  const atk = lasare(db, personal, r, val);
+  return ids.filter(id => meta[id] && !synligForLasare(atk, meta[id]));
+}
 function hamta(db, personal, intygsId, vilken = 'las') {
   if (!personal) throw new Fel(401, 'Logga in först.', 'ej_inloggad');
   const r = typeof intygsId === 'string' && /^[0-9a-f-]{36}$/.test(intygsId) ? db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(intygsId) : null;
@@ -243,11 +273,12 @@ function hamta(db, personal, intygsId, vilken = 'las') {
   // bara den som får signera. För en patient med skyddade personuppgifter når bara den som signerar intyget (Webcert).
   const handling = vilken === 'signera' ? b.signera : vilken === 'skriv' ? (b.signera ?? b.utkast) : (b.signera ?? b.utkast ?? (kanRoll(personal, 'las_intyg') ? 'las_intyg' : null));
   const skyddadSparr = Boolean(p?.skyddad && !b.signera);
-  const pr = r && handling && !skyddadSparr ? prova(db, { personal, patient: r.patient_id, handling, resurs: { enhet_id: r.enhet_id } }) : null;
+  const egenSparr = Boolean(r && t && begransad(personal, t) && r.personal_hsa !== personal.hsa_id);
+  const pr = r && handling && !skyddadSparr && !egenSparr ? prova(db, { personal, patient: r.patient_id, handling, resurs: { enhet_id: r.enhet_id } }) : null;
   const paEnheten = r && vardenhetFor(db, personal.enhet_id) === r.enhet_id;
   // Den som får skriva utkast men inte signera får ett svar som säger vad den kan göra i stället. Det röjer inget, eftersom
   // personen får öppna utkastet.
-  if (r && paEnheten && vilken === 'signera' && !b.signera && b.utkast && !skyddadSparr) {
+  if (r && paEnheten && vilken === 'signera' && !b.signera && b.utkast && !skyddadSparr && !egenSparr) {
     const skriva = prova(db, { personal, patient: r.patient_id, handling: b.utkast, resurs: { enhet_id: r.enhet_id } });
     if (skriva.tillaten) {
       loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling: b.utkast, resurs: `intygsapplikation:${r.intygs_id}:signera`, grund: 'nekad', resultat: 'nekad' });
@@ -278,7 +309,8 @@ const efterfoljare = (t, nu = new Date()) => {
   }
   return IT.aktuell(t.kod, nu);
 };
-function ut(db, r, personal, visad, nu = new Date()) {
+function ut(db, r, personal, val = {}, nu = new Date()) {
+  const visad = Boolean(val?.visa_identitet);
   const p = db.query('SELECT * FROM patienter WHERE id = ?').get(r.patient_id);
   const t = typAv(r);
   const b = behorighet(personal, t);
@@ -286,15 +318,24 @@ function ut(db, r, personal, visad, nu = new Date()) {
   const galler = IT.galler(t, nu);
   const ny = efterfoljare(t, nu);
   const skriva = Boolean(b.signera || b.utkast);
-  const saknasNu = UTKAST.includes(r.status) ? IT.saknas(t, svar) : [];
+  const dolda = doldaFor(db, r, personal, t, val);
+  const synligaSvar = Object.fromEntries(Object.entries(svar).filter(([id]) => !dolda.includes(id)));
+  // Det som saknas räknas på det läsaren ser, så att svaret är detsamma som om de dolda frågorna inte hade besvarats.
+  const saknasNu = UTKAST.includes(r.status) ? IT.saknas(t, synligaSvar) : [];
+  const kallorAlla = JSON.parse(r.kallor || '{}');
+  const kallor = begransad(personal, t) ? {} : Object.fromEntries(Object.entries(kallorAlla).filter(([k]) => !k.startsWith('_') && !dolda.includes(k)));
+  const lasA = lasare(db, personal, r, val);
+  const underlag = begransad(personal, t) ? [] : (kallorAlla._underlag ?? []).filter(u => typeof u === 'object' && synligForLasare(lasA, u)).map(u => u.text);
+  // Förslagen ur journalen för den som signerar, räknade på det personen ser just nu, för de frågor som är tomma.
+  const forslag = UTKAST.includes(r.status) && behorighet(personal, t).signera ? forslagForUtkast(db, personal, r.intygs_id, val, IT.fragorFor(t).map(q => q.id).filter(id => !Object.hasOwn(svar, id))) : null;
   return {
     intygsId: r.intygs_id, typ: r.typ, version: r.version ?? t.version, blankett: t.blankett, text: t.text, mottagare: t.mottagare, status: r.status, statusText: STATUS[r.status] ?? r.status,
     patient: { namn: visningsnamn(p, visad), personnummer: visningsPnr(p, visad), skyddad: Boolean(p.skyddad) },
     skapadAv: r.personal_namn, skapad: r.skapad, signerad: r.signerad, skickad: r.skickad, makulerad: r.makulerad,
     vardenhet: db.query('SELECT namn FROM enheter WHERE id = ?').get(r.enhet_id)?.namn ?? null,
     kategorier: t.fragor.map(k => ({ rubrik: k.rubrik, fragor: k.fragor.map(q => ({ id: q.id, typ: q.typ, text: q.text, alt: q.alt ?? null, krav: Boolean(q.krav), visas: q.visas ?? null, dold: q.dold ?? null, min: q.min ?? null, max: q.max ?? null, maxDagar: q.maxDagar ?? null })) })),
-    svar, kallor: Object.fromEntries(Object.entries(JSON.parse(r.kallor || '{}')).filter(([k]) => k !== '_underlag')), underlag: JSON.parse(r.kallor || '{}')._underlag ?? [],
-    patientId: r.patient_id, saknas: saknasNu, varningar: UTKAST.includes(r.status) ? IT.varningar(t, svar, nu, datumAv(nu)) : [],
+    svar: synligaSvar, kallor, underlag, dolda: begransad(personal, t) ? dolda : [], forslag: forslag ? { svar: forslag.svar, kallor: forslag.kallor } : null,
+    patientId: r.patient_id, saknas: saknasNu, varningar: UTKAST.includes(r.status) ? IT.varningar(t, synligaSvar, nu, datumAv(nu)) : [],
     sandning: { typ: t.sandning, text: SANDNING[t.sandning] },
     giltighet: galler ? null : (IT.giltighetText(t) ?? 'Intygstypen gäller inte längre.'),
     relation: r.relation_typ ? { typ: r.relation_typ, text: IT.RELATIONER[r.relation_typ] ?? r.relation_typ } : null,
@@ -304,7 +345,7 @@ function ut(db, r, personal, visad, nu = new Date()) {
       signera: UTKAST.includes(r.status) && Boolean(b.signera) && galler,
       byt: UTKAST.includes(r.status) && skriva && !galler && Boolean(ny),
       skicka: r.status === 'signerat' && t.sandning === 'samrad' && skriva,
-      skrivUt: SIGNERAT.includes(r.status),
+      skrivUt: SIGNERAT.includes(r.status) && !begransad(personal, t),
       makulera: SIGNERAT.includes(r.status) && Boolean(b.signera),
       radera: UTKAST.includes(r.status) && skriva,
       fornya: SIGNERAT.includes(r.status) && skriva && Boolean(ny ? true : t.fornyas),
@@ -318,7 +359,7 @@ function ut(db, r, personal, visad, nu = new Date()) {
 export function visa(db, personal, intygsId, val = {}) {
   const { r, grund, handling } = hamta(db, personal, intygsId);
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling, resurs: `intygsapplikation:${r.intygs_id}`, grund, resultat: 'tillaten' });
-  return ut(db, r, personal, Boolean(val.visa_identitet));
+  return ut(db, r, personal, val);
 }
 
 // Svaren ur ett formulär. Svaren ligger i body.svar som { frågans id: värde }. Fälten från runda 14 (sysselsattning,
@@ -360,34 +401,38 @@ function nyaSvar(t, gamla, body) {
 export async function spara(db, personal, intygsId, body = {}, val = {}) {
   const { r, t, grund, handling } = hamta(db, personal, intygsId, 'skriv');
   if (!UTKAST.includes(r.status)) throw new Fel(409, 'Ett signerat intyg kan inte ändras. Makulera det och skriv ett nytt.', 'konflikt');
-  const ny = nyaSvar(t, lasSvar(r), body);
-  db.query('UPDATE sim_intygsapplikation SET svar = ? WHERE intygs_id = ?').run(JSON.stringify(ny), r.intygs_id);
+  const gamla = lasSvar(r);
+  const dolda = doldaFor(db, r, personal, t, val);
+  const ny0 = nyaSvar(t, gamla, body);
+  // Ett svar som personen inte får se ändras inte av personen, hur anropet än ser ut.
+  const ny = { ...Object.fromEntries(Object.entries(ny0).filter(([id]) => !dolda.includes(id))), ...Object.fromEntries(dolda.filter(id => Object.hasOwn(gamla, id)).map(id => [id, gamla[id]])) };
+  const kallor = JSON.parse(r.kallor || '{}');
+  const av = { ...(kallor._av ?? {}) };
+  const meta = { ...(kallor._meta ?? {}) };
+  // Förslagen som personen ser just nu. Ett sparat svar som är detsamma som förslaget får förslagets källa och källornas
+  // vårdenheter, så att varje läsare sedan prövas mot dem. Annars är svaret personens eget, utan källa.
+  const f = behorighet(personal, t).signera ? forslagForUtkast(db, personal, r.intygs_id, val) : null;
+  for (const id of new Set([...Object.keys(gamla), ...Object.keys(ny)])) {
+    if (dolda.includes(id) || JSON.stringify(gamla[id] ?? null) === JSON.stringify(ny[id] ?? null)) continue;
+    delete kallor[id];
+    delete meta[id];
+    if (ny[id] == null) { delete av[id]; continue; }
+    av[id] = personal.id;
+    if (f && Object.hasOwn(f.svar, id) && JSON.stringify(IT.normaliseraSvar(IT.fragorFor(t).find(q => q.id === id), f.svar[id])) === JSON.stringify(ny[id])) {
+      kallor[id] = f.kallor[id];
+      meta[id] = f.meta[id];
+    }
+  }
+  kallor._av = av;
+  kallor._meta = meta;
+  db.query('UPDATE sim_intygsapplikation SET svar = ?, kallor = ? WHERE intygs_id = ?').run(JSON.stringify(ny), JSON.stringify(kallor), r.intygs_id);
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling, resurs: `intygsapplikation:${r.intygs_id}`, grund, resultat: 'tillaten' });
   await handelse(db, r.intygs_id, 'ANDRAT');
-  return ut(db, db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(r.intygs_id), personal, Boolean(val.visa_identitet));
+  return ut(db, db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(r.intygs_id), personal, val);
 }
 // Vad som saknas innan intyget kan signeras, på vanlig svenska.
 export function saknas(r) {
   return IT.saknas(typAv(r), lasSvar(r)).map(x => x.text.charAt(0).toLowerCase() + x.text.slice(1));
-}
-
-// Förifyllnaden när den som signerar öppnar ett utkast: bara frågor som fortfarande är tomma fylls i.
-export async function fyllI(db, personal, intygsId, forifyllt) {
-  const r = db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(intygsId);
-  if (!r || !UTKAST.includes(r.status)) return null;
-  const t = typAv(r);
-  const svar = lasSvar(r);
-  const kallor = JSON.parse(r.kallor || '{}');
-  let andrat = 0;
-  for (const q of IT.fragorFor(t)) {
-    if (!Object.hasOwn(forifyllt.svar ?? {}, q.id) || (svar[q.id] != null && svar[q.id] !== '')) continue;
-    try { svar[q.id] = IT.normaliseraSvar(q, forifyllt.svar[q.id]); kallor[q.id] = forifyllt.kallor?.[q.id] ?? null; andrat++; } catch { /* ett svar som inte passar tas inte med */ }
-  }
-  if (forifyllt.underlag?.length && !kallor._underlag) { kallor._underlag = forifyllt.underlag.slice(0, 5).map(x => String(x.text).slice(0, 300)); andrat++; }
-  if (!andrat) return 0;
-  db.query('UPDATE sim_intygsapplikation SET svar = ?, kallor = ? WHERE intygs_id = ?').run(JSON.stringify(svar), JSON.stringify(kallor), intygsId);
-  await handelse(db, intygsId, 'ANDRAT');
-  return andrat;
 }
 
 // Ett nytt utkast ur ett intyg: förnyelse eller förlängning av ett signerat intyg (FRLANG), och byte från ett ersatt
@@ -398,13 +443,18 @@ async function nyttUr(db, personal, r, t, relation, nu = new Date(), mal = null)
   if (!till) throw new Fel(409, 'Det finns ingen version av intyget som gäller nu.', 'konflikt');
   const b = behorighet(personal, till);
   if (!b.signera && !b.utkast) throw new Fel(403, 'Du får inte skriva det nya intyget.', 'nekad');
+  // Säkerhetsgranskningen av runda 16: samma regler som när ett utkast skapas (skyddade personuppgifter, avliden, ålder och
+  // graviditet), prövade för det nya intyget och den som skapar det.
+  const p = db.query('SELECT * FROM patienter WHERE id = ?').get(r.patient_id);
+  const skal = provaRegler(db, p, till, personal, { nu });
+  if (skal) throw new Fel(400, `${till.text} kan inte skrivas: ${skal}`, 'ogiltig');
   const o = IT.overfor(t, till, lasSvar(r));
   const intygsId = randomUUID();
   const tid = iso();
   const pers = db.query('SELECT hsa_id, namn FROM personal WHERE id = ?').get(personal.id);
   const kallor = JSON.parse(r.kallor || '{}');
   db.query("INSERT INTO sim_intygsapplikation (intygs_id, patient_id, enhet_id, typ, version, personnummer, personal_hsa, personal_namn, ref, status, skapad, svar, kallor, handelser, relation_typ, relation_intygs_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 'utkast', ?, ?, ?, '[]', ?, ?)")
-    .run(intygsId, r.patient_id, r.enhet_id, till.kod, till.version, r.personnummer, pers.hsa_id, pers.namn, tid, JSON.stringify(o.svar), JSON.stringify(Object.fromEntries(o.foljde.filter(id => kallor[id]).map(id => [id, kallor[id]]))), relation, r.intygs_id);
+    .run(intygsId, r.patient_id, r.enhet_id, till.kod, till.version, r.personnummer, pers.hsa_id, pers.namn, tid, JSON.stringify(o.svar), JSON.stringify({ ...Object.fromEntries(o.foljde.filter(id => typeof kallor[id] === 'string').map(id => [id, kallor[id]])), _meta: Object.fromEntries(o.foljde.filter(id => kallor._meta?.[id]).map(id => [id, kallor._meta[id]])), _av: Object.fromEntries(o.foljde.filter(id => kallor._av?.[id]).map(id => [id, kallor._av[id]])) }), relation, r.intygs_id);
   const svar = await handelse(db, intygsId, 'SKAPAT');
   if (svar?.result?.resultCode !== 'OK') {
     db.query("UPDATE sim_intygsapplikation SET status = 'raderat' WHERE intygs_id = ?").run(intygsId);
@@ -450,17 +500,19 @@ export async function arbetsgivarintyg(db, personal, intygsId, nu = new Date()) 
 // Utskriften av ett signerat intyg. För ett intyg till arbetsgivaren kan patienten välja att dölja diagnosen, och om
 // patienten har sagt nej till att förmedla diagnosen finns den aldrig med. För en patient med skyddade personuppgifter
 // står bara personnumret på utskriften, aldrig namnet (som i Webcert).
-export function utskrift(db, personal, intygsId, { doljDiagnos = false } = {}) {
+export function utskrift(db, personal, intygsId, { doljDiagnos = false, val = {} } = {}) {
   const { r, t, grund, handling } = hamta(db, personal, intygsId);
+  if (begransad(personal, t)) throw new Fel(403, 'Intyget skrivs ut av den som har signerat det.', 'nekad');
   if (!SIGNERAT.includes(r.status)) throw new Fel(409, 'Bara ett signerat intyg kan skrivas ut.', 'konflikt');
   const p = db.query('SELECT * FROM patienter WHERE id = ?').get(r.patient_id);
   const svar = lasSvar(r);
   const nekat = t.diagnosFraga && svar[t.diagnosFraga] === false;
   const dolj = nekat || (t.sandning === 'utskrift' && doljDiagnos);
   const rader = [];
+  const dolda = doldaFor(db, r, personal, t, val);
   for (const k of t.fragor) {
     for (const q of k.fragor) {
-      if (!IT.synlig(t, q, svar) || svar[q.id] == null) continue;
+      if (!IT.synlig(t, q, svar) || svar[q.id] == null || dolda.includes(q.id)) continue;
       if (q.typ === 'diagnoser' && dolj) continue;
       rader.push({ rubrik: k.rubrik, fraga: q.text, svar: svarText(q, svar[q.id]) });
     }
@@ -502,7 +554,8 @@ export async function atgard(db, personal, intygsId, atgardNamn, val = {}, body 
       const ny = efterfoljare(t);
       throw new Fel(409, `${t.blankett} kan inte signeras längre. ${IT.giltighetText(t) ?? ''} Byt utkastet mot ${ny ? `${ny.blankett}, ${IT.iMening(ny.text)}` : 'det intyg som gäller'}; de svar som får följa med tas med.`.replace(/\s+/g, ' '), 'konflikt');
     }
-    const f = IT.saknas(t, lasSvar(r));
+    const doldaNu = doldaFor(db, r, personal, t, val);
+    const f = IT.saknas(t, Object.fromEntries(Object.entries(lasSvar(r)).filter(([id]) => !doldaNu.includes(id))));
     if (f.length) throw new Fel(400, IT.saknasText(f), 'ogiltig', { saknas: f.map(x => x.fraga), falt: f.map(x => `q-${x.fraga}`) });
     db.query("UPDATE sim_intygsapplikation SET status = 'signerat', signerad = ?, signerad_av = ? WHERE intygs_id = ?").run(tid, personal.hsa_id, r.intygs_id);
     await handelse(db, r.intygs_id, 'SIGNAT');
@@ -543,7 +596,7 @@ export async function atgard(db, personal, intygsId, atgardNamn, val = {}, body 
     await handelse(db, r.intygs_id, 'RADERA');
   }
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling, resurs: `intygsapplikation:${r.intygs_id}:${atgardNamn}`, grund, resultat: 'tillaten' });
-  return { ...ut(db, db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(r.intygs_id), personal, Boolean(val.visa_identitet)), ...extra };
+  return { ...ut(db, db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(r.intygs_id), personal, val), ...extra };
 }
 
 // Underlaget för en sjukskrivning ur ett signerat läkarintyg för sjukpenning: diagnosen och perioderna med grad. För
@@ -562,5 +615,4 @@ export const tjanst = r3.simuleradTjanst(NAMN, [LOGISK_ADRESS_INTYGSAPPLIKATION]
 tjanst.registrera(DEF.skapa(), skapaUtkast);
 tjanst.registrera(DEF.lista(), lista);
 sattTransport((db) => r3.tillMotpart(db, tjanst));
-sattFyllUtkast(fyllI);
 sattFornya((db, personal, intygsId) => fornya(db, personal, intygsId));

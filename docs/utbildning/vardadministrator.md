@@ -222,9 +222,11 @@ Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket
 
 Du har fyllt i ett utkast till ett läkarutlåtande åt läkaren. Hur gör du klart det?
 
-Rätt svar: Klickar på Markera klart för signering. Läkaren signerar, och när läkaren öppnar utkastet fyller systemet i det läkaren får se ur journalen, till exempel diagnosen.
+Rätt svar: Klickar på Markera klart för signering. Läkaren signerar. När läkaren öppnar utkastet föreslår systemet det läkaren får se ur journalen, till exempel diagnosen, och läkaren sparar det.
 
-Vårdadministratören skapar och fyller i utkast men signerar aldrig. Journalen visar Klart för signering av sig själv.
+Vårdadministratören skapar och fyller i utkast men signerar aldrig, och ser bara de svar som den själv har skrivit. Journalen visar Klart för signering av sig själv.
+
+Pröva i demon: logga in som Karin Berg och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/intyg).
 
 ### Övning 10
 

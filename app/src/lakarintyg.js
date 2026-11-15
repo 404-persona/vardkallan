@@ -22,7 +22,7 @@
 // Ineras tjänst, och ingenting skickas till Försäkringskassan, Transportstyrelsen eller någon annan mottagare.
 import { randomUUID } from 'node:crypto';
 import { Fel, iso, idag, datumAv } from './db.js';
-import { vardenhetFor, kanRoll, alder, visningsnamn } from './atkomst.js';
+import { vardenhetFor, kanRoll, alder, visningsnamn, Atkomst } from './atkomst.js';
 import { avlidenFor } from './avliden.js';
 import { el } from './rivta/xml.js';
 import * as r3 from './rivta-r3.js';
@@ -182,7 +182,7 @@ function senasteStatus(atk) {
     let s = null;
     try { s = JSON.parse(a.sokord); } catch { s = null; }
     const text = s && typeof s.Status === 'string' ? s.Status.trim() : '';
-    if (text) return { text, kalla: `Status i ${a.typ.toLowerCase()} ${datumText(a.skapad)}, ${enhetsnamn(atk.db, a.enhet_id)}` };
+    if (text) return { text, rad: a, kalla: `Status i ${a.typ.toLowerCase()} ${datumText(a.skapad)}, ${enhetsnamn(atk.db, a.enhet_id)}` };
   }
   return null;
 }
@@ -200,86 +200,134 @@ const DIABETES = /^E1[0-4]/;
 const arInsulin = (o) => /^A10A/.test(o.atc ?? '');
 const arAntidiabetika = (o) => /^A10/.test(o.atc ?? '');
 
-// Förifyllnaden för en intygstyp: svaren och källan för varje svar. Bara frågor med forifyll, och bara det som den
-// inloggade får se.
-export function forifyllnad(atk, t, p, nu = new Date()) {
+// Förifyllnaden för en intygstyp: svaren, källan och källans vårdenheter och läsrätt (meta) för varje svar. Bara frågor
+// med forifyll, och bara det som den inloggade får se.
+//
+// Säkerhetsgranskningen av runda 16: det som sparas i ett utkast (endastEgen, förvalet) kommer bara från den inloggades
+// egen vårdenhet: diagnoser, läkemedel, mätvärden, graviditetsjournalen, vårdkontakter och anteckningar. Uppgifter från
+// andra vårdenheter, som den inloggade ser genom aktivt val eller genom att patienten häver en spärr, skrivs aldrig in i
+// en gemensam post. Med endastEgen: false räknas förslag på allt den inloggade ser just nu; förslagen visas för den som
+// signerar, med källa, och sparas bara när personen själv sparar dem, med källornas vårdenheter (meta), så att varje
+// läsare sedan prövas mot dem.
+const KRAV = { diagnos: 'las_diagnoser', lakemedel: 'las_lakemedel', matvarde: 'las_matvarden', graviditet: 'las_graviditet', journal: 'las_journal', kontakt: 'las_admin' };
+export function forifyllnad(atk, t, p, nu = new Date(), { endastEgen = true } = {}) {
   const svar = {};
   const kallor = {};
+  const meta = {};
   const underlag = [];
-  const satt = (id, v, kalla) => { if (v == null || v === '' || (Array.isArray(v) && !v.length)) return; svar[id] = v; kallor[id] = kalla; };
+  const min = egenEnhet(atk);
+  const egen = (rader) => (endastEgen ? rader.filter(x => vardenhetFor(atk.db, x.enhet_id) === min) : rader);
+  const satt = (id, v, kalla, kallrader = [], slag = null) => {
+    if (v == null || v === '' || (Array.isArray(v) && !v.length)) return;
+    svar[id] = v;
+    kallor[id] = kalla;
+    meta[id] = { enheter: [...new Set(kallrader.map(x => x.enhet_id))], krav: [...new Set((Array.isArray(slag) ? slag : slag ? [slag] : []).map(x => KRAV[x]))] };
+  };
   let cache = {};
   const en = (namn, fn) => (Object.hasOwn(cache, namn) ? cache[namn] : (cache[namn] = fn()));
-  const diagn = () => en('d', () => egnaDiagnoser(atk));
-  const alla = () => en('a', () => synligaDiagnoser(atk));
+  const diagn = () => en('d', () => (endastEgen ? egnaDiagnoser(atk) : (() => { const sedda = new Set(); return synligaDiagnoser(atk).filter(d => !sedda.has(d.kod) && sedda.add(d.kod)); })()));
+  const alla = () => en('a', () => egen(synligaDiagnoser(atk)));
   const vk = () => en('v', () => egnaVardkontakter(atk, nu));
-  const lm = () => en('l', () => aktivaLakemedel(atk));
+  const lm = () => en('l', () => egen(aktivaLakemedel(atk)));
+  const grav = () => en('g', () => { const g = synligGraviditet(atk); return g && egen([g]).length ? g : null; });
   for (const q of IT.fragorFor(t)) {
     if (!q.forifyll) continue;
     const k = q.forifyll;
     if (k === 'diagnoser') {
       const d = diagn().slice(0, 3);
-      satt(q.id, d.map(x => ({ kod: ren(x.kod), text: x.text })), d.length ? `Diagnoser på din vårdenhet: ${d.map(x => diagnosRad(atk, x)).join('; ')}` : null);
+      satt(q.id, d.map(x => ({ kod: ren(x.kod), text: x.text })), d.length ? `Diagnoser: ${d.map(x => diagnosRad(atk, x)).join('; ')}` : null, d, 'diagnos');
     } else if (k === 'diagnoserText') {
       const d = diagn().slice(0, 3);
-      satt(q.id, d.map(x => `${x.kod} ${x.text}`).join('. '), `Diagnoser på din vårdenhet: ${d.map(x => diagnosRad(atk, x)).join('; ')}`);
+      satt(q.id, d.map(x => `${x.kod} ${x.text}`).join('. '), `Diagnoser: ${d.map(x => diagnosRad(atk, x)).join('; ')}`, d, 'diagnos');
     } else if (k === 'vardkontakt') {
       const v = vk()[0];
       if (!v) continue;
       const kod = /telefon/i.test(v.plats ?? '') ? 'TELEFONKONTAKT' : /video|digital/i.test(v.plats ?? '') ? 'DIGITALUNDERSOKNING' : Object.hasOwn(q.alt, 'FYSISKUNDERSOKNING') ? 'FYSISKUNDERSOKNING' : 'UNDERSOKNING';
-      if (Object.hasOwn(q.alt, kod)) satt(q.id, { [kod]: datumAv(new Date(v.start)) }, `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`);
+      if (Object.hasOwn(q.alt, kod)) satt(q.id, { [kod]: datumAv(new Date(v.start)) }, `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`, [v], 'kontakt');
     } else if (k === 'vardkontaktDatum') {
       const v = vk()[0];
-      if (v) satt(q.id, datumAv(new Date(v.start)), `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`);
+      if (v) satt(q.id, datumAv(new Date(v.start)), `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`, [v], 'kontakt');
     } else if (k === 'tsKalla') {
       const v = vk()[0];
-      if (v) satt(q.id, datumAv(new Date(v.start)) === datumAv(nu) ? 'undersokn' : 'journal', `Vårdkontakten ${datumText(v.start)}`);
+      if (v) satt(q.id, datumAv(new Date(v.start)) === datumAv(nu) ? 'undersokn' : 'journal', `Vårdkontakten ${datumText(v.start)}`, [v], 'kontakt');
     } else if (k === 'status') {
-      const s = senasteStatus(atk);
-      if (s) satt(q.id, s.text, s.kalla);
+      const st = senasteStatus(atk);
+      if (st) satt(q.id, st.text, st.kalla, [st.rad], 'journal');
     } else if (k === 'graviditet') {
-      const g = synligGraviditet(atk);
-      if (g) satt(q.id, g.bpd, `Graviditetsjournalen på ${enhetsnamn(atk.db, g.enhet_id)}, beräknad förlossning ${datumText(g.bpd)}`);
+      const g = grav();
+      if (g) satt(q.id, g.bpd, `Graviditetsjournalen på ${enhetsnamn(atk.db, g.enhet_id)}, beräknad förlossning ${datumText(g.bpd)}`, [g], 'graviditet');
     } else if (k === 'inneliggande') {
-      const s = pagaendeSlutenvard(atk, nu);
-      if (s) satt(q.id, true, `Inskriven i slutenvård sedan ${datumText(s.start)}`);
+      const sv = pagaendeSlutenvard(atk, nu);
+      if (sv) satt(q.id, true, `Inskriven i slutenvård sedan ${datumText(sv.start)}`, [sv], 'kontakt');
     } else if (k === 'dodsdatum') {
-      const a = avlidenFor(atk.db, atk.patientId);
-      if (a?.datum) satt(q.id, a.datum, `Registrerat dödsdatum ${datumText(a.datum)}`);
+      const d = avlidenFor(atk.db, atk.patientId);
+      if (d?.datum) satt(q.id, d.datum, `Registrerat dödsdatum ${datumText(d.datum)}`);
     } else if (k === 'lakemedelText') {
       const l = lm();
-      satt(q.id, l.map(o => o.lm_namn ?? o.lakemedel_id).join(', '), l.length ? 'Aktuella läkemedel i läkemedelslistan' : null);
+      satt(q.id, l.map(o => o.lm_namn ?? o.lakemedel_id).join(', '), l.length ? 'Aktuella läkemedel i läkemedelslistan' : null, l, 'lakemedel');
     } else if (k === 'ts.medicinering') {
-      if (lm().length) satt(q.id, true, 'Aktuella läkemedel i läkemedelslistan');
+      if (lm().length) satt(q.id, true, 'Aktuella läkemedel i läkemedelslistan', lm(), 'lakemedel');
     } else if (k === 'ts.diabetes') {
       const d = alla().find(x => DIABETES.test(ren(x.kod)));
-      if (d && lm().some(arAntidiabetika)) satt(q.id, true, `${diagnosRad(atk, d)} och läkemedel mot diabetes i läkemedelslistan`);
+      const l = lm().filter(arAntidiabetika);
+      if (d && l.length) satt(q.id, true, `${diagnosRad(atk, d)} och läkemedel mot diabetes i läkemedelslistan`, [d, ...l], ['diagnos', 'lakemedel']);
     } else if (Object.hasOwn(TS_KODER, k)) {
-      const d = alla().filter(x => TS_KODER[k].test(ren(x.kod)));
+      const d = alla().filter(x => TS_KODER[k].test(ren(x.kod))).slice(0, 3);
       if (d.length) {
-        satt(q.id, true, `Diagnos: ${d.slice(0, 3).map(x => diagnosRad(atk, x)).join('; ')}`);
-        satt(`${q.id}.2`, d.slice(0, 3).map(x => `${x.kod} ${x.text}, diagnos ${datumText(x.datum)}`).join('. '), 'Ur diagnoserna i journalen');
+        satt(q.id, true, `Diagnos: ${d.map(x => diagnosRad(atk, x)).join('; ')}`, d, 'diagnos');
+        satt(`${q.id}.2`, d.map(x => `${x.kod} ${x.text}, diagnos ${datumText(x.datum)}`).join('. '), 'Ur diagnoserna i journalen', d, 'diagnos');
       }
     } else if (k.startsWith('diabetes') || k === 'hypoglykemiRisk') {
       const d = alla().filter(x => DIABETES.test(ren(x.kod)));
       const l = lm().filter(arAntidiabetika);
-      if (k === 'diabetesAr' && d.length) { const f = d.at(-1); satt(q.id, Number(f.datum.slice(0, 4)), `Första diabetesdiagnosen i journalen: ${diagnosRad(atk, f)}`); }
-      if (k === 'diabetesTyp' && d.length) { const typ = /^E10/.test(ren(d[0].kod)) ? 'DIABETES_TYP_1' : /^E11/.test(ren(d[0].kod)) ? 'DIABETES_TYP_2' : 'ANNAN'; satt(q.id, typ, diagnosRad(atk, d[0])); }
-      if (k === 'diabetesMedicinering' && d.length) satt(q.id, l.length > 0, l.length ? `Läkemedel mot diabetes: ${l.map(o => o.lm_namn).join(', ')}` : 'Inga läkemedel mot diabetes i läkemedelslistan');
-      if (k === 'diabetesBehandling' && l.length) satt(q.id, [...new Set(l.map(o => (arInsulin(o) ? 'INSULIN' : /^A10B[ABFGHKX]/.test(o.atc) ? 'TABLETTER' : 'ANNAN')))], `Läkemedel mot diabetes: ${l.map(o => `${o.lm_namn} (${o.atc})`).join(', ')}`);
-      if (k === 'hypoglykemiRisk' && l.length) { const risk = l.some(o => arInsulin(o) || /^A10BB/.test(o.atc)); if (risk) satt(q.id, true, 'Insulin eller sulfonureider ger risk för hypoglykemi'); }
+      if (k === 'diabetesAr' && d.length) { const f = d.at(-1); satt(q.id, Number(f.datum.slice(0, 4)), `Första diabetesdiagnosen i journalen: ${diagnosRad(atk, f)}`, [f], 'diagnos'); }
+      if (k === 'diabetesTyp' && d.length) { const typ = /^E10/.test(ren(d[0].kod)) ? 'DIABETES_TYP_1' : /^E11/.test(ren(d[0].kod)) ? 'DIABETES_TYP_2' : 'ANNAN'; satt(q.id, typ, diagnosRad(atk, d[0]), [d[0]], 'diagnos'); }
+      if (k === 'diabetesMedicinering' && d.length) satt(q.id, l.length > 0, l.length ? `Läkemedel mot diabetes: ${l.map(o => o.lm_namn).join(', ')}` : 'Inga läkemedel mot diabetes i läkemedelslistan', [...d, ...l], ['diagnos', 'lakemedel']);
+      if (k === 'diabetesBehandling' && l.length) satt(q.id, [...new Set(l.map(o => (arInsulin(o) ? 'INSULIN' : /^A10B[ABFGHKX]/.test(o.atc) ? 'TABLETTER' : 'ANNAN')))], `Läkemedel mot diabetes: ${l.map(o => `${o.lm_namn} (${o.atc})`).join(', ')}`, l, 'lakemedel');
+      if (k === 'hypoglykemiRisk' && l.length) { const risk = l.filter(o => arInsulin(o) || /^A10BB/.test(o.atc)); if (risk.length) satt(q.id, true, 'Insulin eller sulfonureider ger risk för hypoglykemi', risk, 'lakemedel'); }
     }
   }
-  // Underlag bredvid frågorna, som inte är svar: senaste HbA1c för intygen om körkort.
+  // Underlag bredvid frågorna, som inte är svar: senaste HbA1c för intygen om körkort, och graviditetsveckan.
   if (['TSTRK1031', 'TS8071'].includes(t.kod)) {
     const h = senasteMatvarde(atk, 'hba1c');
-    if (h) underlag.push({ text: `Senaste HbA1c ${String(h.varde).replace('.', ',')} mmol/mol (${datumText(h.tid)}, ${enhetsnamn(atk.db, h.enhet_id)})` });
+    if (h && egen([h]).length) underlag.push({ text: `Senaste HbA1c ${String(h.varde).replace('.', ',')} mmol/mol (${datumText(h.tid)}, ${enhetsnamn(atk.db, h.enhet_id)})`, enheter: [h.enhet_id], krav: [KRAV.matvarde] });
   }
   if (t.kod === 'IGRAV') {
-    const g = synligGraviditet(atk);
-    if (g) { const dagar = 280 - Math.round((Date.parse(`${g.bpd}T12:00:00Z`) - Date.parse(`${datumAv(nu)}T12:00:00Z`)) / 86400_000); underlag.push({ text: `Graviditetsvecka ${Math.floor(dagar / 7)}+${dagar % 7} i dag` }); }
+    const g = grav();
+    if (g) { const dagar = 280 - Math.round((Date.parse(`${g.bpd}T12:00:00Z`) - Date.parse(`${datumAv(nu)}T12:00:00Z`)) / 86400_000); underlag.push({ text: `Graviditetsvecka ${Math.floor(dagar / 7)}+${dagar % 7} i dag`, enheter: [g.enhet_id], krav: [KRAV.graviditet] }); }
   }
   cache = null;
-  return { svar, kallor, underlag };
+  return { svar, kallor, meta, underlag };
+}
+
+// Om läsaren får se ett förifyllt svar eller underlag: läsrätten för varje slag av källa, och varje källas vårdenhet
+// prövad med läsarens egen Atkomst (spärr, aktivt val och samtycke som i journalen). Ett svar utan källa är fritt.
+export function synligForLasare(atk, m) {
+  if (!m) return true;
+  for (const h of m.krav ?? []) {
+    if (!kanRoll(atk.personal, h)) return false;
+    if ((m.enheter ?? []).length && atk.filtrera(m.enheter.map(enhet_id => ({ enhet_id })), h, { gemensam: h === 'las_lakemedel' }).length !== m.enheter.length) return false;
+  }
+  return true;
+}
+
+// Förslagen för den som signerar ett utkast, räknade på det personen ser just nu, för de frågor som är tomma. De sparas
+// inte förrän personen sparar utkastet (intygsapplikation-simulerad.js). Ger null för den som inte får signera.
+export function forslagForUtkast(db, personal, intygsId, val = {}, tomma = null) {
+  const rad = db.query('SELECT * FROM lakarintyg WHERE intygs_id = ?').get(intygsId);
+  if (!rad || !['utkast', 'klart_for_signering'].includes(rad.status) || vardenhetFor(db, personal.enhet_id) !== rad.enhet_id) return null;
+  const t = IT.typFor(rad.typ, rad.version);
+  if (!t || !behorighet(personal, t).signera) return null;
+  const p = db.query('SELECT * FROM patienter WHERE id = ?').get(rad.patient_id);
+  const atk = new Atkomst(db, personal, p.id, val, behorighet(personal, t).signera);
+  if (!atk.prova(behorighet(personal, t).signera, { enhet_id: rad.enhet_id }).tillaten) return null;
+  const f = forifyllnad(atk, t, p, new Date(), { endastEgen: false });
+  const ut = { svar: {}, kallor: {}, meta: {} };
+  for (const id of Object.keys(f.svar)) {
+    if (tomma && !tomma.includes(id)) continue;
+    ut.svar[id] = f.svar[id]; ut.kallor[id] = f.kallor[id]; ut.meta[id] = f.meta[id];
+  }
+  return ut;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -287,6 +335,29 @@ export function forifyllnad(atk, t, p, nu = new Date()) {
 // val som inte går ska aldrig visas som ett val. Intygstyper som den inloggade inte får skriva visas inte alls, och
 // intyg som ännu inte gäller visas inte. Ett ersatt intyg visas med vad som ersatte det.
 // ---------------------------------------------------------------------------------------------------------------
+// Säkerhetsgranskningen av runda 16: reglerna för om en intygstyp får skrivas för patienten av personen, i en funktion
+// som alla vägar anropar: listan och förslaget i journalen (typerFor), utkastet i intygsapplikationen (CreateDraftCertificate)
+// och nya utkast ur ett intyg (förnyelse, byte och intyget till arbetsgivaren). Ger skälet på vanlig svenska, eller null.
+// Utan personal prövas reglerna som för läkaren. Graviditeten prövas med det personen får se i graviditetsjournalen.
+export function provaRegler(db, p, t, personal, { nu = new Date(), dagen = null, atk = null, avliden = null, ar = null } = {}) {
+  const b = personal ? behorighet(personal, t) : { signera: 'skriv_intyg', utkast: null };
+  if (!b.signera && !b.utkast) return 'Du får inte skriva intyget.';
+  const dod = avliden ?? Boolean(avlidenFor(db, p.id));
+  const alderNu = ar ?? alder(p.fodd, dagen ?? datumAv(IT.tidpunkt(nu)));
+  const { alder: [min, max], skal: alderSkal } = IT.alderFor(t, nu);
+  if (t.avliden && !dod) return 'Skrivs först när patienten är registrerad som avliden.';
+  if (!t.avliden && dod) return 'Patienten är registrerad som avliden. Bara dödsbevis och dödsorsaksintyg kan skrivas.';
+  if (p.skyddad && !t.sekretess) return 'Kan inte skrivas för en patient med skyddade personuppgifter.';
+  if (p.skyddad && !b.signera) return 'För en patient med skyddade personuppgifter skapas intyget av den som signerar det.';
+  if (alderNu < min || alderNu > max) return alderSkal ?? (max >= 130 ? `Gäller patienter från ${min} år.` : `Gäller patienter mellan ${min} och ${max} år.`);
+  if (t.kraver === 'graviditet') {
+    if (personal && !kanRoll(personal, 'las_graviditet')) return 'Skrivs av läkaren, barnmorskan eller sjuksköterskan, som ser graviditetsjournalen.';
+    const a = atk ?? (personal ? new Atkomst(db, personal, p.id, {}, 'las_graviditet') : null);
+    if (!(a && synligGraviditet(a))) return 'Skrivs när det finns en pågående graviditet i graviditetsjournalen. Registrera graviditeten först.';
+  }
+  return null;
+}
+
 export function typerFor(db, p, dag = idag(), { personal = null, atk = null } = {}) {
   const nu = IT.tidpunkt(dag);
   const dagen = typeof dag === 'string' && /^\d{4}-\d\d-\d\d$/.test(dag) ? dag : datumAv(nu);
@@ -304,14 +375,7 @@ export function typerFor(db, p, dag = idag(), { personal = null, atk = null } = 
     }
     const b = personal ? behorighet(personal, t) : { signera: 'skriv_intyg', utkast: null };
     if (!b.signera && !b.utkast) continue;
-    const { alder: [min, max], skal: alderSkal } = IT.alderFor(t, nu);
-    if (skal) { /* ersatt */ } else if (t.avliden && !avliden) skal = 'Skrivs först när patienten är registrerad som avliden.';
-    else if (!t.avliden && avliden) skal = 'Patienten är registrerad som avliden. Bara dödsbevis och dödsorsaksintyg kan skrivas.';
-    else if (p.skyddad && !t.sekretess) skal = 'Kan inte skrivas för en patient med skyddade personuppgifter.';
-    else if (p.skyddad && !b.signera) skal = 'För en patient med skyddade personuppgifter skapas intyget av den som signerar det.';
-    else if (ar < min || ar > max) skal = alderSkal ?? (max >= 130 ? `Gäller patienter från ${min} år.` : `Gäller patienter mellan ${min} och ${max} år.`);
-    else if (t.kraver === 'graviditet' && personal && !kanRoll(personal, 'las_graviditet')) skal = 'Skrivs av läkaren, barnmorskan eller sjuksköterskan, som ser graviditetsjournalen.';
-    else if (t.kraver === 'graviditet' && !(atk && synligGraviditet(atk))) skal = 'Skrivs när det finns en pågående graviditet i graviditetsjournalen. Registrera graviditeten först.';
+    if (!skal) skal = provaRegler(db, p, t, personal, { nu, dagen, atk, avliden, ar });
     ut.push({ kod: t.kod, version: t.version, blankett: t.blankett, text: t.text, mottagare: t.mottagare, sandning: t.sandning, mojlig: !skal, skal, kanSignera: Boolean(b.signera) });
   }
   return ut;
@@ -367,8 +431,8 @@ export function forifyllnadSvar(t, forifyllt) {
     const kalla = forifyllt.kallor?.[q.id] ?? null;
     const svarId = q.id.split('.')[0];
     const lista = perSvar.get(svarId) ?? [];
-    if (q.typ === 'diagnoser') lista.push(...v.slice(0, 3).map((x, i) => ({ '@id': `${q.id}.${2 + i * 2}`, $any: [el(NS.types, 'cv', [el(NS.types, 'code', x.kod), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', x.text)]), ...(i === 0 && kalla ? [el(NS.demo, 'kalla', kalla)] : [])] })));
-    else lista.push({ '@id': delsvarId(t, q.id), $any: [el(NS.demo, 'varde', JSON.stringify({ v, kalla }))] });
+    if (q.typ === 'diagnoser') lista.push(...v.slice(0, 3).map((x, i) => ({ '@id': `${q.id}.${2 + i * 2}`, $any: [el(NS.types, 'cv', [el(NS.types, 'code', x.kod), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', x.text)]), ...(i === 0 && kalla ? [el(NS.demo, 'kalla', JSON.stringify({ kalla, meta: forifyllt.meta?.[q.id] ?? null }))] : [])] })));
+    else lista.push({ '@id': delsvarId(t, q.id), $any: [el(NS.demo, 'varde', JSON.stringify({ v, kalla, meta: forifyllt.meta?.[q.id] ?? null }))] });
     perSvar.set(svarId, lista);
   }
   const svar = [...perSvar].filter(([, d]) => d.length).map(([id, delsvar]) => ({ '@id': id, delsvar }));
@@ -379,7 +443,7 @@ export function forifyllnadSvar(t, forifyllt) {
 // schemat tillåter element ur andra namnrymder.
 function forifyllnadMedUnderlag(t, f) {
   const s = forifyllnadSvar(t, f);
-  const u = (f.underlag ?? []).slice(0, 5).map(x => String(x.text).slice(0, 300));
+  const u = (f.underlag ?? []).slice(0, 5).map(x => ({ text: String(x.text).slice(0, 300), enheter: x.enheter ?? [], krav: x.krav ?? [] }));
   if (!s && !u.length) return null;
   return { ...(s ?? {}), ...(u.length ? { $any: [el(NS.demo, 'underlag', JSON.stringify(u))] } : {}) };
 }
@@ -412,14 +476,16 @@ const radUt = (db, r, personal = null) => {
   const b = t && personal ? behorighet(personal, t) : { signera: null, utkast: null };
   const ny = ersatt && t.ersattsAv ? IT.aktuell(t.ersattsAv.kod, nu) : null;
   const pat = db.query('SELECT skyddad FROM patienter WHERE id = ?').get(r.patient_id);
-  const far = b.signera || (b.utkast && !pat?.skyddad);
+  // Säkerhetsgranskningen av runda 16: den med begränsad vy (vårdadministratören) öppnar bara egna utkast och intyg.
+  const begransadVy = t && personal && !b.signera && !(kanRoll(personal, 'las_diagnoser') && kanRoll(personal, 'las_journal'));
+  const far = b.signera || (b.utkast && !pat?.skyddad && !(begransadVy && r.skapad_av !== personal.id));
   return {
     id: r.id, typ: r.typ, version: r.version ?? '1.0', blankett: t?.blankett ?? null, text: t?.text ?? r.typ, mottagare: t?.mottagare ?? null,
     status: r.status, statusText: STATUSTEXT[r.status] ?? r.status,
     skapad: r.skapad_tid, signerad: r.signerad_tid, skickad: r.skickad_tid, fragorEjBesvarade: r.fragor_ej_besvarade,
     vardenhet: ve(db, r.enhet_id) ? { namn: ve(db, r.enhet_id).namn } : null,
     skapadAv: db.query('SELECT namn FROM personal WHERE id = ?').get(r.skapad_av)?.namn ?? null,
-    kanOppnas: ['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status) && Boolean(r.intygs_id) && Boolean(personal ? (far || (!pat?.skyddad && kanRoll(personal, 'las_intyg'))) : true),
+    kanOppnas: ['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status) && Boolean(r.intygs_id) && Boolean(personal ? (far || (!pat?.skyddad && !begransadVy && kanRoll(personal, 'las_intyg'))) : true),
     // Runda 16, r1: ett ersatt intyg säger vad som ersatte det, och ett signerat intyg kan förnyas med den version som
     // gäller nu, eller bytas mot det intyg som ersatte det.
     ersatt: ersatt ? (IT.giltighetText(t) ?? 'Intygstypen gäller inte längre.') : null,
@@ -516,22 +582,14 @@ function synligRad(atk, id) {
   return synlig;
 }
 
-// Runda 16, r1: när den som får signera öppnar ett utkast som någon annan har skapat, till exempel vårdadministratören,
-// fyller journalen i de frågor som fortfarande är tomma med det som den som öppnar får se. Intygsapplikationen tar emot
-// förifyllnaden på samma sätt som när utkastet skapas (simulerat i samma process; Webcert har ingen sådan uppdatering).
-let fyllUtkast = async () => null;
-export const sattFyllUtkast = (fn) => { fyllUtkast = fn; };
-
 export async function oppna(atk, id) {
   const synlig = synligRad(atk, id);
   const t = IT.typFor(synlig.typ, synlig.version);
   const b = t ? behorighet(atk.personal, t) : { signera: null, utkast: null };
   atk.krav(b.signera ?? b.utkast ?? 'las_intyg', { resurs: { enhet_id: synlig.enhet_id } });
   atk.logga(atk.handling, atk.grund(), `intyg:${synlig.id}`);
-  if (b.signera && ['utkast', 'klart_for_signering'].includes(synlig.status) && vardenhetFor(atk.db, atk.personal.enhet_id) === synlig.enhet_id) {
-    const p = atk.db.query('SELECT * FROM patienter WHERE id = ?').get(synlig.patient_id);
-    await fyllUtkast(atk.db, atk.personal, synlig.intygs_id, forifyllnad(atk, t, p));
-  }
+  // Säkerhetsgranskningen av runda 16: inget sparas i utkastet för att det öppnas. Förslagen visas i intygsapplikationen
+  // för den som signerar och sparas först när personen sparar (forslagForUtkast).
   return { oppna: oppnaAdress(synlig) };
 }
 

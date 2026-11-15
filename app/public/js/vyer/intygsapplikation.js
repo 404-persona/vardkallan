@@ -116,6 +116,12 @@ export async function visa(main, iid) {
   const d = await api(`/api/intygsapplikation/${encodeURIComponent(iid)}`);
   const av = !d.kan.andra;
   const fragor = d.kategorier.flatMap(k => k.fragor);
+  // Svar som den inloggade inte får se visas som ifyllda, utan värde, och skickas inte med när utkastet sparas.
+  const dolda = new Set(d.dolda ?? []);
+  // Förslagen ur journalen står i de tomma frågorna med sin källa. De sparas först när du sparar eller signerar.
+  const forslag = d.forslag?.svar ?? {};
+  const visat = { ...forslag, ...d.svar };
+  const kallaFor = (id) => (Object.hasOwn(d.svar, id) ? d.kallor[id] : forslag[id] !== undefined ? `${d.forslag.kallor[id]} (förslag, sparas när du sparar)` : null);
   const svarNu = (form) => Object.fromEntries(fragor.map(q => [q.id, lasVarde(form, q)]));
   main.innerHTML = `${vyRubrik(d.text, esc(d.simulerad))}
     <div class="ruta ruta-info"><p><strong>Intygsapplikation (simulerad, inte Webcert)</strong></p>
@@ -127,7 +133,7 @@ export async function visa(main, iid) {
     <form class="ia-form" novalidate>
       <p class="form-fel" role="alert" hidden></p>
       ${d.kategorier.map(k => `<section class="ia-kategori" aria-label="${esc(k.rubrik)}"><h2 class="ia-rubrik">${esc(k.rubrik)}</h2>
-        ${k.fragor.map(q => `<div class="ia-fraga" data-fraga="${esc(q.id)}"${synlig(fragor, q, d.svar) ? '' : ' hidden'}>${fragaHtml(q, d.svar[q.id], d.kallor[q.id], av)}</div>`).join('')}</section>`).join('')}
+        ${k.fragor.map(q => `<div class="ia-fraga" data-fraga="${esc(q.id)}"${synlig(fragor, q, visat) || dolda.has(q.id) ? '' : ' hidden'}>${dolda.has(q.id) ? `<p class="falt"><strong>${esc(q.text)}</strong><span class="under-text">Ifyllt. Svaret visas för den som signerar intyget.</span></p>` : fragaHtml(q, visat[q.id], kallaFor(q.id), av)}</div>`).join('')}</section>`).join('')}
       ${d.varningar.length ? `<div class="ruta ruta-varning">${d.varningar.map(v => `<p>${esc(v.text)}</p>`).join('')}</div>` : ''}
       ${d.saknas.length ? `<p class="forslag-varfor">Innan intyget kan signeras behövs svar under: ${esc([...new Set(d.saknas.map(x => x.rubrik))].join(', '))}.</p>` : ''}
       ${d.kan.skicka ? `<div class="falt falt-kryss"><label><input type="checkbox" name="samrad" id="ia-samrad"> Patienten vill att intyget skickas till ${esc(d.mottagare)}</label></div>` : ''}
@@ -168,10 +174,10 @@ export async function visa(main, iid) {
       if (d && !d.value) d.value = idag();
     }
     const s = svarNu(form);
-    for (const q of fragor) main.querySelector(`.ia-fraga[data-fraga="${q.id}"]`).hidden = !synlig(fragor, q, s);
+    for (const q of fragor) if (!dolda.has(q.id)) main.querySelector(`.ia-fraga[data-fraga="${q.id}"]`).hidden = !synlig(fragor, q, s);
   });
   // Bara synliga frågor skickas med värde. En dold fråga skickas tom, så att ett gammalt svar inte blir kvar.
-  const data = () => { const s = svarNu(form); return { svar: Object.fromEntries(fragor.map(q => [q.id, synlig(fragor, q, s) ? s[q.id] : null])) }; };
+  const data = () => { const s = svarNu(form); return { svar: Object.fromEntries(fragor.filter(q => !dolda.has(q.id)).map(q => [q.id, synlig(fragor, q, s) ? s[q.id] : null])) }; };
   const spara = (knapp) => medKnapp(knapp, () => api(`/api/intygsapplikation/${encodeURIComponent(iid)}`, { metod: 'POST', data: data() }), form);
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

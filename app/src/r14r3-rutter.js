@@ -23,7 +23,7 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   rutt('GET', '/api/intygsapplikation/:iid', (c, iid) => intygsapp.visa(c.db, kravInloggad(c), iid, val(c, iid)));
   rutt('POST', '/api/intygsapplikation/:iid', async (c, iid) => intygsapp.spara(c.db, kravInloggad(c), iid, c.body, val(c, iid)));
   // Runda 16, r1: utskriften (patienten kan välja att dölja diagnosen på ett intyg till arbetsgivaren).
-  rutt('GET', '/api/intygsapplikation/:iid/utskrift', (c, iid) => intygsapp.utskrift(c.db, kravInloggad(c), iid, { doljDiagnos: c.url.searchParams.get('dolj_diagnos') === '1' }));
+  rutt('GET', '/api/intygsapplikation/:iid/utskrift', (c, iid) => intygsapp.utskrift(c.db, kravInloggad(c), iid, { doljDiagnos: c.url.searchParams.get('dolj_diagnos') === '1', val: val(c, iid) }));
   rutt('POST', '/api/intygsapplikation/:iid/:atgard', async (c, iid, atgard) => intygsapp.atgard(c.db, kravInloggad(c), iid, atgard, val(c, iid), c.body ?? {}));
 
   // Sussa 2.2.1.12 och 3.3.1.2: e-remiss till en vårdgivare utanför Vårdkällan.

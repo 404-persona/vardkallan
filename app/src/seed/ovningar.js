@@ -186,9 +186,9 @@ OVNINGAR_V1.push(
   ], 'b', 'Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan inte skickas digitalt. Diagnosen är patientens att dela.'),
   o('intyg-utkast', ['vardadministrator'], 'Du har fyllt i ett utkast till ett läkarutlåtande åt läkaren. Hur gör du klart det?', [
     ['a', 'Signerar det själv, så att läkaren slipper.'],
-    ['b', 'Klickar på Markera klart för signering. Läkaren signerar, och när läkaren öppnar utkastet fyller systemet i det läkaren får se ur journalen, till exempel diagnosen.'],
+    ['b', 'Klickar på Markera klart för signering. Läkaren signerar. När läkaren öppnar utkastet föreslår systemet det läkaren får se ur journalen, till exempel diagnosen, och läkaren sparar det.'],
     ['c', 'Skickar det till Försäkringskassan.'],
-  ], 'b', 'Vårdadministratören skapar och fyller i utkast men signerar aldrig. Journalen visar Klart för signering av sig själv.', '#/patient/p01/intyg'),
+  ], 'b', 'Vårdadministratören skapar och fyller i utkast men signerar aldrig, och ser bara de svar som den själv har skrivit. Journalen visar Klart för signering av sig själv.', '#/patient/p01/intyg'),
   o('intyg-skyddad', ['vardadministrator'], 'En patient har skyddade personuppgifter och behöver ett intyg. Kan du skapa utkastet?', [
     ['a', 'Ja, som för alla patienter.'],
     ['b', 'Nej. För en patient med skyddade personuppgifter skapar den som signerar intyget, och systemet säger det.'],
