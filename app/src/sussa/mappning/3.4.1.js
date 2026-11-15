@@ -2,6 +2,7 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 // Runda 13, r4 (sussa/runda13-r4.js).
 import { medR13r4 } from '../runda13-r4.js';
+import { medR16r2 } from '../runda16-r2.js';
 import { TEST } from '../../krav.js';
 import { T, flode } from '../tidbok-tester.js';
 // Runda 6, r4.
@@ -84,4 +85,5 @@ const AVSNITT = [
 
 // Runda 6, r4: posterna som byggdes i planering och tidbok, del 2, och remiss, del 2, ersätts ur sussa/planering-r4.js.
 // Runda 13, r4: arbetsdagen, väntelistan och bokningen (sussa/runda13-r4.js).
-export default medR13r4(medR10r7(medR8(medR4(AVSNITT))));
+// Runda 16, r2: bevakningen av sjukskrivningar för läkaren och vårdenheten (sussa/runda16-r2.js).
+export default medR16r2(medR13r4(medR10r7(medR8(medR4(AVSNITT)))));

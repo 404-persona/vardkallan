@@ -167,3 +167,28 @@ OVNINGAR_V1.push(
     ['c', 'En hel mall med många sökord.'],
   ], 'b', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
 );
+// Runda 16, r2: stödet vid sjukskrivning, beslutsstödet och förlängningen för läkaren, och vårdenhetens översikt för
+// verksamhetschefen.
+OVNINGAR_V1.push(
+  o('sjukfall-forlang', ['lakare'], 'Demopatienten Mikael Svensson är sjukskriven och intyget går snart ut. Hur förlänger du sjukskrivningen?', [
+    ['a', 'Skriver ett nytt sjukintyg från början och räknar ut när perioden ska börja.'],
+    ['b', 'Klickar på Förläng sjukskrivningen i fliken Sjukskrivning. Utkastet börjar dagen efter förra intyget och har diagnos, sysselsättning, nivå och motivering ifyllda.'],
+    ['c', 'Ändrar slutdatumet i det signerade intyget.'],
+  ], 'b', 'Ett signerat intyg ändras aldrig. Systemet föreslår perioden och fyller i det som inte har ändrats, och du tar ställning till resten och signerar.', '#/patient/p14/sjukskrivning'),
+  o('fmb-varning', ['lakare'], 'Beslutsstödet säger att den sammanlagda sjukskrivningen blir längre än Socialstyrelsens rekommendation. Vad gör du?', [
+    ['a', 'Kortar perioden så att varningen försvinner.'],
+    ['b', 'Bedömer patienten. Behövs en längre sjukskrivning skriver du varför i rutan under varningen, en gång, och motiveringen följer med i intyget och i förlängningar.'],
+    ['c', 'Intyget går inte att signera förrän varningen är borta.'],
+  ], 'b', 'Rekommendationen är ett stöd, inte en gräns. Systemet räknar dagarna ur patientens tidigare intyg, och Försäkringskassan får din motivering i intyget.'),
+  o('sjukfall-regel', ['lakare'], 'Ett sjukintyg slutar den 10:e och nästa börjar den 14:e. Räknas de som ett sjukfall?', [
+    ['a', 'Nej, sjukfallet bryts så fort det finns en dag utan intyg.'],
+    ['b', 'Ja. Intyg med högst 5 dagars uppehåll hör till samma sjukfall, men dagarna mellan intygen räknas inte i sjukskrivningens längd.'],
+    ['c', 'Ja, och dagarna mellan intygen räknas med i längden.'],
+  ], 'b', 'Regeln är densamma som i Rehabstöd och Webcert. Systemet räknar sjukfallet själv och visar var patienten är i rehabiliteringskedjan.', '#/sjukskrivningar'),
+  o('sjukfall-enhet', ['verksamhetschef'], 'Varför står det färre än 5 på flera rader i Sjukskrivningar på vårdenheten?', [
+    ['a', 'Uppgifterna har inte hunnit räknas.'],
+    ['b', 'Små antal visas inte, så att översikten inte pekar ut enskilda patienter. Patienter med skyddade personuppgifter räknas inte alls.'],
+    ['c', 'Det är ett fel som ska anmälas.'],
+  ], 'b', 'Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 visas som färre än 5, och ibland döljs också en till ruta så att det dolda inte kan räknas fram ur totalen.', '#/sjukskrivningar/enhet'),
+);
+

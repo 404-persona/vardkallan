@@ -2,6 +2,8 @@
 // patienten, läkaren och vårdenheten ifyllda, som Webcert i integrerat läge. Den är simulerad och inte Webcert: inget
 // intyg lämnar demon. Varje ändring, signering och sändning meddelas journalen med statusuppdateringar.
 import { esc, api, notis, felNotis, medKnapp, vyRubrik, tidpunkt } from '../ui.js';
+// Runda 16, r2: Socialstyrelsens försäkringsmedicinska beslutsstöd medan läkaren skriver sjukintyget.
+import * as fmbPanel from '../beslutsstod-fmb-ui.js';
 
 export const namn = 'intygsapplikation';
 
@@ -32,9 +34,13 @@ export async function visa(main, iid) {
         ${d.kan.radera ? '<button type="button" class="knapp sekundar" data-atgard="radera">Radera utkastet</button>' : ''}
       </div>
     </form>
+    <div class="fmb-yta"></div>
     <p><a href="#/patient/${encodeURIComponent(d.patientId)}/intyg">Tillbaka till journalen</a></p>`;
   const form = main.querySelector('.ia-form');
   const data = () => Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, v === '' ? null : v]));
+  // Runda 16, r2: beslutsstödet följer perioden och nivån som läkaren väljer.
+  const fmb = () => fmbPanel.visa(main.querySelector('.fmb-yta'), iid, d.kan.andra ? { fran: form.fran?.value, till: form.till?.value, nedsattning: form.nedsattning?.value } : {});
+  if (d.typ === 'LISJP') { fmb(); form.addEventListener('change', (e) => { if (['fran', 'till', 'nedsattning'].includes(e.target.name)) fmb(); }); }
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     try { await medKnapp(e.submitter ?? form.querySelector('button'), () => api(`/api/intygsapplikation/${encodeURIComponent(iid)}`, { metod: 'POST', data: data() })); notis('Utkastet är sparat.'); visa(main, iid); } catch (x) { felNotis(x); }

@@ -232,6 +232,9 @@ export const GRANSSNITT = [
     behorighet: 'Läskopian byggs med samma behörighetskontroll som de vanliga anropen, och utlämnandet loggas.',
   }),
 ];
+// Runda 16, r2: svaren om sjukskrivningen i intygen (FK 7804 fråga 28, 32 och 37) i förifyllnaden och
+// statusuppdateringen hör till intygen, liksom motiveringen till beslutsstödet i den simulerade intygsapplikationen.
+GRANSSNITT.find(x => x.id === 'intyg').kod.push('src/sjukfall-intygssvar.js', 'src/intygsapplikation-beslutsstod-simulerad.js');
 
 // Adressprefix som servern skickar vidare men som inte är gränssnitt för informationsutbyte med andra system.
 export const INTERNA = {

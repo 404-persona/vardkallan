@@ -2,6 +2,7 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 // Runda 10, r5: processtöd, kunskapsstöd, vårdprocesser, högflödesmottagning, läkemedel och vaccination (sussa/runda10-r5.js).
 import { medR10r5 } from '../runda10-r5.js';
+import { medR16r2 } from '../runda16-r2.js';
 import { TEST } from '../../krav.js';
 
 const { M } = TEST;
@@ -41,4 +42,5 @@ const POSTERNA = [
     anmarkning: 'Kunskapsgenererande system saknas, och reglerna är demoregler utan MDR-bedömning.',
   },
 ];
-export default medR10r5(POSTERNA);
+// Runda 16, r2: Socialstyrelsens försäkringsmedicinska beslutsstöd vid sjukskrivning (sussa/runda16-r2.js).
+export default medR16r2(medR10r5(POSTERNA));

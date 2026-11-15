@@ -15,6 +15,8 @@ import { loggaRad } from './logg.js';
 import { avlidenFor } from './avliden.js';
 import * as r3 from './rivta-r3.js';
 import { KV, INTYGSTYPER, LOGISK_ADRESS_INTYGSAPPLIKATION, DEF, personId, sattTransport } from './lakarintyg.js';
+// Runda 16, r2: svaren om sjukskrivningen (fråga 28, 32 och 37 i FK 7804) i förifyllnaden och statusuppdateringen.
+import { simSvarUrForifyllnad, sjukskrivningSvar } from './sjukfall-intygssvar.js';
 
 export const NAMN = 'Intygsapplikation (simulerad, inte Webcert)';
 // Påhittade värden som kontraktet kräver men som demon inte har. Märkta som demo.
@@ -83,6 +85,8 @@ function skapaUtkast(ctx, { begaran: m }) {
       }
     }
   }
+  // Runda 16, r2: sysselsättning, perioden och motiveringen när journalen förlänger en sjukskrivning.
+  if (typ === 'LISJP') Object.assign(svar, simSvarUrForifyllnad(i.forifyllnad?.svar));
   const tid = iso();
   db.query("INSERT INTO sim_intygsapplikation (intygs_id, patient_id, enhet_id, typ, personnummer, personal_hsa, personal_namn, ref, status, skapad, svar, handelser) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'utkast', ?, ?, '[]')")
     .run(intygsId, p.id, enhet.id, typ, pnr, personalHsa, personalNamn, i.ref ?? null, tid, JSON.stringify(svar));
@@ -121,7 +125,8 @@ function intygObjekt(db, r, { med } = {}) {
       },
     },
     status: status.length ? status : null,
-    svar: med && svar.diagnosKod ? [{ '@id': '6', delsvar: [{ '@id': '6.2', $any: [el(NS_TYPES, 'cv', [el(NS_TYPES, 'code', svar.diagnosKod), el(NS_TYPES, 'codeSystem', KV.icd10), el(NS_TYPES, 'displayName', svar.diagnosText ?? svar.diagnosKod)])] }] }] : null,
+    // Runda 16, r2: sjukskrivningens svar följer med diagnosen (sjukskrivningSvar i sjukfall-intygssvar.js).
+    svar: sjukskrivningSvar(r.typ, med, svar, med && svar.diagnosKod ? [{ '@id': '6', delsvar: [{ '@id': '6.2', $any: [el(NS_TYPES, 'cv', [el(NS_TYPES, 'code', svar.diagnosKod), el(NS_TYPES, 'codeSystem', KV.icd10), el(NS_TYPES, 'displayName', svar.diagnosText ?? svar.diagnosKod)])] }] }] : null),
   };
 }
 const NS_TYPES = 'urn:riv:clinicalprocess:healthcond:certificate:types:3';

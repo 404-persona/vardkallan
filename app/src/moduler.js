@@ -427,6 +427,14 @@ MODULER.push(m('intyg', 'journal', 'Intyg',
   { avsnitt: ['2.2.1.9'], rutter: ['#/intygsapplikation/:id'], journal: ['intyg'], vyer: ['patient-intyg.js', 'intygsapplikation.js'], kod: ['src/lakarintyg.js', 'src/intygsapplikation-simulerad.js', 'src/r14r3-rutter.js'],
     api: ['/api/patient/:id/intyg', '/api/intygsapplikation/:id'],
     simulerat: 'Intygsapplikationen är simulerad och är inte Webcert. Inget intyg skickas till Försäkringskassan eller någon annan mottagare. Tjänstekontrakten är byggda och validerade mot sina scheman men inte anslutna till den nationella tjänsteplattformen.' }));
+// Runda 16, r2: stödet vid sjukskrivning: sjukfallen, Socialstyrelsens försäkringsmedicinska beslutsstöd, förlängning
+// med ett klick och översikterna för läkaren och verksamhetschefen.
+MODULER.push(m('sjukskrivning', 'journal', 'Sjukskrivning',
+  'Systemet för ihop sjukintygen till sjukfall efter regeln i Rehabstöd, räknar dagar och grad över tiden och visar var patienten är i rehabiliteringskedjan. När läkaren skriver ett sjukintyg visar systemet Socialstyrelsens försäkringsmedicinska beslutsstöd för diagnosen och varnar när den sammanlagda sjukskrivningen blir längre än rekommendationen. En sjukskrivning förlängs med ett klick. Läkaren har en översikt över sina pågående sjukfall och verksamhetschefen över vårdenhetens, utan patientuppgifter.',
+  { avsnitt: [], rutter: ['#/sjukskrivningar', '#/sjukskrivningar/enhet'], journal: ['sjukskrivning'], vyer: ['patient-sjukskrivning.js', 'sjukskrivningar.js'],
+    kod: ['src/sjukfall.js', 'src/fmb.js', 'src/sjukfall-intygssvar.js', 'src/sjukfall-rutter.js', 'src/intygsapplikation-beslutsstod-simulerad.js', 'public/js/beslutsstod-fmb-ui.js'],
+    api: ['/api/patient/:id/sjukskrivning', '/api/sjukskrivningar', '/api/intygsapplikation/:id/beslutsstod'],
+    simulerat: 'Intygen kommer från den simulerade intygsapplikationen och från demodata. Inget skickas till Försäkringskassan. Socialstyrelsens beslutsstöd är ett utdrag ur det öppna API:t (villkor CC0) och hämtas inte i drift. Rehabkoordinatorns status per sjukfall visas inte, eftersom demon saknar rollen rehabkoordinator.' }));
 {
   const r = MODULER.find(x => x.id === 'remiss');
   r.beskrivning += ' E-remiss till och från vårdgivare utanför Vårdkällan med tjänstekontrakten för elektronisk remiss, där systemet fyller i remissen och statusen följer mottagarens besked och svar.';

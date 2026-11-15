@@ -1363,6 +1363,17 @@ function skapa(BAS) {
     await m.klicka(page.locator('.eremiss-form [type="submit"]'), 'Skicka e-remissen');
     await synlig(page, '.notis', 'E-remissen är skickad');
   };
+  // Runda 16, r2: förlänga en sjukskrivning för demons sjukskrivna patient på vårdcentralen (Mikael Svensson).
+  startI['Journalen för en sjukskriven patient på vårdcentralen'] = async (page) => { await gaTill(page, '#/patient/p14'); await page.waitForSelector('.patientband h1'); await page.waitForLoadState('networkidle'); };
+  GOR['forlang-sjukskrivning'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Sjukskrivning' }), 'Sjukskrivning');
+    await page.waitForSelector('[data-forlang]');
+    await m.klicka(page.locator('[data-forlang]'), 'Förläng sjukskrivningen');
+    await page.waitForURL(/#\/intygsapplikation\//);
+    await synlig(page, '.fmb-panel', 'Försäkringsmedicinskt beslutsstöd');
+    await m.klicka(page.locator('[data-atgard="signera"]'), 'Signera');
+    await synlig(page, '.notis', 'signerat');
+  };
   // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.
   GOR['las-mellanarkiv'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Journal' }).first(), 'fliken Journal');

@@ -515,8 +515,12 @@ export class Schemaset {
       for (const x of lista) if (x != null) barn.push(this.byggEl(p, x, `${vag}/${p.lokal}`));
     };
     ga(typ.innehall);
+    // Runda 16, r2: text i ett element med blandat innehåll (mixed), som delsvaren i intygen (FK 7804 fråga 37.1). Texten
+    // anges med '$', som för enkelt innehåll.
+    if (typ.blandat && typeof objekt.$ === 'string') anvanda.add('$');
     for (const k of Object.keys(objekt)) if (!anvanda.has(k) && !k.startsWith('@')) throw new SchemaFel(`${vag}: fältet ${k} finns inte i schemat.`);
     const e = nyttEl(dekl.ns, dekl.lokal, barn);
+    if (typ.blandat && typeof objekt.$ === 'string') e.text = objekt.$;
     e.attr = byggAttr(typ, objekt, vag);
     void attr;
     return e;
@@ -539,6 +543,8 @@ export class Schemaset {
     }
     const ut = {};
     for (const a of nod.attr) if (a.ns !== XSI) ut[`@${a.lokal}`] = a.varde;
+    // Runda 16, r2: texten i ett element med blandat innehåll läses ut som '$', som bygg tar den.
+    if (typ.blandat && harText(nod)) ut.$ = nod.text;
     const lokala = elementIModell(typ.innehall);
     for (const b of nod.barn) {
       const d = lokala.get(nyckel(b.ns, b.lokal));

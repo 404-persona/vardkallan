@@ -518,6 +518,11 @@ export function byggSeed(bas = nu()) {
   require('./administrering.js').sakraIdentitet(db);
   // Runda 14, r3: intyg, e-remiss, vaccination, Infektionsverktyget, NKRR, formulär, 1177 och dos (schema-runda14-r3.js).
   require('./schema-runda14-r3.js').sakraR14r3(db);
+  // Runda 16, r2: sjukskrivningarna ur de signerade sjukintygen (sjukfall.js). Inget läggs in i efterhand.
+  require('./sjukfall.js').sakra(db);
+  // Runda 16, r2: tabellerna för makulerade vårdkontakter skapades först vid den första läsningen av översikten, och i en
+  // sandlåda som har nått taket för databasen gick det inte. De skapas nu med de andra (vardkontakt-makulering.js).
+  require('./vardkontakt-makulering.js').sakra(db);
   // Runda 14, r4: mellanarkivet med de äldre uppgifter ur VAS som fördes dit vid migreringen (mellanarkiv.js).
   require('./mellanarkiv.js').seeda(db);
   // Runda 14, r5: incidentregistret (servicenivaer.js). Inget läggs in i efterhand.
@@ -683,6 +688,11 @@ export function migrera(db) {
   require('./administrering.js').sakraIdentitet(db);
   // Runda 14, r3 (schema-runda14-r3.js).
   require('./schema-runda14-r3.js').sakraR14r3(db);
+  // Runda 16, r2: sjukskrivningarna ur de signerade sjukintygen (sjukfall.js). Inget läggs in i efterhand.
+  require('./sjukfall.js').sakra(db);
+  // Runda 16, r2: tabellerna för makulerade vårdkontakter skapades först vid den första läsningen av översikten, och i en
+  // sandlåda som har nått taket för databasen gick det inte. De skapas nu med de andra (vardkontakt-makulering.js).
+  require('./vardkontakt-makulering.js').sakra(db);
   // Runda 14, r5: incidentregistret (servicenivaer.js). Inget läggs in i efterhand.
   require('./servicenivaer.js').sakra(db);
   // Runda 14, r1: de betrodda inloggningstjänsterna (inloggningstjanster.js).
@@ -729,6 +739,8 @@ export function mallen() {
     require('./bildmedia.js').demo(db);
     // Runda 11, r6: undersökningar som väntar på tid och är bokade på röntgenkliniken (undersokningar.js).
     try { require('./undersokningar.js').seedaDemo(db); } catch (e) { console.error('Undersökningarna i demon kunde inte läggas in:', e.message); }
+    // Runda 16, r2: demons sjukskrivningar för läkaren på vårdcentralen (sjukfall.js), i mallen som demons andra exempel.
+    require('./sjukfall.js').seedaDemo(db);
     mall = { datum: d, byggd: nuMs, data: db.serialize() };
     db.close();
   }

@@ -163,6 +163,8 @@ import { MIGRERINGAR as r12r2Migreringar } from './releaser.js';
 import { registreraRutter as r13r1Rutter } from './r13r1-rutter.js';
 // Runda 14, r3: intyg genom intygsapplikationen och e-remiss (r14r3-rutter.js).
 import { registreraRutter as r14r3Rutter } from './r14r3-rutter.js';
+// Runda 16, r2: stödet vid sjukskrivning: sjukfall, beslutsstöd och förlängning (sjukfall-rutter.js).
+import { registreraRutter as r16r2Rutter } from './sjukfall-rutter.js';
 // Runda 15, r5: omvårdnadsprocessen (r15r5-rutter.js) och mallarna per yrke (mallar-yrken.js).
 import { registreraRutter as r15r5Rutter } from './r15r5-rutter.js';
 import { mallarForPerson as yrkesMallar } from './mallar-yrken.js';
@@ -2606,6 +2608,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r12r1Rutter({ rutt, kravInloggad });
   // Runda 14, r3 (r14r3-rutter.js).
   r14r3Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // Runda 16, r2 (sjukfall-rutter.js).
+  r16r2Rutter({ rutt, kravInloggad, medPatient, valFor });
   // Runda 15, r5 (r15r5-rutter.js).
   r15r5Rutter({ rutt, kravInloggad, medPatient });
   // Runda 15, r4 (r15r4-rutter.js).

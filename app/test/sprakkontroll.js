@@ -259,6 +259,10 @@ TILLATNA.add('SOAP');
 // specifikation och JWKS och jwks_uri formatet och adressen för publika nycklar.
 for (const f of ['SAML', 'SAD', 'JWKS']) TILLATNA.add(f);
 FRASER.push('/api/inloggning/rp-jwks', 'jwks_uri', 'alg none');
+// Runda 16, r2: ICF är WHO:s klassifikation av funktionstillstånd, som Socialstyrelsens försäkringsmedicinska
+// beslutsstöd (FMB) kodar funktionsnedsättningar och aktivitetsbegränsningar med.
+for (const f of ['ICF', 'FMB']) TILLATNA.add(f);
+FRASER.push('/api/patient/:id/sjukskrivning/forlang', '/api/intygsapplikation/:id/beslutsstod/motivering', '/api/intygsapplikation/:id/beslutsstod');
 
 // Interna anteckningar och råd till oss själva, som aldrig ska visas för användaren.
 export const INTERN = /\b(TODO|FIXME|XXX|HACK)\b|\b([Tt]änk på att|[Kk]om ihåg att|[Ss]äg inte|[Gg]löm inte att|OBS! [Ii]ntern|[Ii]ntern anteckning)/;

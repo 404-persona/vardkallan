@@ -2,7 +2,7 @@
 // API:t ligger i src/fmb/fmb-data.json.
 import { describe, test, expect } from 'bun:test';
 import * as fmb from '../src/fmb.js';
-import { utdrag, tillText } from '../scripts/fmb-hamta.js';
+import { utdrag, tillText, utanTankstreck } from '../scripts/fmb-hamta.js';
 
 const T = 'FMB > ';
 
@@ -37,10 +37,12 @@ describe('Försäkringsmedicinskt beslutsstöd', () => {
     expect(fmb.tidText(1, 'wk')).toBe('1 vecka');
   });
 
-  test(`${T}utdraget ur det öppna API:t tar med alla giltiga typfall och gör HTML till vanlig text`, () => {
+  test(`${T}utdraget ur det öppna API:t tar med alla giltiga typfall och gör HTML till vanlig text utan tankstreck`, () => {
     expect(fmb.ANTAL.diagnosrubriker).toBeGreaterThan(100);
     expect(fmb.ANTAL.typfall).toBeGreaterThan(400);
     expect(fmb.KALLA.licens).toBe('CC0');
+    expect(utanTankstreck('i 2 – 4 veckor')).toBe('i 2 till 4 veckor');
+    expect(utanTankstreck('lång tid – ofta 1 år – är')).toBe('lång tid, ofta 1 år, är');
     expect(tillText('Till exempel\n\n<ul>\n<li>svårt att gå</li>\n<li>svårt att lyfta</li>\n</ul>')).toBe('Till exempel\n• svårt att gå\n• svårt att lyfta');
     const diag = { meta: { version: '9' }, data: [{ id: '1', attributes: { diagnosrubrik: 'X', diagnoskod: [{ kod: 'A01' }], funktionsnedsattning: { funktionsnedsattningsbeskrivning: '<p>F</p>' }, aktivitetsbegransning: {} } }] };
     const typfall = { data: [

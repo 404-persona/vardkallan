@@ -696,3 +696,12 @@ ROLLER.sjukskoterska.push('las_intyg');
 // Undersköterskan läser inte läkarnas anteckningar.
 HANDLINGAR.skriv_observation = 'skriva anteckningar med de mallar som vårdgivaren har gett yrket';
 ROLLER.underskoterska.push('skriv_observation');
+
+// Runda 16, r2: stödet vid sjukskrivning (sjukfall.js). Läkaren ser sina pågående sjukfall i en översikt, där varje
+// patient prövas för sig med las_intyg på den egna vårdenheten. Verksamhetschefen ser vårdenhetens sjukfall som antal,
+// utan patientuppgifter. Patientens sjukskrivning och förlängningen prövas med las_intyg och skriv_intyg som intygen.
+Object.assign(HANDLINGAR, { sjukfall_mina: 'se sina pågående sjukfall', sjukfall_enhet: 'se vårdenhetens sjukfall som antal, utan patientuppgifter' });
+ROLLER.lakare.push('sjukfall_mina');
+ROLLER.verksamhetschef.push('sjukfall_enhet');
+UTAN_PATIENT.add('sjukfall_mina');
+UTAN_PATIENT.add('sjukfall_enhet');

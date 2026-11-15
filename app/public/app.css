@@ -1978,3 +1978,23 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .ant-ref { background: var(--kalla-ljus); border-bottom: 1px dotted var(--kalla); }
 .lasordning-rad { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .fraser-dialog { max-width: min(40rem, calc(100vw - 32px)); }
+
+/* Runda 16, r2: stödet vid sjukskrivning (patient-sjukskrivning.js, sjukskrivningar.js och beslutsstod-fmb-ui.js). */
+.sjk-varning { background: var(--obs-bg); border-color: var(--obs-kant); color: var(--obs); margin: 8px 0; }
+.sjk-kort h3 { font-size: var(--f-l); margin: 0 0 6px; }
+.sjk-kort h4 { font-size: var(--f-s); margin: 10px 0 4px; }
+.sjk-kedja { margin: 6px 0; }
+.sjk-tidslinje { display: flex; gap: 2px; height: 14px; border-radius: 3px; overflow: hidden; background: var(--yta-2); max-width: 40rem; }
+.sjk-avsnitt { flex-basis: 0; min-width: 4px; background: var(--kalla-mork); }
+.sjk-grad-75 { background: var(--kalla); }
+.sjk-grad-50 { background: var(--kalla-mellan); }
+.sjk-grad-25 { background: var(--kalla-ljus); border: 1px solid var(--kalla-mellan); }
+.sjk-avsnittslista li { padding: 2px 0; }
+.sjk-forlang { border-left: 4px solid var(--kalla); }
+.sjk-rad { display: flex; flex-direction: column; gap: 2px; }
+.sjk-markeringar { display: flex; flex-wrap: wrap; gap: 4px; }
+.sjk-fordelningar { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 12px; }
+.sjk-fordelningar .ruta { margin: 0; }
+.fmb-panel h2 { font-size: var(--f-l); margin: 0 0 6px; }
+.fmb-panel details { margin: 6px 0; }
+.fmb-panel details > ul:not(.enkel-lista) { margin: 4px 0 4px 1.2em; }

@@ -568,7 +568,7 @@
   },
   {
    "id": "644",
-   "rubrik": "Ankyloserande spondylit (Bechterews sjukdom) – (axial spondylartrit (inflammatorisk ryggsjukdom))",
+   "rubrik": "Ankyloserande spondylit (Bechterews sjukdom), (axial spondylartrit (inflammatorisk ryggsjukdom))",
    "koder": [
     "M45",
     "M45.9"
@@ -1301,7 +1301,7 @@
     "S56",
     "S66"
    ],
-   "funktionsnedsattning": "Skador på böjsenor och sträcksenor kan ge smärta och svullnad, och problem med handens och fingrarnas funktioner. Det kan till exempel vara:\n• nedsatt ledrörlighet – problem att greppa respektive att öppna upp greppet (att böja respektive sträcka ut handleden och fingrarna)\n• nedsatt koordination och precision i handens och fingrarnas rörelser\n• nedsatt muskelkraft.",
+   "funktionsnedsattning": "Skador på böjsenor och sträcksenor kan ge smärta och svullnad, och problem med handens och fingrarnas funktioner. Det kan till exempel vara:\n• nedsatt ledrörlighet, problem att greppa respektive att öppna upp greppet (att böja respektive sträcka ut handleden och fingrarna)\n• nedsatt koordination och precision i handens och fingrarnas rörelser\n• nedsatt muskelkraft.",
    "funktionsnedsattningIcf": [],
    "aktivitetsbegransning": "Skador på böjsenor och sträcksenor kan ge svårigheter med aktiviteter som kräver handens fulla funktion, exempelvis att hantera föremål. Det kan till exempel vara:\n• svårt att lyfta och bära föremål\n• svårt att utföra koordinerade hand- och fingerrörelser, till exempel att plocka upp eller hålla fast små föremål, eller att skriva för hand\n• svårt att koordinera arm- och handrörelser, till exempel att hantera verktyg.\nDet kan även bli svårt att använda kommunikationsutrustning, till exempel att skriva på tangentbord.",
    "aktivitetsbegransningIcf": [],
@@ -1838,7 +1838,7 @@
    "koder": [
     "M72.0"
    ],
-   "funktionsnedsattning": "Dupuytrens kontraktur medför problem att räta ut och böja fingrarna vilket i vissa fall kan påverka handfunktioner som exempelvis greppförmåga. Efter operation bandageras handen i 2 – 4 veckor under vilken tid arbete som kräver god handhygien inte kan utföras.",
+   "funktionsnedsattning": "Dupuytrens kontraktur medför problem att räta ut och böja fingrarna vilket i vissa fall kan påverka handfunktioner som exempelvis greppförmåga. Efter operation bandageras handen i 2 till 4 veckor under vilken tid arbete som kräver god handhygien inte kan utföras.",
    "funktionsnedsattningIcf": [
     {
      "kod": "b710",
@@ -5169,7 +5169,7 @@
    "koder": [
     "E66"
    ],
-   "funktionsnedsattning": "Obesitaskirurgi vid fetma kan efter operationen och i samband med hastig viktnedgång och minskat näringsintag medföra trötthet, värk, illamående, diarré, yrsel, hjärtklappning och nedsatt fysisk uthållighet (så kallat dumpingsymtom). Kirurgiska komplikationer – till exempel sårkomplikationer, läckage, bukabscess kan leda till längre tids funktionsnedsättning.",
+   "funktionsnedsattning": "Obesitaskirurgi vid fetma kan efter operationen och i samband med hastig viktnedgång och minskat näringsintag medföra trötthet, värk, illamående, diarré, yrsel, hjärtklappning och nedsatt fysisk uthållighet (så kallat dumpingsymtom). Kirurgiska komplikationer, till exempel sårkomplikationer, läckage, bukabscess kan leda till längre tids funktionsnedsättning.",
    "funktionsnedsattningIcf": [
     {
      "kod": "b130",
@@ -9159,7 +9159,7 @@
    "koder": [
     "S61"
    ],
-   "tillstand": "isolerade hudskador ovanför handleden – uppåt armen",
+   "tillstand": "isolerade hudskador ovanför handleden, uppåt armen",
    "rekommendation": "ingen",
    "tid": null,
    "enhet": null,
@@ -9170,7 +9170,7 @@
    "koder": [
     "S61"
    ],
-   "tillstand": "isolerade hudskador ovanför handleden – uppåt armen – med arbeten som kräver att huden läkt ihop och eventuella suturer tagits bort",
+   "tillstand": "isolerade hudskador ovanför handleden, uppåt armen, med arbeten som kräver att huden läkt ihop och eventuella suturer tagits bort",
    "rekommendation": "2v",
    "tid": null,
    "enhet": null,
@@ -9181,7 +9181,7 @@
    "koder": [
     "S61"
    ],
-   "tillstand": "ytliga sårskador nedanför handleden – på hand eller fingrar – med manuella arbetsuppgifter, eller med krav på god handhygien som kräver frekvent tvättning",
+   "tillstand": "ytliga sårskador nedanför handleden, på hand eller fingrar, med manuella arbetsuppgifter, eller med krav på god handhygien som kräver frekvent tvättning",
    "rekommendation": "2v",
    "tid": null,
    "enhet": null,
@@ -9226,7 +9226,7 @@
     "C43"
    ],
    "tillstand": "lokalt avancerat hudmelanom (stadium III) med regional lymfkörtelspridning, efter att lymfkörteln har opererats bort",
-   "rekommendation": "behov av 14–30 dagars sjukskrivning",
+   "rekommendation": "behov av 14 till 30 dagars sjukskrivning",
    "tid": 30,
    "enhet": "d",
    "grad": "heltid"
@@ -9332,7 +9332,7 @@
     "C34"
    ],
    "tillstand": "lokaliserad lungcancer (stadium I-II) och efter kirurgisk behandling",
-   "rekommendation": "Rekommenderas sjukskrivning på heltid i 4–8 veckor.",
+   "rekommendation": "Rekommenderas sjukskrivning på heltid i 4 till 8 veckor.",
    "tid": 8,
    "enhet": "wk",
    "grad": "heltid"
@@ -9343,7 +9343,7 @@
     "C34"
    ],
    "tillstand": "lokaliserad lungcancer (stadium I-II) och tilläggsbehandling med cytostatika",
-   "rekommendation": "Sjukskrivning på heltid oftast motiverad under behandlingstiden (vanligen 12 veckor) och 4–8 veckor efter avslutad behandling, totalt i 16–20 veckor.",
+   "rekommendation": "Sjukskrivning på heltid oftast motiverad under behandlingstiden (vanligen 12 veckor) och 4 till 8 veckor efter avslutad behandling, totalt i 16 till 20 veckor.",
    "tid": 20,
    "enhet": "wk",
    "grad": "heltid"
@@ -9398,7 +9398,7 @@
     "C34"
    ],
    "tillstand": "lokalt avancerad lungcancer (stadium III) och tilläggsbehandling med cytostatika efter operation",
-   "rekommendation": "sjukskrivning oftast motiverad under behandlingstiden (vanligen 12 veckor) och 4–8 veckor efter avslutad behandling, totalt 16–20 veckor",
+   "rekommendation": "sjukskrivning oftast motiverad under behandlingstiden (vanligen 12 veckor) och 4 till 8 veckor efter avslutad behandling, totalt 16 till 20 veckor",
    "tid": 20,
    "enhet": "wk",
    "grad": "heltid"
@@ -9444,7 +9444,7 @@
     "C21"
    ],
    "tillstand": "lokaliserad och lokalt avancerad rektalcancer (stadium I, II och III) med okomplicerat behandlingsförlopp efter operationen, och fysiskt lätt arbete",
-   "rekommendation": "3–4 månader",
+   "rekommendation": "3 till 4 månader",
    "tid": 4,
    "enhet": "mo",
    "grad": "heltid"
@@ -9480,7 +9480,7 @@
     "C21"
    ],
    "tillstand": "kvarstående långvariga symtom efter cytostatikabehandling",
-   "rekommendation": "ytterligare 2–3 månader",
+   "rekommendation": "ytterligare 2 till 3 månader",
    "tid": 3,
    "enhet": "mo",
    "grad": "heltid"
@@ -10500,7 +10500,7 @@
     "C61"
    ],
    "tillstand": "spridd prostatacancer",
-   "rekommendation": "Sjukskrivning under lång tid – ofta 1 år eller längre – är ofta motiverad. I perioder med förbättring kan ofta finns viss arbetsförmåga.",
+   "rekommendation": "Sjukskrivning under lång tid, ofta 1 år eller längre, är ofta motiverad. I perioder med förbättring kan ofta finns viss arbetsförmåga.",
    "tid": 12,
    "enhet": "mo",
    "grad": "heltid"
@@ -10544,7 +10544,7 @@
     "C54"
    ],
    "tillstand": "icke-spridd endometriecancer, under cytostatikabehandling",
-   "rekommendation": "Sjukskrivning under själva behandlingen är motiverad. Ofta finns arbetsförmåga (under 1–2 veckor) mellan behandlingarna.",
+   "rekommendation": "Sjukskrivning under själva behandlingen är motiverad. Ofta finns arbetsförmåga (under 1 till 2 veckor) mellan behandlingarna.",
    "tid": null,
    "enhet": null,
    "grad": "heltid"
@@ -10566,7 +10566,7 @@
     "C54"
    ],
    "tillstand": "spridd endometriecancer",
-   "rekommendation": "Sjukskrivning under lång tid – ofta 1 år eller längre – är ofta motiverad. I perioder med förbättring kan ofta finns viss arbetsförmåga.",
+   "rekommendation": "Sjukskrivning under lång tid, ofta 1 år eller längre, är ofta motiverad. I perioder med förbättring kan ofta finns viss arbetsförmåga.",
    "tid": 12,
    "enhet": "mo",
    "grad": "heltid"
@@ -10588,7 +10588,7 @@
     "C67"
    ],
    "tillstand": "icke-spridd blåscancer efter transuretral resektion av blåstumör",
-   "rekommendation": "Upp till 4 veckor. 3–4 veckor är vägledande.",
+   "rekommendation": "Upp till 4 veckor. 3 till 4 veckor är vägledande.",
    "tid": 4,
    "enhet": "wk",
    "grad": "heltid"
@@ -10610,7 +10610,7 @@
     "C67"
    ],
    "tillstand": "icke-spridd blåscancer, efter cystektomi",
-   "rekommendation": "Upp till 120 dagar. 90–120 dagar är vägledande.",
+   "rekommendation": "Upp till 120 dagar. 90 till 120 dagar är vägledande.",
    "tid": 4,
    "enhet": "mo",
    "grad": "heltid"
@@ -12202,7 +12202,7 @@
    "koder": [
     "M16"
    ],
-   "tillstand": "samtliga svårighetsgrader av höftledsartros med smärta vid ansträngning, utan eller med måttlig svårighet att röra sig och där arbetet innefattar låg till måttlig fysisk belastning – samt att patienten har fysisk eller psykisk samsjuklighet",
+   "tillstand": "samtliga svårighetsgrader av höftledsartros med smärta vid ansträngning, utan eller med måttlig svårighet att röra sig och där arbetet innefattar låg till måttlig fysisk belastning, samt att patienten har fysisk eller psykisk samsjuklighet",
    "rekommendation": "3-6 månader",
    "tid": 6,
    "enhet": "mo",
@@ -12334,7 +12334,7 @@
    "koder": [
     "M17"
    ],
-   "tillstand": "samtliga svårighetsgrader av knäartros med smärta vid ansträngning, utan eller med måttlig svårighet att röra sig och där arbetet innefattar låg till måttlig belastning – samt att patienten har fysisk eller psykisk samsjuklighet",
+   "tillstand": "samtliga svårighetsgrader av knäartros med smärta vid ansträngning, utan eller med måttlig svårighet att röra sig och där arbetet innefattar låg till måttlig belastning, samt att patienten har fysisk eller psykisk samsjuklighet",
    "rekommendation": "3-6 månader",
    "tid": 6,
    "enhet": "mo",

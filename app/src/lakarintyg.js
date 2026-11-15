@@ -153,8 +153,10 @@ export function forslag(atk, p, dag = idag()) {
 
 // Begäran CreateDraftCertificate 3.3 i schemats form (grunden bygger den i schemats ordning och validerar den).
 const hsa = (x) => ({ root: KV.hsa, extension: x });
-export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, diagnos = null }) {
+export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, diagnos = null, extraSvar = [] }) {
   const t = TYP.get(typ);
+  // Runda 16, r2: förifyllnaden vid en förlängning (sjukfall.js) kommer som färdiga svar i kontraktets form.
+  const forifyllda = [...(diagnos && typ === 'LISJP' ? [{ '@id': '6', delsvar: [{ '@id': '6.2', $any: [el(NS.types, 'cv', [el(NS.types, 'code', diagnos.kod.replace('.', '')), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', diagnos.text)])] }] }] : []), ...extraSvar];
   return {
     intyg: {
       typAvIntyg: { code: t.kod, codeSystem: KV.intygstyp, displayName: t.text },
@@ -166,7 +168,7 @@ export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, di
       skapadAv: { 'personal-id': hsa(personal.hsa_id), fullstandigtNamn: personal.namn, enhet: { 'enhets-id': hsa(enhet.hsa_id), enhetsnamn: enhet.namn } },
       ref,
       // Förifyllnaden: diagnosen i fråga 6 (delsvar 6.2, ICD-10-SE utan punkt).
-      forifyllnad: diagnos && typ === 'LISJP' ? { svar: [{ '@id': '6', delsvar: [{ '@id': '6.2', $any: [el(NS.types, 'cv', [el(NS.types, 'code', diagnos.kod.replace('.', '')), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', diagnos.text)])] }] }] } : null,
+      forifyllnad: forifyllda.length ? { svar: forifyllda } : null,
     },
   };
 }
@@ -201,7 +203,9 @@ export function forPatient(atk, p, dag = idag()) {
 }
 
 // Skapar ett utkast i intygsapplikationen. Ger raden och adressen som öppnar utkastet.
-export async function skapa(atk, p, body = {}, dag = idag()) {
+// Runda 16, r2: extra används bara av servern (sjukfall.js, förlängning): { diagnos, svar } ur ett intyg som läkaren får
+// se. Inget i extra kommer från klienten.
+export async function skapa(atk, p, body = {}, dag = idag(), extra = {}) {
   atk.krav('skriv_intyg');
   const typ = typeof body.typ === 'string' ? body.typ : '';
   if (!TYP.has(typ)) throw new Fel(400, 'Välj ett av intygen i listan.', 'ogiltig', { falt: ['typ'] });
@@ -212,7 +216,7 @@ export async function skapa(atk, p, body = {}, dag = idag()) {
   const db = atk.db;
   const personal = db.query('SELECT * FROM personal WHERE id = ?').get(atk.personal.id);
   const enhet = ve(db, atk.personal.enhet_id);
-  const diagnos = typ === 'LISJP' && kanRoll(atk.personal, 'las_diagnoser') ? diagnosForForifyllnad(atk) : null;
+  const diagnos = typ === 'LISJP' && extra.diagnos ? extra.diagnos : typ === 'LISJP' && kanRoll(atk.personal, 'las_diagnoser') ? diagnosForForifyllnad(atk) : null;
   const ref = `VK-INTYG-${randomUUID()}`;
   const t = iso();
   const id = Number(db.query("INSERT INTO lakarintyg (patient_id, enhet_id, typ, ref, skapad_av, skapad_tid, status, andrad_tid) VALUES (?, ?, ?, ?, ?, ?, 'utkast', ?)")
@@ -220,7 +224,7 @@ export async function skapa(atk, p, body = {}, dag = idag()) {
   let svar = null;
   let orsak = null;
   try {
-    svar = await r3.anropa(db, DEF.skapa(), { logiskAdress: LOGISK_ADRESS_INTYGSAPPLIKATION, begaran: skapaUtkastBegaran({ typ, patient: p, pid, personal, enhet, ref, diagnos }), transport: transportTill(db) });
+    svar = await r3.anropa(db, DEF.skapa(), { logiskAdress: LOGISK_ADRESS_INTYGSAPPLIKATION, begaran: skapaUtkastBegaran({ typ, patient: p, pid, personal, enhet, ref, diagnos, extraSvar: Array.isArray(extra.svar) ? extra.svar : [] }), transport: transportTill(db) });
   } catch (x) { if (!(x instanceof r3.RivtaFel)) throw x; orsak = x.message; }
   const intygsId = svar?.['intygs-id']?.extension ?? null;
   if (!svar || svar.result?.resultCode !== 'OK' || !intygsId) {
@@ -275,8 +279,14 @@ export function taEmotStatus(ctx, { begaran: m, logiskAdress }) {
   const pid = personId(db.query('SELECT personnummer FROM patienter WHERE id = ?').get(rad.patient_id) ?? {});
   if (!pid || m.intyg.patient?.['person-id']?.extension !== pid.extension) return resultat('ERROR', 'Patienten i meddelandet är inte intygets patient.', 'APPLICATION_ERROR');
   tillampa(db, rad, { kod, tid, kalla: 'statusuppdatering', ejBesvarade: Number(m.mottagnaFragor?.ejBesvarade ?? 0), signerad: m.intyg.signeringstidpunkt ?? null, skickad: m.intyg.skickatTidpunkt ?? null });
+  // Runda 16, r2: det som tar emot intygets svar efter en händelse (sjukfall.js sparar sjukskrivningen).
+  for (const f of EFTER_STATUS) f(db, rad, { kod, intyg: m.intyg });
   return resultat('OK');
 }
+
+// Runda 16, r2: funktioner som anropas efter en mottagen och prövad statusuppdatering, med raden, händelsekoden och
+// intyget i meddelandet. sjukfall.js lägger till sin.
+export const EFTER_STATUS = [];
 
 // En händelse ändrar statusen bara framåt, och samma händelse vid samma tid läggs bara in en gång.
 function tillampa(db, rad, { kod, tid, kalla, ejBesvarade = null, signerad = null, skickad = null }) {

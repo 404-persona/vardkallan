@@ -618,3 +618,10 @@ FLODEN.push(
     motivering: 'Ett klick för att öppna en ny anteckning, där Observationsanteckning är förvald eftersom det är yrkets mall, ett klick på det senaste mätvärdet i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och undersköterskan skriver bara det hon har sett.',
   },
 );
+// Runda 16, r2: att förlänga en sjukskrivning. Flödet finns i test/flodessteg.cjs (GOR['forlang-sjukskrivning']).
+FLODEN.push(
+  {
+    id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', roll: 'lak-vc', start: 'Journalen för en sjukskriven patient på vårdcentralen', budget: 3,
+    motivering: 'Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Signera i intygsapplikationen. Systemet har räknat sjukfallet, föreslår perioden från dagen efter förra intyget med samma längd och nivå, fyller i diagnos, sysselsättning och motiveringen till beslutsstödet och visar Socialstyrelsens rekommendation och var patienten är i rehabiliteringskedjan.',
+  },
+);

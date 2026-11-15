@@ -66,7 +66,9 @@ describe('Ansvarsuppdrag för läkemedel', () => {
       // Runda 15, r2, tredje omgången: godkännande av en flytt till rätt patient med fyra ögon.
       'godkanna_flytt', 'las_flytt',
       // Runda 10, r2: vårdenhetens förval för vyerna.
-      'vyforval']);
+      'vyforval',
+      // Runda 16, r2: vårdenhetens sjukfall som antal, utan patientuppgifter.
+      'sjukfall_enhet']);
     const f = (await k.get('/api/lakemedelsansvar')).data.uppdrag.find(u => u.typ === 'medicinskt_ansvarig').forslag[0];
     const r = await k.post('/api/lakemedelsansvar/uppdrag', { typ: 'medicinskt_ansvarig', personalId: f.personalId });
     expect(r.status).toBe(201);

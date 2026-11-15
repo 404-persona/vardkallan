@@ -82,6 +82,8 @@ export const PROVA = {
   '#/nationella-tjanster': 'forvalta_api',
   // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
   '#/flyttar': 'godkanna_flytt',
+  // Runda 16, r2: sjukskrivningen för demons sjukskrivna patient och översikterna över sjukskrivningar.
+  '#/patient/p14/sjukskrivning': 'las_intyg', '#/sjukskrivningar': 'sjukfall_mina', '#/sjukskrivningar/enhet': 'sjukfall_enhet',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

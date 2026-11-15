@@ -106,6 +106,8 @@ import * as modrahalsovard from './vyer/modrahalsovard.js';
 import * as flerfaktorVy from './vyer/flerfaktor.js';
 // Runda 14, r3: den simulerade intygsapplikationen (Sussa 2.2.1.9).
 import * as intygsapplikation from './vyer/intygsapplikation.js';
+// Runda 16, r2: läkarens och vårdenhetens översikt över sjukskrivningar.
+import * as sjukskrivningarVy from './vyer/sjukskrivningar.js';
 import { andraFaktorn } from './flerfaktor-ui.js';
 // Runda 12, r3 (Sussa KD1.1.4.10): arbete över flera skärmar.
 import * as flera from './flera-fonster.js';
@@ -343,6 +345,13 @@ RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/anvandartest$/)
 RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0, [/^#\/flerfaktor$/, flerfaktorVy, () => arPersonal()]);
 // Runda 14, r3: den simulerade intygsapplikationen, som öppnas från fliken Intyg i journalen.
 RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0, [/^#\/intygsapplikation\/([\w-]+)$/, intygsapplikation, () => far('las_intyg')]);
+// Runda 16, r2: Mina sjukskrivningar för läkaren och Sjukskrivningar på vårdenheten för verksamhetschefen.
+RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0,
+  [/^#\/sjukskrivningar$/, sjukskrivningarVy, () => far('sjukfall_mina')],
+  [/^#\/sjukskrivningar\/enhet$/, sjukskrivningarVy, () => far('sjukfall_enhet')]);
+MENY.splice(MENY.findIndex(m => m[0] === '#/remisser') + 1, 0,
+  ['#/sjukskrivningar', 'Sjukskrivningar', 'kalender', () => far('sjukfall_mina')],
+  ['#/sjukskrivningar/enhet', 'Sjukskrivningar på vårdenheten', 'krav', () => far('sjukfall_enhet')]);
 
 // Invånarens adresser i Min journal, och de offentliga sidorna. Personalens vyer finns inte här.
 const RUTTER_MIN = [

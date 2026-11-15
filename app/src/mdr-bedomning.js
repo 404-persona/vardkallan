@@ -64,6 +64,11 @@ export const MODULER = [
     J(true, false, false, true, false), null,
     'Förslagen pekar på uppgifter som redan finns i journalen och visar dem på ett annat ställe, utan att räkna fram ny medicinsk information. Steg 3 ger nej.'),
 ];
+// Runda 16, r2: stödet vid sjukskrivning (sjukfall.js och fmb.js).
+MODULER.push(m('sjukskrivning', 'Sjukfall och Socialstyrelsens försäkringsmedicinska beslutsstöd', ['src/sjukfall.js', 'src/fmb.js'],
+  'Föra ihop sjukintygen till sjukfall, räkna sjukskrivningens längd och visa Socialstyrelsens rekommenderade sjukskrivningstid för diagnosen.',
+  J(true, false, true, true, false), null,
+  'Modulen räknar dagar i intygen och jämför dem med Socialstyrelsens rekommendation, som visas som den är. Ändamålet är underlaget för bedömningen av arbetsförmåga och behovet av sjukskrivning, inte diagnos, förebyggande, övervakning, prognos eller behandling av sjukdom enligt artikel 2.1. Steg 5 ger nej.'));
 
 // Slutsatsen ur stegen: en medicinteknisk produkt bara när steg 1, 3, 4 och 5 ger ja och steg 2 ger nej.
 export const arMdsw = (s) => Boolean(s.programvara && !s.tillbehor && s.bearbetar && s.individ && s.andamal);

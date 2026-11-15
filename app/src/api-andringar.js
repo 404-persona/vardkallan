@@ -11,6 +11,16 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 16: version 1.6. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.6.0', datum: '2026-11-15',
+    text: 'Stödet vid sjukskrivning, intygen och de nya rollerna.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 16, r2: stödet vid sjukskrivning (docs/api-avvikelser.md).
+      'Nya rutter i det interna API:t: patientens sjukfall med beslutsstöd och förslag till förlängning (GET /api/patient/:id/sjukskrivning), förlängning med ett klick (POST /api/patient/:id/sjukskrivning/forlang), läkarens pågående sjukfall (GET /api/sjukskrivningar), vårdenhetens sjukfall som antal (GET /api/sjukskrivningar/enhet) och Socialstyrelsens försäkringsmedicinska beslutsstöd för ett utkast med motiveringen (GET /api/intygsapplikation/:id/beslutsstod och POST /api/intygsapplikation/:id/beslutsstod/motivering)',
+      'Statusuppdateringen för ett signerat sjukintyg har svaren 28, 32 och 37 (sysselsättning, sjukskrivningens perioder och motiveringen till beslutsstödet), och CreateDraftCertificate har dem i förifyllnaden vid en förlängning',
+    ],
+  },
   // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.5.0', datum: '2026-11-14',

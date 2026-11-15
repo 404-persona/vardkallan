@@ -22,22 +22,31 @@ async function hamta(vag) {
   return r.json();
 }
 
+// Vårdkällans språkregler: inga tankstreck och inga ellipser i det som visas. Ett tankstreck mellan två tal blir
+// "till" (2 till 4 veckor) och annars ett kommatecken. Ordalydelsen i övrigt ändras inte.
+export function utanTankstreck(s) {
+  return String(s ?? '')
+    .replace(/(\d)\s*[–—]\s*(\d)/g, '$1 till $2')
+    .replace(/\s*[–—]\s*/g, ', ')
+    .replace(/…/g, '').replace(/,\s*,/g, ',').replace(/\(\s*,\s*/g, '(').replace(/^,\s*/, '');
+}
+
 // HTML i texterna (listor och stycken) blir vanlig text med radbrytningar och punkter.
 export function tillText(s) {
-  return String(s ?? '')
+  return utanTankstreck(String(s ?? '')
     .replace(/<li[^>]*>/gi, '\n• ').replace(/<\/li>/gi, '')
     .replace(/<\/?(ul|ol|p|br)[^>]*>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
-    .split('\n').map(r => r.trim()).filter(Boolean).join('\n');
+    .split('\n').map(r => r.trim()).filter(Boolean).join('\n'));
 }
 
-const koder = (lista) => (lista ?? []).filter(Boolean).map(k => ({ kod: k.kod, text: k.beskrivning ?? null }));
+const koder = (lista) => (lista ?? []).filter(Boolean).map(k => ({ kod: k.kod, text: k.beskrivning == null ? null : utanTankstreck(k.beskrivning) }));
 
 export function utdrag(diag, typfall, hamtad) {
   const diagnoser = diag.data.map(({ id, attributes: a }) => ({
     id,
-    rubrik: a.diagnosrubrik,
+    rubrik: utanTankstreck(a.diagnosrubrik),
     koder: (a.diagnoskod ?? []).map(k => k.kod),
     funktionsnedsattning: tillText(a.funktionsnedsattning?.funktionsnedsattningsbeskrivning),
     funktionsnedsattningIcf: koder(a.funktionsnedsattning?.centralkod),
@@ -50,7 +59,7 @@ export function utdrag(diag, typfall, hamtad) {
     return {
       id,
       koder: (a.fmbtillstand?.diagnoskod ?? []).map(k => k.kod),
-      tillstand: (a.fmbtillstand?.tillstandsmening ?? '').trim(),
+      tillstand: utanTankstreck(a.fmbtillstand?.tillstandsmening ?? '').trim(),
       rekommendation: tillText(r.typfalletsrekommenderadesjukskrivning),
       tid: r.maximalsjukskrivningstid == null || r.maximalsjukskrivningstid === '' ? null : Number(r.maximalsjukskrivningstid),
       enhet: r.maximalsjukskrivningsenhet ?? null,

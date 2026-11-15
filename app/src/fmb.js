@@ -2,8 +2,8 @@
 //
 // Datan är ett utdrag ur Socialstyrelsens öppna API för FMB (https://api.socialstyrelsen.se/fmb), som Socialstyrelsen
 // tillhandahåller med villkoret CC0. Utdraget ligger i fmb/fmb-data.json och byggs med scripts/fmb-hamta.js. Texterna
-// är Socialstyrelsens och visas som de är. Det som Vårdkällan själv lägger till är urvalet för en diagnos, omräkningen
-// av tiden till dagar och varningen på vanlig svenska.
+// är Socialstyrelsens, med tankstreck utbytta efter Vårdkällans språkregler. Det som Vårdkällan själv lägger till är
+// urvalet för en diagnos, omräkningen av tiden till dagar och varningen på vanlig svenska.
 //
 // Systemet är experten: läkaren behöver inte söka i beslutsstödet. Diagnosen i intyget ger diagnosrubriken, de typiska
 // funktionsnedsättningarna och aktivitetsbegränsningarna och typfallen med Socialstyrelsens rekommenderade

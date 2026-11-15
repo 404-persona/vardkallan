@@ -46,6 +46,8 @@ TESTER_FLERFAKTOR.push(...TESTER_TILLITSNIVA_R15, ...TESTER_E_LEGITIMATION_R15,
   'Gränssnitt > Avbrott > tillitsnivå: med SITHS-kortet och PIN-koden loggar personen med passkey in utan dialog, och sidan Flerfaktor säger varför');
 // Runda 12, r2: uppgraderingar med återgång och godkännande av två systemförvaltare (releaser.js).
 import { TESTER_RELEASER } from './sussa/runda12-r2.js';
+// Runda 16, r2: testnamnen för stödet vid sjukskrivning.
+import { T16R2 } from './sussa/runda16-r2.js';
 
 const RAPPORT = 'Cosmic upphandling krav och kritik';
 const k = (id, rubrik, kalla, status, var_, tester = [], anmarkning = null) => ({ id, rubrik, kalla, status, var: var_, tester, anmarkning });
@@ -318,6 +320,9 @@ export const KRAV = [
 // Runda 15, r3: läsåtkomsten vid avbrott med läskopian och reservservern (D4), och mellanarkivet i exporten och FHIR (M12).
 import { EGNA as R15R3_EGNA } from './sussa/runda15-r3.js';
 for (const [id, tester] of Object.entries(R15R3_EGNA)) { const x = KRAV.find(k => k.id === id); if (x) x.tester.push(...tester.filter(t => !x.tester.includes(t))); }
+// Runda 16, r2: Socialstyrelsens försäkringsmedicinska beslutsstöd ligger i en egen modul (fmb.js), med MDR-bedömningen i
+// mdr-bedomning.js (vårt D10).
+{ const x = KRAV.find(k => k.id === 'D10'); x.tester.push(...[T16R2.fmbDiagnos, T16R2.fmbTid, T16R2.fmbUtdrag].filter(t => !x.tester.includes(t))); }
 
 export function lasTestresultat(fil) {
   try {

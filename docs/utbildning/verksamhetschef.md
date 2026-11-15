@@ -76,6 +76,16 @@ Förslaget ger ingen åtkomst till rätt patient och visar bara numret som skrev
 
 Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/flyttar).
 
+### Övning 6
+
+Varför står det färre än 5 på flera rader i Sjukskrivningar på vårdenheten?
+
+Rätt svar: Små antal visas inte, så att översikten inte pekar ut enskilda patienter. Patienter med skyddade personuppgifter räknas inte alls.
+
+Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 visas som färre än 5, och ibland döljs också en till ruta så att det dolda inte kan räknas fram ur totalen.
+
+Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar/enhet).
+
 ## Det här ska du kunna efter utbildningen
 
 - Utse en medicinskt ansvarig läkare.
@@ -83,4 +93,4 @@ Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](h
 - Utfärda ett utbildarintyg.
 - Veta vilket ansvar som inte kan lämnas över.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 5 övningar och få intyget.
+- Svara rätt på alla 6 övningar och få intyget.

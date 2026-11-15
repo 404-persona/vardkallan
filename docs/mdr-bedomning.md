@@ -27,6 +27,7 @@ En modul är en medicinteknisk produkt när steg 1, 3, 4 och 5 ger ja och steg 2
 | Vaccinationsprogram | `src/vaccinationsprogram-regler.js` | Ja | IIa |
 | Tillväxtkurvor och avvikelser | `src/tillvaxt.js`, `src/tillvaxt-r11.js` | Ja | IIa |
 | Förslag till uppmärksamhetsinformation | `src/uppmarksamhet-regler.js` | Nej | Ej tillämpligt |
+| Sjukfall och Socialstyrelsens försäkringsmedicinska beslutsstöd | `src/sjukfall.js`, `src/fmb.js` | Nej | Ej tillämpligt |
 
 ## Journalkärnan
 
@@ -159,6 +160,18 @@ Avsett ändamål: Föreslå att en uppgift som redan finns i journalen, till exe
 - Steg 5: Nej
 
 Slutsats: inte en medicinteknisk produkt. Förslagen pekar på uppgifter som redan finns i journalen och visar dem på ett annat ställe, utan att räkna fram ny medicinsk information. Steg 3 ger nej.
+
+## Sjukfall och Socialstyrelsens försäkringsmedicinska beslutsstöd
+
+Avsett ändamål: Föra ihop sjukintygen till sjukfall, räkna sjukskrivningens längd och visa Socialstyrelsens rekommenderade sjukskrivningstid för diagnosen.
+
+- Steg 1: Ja
+- Steg 2: Nej
+- Steg 3: Ja
+- Steg 4: Ja
+- Steg 5: Nej
+
+Slutsats: inte en medicinteknisk produkt. Modulen räknar dagar i intygen och jämför dem med Socialstyrelsens rekommendation, som visas som den är. Ändamålet är underlaget för bedömningen av arbetsförmåga och behovet av sjukskrivning, inte diagnos, förebyggande, övervakning, prognos eller behandling av sjukdom enligt artikel 2.1. Steg 5 ger nej.
 
 ## Vad bedömningen betyder för arkitekturen
 

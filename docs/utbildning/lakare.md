@@ -403,6 +403,12 @@ Börjar i: Översikten för en patient med 30 anteckningar. Klickbudget: högst 
 
 Ett klick på fliken Journal och ett på Senaste bedömning, som systemet har räknat fram bland de anteckningar som läkaren får se. Anteckningen öppnas med bedömning och åtgärd först. Ingen behöver bläddra förbi de nyare omvårdnadsanteckningarna.
 
+### Förlänga en sjukskrivning
+
+Börjar i: Journalen för en sjukskriven patient på vårdcentralen. Klickbudget: högst 3 steg. I demon gör Per Holm flödet.
+
+Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Signera i intygsapplikationen. Systemet har räknat sjukfallet, föreslår perioden från dagen efter förra intyget med samma längd och nivå, fyller i diagnos, sysselsättning och motiveringen till beslutsstödet och visar Socialstyrelsens rekommendation och var patienten är i rehabiliteringskedjan.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -537,6 +543,34 @@ Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
+### Övning 12
+
+Demopatienten Mikael Svensson är sjukskriven och intyget går snart ut. Hur förlänger du sjukskrivningen?
+
+Rätt svar: Klickar på Förläng sjukskrivningen i fliken Sjukskrivning. Utkastet börjar dagen efter förra intyget och har diagnos, sysselsättning, nivå och motivering ifyllda.
+
+Ett signerat intyg ändras aldrig. Systemet föreslår perioden och fyller i det som inte har ändrats, och du tar ställning till resten och signerar.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/sjukskrivning).
+
+### Övning 13
+
+Beslutsstödet säger att den sammanlagda sjukskrivningen blir längre än Socialstyrelsens rekommendation. Vad gör du?
+
+Rätt svar: Bedömer patienten. Behövs en längre sjukskrivning skriver du varför i rutan under varningen, en gång, och motiveringen följer med i intyget och i förlängningar.
+
+Rekommendationen är ett stöd, inte en gräns. Systemet räknar dagarna ur patientens tidigare intyg, och Försäkringskassan får din motivering i intyget.
+
+### Övning 14
+
+Ett sjukintyg slutar den 10:e och nästa börjar den 14:e. Räknas de som ett sjukfall?
+
+Rätt svar: Ja. Intyg med högst 5 dagars uppehåll hör till samma sjukfall, men dagarna mellan intygen räknas inte i sjukskrivningens längd.
+
+Regeln är densamma som i Rehabstöd och Webcert. Systemet räknar sjukfallet själv och visar var patienten är i rehabiliteringskedjan.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -663,4 +697,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 11 övningar och få intyget.
+- Svara rätt på alla 14 övningar och få intyget.
