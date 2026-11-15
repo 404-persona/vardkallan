@@ -116,7 +116,14 @@ export function studieRad(db, id) {
   if (!r) throw new Fel(404, 'Undersökningen finns inte.', 'saknas');
   return r;
 }
+// Runda 16, r3: kategorin psykosocial (kuratorns och psykologens bilder, se spara) läses med las_journal.
 const handlingFor = (m) => (m.kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal');
+function psykosocialBild(db, av, anteckningId) {
+  const yrke = av ? db.query('SELECT yrke FROM personal WHERE id = ?').get(av)?.yrke : null;
+  if (require('./mallar-yrken.js').PSYKOSOCIALA_YRKEN.has(yrke)) return true;
+  const a = anteckningId ? db.query('SELECT typ, kategori FROM anteckningar WHERE id = ?').get(anteckningId) : null;
+  return Boolean(a) && require('./journal.js').lasHandling(a) === 'las_journal' && a.kategori === 'omvardnad';
+}
 const normaliseraStalle = (s) => textFalt(s, 60).toLocaleLowerCase('sv').replace(/\s+/g, ' ');
 
 // Läser en fil ur anropet: { namn, data } med data i base64. Typen avgörs ur innehållet.
@@ -159,6 +166,10 @@ export function takFor(db, patientId, storlek, { uppladdning = null } = {}) {
 export function spara(db, { patientId, enhetId, vardkontaktId = null, anteckningId = null, kategori, fil, kalla, kallaRef = null, kroppsstalle = null, beskrivning = null, tagen, nu, av = null, invanare = null, status = 'journal',
   apparat = null, ursprung = null, langdSek = null, uppladdning = null }) {
   takFor(db, patientId, fil.buf.length, { uppladdning });
+  // Runda 16, r3 (säkerhetsgranskningen): en bild som kuratorn eller psykologen laddar upp, eller som hör till deras
+  // anteckning, får kategorin psykosocial och läses med las_journal (handlingFor), som deras anteckningar, så att
+  // undersköterskan inte ser den. Den ändras med skriv_omvardnad som andra bilder i omvårdnadens kategori.
+  if (kategori === 'omvardnad' && psykosocialBild(db, av, anteckningId)) kategori = 'psykosocial';
   const r = db.query(`INSERT INTO media (patient_id, enhet_id, vardkontakt_id, anteckning_id, kategori, typ, namn, storlek, sha256, data, kalla, kalla_ref, kroppsstalle, beskrivning,
       tagen, registrerad, registrerad_av, invanare_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .run(patientId, enhetId, vardkontaktId, anteckningId, kategori, fil.typ, fil.namn, fil.buf.length, createHash('sha256').update(fil.buf).digest('hex'), fil.buf, kalla, kallaRef,
@@ -236,7 +247,8 @@ export function laddaFil(atk, kategori, fil, body = {}, nu = new Date(), { uppla
   let anteckningId = null;
   if (body.anteckningId != null) {
     const a = db.query('SELECT * FROM anteckningar WHERE id = ? AND patient_id = ?').get(Number(body.anteckningId), atk.patientId);
-    if (!a || vardenhetFor(db, a.enhet_id) !== vardenhetFor(db, atk.personal.enhet_id)) throw new Fel(400, 'Bilden kan knytas till en anteckning för patienten på din vårdenhet.', 'ogiltig', { falt: ['anteckningId'] });
+    // Runda 16, r3: bara till en anteckning som den som laddar upp får läsa, med samma svar som när den inte finns.
+    if (!a || vardenhetFor(db, a.enhet_id) !== vardenhetFor(db, atk.personal.enhet_id) || !atk.prova(require('./journal.js').lasHandling(a), { enhet_id: a.enhet_id }).tillaten) throw new Fel(400, 'Bilden kan knytas till en anteckning för patienten på din vårdenhet.', 'ogiltig', { falt: ['anteckningId'] });
     anteckningId = a.id;
   }
   const m = spara(db, { patientId: atk.patientId, enhetId: atk.personal.enhet_id, vardkontaktId: vardkontaktFor(atk, nu), anteckningId, kategori, fil, kalla,

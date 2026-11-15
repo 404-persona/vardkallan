@@ -41,8 +41,10 @@ Object.assign(T, {
   uskOveralt: `${BB}undersköterskan ser inte anteckningen i journalen, sökningen, översikten, FHIR eller utskriften, och läkaren gör det`,
   egnaMallar: `${BB}kuratorn och psykologen skriver bara med sina egna mallar, så att ingen av deras anteckningar läses av undersköterskan`,
   kuratorSip: `${BC}kuratorn upprättar en samordnad individuell plan med samma handling som läkaren och sjuksköterskan, men inget inskrivningsmeddelande`,
+  kuratorAndra: `${BC}kuratorn ändrar, upprättar och avslutar bara samordnade individuella planer, aldrig en annan samordnad planering, och nekandet loggas`,
+  bilder: 'Runda 16, r3, beslut B: bilder och media till kuratorns och psykologens anteckningar > en bild som kuratorn eller psykologen har laddat upp, eller som hör till deras anteckning, läses inte av undersköterskan',
 });
-export const TESTER_BESLUT = [T.bmBada, T.bmOvning, T.uskLaserInte, T.uskOveralt, T.egnaMallar, T.kuratorSip];
+export const TESTER_BESLUT = [T.bmBada, T.bmOvning, T.uskLaserInte, T.uskOveralt, T.egnaMallar, T.kuratorSip, T.kuratorAndra, T.bilder];
 export const TESTER_ROLLER = [T.roller, T.barnmorska, T.studentRoller, T.skotare, T.demo, T.aldre, T.ovningar];
 export const TESTER_STUDENT = [T.signera, T.aldrig, T.tid, T.registrera, T.bmStudent, T.utanHandledning];
 
@@ -73,11 +75,11 @@ const POSTER = {
     expertErsatt: 'Rollen följer yrket i katalogen och legitimationen i biljetten, och en students åtkomst följer handledningen och handledarens vårdenhet, så att ingen behöver lägga upp eller ta bort behörighet för hand. Handledaren registrerar handledningen med ett klick, och systemet föreslår tiden.',
   },
   '5.2.1.7': {
-    tester: [T.sekretess, T.uskLaserInte, T.uskOveralt],
+    tester: [T.sekretess, T.uskLaserInte, T.uskOveralt, T.bilder],
     anmarkning: ' Sedan runda 16 läser undersköterskan inte kuratorns och psykologens anteckningar, varken i journalen, sökningen, översikten, FHIR eller utskriften (minsta åtkomst, patientdatalagen 4 kap. 2 §).',
   },
   '4.3.1.2': {
-    tester: [T.kuratorSip],
+    tester: [T.kuratorSip, T.kuratorAndra],
     losning: ' Sedan runda 16 upprättar också hälso- och sjukvårdskuratorn samordnade individuella planer, med samma behörighet som läkaren och sjuksköterskan.',
   },
   '12.1.1.7': {

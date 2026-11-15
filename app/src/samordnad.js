@@ -290,6 +290,11 @@ export const hamta = (db, id) => {
 // kallar till samordnad individuell planering.
 export function andra(atk, s, atgard, body = {}) {
   kravSkriv(atk);
+  // Runda 16, r3 (säkerhetsgranskningen): kuratorn ändrar bara samordnade individuella planer, som när de upprättas.
+  if (atk.personal.yrke === 'kurator' && s.typ !== 'sip') {
+    atk.logga('samordna', 'nekad', `samordning:${s.id}:${['beraknad', 'utskrivningsklar', 'fast-vardkontakt', 'kallelse', 'plan', 'avsluta'].includes(atgard) ? atgard : 'okand'}`, 'nekad');
+    throw new Fel(403, 'Som kurator ändrar du bara samordnade individuella planer. Inskrivningsmeddelandet och planen vid tvångsvård ändras av läkare och sjuksköterskor.', 'nekad');
+  }
   const db = atk.db;
   const pers = atk.personal;
   if (!synliga(atk).some(x => x.id === s.id)) throw new Fel(404, 'Den samordnade planeringen finns inte.', 'saknas');

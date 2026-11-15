@@ -132,4 +132,50 @@ describe('Runda 16, r3, beslut C: kuratorn och SIP', () => {
     expect(kanRoll(personal(db, 'kur-vc'), 'samordna')).toBe(true);
     expect(prova(db, { personal: personal(db, 'kur-vc'), patient: 'p06', handling: 'samordna' }).tillaten).toBe(true);
   }, 30_000);
+
+  test('kuratorn ändrar, upprättar och avslutar bara samordnade individuella planer, aldrig en annan samordnad planering, och nekandet loggas', async () => {
+    const l = klient(app);
+    await l.logga('lak-vc');
+    const s = sandlada(app, l);
+    const vard = await l.post('/api/patient/p06/samordning', { typ: 'lpt7a', samtycke: true, insatser: [{ text: 'Boendestöd', huvudman: 'kommun' }] });
+    expect(vard.status).toBe(201);
+    const k = klient(app);
+    await k.logga('kur-vc');
+    sandlada(app, k).db = s.db;
+    for (const [atgard, body] of [['beraknad', { datum: '2099-01-01' }], ['plan', { samtycke: true, insatser: [{ text: 'x', huvudman: 'kommun' }] }], ['avsluta', {}], ['fast-vardkontakt', {}], ['kallelse', {}]]) {
+      const r = await k.post(`/api/samordning/${vard.data.id}/${atgard}`, body);
+      expect({ atgard, status: r.status }).toEqual({ atgard, status: 403 });
+    }
+    const nekade = s.db.query(`SELECT count(*) AS n FROM atkomstlogg WHERE personal_id = 'kur-vc' AND resultat = 'nekad' AND resurs LIKE 'samordning:${vard.data.id}:%'`).get().n;
+    expect(nekade).toBeGreaterThanOrEqual(5);
+    // Kuratorns egen SIP går att ändra och avsluta.
+    const sip = await k.post('/api/patient/p06/samordning', { typ: 'sip', samtycke: true, insatser: [{ text: 'Samtalsstöd', huvudman: 'region' }] });
+    expect((await k.post(`/api/samordning/${sip.data.id}/plan`, { samtycke: true, insatser: [{ text: 'Samtalsstöd varannan vecka', huvudman: 'region' }] })).status).toBe(200);
+    expect((await k.post(`/api/samordning/${sip.data.id}/avsluta`, {})).status).toBe(200);
+  }, 30_000);
+});
+
+describe('Runda 16, r3, beslut B: bilder och media till kuratorns och psykologens anteckningar', () => {
+  test('en bild som kuratorn eller psykologen har laddat upp, eller som hör till deras anteckning, läses inte av undersköterskan', async () => {
+    const bilder = require('../src/bilder.js');
+    const db = byggSeed();
+    bilder.sakra(db);
+    const png = { namn: 'bild.png', typ: 'image/png', buf: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64') };
+    const nu = new Date();
+    const a = journal.skapaAnteckning(atk(db, 'psy-psyk', 'p04', {}, 'skriv_omvardnad'), { typ: 'Psykologanteckning', sokord: [{ sokord: 'Bedömning', text: 'Teckning från samtalet.' }] });
+    const avPsykolog = bilder.spara(db, { patientId: 'p04', enhetId: 'uso-psyk', kategori: 'omvardnad', fil: png, kalla: 'uppladdning', tagen: nu.toISOString(), nu, av: 'psy-psyk' });
+    const tillAnteckning = bilder.spara(db, { patientId: 'p04', enhetId: 'uso-psyk', anteckningId: a.id, kategori: 'omvardnad', fil: png, kalla: 'uppladdning', tagen: nu.toISOString(), nu, av: 'ssk-psyk' });
+    const vanlig = bilder.spara(db, { patientId: 'p04', enhetId: 'uso-psyk', kategori: 'omvardnad', fil: png, kalla: 'uppladdning', tagen: nu.toISOString(), nu, av: 'ssk-psyk' });
+    const rad = (id) => db.query('SELECT * FROM media WHERE id = ?').get(id.id ?? id);
+    for (const m of [avPsykolog, tillAnteckning]) {
+      expect(bilder.lasHandlingFor(rad(m))).toBe('las_journal');
+      expect(fel(() => bilder.kravFil(atk(db, 'sk-psyk', 'p04', {}, 'las_omvardnad'), rad(m)))?.status).toBe(403);
+      expect(fel(() => bilder.kravFil(atk(db, 'ssk-psyk', 'p04', {}, 'las_journal'), rad(m)))).toBeNull();
+    }
+    expect(bilder.lasHandlingFor(rad(vanlig))).toBe('las_omvardnad');
+    // Listan med patientens bilder.
+    const uskLista = JSON.stringify(bilder.forPatient(atk(db, 'sk-psyk', 'p04', {}, 'las_omvardnad')));
+    for (const m of [avPsykolog, tillAnteckning]) expect(uskLista).not.toContain(`/api/media/${m.id ?? m}/fil`);
+    expect(uskLista).toContain(`/api/media/${vanlig.id ?? vanlig}/fil`);
+  });
 });
