@@ -1,4 +1,5 @@
 // Runda 14, r3: intyg genom en integrerad intygsapplikation (Webcert integrerat läge) och Intygstjänsten, Sussa 2.2.1.9.
+// Runda 16, r1: alla intyg som finns i Webcert i dag, med intygstyperna, frågorna och giltigheten i intygstyper.js.
 //
 // Tjänstekontrakten i riv.clinicalprocess.healthcond.certificate 4.0.5 (bilaga K10):
 //   CreateDraftCertificate 3.3      Vårdkällan är konsument. Journalen skapar ett utkast i intygsapplikationen för
@@ -9,21 +10,23 @@
 //   ListCertificatesForCareWithQA   Vårdkällan är konsument. Journalen stämmer själv av sin lista mot intygsapplikationen,
 //   3.3                             så att en händelse som aldrig kom fram ändå syns.
 //
-// Systemet är experten: läkaren väljer bara vilket intyg som ska skrivas, och systemet föreslår det som passar
-// patienten (dödsbevis för en avliden, sjukpenning för en patient i arbetsför ålder med en diagnos), visar bara de
-// intygstyper som får skrivas för patienten och fyller i patienten, läkaren, vårdenheten och diagnosen. Intyget skrivs
-// och signeras i intygsapplikationen, och journalen visar dess status utan att någon behöver göra något.
+// Systemet är experten: den inloggade väljer bara vilket intyg som ska skrivas. Systemet visar bara de intyg som får
+// skrivas för patienten, av den som är inloggad och just nu (giltigheten i intygstyper.js), förklarar varför de andra inte
+// går, föreslår det som passar patienten och fyller i allt journalen vet: patient, läkare, vårdenhet, diagnoser med kod,
+// underlaget, och där frågan gäller dem graviditeten, läkemedlen, diabetesuppgifterna och funktionsnedsättningen ur
+// anteckningen, med källa. Förifyllnaden räknas bara på det den inloggade får se, efter samma prövning som journalen.
 //
 // Meddelandena byggs, valideras och skickas med den gemensamma grunden i src/rivta/ (rivta-r3.js).
 //
 // Intygsapplikationen är simulerad i demon (intygsapplikation-simulerad.js) och märkt som simulerad. Den är inte Webcert och inte
-// Ineras tjänst, och ingenting skickas till Försäkringskassan eller någon annan mottagare.
+// Ineras tjänst, och ingenting skickas till Försäkringskassan, Transportstyrelsen eller någon annan mottagare.
 import { randomUUID } from 'node:crypto';
-import { Fel, iso, idag } from './db.js';
+import { Fel, iso, idag, datumAv } from './db.js';
 import { vardenhetFor, kanRoll, alder, visningsnamn } from './atkomst.js';
 import { avlidenFor } from './avliden.js';
 import { el } from './rivta/xml.js';
 import * as r3 from './rivta-r3.js';
+import * as IT from './intygstyper.js';
 
 export const DOMAN = 'riv.clinicalprocess.healthcond.certificate';
 export const DOMANVERSION = '4.0.5';
@@ -34,6 +37,9 @@ export const NS = {
   skapa: 'urn:riv:clinicalprocess:healthcond:certificate:CreateDraftCertificateResponder:3',
   status: 'urn:riv:clinicalprocess:healthcond:certificate:CertificateStatusUpdateForCareResponder:3',
   lista: 'urn:riv:clinicalprocess:healthcond:certificate:ListCertificatesForCareWithQAResponder:3',
+  // Runda 16, r1: förifyllda svar som inte är diagnoser skickas som ett element i en egen namnrymd inuti delsvaret
+  // (schemat tillåter element ur andra namnrymder där). Det är en förenkling i demon; Webcert har egna regler per intyg.
+  demo: 'urn:vardkallan:demo:intyg:forifyllnad:1',
 };
 export const DEF = {
   skapa: () => r3.def(DOMAN, 'CreateDraftCertificate', '3.3'),
@@ -48,27 +54,16 @@ export const KONTRAKT = {
 
 // Kodverk ur Ineras kodverk för intyg. OID:erna är kodverkens identiteter i tjänstekontrakten.
 export const KV = {
-  intygstyp: 'b64ea353-e8f6-4832-b563-fc7d46f29548', handelse: 'dfd7bbad-dbe5-4a2f-ba25-f7b9b2cc6b14',
-  status: '9871cd17-8755-4ed9-b894-ff3729e775a4', part: '769bb12b-bd9f-4203-a5cd-fd14f2eb3b80',
+  intygstyp: IT.KV_INTYGSTYP, handelse: 'dfd7bbad-dbe5-4a2f-ba25-f7b9b2cc6b14',
+  status: '9871cd17-8755-4ed9-b894-ff3729e775a4', part: '769bb12b-bd9f-4203-a5cd-fd14f2eb3b80', relation: IT.KV_RELATION,
   personnummer: '1.2.752.129.2.1.3.1', samordningsnummer: '1.2.752.129.2.1.3.3', hsa: '1.2.752.129.2.1.4.1', icd10: '1.2.752.116.1.1.1',
 };
 // Den simulerade intygsapplikationens logiska adress. Påhittad och märkt som demo.
 export const LOGISK_ADRESS_INTYGSAPPLIKATION = 'SE0000000000-SIMINTYG';
 export const MOTPART = 'Intygsapplikation (simulerad, inte Webcert)';
 
-// Intygstyperna som demon erbjuder. sekretess: får skrivas för en patient med skyddade personuppgifter. avliden: får
-// (bara) skrivas för en avliden patient. Reglerna motsvarar de regler som en intygsapplikation tillämpar och är
-// demoregler i Vårdkällan, så att läkaren aldrig ser ett val som intygsapplikationen sedan nekar.
-export const INTYGSTYPER = [
-  { kod: 'LISJP', text: 'Läkarintyg för sjukpenning', mottagare: 'Försäkringskassan', part: 'FKASSA', sekretess: true, avliden: false, alder: [16, 69] },
-  { kod: 'AG7804', text: 'Läkarintyg om arbetsförmåga till arbetsgivaren', mottagare: 'Arbetsgivaren, via patienten', part: 'INVANA', sekretess: true, avliden: false, alder: [16, 69] },
-  { kod: 'LUSE', text: 'Läkarutlåtande för sjukersättning', mottagare: 'Försäkringskassan', part: 'FKASSA', sekretess: true, avliden: false, alder: [19, 66] },
-  { kod: 'LUAE_NA', text: 'Läkarutlåtande för aktivitetsersättning vid nedsatt arbetsförmåga', mottagare: 'Försäkringskassan', part: 'FKASSA', sekretess: true, avliden: false, alder: [19, 29] },
-  { kod: 'TSTRK1007', text: 'Läkarintyg för körkort, högre behörigheter', mottagare: 'Transportstyrelsen', part: 'TRANSP', sekretess: false, avliden: false, alder: [16, 120] },
-  { kod: 'DB', text: 'Dödsbevis', mottagare: 'Skatteverket', part: 'SKV', sekretess: true, avliden: true, alder: [0, 130] },
-  { kod: 'DOI', text: 'Dödsorsaksintyg', mottagare: 'Socialstyrelsen', part: 'SOS', sekretess: true, avliden: true, alder: [0, 130] },
-];
-const TYP = new Map(INTYGSTYPER.map(t => [t.kod, t]));
+// Runda 16, r1: intygstyperna finns i intygstyper.js, med version och giltighet i tid.
+export const INTYGSTYPER = IT.INTYGSTYPER;
 
 // Händelserna i KV Händelse, med det journalen visar.
 export const HANDELSER = {
@@ -101,7 +96,13 @@ CREATE TRIGGER IF NOT EXISTS lakarintyg_handelse_andras_ej BEFORE UPDATE ON laka
 CREATE TRIGGER IF NOT EXISTS lakarintyg_handelse_raderas_ej BEFORE DELETE ON lakarintyg_handelser BEGIN SELECT RAISE(ABORT, 'En händelse för ett intyg raderas inte'); END;
 CREATE TRIGGER IF NOT EXISTS lakarintyg_raderas_ej BEFORE DELETE ON lakarintyg BEGIN SELECT RAISE(ABORT, 'Ett intyg raderas inte'); END;
 `;
-export const sakra = (db) => db.exec(SCHEMA);
+// Runda 16, r1: intygets version och relationen till ett tidigare intyg (förnyelse, förlängning och byte från ett
+// ersatt intyg). Läggs till i sandlådor som skapades före runda 16.
+export function sakra(db) {
+  db.exec(SCHEMA);
+  const k = new Set(db.query("SELECT name FROM pragma_table_info('lakarintyg')").all().map(x => x.name));
+  for (const [namn, typ] of [['version', "TEXT NOT NULL DEFAULT '1.0'"], ['relation_typ', 'TEXT'], ['relation_id', 'INTEGER']]) if (!k.has(namn)) db.exec(`ALTER TABLE lakarintyg ADD COLUMN ${namn} ${typ}`);
+}
 
 const ve = (db, enhetId) => db.query('SELECT id, hsa_id, namn FROM enheter WHERE id = ?').get(vardenhetFor(db, enhetId));
 
@@ -113,48 +114,282 @@ export function personId(p) {
   return { root: dag > 60 ? KV.samordningsnummer : KV.personnummer, extension: nr };
 }
 
-// Vilka intygstyper som får skrivas för patienten och varför de andra inte får det. Ett val som inte går ska aldrig
-// visas som ett val.
-export function typerFor(db, p, dag = idag()) {
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 16, r1: vem som får göra vad med en intygstyp. utfardare är handlingarna som får signera, utkast de som får
+// skapa och fylla i men aldrig signera (vårdadministratören, som i Webcert).
+// ---------------------------------------------------------------------------------------------------------------
+export const behorighet = (personal, t) => ({
+  signera: t.utfardare.find(h => kanRoll(personal, h)) ?? null,
+  utkast: t.utkast.find(h => kanRoll(personal, h)) ?? null,
+});
+const harRatt = (personal, t) => { const b = behorighet(personal, t); return Boolean(b.signera || b.utkast); };
+export const kanNagotIntyg = (personal) => IT.INTYGSTYPER.some(t => harRatt(personal, t));
+
+// ---------------------------------------------------------------------------------------------------------------
+// Det journalen vet, räknat på det den inloggade får se. Inga tak före urvalet, så att rader på en annan eller spärrad
+// vårdenhet aldrig kan tränga undan de synliga och därmed röja att de finns (säkerhetsgranskningen i runda 14).
+// ---------------------------------------------------------------------------------------------------------------
+const egenEnhet = (atk) => vardenhetFor(atk.db, atk.personal.enhet_id);
+const harTabell = (db, namn) => Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(namn));
+const enhetsnamn = (db, id) => db.query('SELECT namn FROM enheter WHERE id = ?').get(id)?.namn ?? '';
+const datumText = (d) => new Intl.DateTimeFormat('sv-SE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Stockholm' }).format(new Date(d.length === 10 ? `${d}T12:00:00Z` : d));
+
+// Diagnoserna på den egna vårdenheten, de senaste först, en per kod. Intygets diagnos är skälet hos den som utfärdar.
+function egnaDiagnoser(atk) {
+  if (!kanRoll(atk.personal, 'las_diagnoser')) return [];
+  const min = egenEnhet(atk);
+  const rader = atk.db.query('SELECT id, enhet_id, kod, text, typ, datum FROM diagnoser WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId)
+    .filter(d => vardenhetFor(atk.db, d.enhet_id) === min);
+  const sedda = new Set();
+  return atk.filtrera(rader, 'las_diagnoser').filter(d => !sedda.has(d.kod) && sedda.add(d.kod));
+}
+// Alla diagnoser som den inloggade får se, på den egna vårdenheten och efter aktivt val eller samtycke på andra.
+function synligaDiagnoser(atk) {
+  if (!kanRoll(atk.personal, 'las_diagnoser')) return [];
+  const rader = atk.db.query('SELECT id, enhet_id, kod, text, typ, datum FROM diagnoser WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId);
+  return atk.filtrera(rader, 'las_diagnoser');
+}
+function synligGraviditet(atk) {
+  if (!kanRoll(atk.personal, 'las_graviditet') || !harTabell(atk.db, 'graviditeter')) return null;
+  const rader = atk.db.query("SELECT * FROM graviditeter WHERE patient_id = ? AND status = 'pagaende' ORDER BY skapad DESC, id DESC").all(atk.patientId);
+  return atk.filtrera(rader, 'las_graviditet')[0] ?? null;
+}
+// Vårdkontakterna på den egna vårdenheten som har börjat senast i dag, den senaste först.
+function egnaVardkontakter(atk, nu) {
+  const min = egenEnhet(atk);
+  const dag = datumAv(nu);
+  const rader = atk.db.query('SELECT * FROM vardkontakter WHERE patient_id = ? ORDER BY start DESC, id DESC').all(atk.patientId)
+    .filter(v => datumAv(new Date(v.start)) <= dag && vardenhetFor(atk.db, v.enhet_id) === min);
+  return atk.filtrera(rader, 'las_admin');
+}
+function aktivaLakemedel(atk) {
+  if (!kanRoll(atk.personal, 'las_lakemedel')) return [];
+  const rader = atk.db.query("SELECT o.*, k.namn AS lm_namn, k.atc AS atc FROM ordinationer o LEFT JOIN katalog k ON k.id = o.lakemedel_id WHERE o.patient_id = ? AND o.status = 'aktiv' ORDER BY o.start DESC, o.id DESC").all(atk.patientId);
+  return atk.filtrera(rader, 'las_lakemedel', { gemensam: true });
+}
+function senasteMatvarde(atk, typ) {
+  if (!kanRoll(atk.personal, 'las_matvarden')) return null;
+  const rader = atk.db.query('SELECT * FROM matvarden WHERE patient_id = ? AND typ = ? ORDER BY tid DESC, id DESC').all(atk.patientId, typ);
+  return atk.filtrera(rader, 'las_matvarden')[0] ?? null;
+}
+// Status ur den senaste signerade läkaranteckningen på den egna vårdenheten.
+function senasteStatus(atk) {
+  if (!kanRoll(atk.personal, 'las_journal')) return null;
+  const min = egenEnhet(atk);
+  const rader = atk.db.query("SELECT * FROM anteckningar WHERE patient_id = ? AND kategori = 'lakare' AND status = 'signerad' ORDER BY skapad DESC, id DESC").all(atk.patientId)
+    .filter(a => vardenhetFor(atk.db, a.enhet_id) === min);
+  for (const a of atk.filtrera(rader, 'las_journal')) {
+    let s = null;
+    try { s = JSON.parse(a.sokord); } catch { s = null; }
+    const text = s && typeof s.Status === 'string' ? s.Status.trim() : '';
+    if (text) return { text, kalla: `Status i ${a.typ.toLowerCase()} ${datumText(a.skapad)}, ${enhetsnamn(atk.db, a.enhet_id)}` };
+  }
+  return null;
+}
+const pagaendeSlutenvard = (atk, nu) => egnaVardkontakter(atk, nu).find(v => v.typ === 'slutenvard' && !v.slut) ?? null;
+
+// Koder som TS8071 frågar om. Systemet föreslår ja och beskrivningen när en synlig diagnos finns, aldrig nej.
+const TS_KODER = {
+  'ts.ogon': /^H(0\d|[1-4]\d|5[0-4])/, 'ts.balans': /^(H81|R42)/, 'ts.hjarta': /^I(2[0-5]|4[4-9]|50|6\d)/, 'ts.neuro': /^G(1[0-3]|2[0-6]|3[5-7]|7[0-3])/,
+  'ts.epilepsi': /^(G4[01]|R56)/, 'ts.njure': /^(N18[45]|Z940|Z992)/, 'ts.kognitiv': /^(F0[0-3]|G30)/, 'ts.somn': /^G47/,
+  'ts.substans': /^F1\d/, 'ts.psyk': /^F(2\d|3[01])/, 'ts.npf': /^(F90|F84|F952)/, 'ts.intellektuell': /^F7\d/,
+};
+const ren = (k) => k.replace('.', '');
+const diagnosRad = (atk, d) => `${d.kod} ${d.text} (${datumText(d.datum)}, ${enhetsnamn(atk.db, d.enhet_id)})`;
+const DIABETES = /^E1[0-4]/;
+const arInsulin = (o) => /^A10A/.test(o.atc ?? '');
+const arAntidiabetika = (o) => /^A10/.test(o.atc ?? '');
+
+// Förifyllnaden för en intygstyp: svaren och källan för varje svar. Bara frågor med forifyll, och bara det som den
+// inloggade får se.
+export function forifyllnad(atk, t, p, nu = new Date()) {
+  const svar = {};
+  const kallor = {};
+  const underlag = [];
+  const satt = (id, v, kalla) => { if (v == null || v === '' || (Array.isArray(v) && !v.length)) return; svar[id] = v; kallor[id] = kalla; };
+  let cache = {};
+  const en = (namn, fn) => (Object.hasOwn(cache, namn) ? cache[namn] : (cache[namn] = fn()));
+  const diagn = () => en('d', () => egnaDiagnoser(atk));
+  const alla = () => en('a', () => synligaDiagnoser(atk));
+  const vk = () => en('v', () => egnaVardkontakter(atk, nu));
+  const lm = () => en('l', () => aktivaLakemedel(atk));
+  for (const q of IT.fragorFor(t)) {
+    if (!q.forifyll) continue;
+    const k = q.forifyll;
+    if (k === 'diagnoser') {
+      const d = diagn().slice(0, 3);
+      satt(q.id, d.map(x => ({ kod: ren(x.kod), text: x.text })), d.length ? `Diagnoser på din vårdenhet: ${d.map(x => diagnosRad(atk, x)).join('; ')}` : null);
+    } else if (k === 'diagnoserText') {
+      const d = diagn().slice(0, 3);
+      satt(q.id, d.map(x => `${x.kod} ${x.text}`).join('. '), `Diagnoser på din vårdenhet: ${d.map(x => diagnosRad(atk, x)).join('; ')}`);
+    } else if (k === 'vardkontakt') {
+      const v = vk()[0];
+      if (!v) continue;
+      const kod = /telefon/i.test(v.plats ?? '') ? 'TELEFONKONTAKT' : /video|digital/i.test(v.plats ?? '') ? 'DIGITALUNDERSOKNING' : Object.hasOwn(q.alt, 'FYSISKUNDERSOKNING') ? 'FYSISKUNDERSOKNING' : 'UNDERSOKNING';
+      if (Object.hasOwn(q.alt, kod)) satt(q.id, { [kod]: datumAv(new Date(v.start)) }, `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`);
+    } else if (k === 'vardkontaktDatum') {
+      const v = vk()[0];
+      if (v) satt(q.id, datumAv(new Date(v.start)), `Vårdkontakten ${datumText(v.start)} på ${enhetsnamn(atk.db, v.enhet_id)}`);
+    } else if (k === 'tsKalla') {
+      const v = vk()[0];
+      if (v) satt(q.id, datumAv(new Date(v.start)) === datumAv(nu) ? 'undersokn' : 'journal', `Vårdkontakten ${datumText(v.start)}`);
+    } else if (k === 'status') {
+      const s = senasteStatus(atk);
+      if (s) satt(q.id, s.text, s.kalla);
+    } else if (k === 'graviditet') {
+      const g = synligGraviditet(atk);
+      if (g) satt(q.id, g.bpd, `Graviditetsjournalen på ${enhetsnamn(atk.db, g.enhet_id)}, beräknad förlossning ${datumText(g.bpd)}`);
+    } else if (k === 'inneliggande') {
+      const s = pagaendeSlutenvard(atk, nu);
+      if (s) satt(q.id, true, `Inskriven i slutenvård sedan ${datumText(s.start)}`);
+    } else if (k === 'dodsdatum') {
+      const a = avlidenFor(atk.db, atk.patientId);
+      if (a?.datum) satt(q.id, a.datum, `Registrerat dödsdatum ${datumText(a.datum)}`);
+    } else if (k === 'lakemedelText') {
+      const l = lm();
+      satt(q.id, l.map(o => o.lm_namn ?? o.lakemedel_id).join(', '), l.length ? 'Aktuella läkemedel i läkemedelslistan' : null);
+    } else if (k === 'ts.medicinering') {
+      if (lm().length) satt(q.id, true, 'Aktuella läkemedel i läkemedelslistan');
+    } else if (k === 'ts.diabetes') {
+      const d = alla().find(x => DIABETES.test(ren(x.kod)));
+      if (d && lm().some(arAntidiabetika)) satt(q.id, true, `${diagnosRad(atk, d)} och läkemedel mot diabetes i läkemedelslistan`);
+    } else if (Object.hasOwn(TS_KODER, k)) {
+      const d = alla().filter(x => TS_KODER[k].test(ren(x.kod)));
+      if (d.length) {
+        satt(q.id, true, `Diagnos: ${d.slice(0, 3).map(x => diagnosRad(atk, x)).join('; ')}`);
+        satt(`${q.id}.2`, d.slice(0, 3).map(x => `${x.kod} ${x.text}, diagnos ${datumText(x.datum)}`).join('. '), 'Ur diagnoserna i journalen');
+      }
+    } else if (k.startsWith('diabetes') || k === 'hypoglykemiRisk') {
+      const d = alla().filter(x => DIABETES.test(ren(x.kod)));
+      const l = lm().filter(arAntidiabetika);
+      if (k === 'diabetesAr' && d.length) { const f = d.at(-1); satt(q.id, Number(f.datum.slice(0, 4)), `Första diabetesdiagnosen i journalen: ${diagnosRad(atk, f)}`); }
+      if (k === 'diabetesTyp' && d.length) { const typ = /^E10/.test(ren(d[0].kod)) ? 'DIABETES_TYP_1' : /^E11/.test(ren(d[0].kod)) ? 'DIABETES_TYP_2' : 'ANNAN'; satt(q.id, typ, diagnosRad(atk, d[0])); }
+      if (k === 'diabetesMedicinering' && d.length) satt(q.id, l.length > 0, l.length ? `Läkemedel mot diabetes: ${l.map(o => o.lm_namn).join(', ')}` : 'Inga läkemedel mot diabetes i läkemedelslistan');
+      if (k === 'diabetesBehandling' && l.length) satt(q.id, [...new Set(l.map(o => (arInsulin(o) ? 'INSULIN' : /^A10B[ABFGHKX]/.test(o.atc) ? 'TABLETTER' : 'ANNAN')))], `Läkemedel mot diabetes: ${l.map(o => `${o.lm_namn} (${o.atc})`).join(', ')}`);
+      if (k === 'hypoglykemiRisk' && l.length) { const risk = l.some(o => arInsulin(o) || /^A10BB/.test(o.atc)); if (risk) satt(q.id, true, 'Insulin eller sulfonureider ger risk för hypoglykemi'); }
+    }
+  }
+  // Underlag bredvid frågorna, som inte är svar: senaste HbA1c för intygen om körkort.
+  if (['TSTRK1031', 'TS8071'].includes(t.kod)) {
+    const h = senasteMatvarde(atk, 'hba1c');
+    if (h) underlag.push({ text: `Senaste HbA1c ${String(h.varde).replace('.', ',')} mmol/mol (${datumText(h.tid)}, ${enhetsnamn(atk.db, h.enhet_id)})` });
+  }
+  if (t.kod === 'IGRAV') {
+    const g = synligGraviditet(atk);
+    if (g) { const dagar = 280 - Math.round((Date.parse(`${g.bpd}T12:00:00Z`) - Date.parse(`${datumAv(nu)}T12:00:00Z`)) / 86400_000); underlag.push({ text: `Graviditetsvecka ${Math.floor(dagar / 7)}+${dagar % 7} i dag` }); }
+  }
+  cache = null;
+  return { svar, kallor, underlag };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Vilka intygstyper som får skrivas för patienten, av den inloggade och just nu, och varför de andra inte får det. Ett
+// val som inte går ska aldrig visas som ett val. Intygstyper som den inloggade inte får skriva visas inte alls, och
+// intyg som ännu inte gäller visas inte. Ett ersatt intyg visas med vad som ersatte det.
+// ---------------------------------------------------------------------------------------------------------------
+export function typerFor(db, p, dag = idag(), { personal = null, atk = null } = {}) {
+  const nu = IT.tidpunkt(dag);
+  const dagen = typeof dag === 'string' && /^\d{4}-\d\d-\d\d$/.test(dag) ? dag : datumAv(nu);
   const avliden = Boolean(avlidenFor(db, p.id));
-  const ar = alder(p.fodd, dag);
-  return INTYGSTYPER.map(t => {
+  const ar = alder(p.fodd, dagen);
+  const ut = [];
+  for (const kod of IT.KODER) {
+    let t = IT.aktuell(kod, nu);
     let skal = null;
-    if (t.avliden && !avliden) skal = 'Skrivs först när patienten är registrerad som avliden.';
+    if (!t) {
+      const s = IT.senast(kod);
+      if (s.giltig.fran && Date.parse(s.giltig.fran) > nu.getTime()) continue;
+      t = s;
+      skal = IT.giltighetText(s) ?? `${s.text} kan inte skrivas just nu.`;
+    }
+    const b = personal ? behorighet(personal, t) : { signera: 'skriv_intyg', utkast: null };
+    if (!b.signera && !b.utkast) continue;
+    const { alder: [min, max], skal: alderSkal } = IT.alderFor(t, nu);
+    if (skal) { /* ersatt */ } else if (t.avliden && !avliden) skal = 'Skrivs först när patienten är registrerad som avliden.';
     else if (!t.avliden && avliden) skal = 'Patienten är registrerad som avliden. Bara dödsbevis och dödsorsaksintyg kan skrivas.';
     else if (p.skyddad && !t.sekretess) skal = 'Kan inte skrivas för en patient med skyddade personuppgifter.';
-    else if (ar < t.alder[0] || ar > t.alder[1]) skal = `Gäller patienter mellan ${t.alder[0]} och ${t.alder[1]} år.`;
-    return { kod: t.kod, text: t.text, mottagare: t.mottagare, mojlig: !skal, skal };
-  });
+    else if (p.skyddad && !b.signera) skal = 'För en patient med skyddade personuppgifter skapas intyget av den som signerar det.';
+    else if (ar < min || ar > max) skal = alderSkal ?? (max >= 130 ? `Gäller patienter från ${min} år.` : `Gäller patienter mellan ${min} och ${max} år.`);
+    else if (t.kraver === 'graviditet' && personal && !kanRoll(personal, 'las_graviditet')) skal = 'Skrivs av läkaren, barnmorskan eller sjuksköterskan, som ser graviditetsjournalen.';
+    else if (t.kraver === 'graviditet' && !(atk && synligGraviditet(atk))) skal = 'Skrivs när det finns en pågående graviditet i graviditetsjournalen. Registrera graviditeten först.';
+    ut.push({ kod: t.kod, version: t.version, blankett: t.blankett, text: t.text, mottagare: t.mottagare, sandning: t.sandning, mojlig: !skal, skal, kanSignera: Boolean(b.signera) });
+  }
+  return ut;
 }
 
-// Diagnosen som förifylls: den senaste på den egna vårdenheten. Bara det läkaren får se på den egna enheten används,
-// så att förifyllnaden aldrig kan föra med sig något från en annan eller spärrad vårdenhet.
-function diagnosForForifyllnad(atk) {
-  const min = vardenhetFor(atk.db, atk.personal.enhet_id);
-  // Säkerhetsgranskningen vid sammanslagningen av runda 14: inget tak före urvalet av den egna vårdenheten, så att
-  // diagnoser på en annan eller spärrad vårdenhet aldrig kan tränga undan den egna och därmed röja att de finns.
-  const rader = atk.db.query('SELECT id, enhet_id, kod, text, datum FROM diagnoser WHERE patient_id = ? ORDER BY datum DESC, id DESC').all(atk.patientId)
-    .filter(d => vardenhetFor(atk.db, d.enhet_id) === min);
-  const synliga = atk.filtrera(rader, 'las_diagnoser');
-  return synliga[0] ?? null;
-}
-
-// Förslaget: det systemet tror att läkaren ska skriva, med skälet.
+// Förslaget: det systemet tror att den inloggade ska skriva, med skälet.
+const ALLVARLIG = /^(C\d\d|D4[5-7]|D6[01]|G93[0-9]|I42|Q2[0-4]|J96|N17|K72)/;
 export function forslag(atk, p, dag = idag()) {
-  const typer = typerFor(atk.db, p, dag);
-  const mojliga = typer.filter(t => t.mojlig);
+  const nu = IT.tidpunkt(dag);
+  const dagen = typeof dag === 'string' && /^\d{4}-\d\d-\d\d$/.test(dag) ? dag : datumAv(nu);
+  const typer = typerFor(atk.db, p, dag, { personal: atk.personal, atk });
+  const mojlig = (k) => typer.some(t => t.kod === k && t.mojlig);
   const avliden = avlidenFor(atk.db, p.id);
-  if (avliden) return { kod: 'DB', varfor: 'Patienten är registrerad som avliden. Dödsbeviset ska skrivas först, sedan dödsorsaksintyget.' };
-  const d = kanRoll(atk.personal, 'las_diagnoser') ? diagnosForForifyllnad(atk) : null;
-  if (d && mojliga.some(t => t.kod === 'LISJP')) return { kod: 'LISJP', varfor: `Diagnosen ${d.kod} ${d.text} från din vårdenhet förifylls.` };
-  return mojliga[0] ? { kod: mojliga[0].kod, varfor: null } : null;
+  if (avliden) {
+    const dbSignerat = atk.db.query("SELECT 1 FROM lakarintyg WHERE patient_id = ? AND typ = 'DB' AND status IN ('signerat', 'skickat')").get(p.id);
+    if (!dbSignerat && mojlig('DB')) return { kod: 'DB', varfor: 'Patienten är registrerad som avliden. Dödsbeviset ska skrivas först, sedan dödsorsaksintyget.' };
+    if (mojlig('DOI')) return { kod: 'DOI', varfor: 'Dödsbeviset är signerat. Dödsorsaksintyget skrivs nu.' };
+    return null;
+  }
+  const g = mojlig('IGRAV') ? synligGraviditet(atk) : null;
+  if (g) return { kod: 'IGRAV', varfor: `Graviditeten i graviditetsjournalen, beräknad förlossning ${datumText(g.bpd)}. Intyget om graviditet behövs för graviditetspenning och föräldrapenning före förlossningen.` };
+  const ar = alder(p.fodd, dagen);
+  const diagn = kanRoll(atk.personal, 'las_diagnoser') ? egnaDiagnoser(atk) : [];
+  const d = diagn[0] ?? null;
+  // Besöket gäller körkortet: kontaktorsaken för en vårdkontakt i dag på den egna vårdenheten nämner körkort eller taxi.
+  const korkort = egnaVardkontakter(atk, nu).some(v => datumAv(new Date(v.start)) === dagen && /körkort|taxi/i.test(`${v.orsak ?? ''} ${v.plats ?? ''}`));
+  if (korkort) {
+    const diabetes = synligaDiagnoser(atk).some(x => DIABETES.test(ren(x.kod))) && aktivaLakemedel(atk).some(arAntidiabetika);
+    if (diabetes && mojlig('TSTRK1031')) return { kod: 'TSTRK1031', varfor: 'Besöket gäller körkortet och patienten har läkemedelsbehandlad diabetes.' };
+    if (mojlig('TS8071')) return { kod: 'TS8071', varfor: 'Besöket gäller körkortet. TS8071 är Transportstyrelsens läkarintyg för högre behörigheter och taxi.' };
+  }
+  if (ar < 18 && d) {
+    const allvarlig = diagn.some(x => ALLVARLIG.test(ren(x.kod))) || pagaendeSlutenvard(atk, nu);
+    if (allvarlig && mojlig('LU_TFP_ASB18')) return { kod: 'LU_TFP_ASB18', varfor: `Barnet är under 18 år och allvarligt sjukt (${d.kod} ${d.text}). Utlåtandet ger föräldern rätt till tillfällig föräldrapenning.` };
+    if (mojlig('LU_TFP_B12_16')) return { kod: 'LU_TFP_B12_16', varfor: `Barnet är mellan 12 och 16 år och har ${d.kod} ${d.text}. Utlåtandet behövs för förälderns tillfälliga föräldrapenning.` };
+    if (mojlig('ITFP')) return { kod: 'ITFP', varfor: `Barnet är under 12 år och har ${d.kod} ${d.text}. Intyget behövs för förälderns tillfälliga föräldrapenning från dag åtta.` };
+  }
+  if (d && mojlig('LISJP')) return { kod: 'LISJP', varfor: `Diagnosen ${d.kod} ${d.text} från din vårdenhet förifylls.` };
+  const forsta = typer.find(t => t.mojlig);
+  return forsta ? { kod: forsta.kod, varfor: null } : null;
+}
+
+// Förifyllnaden i kontraktets form. Svarets id är frågans nummer före punkten och delsvarets id frågans eget id, som i
+// blanketterna (fråga 52.2 är delsvar 52.2 i svar 52). Diagnoser är delsvar med cv i ICD-10-SE (id.2, id.4 och id.6 som
+// i Webcert), övriga svar ett element i demons namnrymd. En fråga utan punkt har sitt värde i delsvar id.1, eller id.0
+// när blanketten redan har en fråga id.1. Frågor vars id inte är ett nummer förifylls inte.
+export const delsvarId = (t, id) => (id.includes('.') ? id : IT.fragorFor(t).some(q => q.id === `${id}.1`) ? `${id}.0` : `${id}.1`);
+export function forifyllnadSvar(t, forifyllt) {
+  const perSvar = new Map();
+  for (const q of IT.fragorFor(t)) {
+    if (!Object.hasOwn(forifyllt.svar ?? {}, q.id) || !/^\d+(\.\d+)?$/.test(q.id)) continue;
+    const v = forifyllt.svar[q.id];
+    const kalla = forifyllt.kallor?.[q.id] ?? null;
+    const svarId = q.id.split('.')[0];
+    const lista = perSvar.get(svarId) ?? [];
+    if (q.typ === 'diagnoser') lista.push(...v.slice(0, 3).map((x, i) => ({ '@id': `${q.id}.${2 + i * 2}`, $any: [el(NS.types, 'cv', [el(NS.types, 'code', x.kod), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', x.text)]), ...(i === 0 && kalla ? [el(NS.demo, 'kalla', kalla)] : [])] })));
+    else lista.push({ '@id': delsvarId(t, q.id), $any: [el(NS.demo, 'varde', JSON.stringify({ v, kalla }))] });
+    perSvar.set(svarId, lista);
+  }
+  const svar = [...perSvar].filter(([, d]) => d.length).map(([id, delsvar]) => ({ '@id': id, delsvar }));
+  return svar.length ? { svar } : null;
+}
+
+// Underlaget bredvid frågorna (till exempel senaste HbA1c) skickas som ett element i demons namnrymd efter svaren, där
+// schemat tillåter element ur andra namnrymder.
+function forifyllnadMedUnderlag(t, f) {
+  const s = forifyllnadSvar(t, f);
+  const u = (f.underlag ?? []).slice(0, 5).map(x => String(x.text).slice(0, 300));
+  if (!s && !u.length) return null;
+  return { ...(s ?? {}), ...(u.length ? { $any: [el(NS.demo, 'underlag', JSON.stringify(u))] } : {}) };
 }
 
 // Begäran CreateDraftCertificate 3.3 i schemats form (grunden bygger den i schemats ordning och validerar den).
 const hsa = (x) => ({ root: KV.hsa, extension: x });
-export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, diagnos = null }) {
-  const t = TYP.get(typ);
+export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, diagnos = null, forifyllt = null, nu = new Date() }) {
+  const t = IT.aktuell(typ, nu) ?? IT.senast(typ);
+  // Runda 14: en ensam diagnos kan fortfarande skickas som förut (diagnos), nu som förifyllnad av diagnosfrågan.
+  const f = forifyllt ?? (diagnos ? { svar: { [IT.fragorFor(t).find(q => q.typ === 'diagnoser')?.id ?? '6']: [{ kod: diagnos.kod.replace('.', ''), text: diagnos.text }] } } : null);
   return {
     intyg: {
       typAvIntyg: { code: t.kod, codeSystem: KV.intygstyp, displayName: t.text },
@@ -165,20 +400,33 @@ export function skapaUtkastBegaran({ typ, patient, pid, personal, enhet, ref, di
       },
       skapadAv: { 'personal-id': hsa(personal.hsa_id), fullstandigtNamn: personal.namn, enhet: { 'enhets-id': hsa(enhet.hsa_id), enhetsnamn: enhet.namn } },
       ref,
-      // Förifyllnaden: diagnosen i fråga 6 (delsvar 6.2, ICD-10-SE utan punkt).
-      forifyllnad: diagnos && typ === 'LISJP' ? { svar: [{ '@id': '6', delsvar: [{ '@id': '6.2', $any: [el(NS.types, 'cv', [el(NS.types, 'code', diagnos.kod.replace('.', '')), el(NS.types, 'codeSystem', KV.icd10), el(NS.types, 'displayName', diagnos.text)])] }] }] } : null,
+      forifyllnad: f ? forifyllnadMedUnderlag(t, f) : null,
     },
   };
 }
 
-const radUt = (db, r) => {
-  const t = TYP.get(r.typ);
+const radUt = (db, r, personal = null) => {
+  const t = IT.typFor(r.typ, r.version);
+  const nu = new Date();
+  const ersatt = t && !IT.galler(t, nu) && t.giltig.till && Date.parse(t.giltig.till) <= nu.getTime();
+  const b = t && personal ? behorighet(personal, t) : { signera: null, utkast: null };
+  const ny = ersatt && t.ersattsAv ? IT.aktuell(t.ersattsAv.kod, nu) : null;
+  const pat = db.query('SELECT skyddad FROM patienter WHERE id = ?').get(r.patient_id);
+  const far = b.signera || (b.utkast && !pat?.skyddad);
   return {
-    id: r.id, typ: r.typ, text: t?.text ?? r.typ, mottagare: t?.mottagare ?? null, status: r.status, statusText: STATUSTEXT[r.status] ?? r.status,
+    id: r.id, typ: r.typ, version: r.version ?? '1.0', blankett: t?.blankett ?? null, text: t?.text ?? r.typ, mottagare: t?.mottagare ?? null,
+    status: r.status, statusText: STATUSTEXT[r.status] ?? r.status,
     skapad: r.skapad_tid, signerad: r.signerad_tid, skickad: r.skickad_tid, fragorEjBesvarade: r.fragor_ej_besvarade,
     vardenhet: ve(db, r.enhet_id) ? { namn: ve(db, r.enhet_id).namn } : null,
     skapadAv: db.query('SELECT namn FROM personal WHERE id = ?').get(r.skapad_av)?.namn ?? null,
-    kanOppnas: ['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status) && Boolean(r.intygs_id),
+    kanOppnas: ['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status) && Boolean(r.intygs_id) && Boolean(personal ? (far || (!pat?.skyddad && kanRoll(personal, 'las_intyg'))) : true),
+    // Runda 16, r1: ett ersatt intyg säger vad som ersatte det, och ett signerat intyg kan förnyas med den version som
+    // gäller nu, eller bytas mot det intyg som ersatte det.
+    ersatt: ersatt ? (IT.giltighetText(t) ?? 'Intygstypen gäller inte längre.') : null,
+    sandning: t?.sandning ?? null,
+    relation: r.relation_typ ? { typ: r.relation_typ, text: IT.RELATIONER[r.relation_typ] ?? r.relation_typ } : null,
+    kanFornyas: Boolean(far && ['signerat', 'skickat'].includes(r.status) && r.intygs_id && (ny ? true : t?.fornyas && IT.aktuell(r.typ, nu))),
+    fornyasMed: ['signerat', 'skickat'].includes(r.status) ? (ny ? { kod: ny.kod, version: ny.version, text: ny.kod === r.typ ? `Förnya med version ${ny.version}` : `Skriv ${ny.blankett} i stället` } : t?.fornyas ? { kod: r.typ, version: IT.aktuell(r.typ, nu)?.version ?? null, text: 'Förnya' } : null) : null,
     handelser: db.query('SELECT kod, tid FROM lakarintyg_handelser WHERE intyg_id = ? ORDER BY tid, id').all(r.id).map(h => ({ kod: h.kod, text: HANDELSER[h.kod]?.text ?? h.kod, tid: h.tid })),
   };
 };
@@ -187,66 +435,118 @@ const radUt = (db, r) => {
 export function forPatient(atk, p, dag = idag()) {
   atk.krav('las_intyg');
   const rader = atk.filtrera(atk.db.query('SELECT * FROM lakarintyg WHERE patient_id = ? ORDER BY skapad_tid DESC, id DESC').all(p.id), 'las_intyg');
-  const kanSkriva = kanRoll(atk.personal, 'skriv_intyg');
+  // Runda 16, r1: räknas innan förslaget och förifyllnaden prövar andra rader, så att rutan om dolda intyg bara gäller intygen.
+  const doldaIntyg = atk.doldaVal;
+  const typer = kanNagotIntyg(atk.personal) ? typerFor(atk.db, p, dag, { personal: atk.personal, atk }) : [];
+  // Den som bara får skriva några få intyg (sjuksköterskan) ser rutan bara när något av dem kan skrivas för patienten.
+  const kanSkriva = kanRoll(atk.personal, 'skriv_intyg') || kanRoll(atk.personal, 'utkast_intyg') || typer.some(t => t.mojlig);
   return {
-    intyg: rader.map(r => radUt(atk.db, r)),
+    intyg: rader.map(r => radUt(atk.db, r, atk.personal)),
     kanSkriva,
-    typer: kanSkriva ? typerFor(atk.db, p, dag) : [],
+    typer: kanSkriva ? typer : [],
     forslag: kanSkriva ? forslag(atk, p, dag) : null,
     motpart: MOTPART,
     kontrakt: `${DOMAN} ${DOMANVERSION}: ${KONTRAKT.skapa.namn} ${KONTRAKT.skapa.version}, ${KONTRAKT.status.namn} ${KONTRAKT.status.version} och ${KONTRAKT.lista.namn} ${KONTRAKT.lista.version}`,
     simulerat: 'Intygsapplikationen är simulerad i demon. Inget intyg skickas till någon mottagare.',
-    dolda: atk.doldaVal > 0 ? { kraverVal: true, text: 'Det finns intyg från andra vårdenheter. Gör ett aktivt val för att visa dem.' } : null,
+    dolda: doldaIntyg > 0 ? { kraverVal: true, text: 'Det finns intyg från andra vårdenheter. Gör ett aktivt val för att visa dem.' } : null,
   };
+}
+
+// Texten för det som förifylldes, i frågornas ordning med diagnoserna först.
+function forifylltText(t, f) {
+  const ut = [];
+  for (const q of IT.fragorFor(t)) {
+    if (!Object.hasOwn(f.svar, q.id)) continue;
+    const v = f.svar[q.id];
+    if (q.typ === 'diagnoser') ut.unshift(`Diagnos ${v.map(x => `${x.kod.length > 3 ? `${x.kod.slice(0, 3)}.${x.kod.slice(3)}` : x.kod} ${x.text}`).join(', ')}`);
+    else ut.push(q.text.replace(/\?$/, ''));
+  }
+  return ut;
 }
 
 // Skapar ett utkast i intygsapplikationen. Ger raden och adressen som öppnar utkastet.
 export async function skapa(atk, p, body = {}, dag = idag()) {
-  atk.krav('skriv_intyg');
+  const nu = IT.tidpunkt(dag);
   const typ = typeof body.typ === 'string' ? body.typ : '';
-  if (!TYP.has(typ)) throw new Fel(400, 'Välj ett av intygen i listan.', 'ogiltig', { falt: ['typ'] });
-  const val = typerFor(atk.db, p, dag).find(t => t.kod === typ);
+  if (!IT.KODER.includes(typ)) throw new Fel(400, 'Välj ett av intygen i listan.', 'ogiltig', { falt: ['typ'] });
+  const val = typerFor(atk.db, p, dag, { personal: atk.personal, atk }).find(t => t.kod === typ);
+  // Den som inte får skriva intygstypen nekas av behörighetsmotorn, med samma svar som förut.
+  if (!val) atk.krav('skriv_intyg');
   if (!val.mojlig) throw new Fel(400, `${val.text} kan inte skrivas: ${val.skal}`, 'ogiltig', { falt: ['typ'] });
+  const t = IT.aktuell(typ, nu);
+  const b = behorighet(atk.personal, t);
+  atk.krav(b.signera ?? b.utkast);
   const pid = personId(p);
   if (!pid) throw new Fel(400, 'Patienten har inget personnummer eller samordningsnummer. Intyg via intygsapplikationen kräver ett av dem. Registrera patientens identitet först.', 'ogiltig');
   const db = atk.db;
   const personal = db.query('SELECT * FROM personal WHERE id = ?').get(atk.personal.id);
   const enhet = ve(db, atk.personal.enhet_id);
-  const diagnos = typ === 'LISJP' && kanRoll(atk.personal, 'las_diagnoser') ? diagnosForForifyllnad(atk) : null;
+  const forifyllt = forifyllnad(atk, t, p, nu);
   const ref = `VK-INTYG-${randomUUID()}`;
-  const t = iso();
-  const id = Number(db.query("INSERT INTO lakarintyg (patient_id, enhet_id, typ, ref, skapad_av, skapad_tid, status, andrad_tid) VALUES (?, ?, ?, ?, ?, ?, 'utkast', ?)")
-    .run(p.id, enhet.id, typ, ref, personal.id, t, t).lastInsertRowid);
+  const tid = iso();
+  const id = Number(db.query("INSERT INTO lakarintyg (patient_id, enhet_id, typ, version, ref, skapad_av, skapad_tid, status, andrad_tid) VALUES (?, ?, ?, ?, ?, ?, ?, 'utkast', ?)")
+    .run(p.id, enhet.id, typ, t.version, ref, personal.id, tid, tid).lastInsertRowid);
   let svar = null;
   let orsak = null;
   try {
-    svar = await r3.anropa(db, DEF.skapa(), { logiskAdress: LOGISK_ADRESS_INTYGSAPPLIKATION, begaran: skapaUtkastBegaran({ typ, patient: p, pid, personal, enhet, ref, diagnos }), transport: transportTill(db) });
+    svar = await r3.anropa(db, DEF.skapa(), { logiskAdress: LOGISK_ADRESS_INTYGSAPPLIKATION, begaran: skapaUtkastBegaran({ typ, patient: p, pid, personal, enhet, ref, forifyllt, nu }), transport: transportTill(db) });
   } catch (x) { if (!(x instanceof r3.RivtaFel)) throw x; orsak = x.message; }
   const intygsId = svar?.['intygs-id']?.extension ?? null;
   if (!svar || svar.result?.resultCode !== 'OK' || !intygsId) {
     db.query("UPDATE lakarintyg SET status = 'fel', andrad_tid = ? WHERE id = ?").run(iso(), id);
-    atk.logga('skriv_intyg', atk.grund(), `intyg:${id}`);
+    atk.logga(b.signera ?? b.utkast, atk.grund(), `intyg:${id}`);
     throw new Fel(502, `Intygsapplikationen tog inte emot utkastet. ${orsak ?? svar?.result?.resultText ?? 'Okänt fel.'}`, 'motpart');
   }
   db.query('UPDATE lakarintyg SET intygs_id = ? WHERE id = ?').run(intygsId, id);
   // Intygsapplikationens statusuppdatering om det nya utkastet kommer efter svaret.
   await r3.leverera(db);
-  atk.logga('skriv_intyg', atk.grund(), `intyg:${id}`);
+  atk.logga(b.signera ?? b.utkast, atk.grund(), `intyg:${id}`);
   const rad = db.query('SELECT * FROM lakarintyg WHERE id = ?').get(id);
-  return { intyg: radUt(db, rad), oppna: oppnaAdress(rad), forifyllt: diagnos ? [`Diagnos ${diagnos.kod} ${diagnos.text}`] : [], text: `Utkastet till ${TYP.get(typ).text.toLowerCase()} är skapat i intygsapplikationen.` };
+  return { intyg: radUt(db, rad, atk.personal), oppna: oppnaAdress(rad), forifyllt: forifylltText(t, forifyllt), text: `Utkastet till ${IT.iMening(t.text)} är skapat i intygsapplikationen.` };
 }
 
 // Adressen som öppnar intyget i intygsapplikationen, som i integrerat läge: intygets id och vårdenheten. Inga
 // patientuppgifter finns i adressen.
 export const oppnaAdress = (rad) => `#/intygsapplikation/${encodeURIComponent(rad.intygs_id)}`;
 
-export function oppna(atk, id) {
+function synligRad(atk, id) {
   const rad = /^\d{1,9}$/.test(String(id)) ? atk.db.query('SELECT * FROM lakarintyg WHERE id = ? AND patient_id = ?').get(Number(id), atk.patientId) : null;
   const synlig = rad ? atk.filtrera([rad], 'las_intyg')[0] : null;
   if (!synlig || !synlig.intygs_id) throw new Fel(404, 'Intyget finns inte.', 'saknas');
-  atk.krav(kanRoll(atk.personal, 'skriv_intyg') ? 'skriv_intyg' : 'las_intyg', { resurs: { enhet_id: synlig.enhet_id } });
+  return synlig;
+}
+
+// Runda 16, r1: när den som får signera öppnar ett utkast som någon annan har skapat, till exempel vårdadministratören,
+// fyller journalen i de frågor som fortfarande är tomma med det som den som öppnar får se. Intygsapplikationen tar emot
+// förifyllnaden på samma sätt som när utkastet skapas (simulerat i samma process; Webcert har ingen sådan uppdatering).
+let fyllUtkast = async () => null;
+export const sattFyllUtkast = (fn) => { fyllUtkast = fn; };
+
+export async function oppna(atk, id) {
+  const synlig = synligRad(atk, id);
+  const t = IT.typFor(synlig.typ, synlig.version);
+  const b = t ? behorighet(atk.personal, t) : { signera: null, utkast: null };
+  atk.krav(b.signera ?? b.utkast ?? 'las_intyg', { resurs: { enhet_id: synlig.enhet_id } });
   atk.logga(atk.handling, atk.grund(), `intyg:${synlig.id}`);
+  if (b.signera && ['utkast', 'klart_for_signering'].includes(synlig.status) && vardenhetFor(atk.db, atk.personal.enhet_id) === synlig.enhet_id) {
+    const p = atk.db.query('SELECT * FROM patienter WHERE id = ?').get(synlig.patient_id);
+    await fyllUtkast(atk.db, atk.personal, synlig.intygs_id, forifyllnad(atk, t, p));
+  }
   return { oppna: oppnaAdress(synlig) };
+}
+
+// Runda 16, r1: förnyelse eller förlängning av ett signerat intyg, och byte från ett ersatt intyg till det som ersatte
+// det. Behörigheten prövas här i journalen, och intygsapplikationen skapar det nya utkastet med de svar som får följa
+// med (intygstyper.overfor) och meddelar journalen med en statusuppdatering som har relationen till det gamla intyget.
+let fornyaIApp = async () => { throw new Fel(502, 'Ingen intygsapplikation är ansluten.', 'motpart'); };
+export const sattFornya = (fn) => { fornyaIApp = fn; };
+export async function fornya(atk, p, id) {
+  const synlig = synligRad(atk, id);
+  const t = IT.typFor(synlig.typ, synlig.version);
+  const b = behorighet(atk.personal, t);
+  atk.krav(b.signera ?? b.utkast ?? 'skriv_intyg', { resurs: { enhet_id: synlig.enhet_id } });
+  atk.logga(b.signera ?? b.utkast, atk.grund(), `intyg:${synlig.id}:fornya`);
+  return fornyaIApp(atk.db, atk.personal, synlig.intygs_id);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -255,6 +555,32 @@ export function oppna(atk, id) {
 // får ett fel med förklaring och ändrar ingenting. Svaret innehåller inga patientuppgifter.
 // ---------------------------------------------------------------------------------------------------------------
 const resultat = (kod, resultText = null, errorId = null) => ({ result: { resultCode: kod, resultText, errorId } });
+
+// Runda 16, r1: ett utkast som intygsapplikationen har skapat genom att förnya eller byta ett intyg som journalen har.
+// Journalen lägger in det bara när relationen pekar på ett intyg som journalen själv har på samma vårdenhet och för samma
+// patient, och när den som skapade det har ett uppdrag på vårdenheten. Ett meddelande kan alltså aldrig lägga in ett
+// intyg på en patient som journalen inte redan har ett intyg för på vårdenheten.
+function nyttUrRelation(db, m, logiskAdress) {
+  const rel = (m.intyg.relation ?? [])[0];
+  const typ = rel?.typ?.code;
+  if (!rel || !['FRLANG', 'KOPIA', 'ERSATT'].includes(typ) || rel.typ.codeSystem !== KV.relation) return null;
+  if (m.handelse?.handelsekod?.code !== 'SKAPAT') return null;
+  const gammal = db.query('SELECT * FROM lakarintyg WHERE intygs_id = ?').get(rel['intygs-id']?.extension ?? '');
+  if (!gammal) return null;
+  const agare = ve(db, gammal.enhet_id);
+  if (logiskAdress !== agare.hsa_id || m.intyg.skapadAv?.enhet?.['enhets-id']?.extension !== agare.hsa_id) return null;
+  const kod = m.intyg.typ?.code;
+  const t = IT.typFor(kod, m.intyg.version);
+  if (!t || t.kod !== kod) return null;
+  const pers = db.query('SELECT id, enhet_id FROM personal WHERE hsa_id = ? AND aktiv = 1').get(m.intyg.skapadAv?.['personal-id']?.extension ?? '');
+  if (!pers || vardenhetFor(db, pers.enhet_id) !== gammal.enhet_id) return null;
+  const pid = personId(db.query('SELECT personnummer FROM patienter WHERE id = ?').get(gammal.patient_id) ?? {});
+  if (!pid || m.intyg.patient?.['person-id']?.extension !== pid.extension) return null;
+  const tid = iso();
+  const id = Number(db.query("INSERT INTO lakarintyg (patient_id, enhet_id, typ, version, intygs_id, ref, skapad_av, skapad_tid, status, andrad_tid, relation_typ, relation_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'utkast', ?, ?, ?)")
+    .run(gammal.patient_id, gammal.enhet_id, kod, t.version, m.intyg['intygs-id'].extension, `VK-INTYG-${randomUUID()}`, pers.id, tid, tid, typ, gammal.id).lastInsertRowid);
+  return db.query('SELECT * FROM lakarintyg WHERE id = ?').get(id);
+}
 
 // Grunden har redan prövat kuvertet, schemat, den logiska adressen (en vårdenhet i Vårdkällan) och att den anropande
 // organisationen är den anslutna intygsapplikationen.
@@ -265,8 +591,9 @@ export function taEmotStatus(ctx, { begaran: m, logiskAdress }) {
   const tid = m.handelse?.tidpunkt;
   if (!Object.hasOwn(HANDELSER, kod ?? '')) return resultat('ERROR', `Händelsekoden ${kod ?? ''} finns inte i kodverket för händelser.`, 'VALIDATION_ERROR');
   // Intyget slås upp på intygets id, och referensen och vårdenheten ska stämma. En händelse för ett intyg som journalen
-  // inte har skapat avvisas, så att ingen kan lägga in intyg på en patient genom att skicka ett meddelande.
-  const rad = db.query('SELECT * FROM lakarintyg WHERE intygs_id = ?').get(intygsId);
+  // inte har skapat avvisas, så att ingen kan lägga in intyg på en patient genom att skicka ett meddelande. Undantaget är
+  // ett förnyat intyg, som bara läggs in med relationen till ett intyg som journalen har (nyttUrRelation).
+  const rad = db.query('SELECT * FROM lakarintyg WHERE intygs_id = ?').get(intygsId) ?? (m.ref ? null : nyttUrRelation(db, m, logiskAdress));
   if (!rad) return resultat('ERROR', 'Intyget finns inte i journalen.', 'APPLICATION_ERROR');
   if (m.ref && m.ref !== rad.ref) return resultat('ERROR', 'Referensen stämmer inte med intyget.', 'APPLICATION_ERROR');
   const agare = ve(db, rad.enhet_id);

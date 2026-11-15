@@ -618,3 +618,14 @@ FLODEN.push(
     motivering: 'Ett klick för att öppna en ny anteckning, där Observationsanteckning är förvald eftersom det är yrkets mall, ett klick på det senaste mätvärdet i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och undersköterskan skriver bara det hon har sett.',
   },
 );
+// Runda 16, r1: ett läkarintyg för sjukpenning i version 2, och bytet från ett ersatt intyg (TSTRK1007) till TS8071.
+FLODEN.push(
+  {
+    id: 'skriv-sjukintyg', namn: 'Skriva och signera ett läkarintyg för sjukpenning', roll: 'lak-vc', start: 'Journalen för patienten på vårdcentralen', budget: 10,
+    motivering: 'Sussa 2.2.1.9. Ett klick på fliken Intyg och ett på Skriv intyget, där systemet har föreslagit läkarintyget för sjukpenning. Underlaget (den senaste vårdkontakten), diagnosen och funktionsnedsättningen ur anteckningens status har systemet fyllt i med källa. Läkaren kryssar nuvarande arbete, skriver yrket och aktivitetsbegränsningen (två fältbyten), kryssar graden, där systemet fyller i perioden från i dag i två veckor, väljer prognos och signerar. Vem som signerar, vårdenheten och patienten behöver ingen ange.',
+  },
+  {
+    id: 'byt-ersatt-intyg', namn: 'Byta ett ersatt intyg mot det som gäller nu', roll: 'lak-vc', start: 'Journalen för Mikael Svensson på vårdcentralen', budget: 2,
+    motivering: 'Sussa 2.2.1.9 och 3.1.4.2. Ett klick på fliken Intyg och ett på Skriv TS 8071 i stället vid det ersatta läkarintyget för högre körkortsbehörigheter. Systemet vet att TSTRK1007 ersattes av TS8071, skapar det nya utkastet med de svar som får följa med och öppnar det. Ingen behöver veta vilken blankett som gäller.',
+  },
+);

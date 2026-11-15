@@ -259,6 +259,9 @@ TILLATNA.add('SOAP');
 // specifikation och JWKS och jwks_uri formatet och adressen för publika nycklar.
 for (const f of ['SAML', 'SAD', 'JWKS']) TILLATNA.add(f);
 FRASER.push('/api/inloggning/rp-jwks', 'jwks_uri', 'alg none');
+// Runda 16, r1: intygen. Blanketternas beteckningar (FK, TS och TSTRK), Transportstyrelsens föreskrifter (TSFS),
+// körkortsbehörigheten DE och grupp III, och diagnoserna ADHD, ADD och DCD i TS8071.
+for (const f of ['FK', 'TS', 'TSTRK', 'TSFS', 'DE', 'III', 'ADHD', 'ADD', 'DCD']) TILLATNA.add(f);
 
 // Interna anteckningar och råd till oss själva, som aldrig ska visas för användaren.
 export const INTERN = /\b(TODO|FIXME|XXX|HACK)\b|\b([Tt]änk på att|[Kk]om ihåg att|[Ss]äg inte|[Gg]löm inte att|OBS! [Ii]ntern|[Ii]ntern anteckning)/;

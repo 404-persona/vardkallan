@@ -696,3 +696,16 @@ ROLLER.sjukskoterska.push('las_intyg');
 // Undersköterskan läser inte läkarnas anteckningar.
 HANDLINGAR.skriv_observation = 'skriva anteckningar med de mallar som vårdgivaren har gett yrket';
 ROLLER.underskoterska.push('skriv_observation');
+
+// Runda 16, r1: intygen (lakarintyg.js, intygstyper.js och intygsapplikation-simulerad.js, Sussa 2.2.1.9). Som i
+// Webcert skapar och fyller vårdadministratören i utkast och markerar dem klara för signering, men signerar aldrig
+// (utkast_intyg), och ser intygen och deras status. Intyg om graviditet (FK 7210) utfärdas enligt Försäkringskassan av
+// läkare, barnmorska eller sjuksköterska vid mödrahälsovården (intyg_graviditet), och intyg om tillfällig
+// föräldrapenning (FK 7472) av läkare eller sjuksköterska (intyg_tfp), som i Intygstjänstens behörighetsregler. Rollen
+// barnmorska (runda 16, r3) får intyg_graviditet. Läkaren har skriv_intyg, som omfattar alla intyg.
+Object.assign(HANDLINGAR, {
+  utkast_intyg: 'skapa och fylla i utkast till intyg och markera dem klara för signering',
+  intyg_graviditet: 'skriva och signera intyg om graviditet', intyg_tfp: 'skriva och signera intyg om tillfällig föräldrapenning',
+});
+ROLLER.vardadministrator.push('las_intyg', 'utkast_intyg');
+ROLLER.sjukskoterska.push('intyg_graviditet', 'intyg_tfp');

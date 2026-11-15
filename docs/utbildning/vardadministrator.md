@@ -218,6 +218,30 @@ Rätt svar: Väljer Registrerad på fel patient på vårdkontakten, skriver varf
 
 Journaluppgifter förstörs aldrig. Systemet flyttar allt som hör till besöket, och på fel patient står bara att kontakten är makulerad, utan något om den andra patienten. Har rätt patient ingen vårdrelation till vårdenheten väntar flytten på att verksamhetschefen eller en annan vårdadministratör godkänner den.
 
+### Övning 9
+
+Du har fyllt i ett utkast till ett läkarutlåtande åt läkaren. Hur gör du klart det?
+
+Rätt svar: Klickar på Markera klart för signering. Läkaren signerar, och när läkaren öppnar utkastet fyller systemet i det läkaren får se ur journalen, till exempel diagnosen.
+
+Vårdadministratören skapar och fyller i utkast men signerar aldrig. Journalen visar Klart för signering av sig själv.
+
+### Övning 10
+
+En patient har skyddade personuppgifter och behöver ett intyg. Kan du skapa utkastet?
+
+Rätt svar: Nej. För en patient med skyddade personuppgifter skapar den som signerar intyget, och systemet säger det.
+
+Som i Webcert skapar och hanterar bara den som får signera intyg för en patient med skyddade personuppgifter, och bara på den vårdenhet där intyget skrevs.
+
+### Övning 11
+
+Vem signerar ett intyg om graviditet till Försäkringskassan?
+
+Rätt svar: Läkaren, barnmorskan eller sjuksköterskan vid mödrahälsovården.
+
+Försäkringskassan tar emot intyget om graviditet från läkare, barnmorska eller sjuksköterska vid mödrahälsovården. Systemet visar knappen Signera bara för den som får signera.
+
 ## Uppdrag i testinbjudan
 
 Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Sussas användbarhetstestfall och ligger i den ordning en arbetsdag har dem. Systemet bockar av ett uppdrag själv när det har hänt, och ett uppdrag som går ut på att hitta något har en fråga som systemet rättar.
@@ -279,4 +303,4 @@ Du arbetar som Karin Berg, vårdadministratör på kardiologiska kliniken, som m
 - Boka om en tid och skicka en gruppkallelse.
 - Bekräfta en sammanslagning av två journaler.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 8 övningar och få intyget.
+- Svara rätt på alla 11 övningar och få intyget.

@@ -518,6 +518,9 @@ export function byggSeed(bas = nu()) {
   require('./administrering.js').sakraIdentitet(db);
   // Runda 14, r3: intyg, e-remiss, vaccination, Infektionsverktyget, NKRR, formulär, 1177 och dos (schema-runda14-r3.js).
   require('./schema-runda14-r3.js').sakraR14r3(db);
+  // Runda 16, r1: ett läkarintyg för sjukpenning i version 1 och ett ersatt intyg (TSTRK1007) för Mikael Svensson, så
+  // att förnyelsen till version 2 och bytet till TS8071 går att pröva (intyg-seed.js).
+  require('./intyg-seed.js').seeda(db);
   // Runda 14, r4: mellanarkivet med de äldre uppgifter ur VAS som fördes dit vid migreringen (mellanarkiv.js).
   require('./mellanarkiv.js').seeda(db);
   // Runda 14, r5: incidentregistret (servicenivaer.js). Inget läggs in i efterhand.

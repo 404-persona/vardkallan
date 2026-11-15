@@ -167,3 +167,36 @@ OVNINGAR_V1.push(
     ['c', 'En hel mall med många sökord.'],
   ], 'b', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
 );
+// Runda 16, r1: intygen i intygsapplikationen, för läkaren och vårdadministratören.
+OVNINGAR_V1.push(
+  o('intyg-ersatt', ['lakare'], 'Demopatienten Mikael Svensson har ett läkarintyg för högre körkortsbehörigheter (TSTRK1007) från 2024. Han behöver ett nytt. Hur gör du?', [
+    ['a', 'Skriver ett nytt TSTRK1007, eftersom det är samma intyg som förra gången.'],
+    ['b', 'Klickar på Skriv TS 8071 i stället vid det gamla intyget. Systemet vet att TS8071 har ersatt TSTRK1007 och tar med de svar som får följa med.'],
+    ['c', 'Letar upp rätt blankett på Transportstyrelsens webbplats.'],
+  ], 'b', 'TSTRK1007 kan inte utfärdas sedan den 31 januari 2025. Systemet visar bara de intyg som gäller nu, säger vad som ersatte det gamla och byter med ett klick.', '#/patient/p14/intyg'),
+  o('intyg-fornya', ['lakare'], 'Du förnyar ett läkarintyg för sjukpenning som skrevs i version 1 av blanketten. Vad följer med till det nya utkastet?', [
+    ['a', 'Allt, också sjukskrivningens grad och period.'],
+    ['b', 'Svaren på frågor som inte har ändrats i version 2. Grad och period, underlag och prognos tar du ställning till på nytt.'],
+    ['c', 'Ingenting, du skriver allt från början.'],
+  ], 'b', 'Bara svar på oförändrade frågor följer med, som Inera beskriver för FK 7804 och AG7804. Det du ska bedöma på nytt följer aldrig med, och systemet säger hur många frågor det gäller.', '#/patient/p14/intyg'),
+  o('intyg-arbetsgivare', ['lakare'], 'Patienten vill ha ett läkarintyg till sin arbetsgivare men vill inte att arbetsgivaren får veta diagnosen. Vad gäller?', [
+    ['a', 'Intyget skickas digitalt till arbetsgivaren med diagnosen.'],
+    ['b', 'Intyget skrivs ut och lämnas av patienten. Svarar patienten nej på frågan om att förmedla diagnosen finns den inte med, och patienten kan dölja den på utskriften.'],
+    ['c', 'Det går inte att skriva intyget utan diagnos.'],
+  ], 'b', 'Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan inte skickas digitalt. Diagnosen är patientens att dela.'),
+  o('intyg-utkast', ['vardadministrator'], 'Du har fyllt i ett utkast till ett läkarutlåtande åt läkaren. Hur gör du klart det?', [
+    ['a', 'Signerar det själv, så att läkaren slipper.'],
+    ['b', 'Klickar på Markera klart för signering. Läkaren signerar, och när läkaren öppnar utkastet fyller systemet i det läkaren får se ur journalen, till exempel diagnosen.'],
+    ['c', 'Skickar det till Försäkringskassan.'],
+  ], 'b', 'Vårdadministratören skapar och fyller i utkast men signerar aldrig. Journalen visar Klart för signering av sig själv.', '#/patient/p01/intyg'),
+  o('intyg-skyddad', ['vardadministrator'], 'En patient har skyddade personuppgifter och behöver ett intyg. Kan du skapa utkastet?', [
+    ['a', 'Ja, som för alla patienter.'],
+    ['b', 'Nej. För en patient med skyddade personuppgifter skapar den som signerar intyget, och systemet säger det.'],
+    ['c', 'Ja, men bara om du döljer namnet.'],
+  ], 'b', 'Som i Webcert skapar och hanterar bara den som får signera intyg för en patient med skyddade personuppgifter, och bara på den vårdenhet där intyget skrevs.'),
+  o('intyg-graviditet', ['vardadministrator'], 'Vem signerar ett intyg om graviditet till Försäkringskassan?', [
+    ['a', 'Bara läkaren.'],
+    ['b', 'Läkaren, barnmorskan eller sjuksköterskan vid mödrahälsovården.'],
+    ['c', 'Vårdadministratören.'],
+  ], 'b', 'Försäkringskassan tar emot intyget om graviditet från läkare, barnmorska eller sjuksköterska vid mödrahälsovården. Systemet visar knappen Signera bara för den som får signera.'),
+);

@@ -1479,10 +1479,16 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.click('.intyg-nytt [type="submit"]');
       await page.waitForURL(/#\/intygsapplikation\//);
       await forvanta(page, '.ruta-info', 'simulerad, inte Webcert');
-      await page.selectOption('#ia-sysselsattning', 'nuvarande_arbete');
-      await page.selectOption('#ia-nedsattning', 'halften');
-      await page.fill('#ia-fran', new Date().toISOString().slice(0, 10));
-      await page.fill('#ia-till', new Date(Date.now() + 14 * 86400_000).toISOString().slice(0, 10));
+      // Runda 16, r1: blankettens frågor i version 2. Systemet har fyllt i underlaget och diagnosen, och perioden när
+      // graden kryssas i.
+      if (!(await page.locator('[name="q-1"]:checked').count())) await page.check('[name="q-1"][value="FYSISKUNDERSOKNING"]');
+      await page.check('[name="q-28"][value="NUVARANDE_ARBETE"]');
+      await page.fill('#ia-29', 'Lagerarbetare');
+      if (!(await page.locator('#ia-35').inputValue())) await page.fill('#ia-35', 'Nedsatt rörlighet.');
+      await page.fill('#ia-17', 'Kan inte lyfta.');
+      await page.check('[name="q-32"][value="HALFTEN"]');
+      await page.check('[name="q-33"][value="nej"]');
+      await page.check('[name="q-39"][value="STOR_SANNOLIKHET"]');
       await bild(page, '99-intygsapplikation');
       await page.click('[data-atgard="signera"]');
       await forvanta(page, '.notis', 'Journalen har fått statusen');
@@ -1501,6 +1507,56 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '#p-remisser', 'E-remiss till');
       await bild(page, '99-eremiss');
       await page.waitForLoadState('networkidle');
+    });
+    // Runda 16, r1: förnyelsen till version 2 och bytet från ett ersatt intyg, vårdadministratörens utkast och intyget om
+    // graviditet från mödrahälsovården.
+    await s('Läkaren förnyar ett läkarintyg för sjukpenning i version 1 som version 2 och byter ett ersatt TSTRK1007 mot TS8071', async () => {
+      await gaTill(page, '#/patient/p14/intyg');
+      await forvanta(page, '.intyg-lista', 'Ersattes av TS 8071');
+      await bild(page, '99-intyg-ersatt');
+      await page.locator('[data-fornya]', { hasText: 'Förnya med version 2.0' }).click();
+      await page.waitForURL(/#\/intygsapplikation\//);
+      await forvanta(page, '.ruta-info', 'version 2.0');
+      await forvanta(page, '.ruta-info', 'Förlängning av ett tidigare intyg');
+      if (!(await page.locator('#ia-29').inputValue())) throw new Error('yrket följde inte med till version 2');
+      if (await page.locator('[name="q-32"]:checked').count()) throw new Error('sjukskrivningens grad följde med fast läkaren ska ta ställning på nytt');
+      await bild(page, '99-intyg-fornyat');
+      await gaTill(page, '#/patient/p14/intyg');
+      await page.locator('[data-fornya]', { hasText: 'Skriv TS 8071 i stället' }).click();
+      await page.waitForURL(/#\/intygsapplikation\//);
+      await forvanta(page, '.ruta-info', 'TS 8071');
+      await page.waitForLoadState('networkidle');
+    });
+    await s('Vårdadministratören skapar ett utkast till läkarutlåtande för närståendepenning och markerar det klart för signering', async () => {
+      await loggaIn(page, 'adm-kard');
+      await gaTill(page, '#/patient/p01/intyg');
+      await page.waitForSelector('.intyg-nytt');
+      await page.selectOption('#in-typ', 'LUNSP');
+      await forvanta(page, '[data-in-info]', 'den som får signera');
+      await page.click('.intyg-nytt [type="submit"]');
+      await page.waitForURL(/#\/intygsapplikation\//);
+      if (await page.locator('[data-atgard="signera"]').count()) throw new Error('vårdadministratören kan signera');
+      await page.check('[name="q-52"][value="ENDAST_PALLIATIV"]');
+      await page.fill('#ia-52-2', new Date().toISOString().slice(0, 10));
+      await page.click('[data-atgard="klar"]');
+      await forvanta(page, '.notis', 'klart för signering');
+      await bild(page, '99-intyg-vardadministrator');
+      await page.waitForLoadState('networkidle');
+    });
+    await s('Sjuksköterskan på mödrahälsovården skriver ett intyg om graviditet med beräknad förlossning ur graviditetsjournalen', async () => {
+      await loggaIn(page, 'ssk-vc');
+      await page.evaluate(() => fetch('/api/demo/obstetrik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
+      await gaTill(page, '#/patient/obs1/intyg');
+      await page.waitForSelector('.intyg-nytt');
+      if (await page.locator('#in-typ').inputValue() !== 'IGRAV') throw new Error('systemet föreslog inte intyget om graviditet');
+      await page.click('.intyg-nytt [type="submit"]');
+      await page.waitForURL(/#\/intygsapplikation\//);
+      await forvanta(page, '.ia-kalla', 'Graviditetsjournalen');
+      await page.click('[data-atgard="signera"]');
+      await forvanta(page, '.notis', 'Journalen har fått statusen');
+      await bild(page, '99-intyg-graviditet');
+      await page.waitForLoadState('networkidle');
+      await loggaIn(page, 'lak-vc');
     });
     // Runda 7, r6: vårdnadshavaren ser barnets tillväxt och skickar en mätning hemifrån.
     await s('Linnea Holmqvist ser Idas kurvor och vaccinationer i Min journal och skickar en mätning hemifrån', async () => {
@@ -2948,7 +3004,9 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.
         'inloggning-extern',
         // Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen.
-        'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning',
+        // Runda 16, r1: läkarintyget för sjukpenning och bytet från ett ersatt intyg.
+        'skriv-sjukintyg', 'byt-ersatt-intyg']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

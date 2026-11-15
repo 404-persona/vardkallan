@@ -82,6 +82,8 @@ export const PROVA = {
   '#/nationella-tjanster': 'forvalta_api',
   // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
   '#/flyttar': 'godkanna_flytt',
+  // Runda 16, r1: intygen för demopatienterna med ett ersatt intyg och ett utlåtande på kardiologin.
+  '#/patient/p14/intyg': 'las_intyg', '#/patient/p01/intyg': 'las_intyg',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

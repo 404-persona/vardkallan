@@ -424,7 +424,7 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
 // tjänstekontrakt på den gemensamma grunden för RIVTA.
 MODULER.push(m('intyg', 'journal', 'Intyg',
   'Läkaren skriver intyg i en intygsapplikation som öppnas från journalen med patienten, läkaren, vårdenheten och diagnosen ifyllda, och journalen visar intygets status av sig själv. Systemet föreslår det intyg som passar patienten och visar bara de intyg som får skrivas.',
-  { avsnitt: ['2.2.1.9'], rutter: ['#/intygsapplikation/:id'], journal: ['intyg'], vyer: ['patient-intyg.js', 'intygsapplikation.js'], kod: ['src/lakarintyg.js', 'src/intygsapplikation-simulerad.js', 'src/r14r3-rutter.js'],
+  { avsnitt: ['2.2.1.9'], rutter: ['#/intygsapplikation/:id'], journal: ['intyg'], vyer: ['patient-intyg.js', 'intygsapplikation.js'], kod: ['src/lakarintyg.js', 'src/intygsapplikation-simulerad.js', 'src/r14r3-rutter.js', /* Runda 16, r1 */ 'src/intygstyper.js', 'src/intyg-seed.js'],
     api: ['/api/patient/:id/intyg', '/api/intygsapplikation/:id'],
     simulerat: 'Intygsapplikationen är simulerad och är inte Webcert. Inget intyg skickas till Försäkringskassan eller någon annan mottagare. Tjänstekontrakten är byggda och validerade mot sina scheman men inte anslutna till den nationella tjänsteplattformen.' }));
 {

@@ -26,10 +26,10 @@ export const ANALYS = {
   },
   sjukskoterska: {
     namn: "Sjuksköterska",
-    behov: "Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar.",
+    behov: "Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar. Utfärdar intyg om graviditet på mödrahälsovården och intyg om tillfällig föräldrapenning, som Försäkringskassan tar emot från sjuksköterskor.",
     risker: "Läsning utan behov, och läkemedel som ges utan giltig ordination.",
     atgarder: "Kan inte ordinera läkemedel annat än enligt generella direktiv och muntliga ordinationer som läkaren signerar. Samma regler för vårdrelation, aktivt val, spärr och nödåtkomst som för läkaren. Administreringen kontrollerar ordinationen.",
-    inte: ["ordinera", "skriv_journal", "kontrasignera", "ordinera_cytostatika", "las_logg", "konfigurera"],
+    inte: ["ordinera", "skriv_journal", "kontrasignera", "ordinera_cytostatika", "las_logg", "konfigurera", "skriv_intyg"],
   },
   underskoterska: {
     namn: "Undersköterska",
@@ -40,10 +40,10 @@ export const ANALYS = {
   },
   vardadministrator: {
     namn: "Vårdadministratör",
-    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt.",
+    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt. Skapar och fyller i utkast till intyg åt läkaren och markerar dem klara för signering, som i Webcert.",
     risker: "Insyn i journaltext eller läkemedel utan vårdbehov.",
-    atgarder: "Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift.",
-    inte: ["las_journal", "las_omvardnad", "las_lakemedel", "las_diagnoser", "ordinera"],
+    atgarder: "Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift. Signerar aldrig intyg, och förifyllnaden av ett utkast tar inget ur journalen som rollen inte får läsa. För en patient med skyddade personuppgifter når rollen inte intygen.",
+    inte: ["las_journal", "las_omvardnad", "las_lakemedel", "las_diagnoser", "ordinera", "skriv_intyg"],
   },
   logggranskare: {
     namn: "Logggranskare",

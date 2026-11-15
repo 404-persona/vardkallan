@@ -1354,6 +1354,31 @@ function skapa(BAS) {
     await page.waitForURL(/#\/intygsapplikation\//);
     await synlig(page, '.ruta-info', 'simulerad, inte Webcert');
   };
+  // Runda 16, r1: ett läkarintyg för sjukpenning i version 2 och bytet från ett ersatt intyg till TS8071.
+  GOR['skriv-sjukintyg'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Intyg' }), 'Intyg');
+    await page.waitForSelector('.intyg-nytt');
+    if (await page.locator('#in-typ').inputValue() !== 'LISJP') throw new Error('systemet föreslog inte läkarintyget för sjukpenning');
+    await m.klicka(page.locator('.intyg-nytt [type="submit"]'), 'Skriv intyget');
+    await page.waitForURL(/#\/intygsapplikation\//);
+    await page.waitForSelector('.ia-form #ia-29', { state: 'attached' });
+    if (!(await page.locator('[name="q-1"]:checked').count())) await m.klicka(page.locator('[name="q-1"][value="FYSISKUNDERSOKNING"]'), 'min undersökning vid fysiskt vårdmöte');
+    await m.klicka(page.locator('[name="q-28"][value="NUVARANDE_ARBETE"]'), 'Nuvarande arbete');
+    await m.skriv(page.locator('#ia-29'), 'Lagerarbetare', 'yrke och arbetsuppgifter');
+    if (!(await page.locator('#ia-35').inputValue())) await m.skriv(page.locator('#ia-35'), 'Nedsatt rörlighet.', 'funktionsnedsättning');
+    await m.skriv(page.locator('#ia-17'), 'Kan inte lyfta.', 'aktivitetsbegränsning');
+    await m.klicka(page.locator('[name="q-32"][value="HELT_NEDSATT"]'), '100 procent');
+    await m.klicka(page.locator('[name="q-39"][value="STOR_SANNOLIKHET"]'), 'prognos');
+    await m.klicka(page.locator('[data-atgard="signera"]'), 'Signera');
+    await synlig(page, '.notis', 'Journalen har fått statusen');
+  };
+  startI['Journalen för Mikael Svensson på vårdcentralen'] = async (page) => { await gaTill(page, '#/patient/p14'); await page.waitForSelector('.patientband h1'); await page.waitForLoadState('networkidle'); };
+  GOR['byt-ersatt-intyg'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Intyg' }), 'Intyg');
+    await m.klicka(page.locator('[data-fornya]', { hasText: 'Skriv TS 8071 i stället' }), 'Skriv TS 8071 i stället');
+    await page.waitForURL(/#\/intygsapplikation\//);
+    await synlig(page, '.ruta-info', 'TS 8071');
+  };
   GOR['skicka-eremiss'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Remisser' }), 'Remisser');
     await page.waitForSelector('[data-eremiss]');
