@@ -30,6 +30,8 @@ const vantade403 = [];
 const VANTAD_FULL = new Set();
 // Runda 15, r1: steg där servern väntat svarar 400 med en förklaring, till exempel när den sista faktorn inte får tas bort.
 const VANTAD_400 = new Set(['Sara Lindqvist slår på flerfaktor med en app för engångskoder, loggar in med koden och tar bort appen']);
+// Runda 16: rehabkoordinatorn försöker först spara Aktiv utan samtycke, och servern svarar 400 med lagens krav.
+VANTAD_400.add('Johanna Ståhl söker fram vårdenhetens sjukfall och sätter REKO-status Aktiv med patientens samtycke');
 let steg = 0;
 let aktuelltSteg = '';
 
@@ -3178,6 +3180,8 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         // Runda 16, r3: de nya rollernas uppgifter.
         'arbetsterapianteckning', 'dietistanteckning', 'logopedanteckning', 'kuratorsanteckning', 'psykologanteckning', 'barnmorskeanteckning', 'forskriv-preventivmedel',
         'forlang-sjukskrivning',
+        // Runda 16: rehabkoordinatorns REKO-status.
+        'satt-reko-status',
         'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');

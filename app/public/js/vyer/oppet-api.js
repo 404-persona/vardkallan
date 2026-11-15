@@ -8,7 +8,7 @@ import { ritaAndringslogg, utvecklare, ritaForvaltning } from '../oppet-api-forv
 
 export const namn = 'oppet-api';
 
-export async function visa(main) {
+export async function visa(main, _param, _q, { aktuell = () => true } = {}) {
   let pid = 'p01';
   let pnamn = 'Gunnar Åkesson';
   if (!arLogggranskare()) {
@@ -26,6 +26,9 @@ export async function visa(main) {
       [`/fhir/Composition?patient=${pid}`, 'Journalanteckningar'], [`/fhir/ServiceRequest?patient=${pid}`, 'Remisser'], ['/fhir/Organization', 'Vårdenheter med HSA-id'], ['/fhir/Patient/p12', 'En patient utan vårdrelation'],
       // Runda 6, r5: SMART on FHIR och prenumerationer.
       ['/fhir/.well-known/smart-configuration', 'SMART on FHIR: hur externa tillämpningar ansluter'], ['/fhir/Subscription', 'Dina prenumerationer']];
+  // Runda 16: vyn ritas bara om användaren fortfarande är kvar när arbetslistan har kommit, så att ett sent svar inte
+  // skriver över nästa vy (genomgången föll på det när menyn klickades igenom snabbt).
+  if (!aktuell()) return;
   main.innerHTML = vyRubrik('Öppet API') + `<div class="ingress-block">
       <p>FHIR R4 är den internationella standarden från HL7 för att utbyta vårdinformation. Allt i Vårdkällan går att läsa genom samma öppna API som gränssnittet bygger på, i formatet application/fhir+json, med personnummer, ICD-10-SE, ATC, NPU för labbvärden och LOINC för vitalparametrar.</p>
       <p>API:t har samma behörighetskontroll och samma loggning som gränssnittet. Anropen nedan görs med din session som ${esc(arLogggranskare() ? 'logggranskare' : 'inloggad')}, så svaren visar exakt det din roll får se, och varje anrop som rör en patient hamnar i loggen.</p>
