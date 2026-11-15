@@ -6,8 +6,10 @@
 // docs/design.md, avsnittet Graviditet, förlossning och BB.
 import { GRAVIDITET as T } from '../runda9-r3.js';
 import { GRAVIDITET_R11 as R } from '../runda11-r3.js';
+// Runda 16, r3: de nya yrkesrollerna, barnmorskan och studenterna (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
 
-export default [
+const POSTERNA_R16R3 = [
   { id: '4.7.1.1', kategori: 'system', egna: [], tester: [...Object.values(T), ...Object.values(R)], avsedd: 'uppfyllt_demo',
     losning: 'Graviditetsjournalen i patientens journal (fliken Graviditet) med beräknad partus, besöksprogram, provschema, riskbedömning, ultraljudsjournal, inskrivningssamtal och efterkontroll, Mödrahälsovårdens sida för vårdenheten, Förlossningens sida med pågående förlossningar, partogram, CTG, smärtlindring och födelsen av varje barn också vid flerbörd, och BB-journalen för mor och barn (fliken Nyfödd).',
     expert: 'Systemet räknar graviditetslängden, programmet, proverna och risken, varnar vid besöket och i partogrammet, analyserar och klassar CTG-kurvan, skapar barnets journal och födelseanmälan och prövar utskrivningen från BB.',
@@ -28,3 +30,4 @@ export default [
     expert: 'Systemet räknar allt ur journalerna, så att verksamheten kan planera förlossningarna utan egna listor, och datauttaget pseudonymiserar och lämnar aldrig ut svaren på frågorna om våld.',
     anmarkning: 'Uppfyllt i demon. Uppföljningen är per vårdenhet och period; flexibla urval utöver perioden görs i datauttaget.' },
 ];
+export default medR16r3(POSTERNA_R16R3);

@@ -618,3 +618,26 @@ FLODEN.push(
     motivering: 'Ett klick för att öppna en ny anteckning, där Observationsanteckning är förvald eftersom det är yrkets mall, ett klick på det senaste mätvärdet i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och undersköterskan skriver bara det hon har sett.',
   },
 );
+// Runda 16, r3: den vanligaste anteckningen för varje ny roll, och barnmorskans förskrivning av preventivmedel. Flödena
+// finns i test/flodessteg.cjs (GOR med samma id). Yrkets mall är förvald, eftersom systemet väljer den efter yrket.
+{
+  const yrkesanteckning = (id, namn, roll, start, mall, vem) => ({
+    id, namn, roll, start, budget: 3,
+    motivering: `Ett klick för att öppna en ny anteckning, där ${mall} är förvald eftersom det är yrkets mall, ett fältbyte till det första sökordet om fokus inte redan står där och ett klick för att signera. ${vem}`,
+  });
+  FLODEN.push(
+    yrkesanteckning('arbetsterapianteckning', 'Skriva och signera en arbetsterapianteckning', 'at-kkoga', 'Översikten för en patient på ortopeden i Karlskoga', 'Arbetsterapianteckning', 'Arbetsterapeuten ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('dietistanteckning', 'Skriva och signera en dietistanteckning', 'diet-lind', 'Översikten för en patient på medicinkliniken i Lindesberg', 'Dietistanteckning', 'Dietisten ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('logopedanteckning', 'Skriva och signera en logopedanteckning', 'log-lind', 'Översikten för en patient på medicinkliniken i Lindesberg', 'Logopedanteckning', 'Logopeden ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('kuratorsanteckning', 'Skriva och signera en kuratorsanteckning', 'kur-vc', 'Översikten för en patient på mottagningen', 'Kuratorsanteckning', 'Kuratorn ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('psykologanteckning', 'Skriva och signera en psykologanteckning', 'psy-psyk', 'Översikten för en patient på psykiatrin', 'Psykologanteckning', 'Psykologen ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('barnmorskeanteckning', 'Skriva och signera en barnmorskeanteckning', 'bm-vc', 'Översikten för en patient på mottagningen', 'Barnmorskeanteckning', 'Barnmorskeanteckningen står först bland barnmorskans mallar.'),
+    yrkesanteckning('student-anteckning', 'Skriva och signera en anteckning som sjuksköterskestudent', 'stud-ssk', 'Patientens översikt', 'Omvårdnadsanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    yrkesanteckning('lakarstudent-anteckning', 'Skriva och signera en anteckning som läkarstudent', 'stud-lak', 'Patientens översikt', 'Mottagningsanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    yrkesanteckning('barnmorskestudent-anteckning', 'Skriva och signera en anteckning som barnmorskestudent', 'stud-bm', 'Översikten för en patient på förlossningen', 'Barnmorskeanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    {
+      id: 'forskriv-preventivmedel', namn: 'Förskriva preventivmedel som barnmorska', roll: 'bm-vc', start: 'Översikten för en patient på mottagningen', budget: 3,
+      motivering: 'Ett klick på fliken Läkemedel, ett på Förskriv preventivmedel och ett på Förskriv. Systemet visar bara de preventivmedel som förskrivningsrätten omfattar, med det första förvalt och doseringen för produkten, och fyller i orsak och uppföljning om ett år.',
+    },
+  );
+}

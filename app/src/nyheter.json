@@ -2,6 +2,60 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.6.0",
+      "datum": "2026-11-15",
+      "nyheter": [
+        {
+          "id": "roller-yrken-1-6-0",
+          "roller": [
+            "arbetsterapeut",
+            "dietist",
+            "logoped",
+            "kurator",
+            "psykolog"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Din egen roll i Vårdkällan",
+          "text": "Du loggar nu in med din egen yrkesroll. Systemet väljer ditt yrkes mall när du dokumenterar, och du ser det som yrket behöver i vården av patienten och inget mer. Du ordinerar och ger inga läkemedel."
+        },
+        {
+          "id": "roller-barnmorska-1-6-0",
+          "roller": [
+            "barnmorska"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Barnmorskan har en egen roll",
+          "text": "Du loggar in som barnmorska och gör allt som förut på förlossningen, BB och mödrahälsovården. På barnmorskemottagningen förskriver du preventivmedel med Förskriv preventivmedel under Läkemedel: systemet visar bara de preventivmedel som förskrivningsrätten omfattar och fyller i orsak, dosering och uppföljning."
+        },
+        {
+          "id": "roller-student-1-6-0",
+          "roller": [
+            "lakarstudent",
+            "sjukskoterskestudent",
+            "barnmorskestudent"
+          ],
+          "omfattning": "stor",
+          "var": "#/handledning",
+          "rubrik": "Du dokumenterar under handledning",
+          "text": "Under Handledning ser du din handledare och hur länge handledningen gäller. Det du signerar går till handledaren för kontrasignering och är märkt att du skrev det under handledning. Du ordinerar inte, ger inga läkemedel på egen hand och signerar inga intyg."
+        },
+        {
+          "id": "roller-handledare-1-6-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "barnmorska"
+          ],
+          "omfattning": "liten",
+          "var": "#/handledning",
+          "rubrik": "Handleda studenter",
+          "text": "Under Handledning registrerar du en handledning för en student på din vårdenhet, med en tid som systemet föreslår. Det studenten signerar hamnar i din inkorg under Att kontrasignera."
+        }
+      ]
+    },
+    {
       "version": "1.5.0",
       "datum": "2026-11-14",
       "nyheter": [

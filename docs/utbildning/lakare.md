@@ -537,6 +537,16 @@ Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
+### Övning 12
+
+Din student har signerat en anteckning. Var hittar du den, och vad gör du?
+
+Rätt svar: Den ligger i din inkorg under Att kontrasignera. Du läser den, går igenom den med studenten om något behöver rättas, och kontrasignerar med ett klick.
+
+Systemet skickar varje anteckning som studenten signerar till handledaren. Anteckningen är märkt som inte kontrasignerad tills du har kontrasignerat den.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/inkorg).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -663,4 +673,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 11 övningar och få intyget.
+- Svara rätt på alla 12 övningar och få intyget.

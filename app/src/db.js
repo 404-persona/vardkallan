@@ -524,6 +524,8 @@ export function byggSeed(bas = nu()) {
   require('./servicenivaer.js').sakra(db);
   // Runda 14, r1: de betrodda inloggningstjänsterna (inloggningstjanster.js).
   require('./inloggningstjanster.js').sakra(db);
+  // Runda 16, r3: de nya yrkesrollerna och studenternas handledningar (roller-r16r3.js och handledning.js).
+  require('./roller-r16r3.js').sakra(db, bas);
   db.query('INSERT INTO installningar VALUES (?, ?)').run('seed_datum', datumAv(bas));
   db.query('INSERT INTO installningar VALUES (?, ?)').run('seed_tid', bas.toISOString());
   // Runda 12, r2: de versionerade migreringarna från version 1.2 (releaser.js). Sist, så att schemaversionen gäller allt.
@@ -687,6 +689,8 @@ export function migrera(db) {
   require('./servicenivaer.js').sakra(db);
   // Runda 14, r1: de betrodda inloggningstjänsterna (inloggningstjanster.js).
   require('./inloggningstjanster.js').sakra(db);
+  // Runda 16, r3: den nya personalen, barnmorskans roll och handledningarna i en sandlåda från före runda 16.
+  require('./roller-r16r3.js').sakra(db, nu());
   // Runda 12, r2: kontrollen av schemaversionen när en sandlåda läses in (releaser.js). Saknade migreringar tillämpas och
   // migreringar från en nyare version av programmet backas med de återställningar som sparades i databasen.
   require('./releaser.js').kontrolleraVidStart(db);

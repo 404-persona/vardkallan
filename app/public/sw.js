@@ -68,7 +68,9 @@ const FILER = [
   '/js/anteckningsstod.js', '/js/aktivitet-regler.js',
   '/js/vyer/nationella-tjanster.js',
   '/js/vyer/flyttar.js',
+  '/js/vyer/handledning.js', '/js/preventivmedel-ui.js',
 ];
+// Runda 16, r3: listan har handledningen av studenter (vyer/handledning.js) och barnmorskans förskrivning av preventivmedel (preventivmedel-ui.js).
 // Runda 15, r4: listan har stödet i anteckningsvyn (anteckningsstod.js).
 // Runda 15, r2, tredje omgången: listan har flyttarna till rätt patient (vyer/flyttar.js).
 // Runda 15, r2: listan har köerna till de nationella tjänsterna (vyer/nationella-tjanster.js).

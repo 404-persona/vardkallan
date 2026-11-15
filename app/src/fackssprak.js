@@ -97,6 +97,9 @@ export const SOKORD = {
   'Symtomskattning': { ingen: 'Sökordet samlar patientens symtom och skattningen av dem i text. Skalorna har egna koder när de används, så sökordet får ingen kod.' },
   'Graviditet': { ingen: 'Sökordet samlar det som gäller graviditeten vid kontakten. Graviditetsjournalen har sina egna uppgifter, och begreppet för avsnittet är inte kontrollerat, så sökordet får ingen kod än.' },
   'Läkemedel under graviditet': { ingen: 'Sökordet samlar bedömningen av läkemedlen under graviditeten. Snomed CT har inget begrepp för avsnittet som är kontrollerat, så sökordet får ingen kod än.' },
+  // Runda 16, r3: psykologens och logopedens mallar (mallar-yrken.js). Psykiskt status och Kommunikation finns redan.
+  'Psykologisk utredning': { ingen: 'Sökordet samlar psykologens utredning med test och skattningar i text. Varje test och skattning har sin egen kod när den registreras, och Snomed CT har inget kontrollerat avsnittsbegrepp för utredningen, så sökordet får ingen kod.' },
+  'Sväljning': { ingen: 'Sökordet samlar logopedens bedömning av sväljningen. Snomed CT har fynd om sväljning men inget avsnittsbegrepp som är kontrollerat mot den svenska utgåvan, så sökordet får ingen kod än.' },
 };
 
 // Åtgärderna med KVÅ och samma åtgärd i Snomed CT. Åtgärder utan exakt motsvarighet har ingen Snomed-kod.

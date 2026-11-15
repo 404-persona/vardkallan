@@ -15,6 +15,8 @@ import { R6 } from '../runda11-r6.js';
 // Runda 12, r1: konfiguration utan programmerare (journalstruktur.js och konfiguration.js).
 import { TESTER_STRUKTUR, TESTER_RAMAR, TESTER_LAKEMEDELSMALLAR, TESTER_LAKEMEDELSREGLER, TESTER_ADMINISTRATION, TESTER_UNDANTAG_ENSKILD } from '../runda12-r1.js';
 import { T as KV } from '../runda9-r4.js';
+// Runda 16, r3: de nya yrkesrollerna, barnmorskan och studenterna (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
 
 const { GK } = TEST;
 const S = 'Systemförvaltning > ';
@@ -148,4 +150,4 @@ const POSTERNA = [
 import { medR14r5 } from '../runda14-r5.js';
 
 const R14_FORE = medR13r4(medR8r5(POSTERNA));
-export default medR15r5(medR14r5(R14_FORE));
+export default medR16r3(medR15r5(medR14r5(R14_FORE)));

@@ -40,7 +40,27 @@ const VISAR = {
   'vch-kard': 'Verksamhetschef på kardiologen: utser medicinskt ansvarig läkare, mallansvarig läkare och läkemedelsansvariga sjuksköterskor med systemets förslag, och påminns när ett uppdrag saknas eller ansvarsdokumentet inte har setts över på ett år. Läser inte journalen.',
   // Runda 7, r3.
   'eko': 'Ekonom på regionkansliet: hämtar faktureringsunderlaget per vårdenhet och månad med ett klick, eftersom systemet redan har skapat posterna, och ändrar prislistorna med giltighetstid och historik. Läser inte journalen.',
+  // Runda 16, r3: de nya yrkesrollerna och studenterna.
+  'bm-uso': 'Barnmorska på förlossningen och BB: för förlossningsjournalen med partogram och CTG, ger läkemedel och handleder barnmorskestudenten Alice Persson.',
+  'bm-vc': 'Barnmorska på barnmorskemottagningen: mödrahälsovården och förskrivning av preventivmedel, där systemet bara visar de preventivmedel som förskrivningsrätten omfattar. Ordinerar inte andra läkemedel.',
+  'at-kkoga': 'Arbetsterapeut på ortopeden i Karlskoga: bedömer vad patienten klarar i vardagen, registrerar hjälpmedel och skriver arbetsterapianteckningar. Ordinerar och ger inga läkemedel.',
+  'diet-lind': 'Dietist på medicinkliniken i Lindesberg: följer vikt och provsvar och skriver dietistanteckningar om nutritionen. Ordinerar och ger inga läkemedel.',
+  'log-lind': 'Logoped på medicinkliniken i Lindesberg: bedömer kommunikation och sväljning och skriver logopedanteckningar. Ordinerar och ger inga läkemedel.',
+  'kur-vc': 'Hälso- och sjukvårdskurator på Vårdcentralen Tybble: skriver kuratorsanteckningar om sociala förhållanden och mående. Läser journalen men inte läkemedelslistan och mätvärdena.',
+  'psy-psyk': 'Psykolog på psykiatrin: utreder och behandlar och skriver psykologanteckningar, ser om patienten vårdas med tvång och läser läkemedelslistan. Ordinerar inte.',
+  'stud-lak': 'Läkarstudent under handledning av Sara Lindqvist: läser journalen på kardiologen och skriver anteckningar som handledaren kontrasignerar. Ordinerar inte och signerar inga intyg.',
+  'stud-ssk': 'Sjuksköterskestudent under handledning av Johan Ek på avdelning 72: skriver omvårdnadsanteckningar som handledaren kontrasignerar. Ger inga läkemedel på egen hand.',
+  'stud-bm': 'Barnmorskestudent under handledning av Sofia Ekdahl: läser graviditetsjournalen på förlossningen och skriver anteckningar som handledaren kontrasignerar.',
 };
+// Runda 16, r3: demorollerna i grupper, så att sidan är enkel också med många roller. Gruppen följer yrket.
+const GRUPPER = [
+  ['vard', 'Läkare, sjuksköterskor och barnmorskor', ['lakare', 'sjukskoterska', 'barnmorska', 'underskoterska', 'farmaceut']],
+  ['rehab', 'Rehabilitering, nutrition, psykologi och kurator', ['fysioterapeut', 'arbetsterapeut', 'dietist', 'logoped', 'psykolog', 'kurator']],
+  ['student', 'Studenter under handledning', ['lakarstudent', 'sjukskoterskestudent', 'barnmorskestudent']],
+  ['admin', 'Administration, ledning och kommunen', ['vardadministrator', 'verksamhetschef', 'ekonom', 'kommun']],
+  ['drift', 'Logg, arkiv, uppföljning och systemförvaltning', ['logggranskare', 'arkivarie', 'uppfoljning', 'systemforvaltare']],
+];
+const gruppFor = (yrke) => GRUPPER.find(g => g[2].includes(yrke))?.[0] ?? 'drift';
 
 // Vad några av patienterna visar i Min journal.
 const VISAR_PATIENT = {
@@ -93,7 +113,7 @@ export async function visa(main, _param, q) {
           <div class="kryssfalt"><input type="radio" id="inl-niva-3" name="tillitsniva" value="3" checked><label for="inl-niva-3">Med SITHS-kortet och PIN-koden (tillitsnivå 3). Det är redan flerfaktor.</label></div>
           <div class="kryssfalt"><input type="radio" id="inl-niva-2" name="tillitsniva" value="2"><label for="inl-niva-2">Utan SITHS-kort (tillitsnivå 2, en faktor). Systemet ber om den passkey eller app för engångskoder som du har registrerat efter en inloggning med kortet.</label></div>
         </fieldset>
-        <ul class="rollista" id="rollista"><li class="tom">Hämtar demorollerna.</li></ul>
+        <div class="rollgrupper" id="rollista"><p class="tom">Hämtar demorollerna.</p></div>
       </section>
     </div>
     <div class="inloggning" id="panel-patient" role="tabpanel" aria-labelledby="flik-patient"${vald === 'patient' ? '' : ' hidden'}>
@@ -157,7 +177,7 @@ export async function visa(main, _param, q) {
   }).catch(() => {});
   const [roller, invanare] = await Promise.all([api('/api/demo/personal'), api('/api/demo/invanare')]);
   const lista = main.querySelector('#rollista');
-  lista.innerHTML = roller.map(r => `<li>
+  const rollRad = (r) => `<li>
     <button type="button" class="roll" data-roll="${esc(r.id)}" aria-describedby="roll-${esc(r.id)}-visar">
       <span class="roll-kort" aria-hidden="true">${ikon.kort}</span>
       <span class="roll-text">
@@ -168,7 +188,10 @@ export async function visa(main, _param, q) {
       <span class="roll-pil" aria-hidden="true">${ikon.pil}</span>
     </button>
     <p class="roll-visar" id="roll-${esc(r.id)}-visar">${esc(VISAR[r.id] ?? '')}</p>
-  </li>`).join('');
+  </li>`;
+  // Runda 16, r3: en rubrik och en lista per grupp, i katalogens ordning inom gruppen.
+  lista.innerHTML = GRUPPER.map(([id, rubrik]) => [id, rubrik, roller.filter(r => gruppFor(r.yrke) === id)]).filter(([, , rr]) => rr.length)
+    .map(([id, rubrik, rr]) => `<section class="rollgrupp" aria-labelledby="rg-${id}"><h3 id="rg-${id}">${esc(rubrik)}</h3><ul class="rollista">${rr.map(rollRad).join('')}</ul></section>`).join('');
   lista.addEventListener('click', (e) => {
     const b = e.target.closest('[data-roll]');
     // Runda 15, r1: utan SITHS-kort loggar demorollen in med tillitsnivå 2.

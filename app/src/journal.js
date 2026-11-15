@@ -63,7 +63,11 @@ export function kategoriFor(db, typ) {
 export const lasHandling = (kategori) => (kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal');
 // Runda 15, r5: ett yrke som bara har den smala handlingen skriv_observation (undersköterskan) skriver omvårdnadens
 // anteckningar med den, och bara med de mallar som vårdgivaren har gett yrket (yrkesmallar.provaMall).
-export const skrivHandling = (kategori, personal = null) => (kategori !== 'omvardnad' ? 'skriv_journal'
+export const skrivHandling = (kategori, personal = null) => (
+  // Runda 16, r3: en student skriver bara med den smala handlingen skriv_handledd, och bara med yrkets mallar
+  // (yrkesmallar.provaMall). Handledaren kontrasignerar det som signeras (handledning.js).
+  personal && kanRoll(personal, 'skriv_handledd') ? 'skriv_handledd'
+  : kategori !== 'omvardnad' ? 'skriv_journal'
   : personal && !kanRoll(personal, 'skriv_omvardnad') && kanRoll(personal, 'skriv_observation') ? 'skriv_observation' : 'skriv_omvardnad');
 
 export function kallaEtikett(kalla, tid) {
@@ -114,6 +118,9 @@ export function anteckningUt(db, a, { full = true } = {}) {
   if (!full) ut.sammanfattning = sokord.map(s => `${s.sokord}: ${s.text}`).join(' ').slice(0, 200);
   // Runda 15, r5: omvårdnadsproblemen och resultaten mot vårdplanens mål.
   if (full) { const op = omvardnad.ut(db, a.id); if (op) ut.omvardnadsprocess = op; }
+  // Runda 16, r3: en anteckning som en student har skrivit är märkt med handledaren och om den är kontrasignerad.
+  const hl = require('./handledning.js').forAnteckning(db, a.id);
+  if (hl) ut.handledning = hl;
   return ut;
 }
 
@@ -282,6 +289,8 @@ export function signera(atk, a) {
     omvardnad.vidSignering(atk, a);
     // Runda 9, r7: signaturen över innehållet.
     signering.vidSignering(atk.db, a.id);
+    // Runda 16, r3: en students anteckning går till handledaren för kontrasignering (handledning.js).
+    require('./handledning.js').vidSignering(atk, a, t);
   })();
   return anteckningUt(atk.db, hamtaAnteckningRad(atk.db, a.id));
 }
@@ -324,6 +333,8 @@ export function ratta(atk, a, { orsak, sokord, tobak: tobakSvar, levnadsvanor: l
   // Runda 9, r7: rättelsen signeras med en egen signatur.
   signering.vidSignering(atk.db, Number(r.lastInsertRowid));
   const ny = hamtaAnteckningRad(atk.db, r.lastInsertRowid);
+  // Runda 16, r3: en students rättelse går också till handledaren för kontrasignering.
+  require('./handledning.js').vidSignering(atk, ny, t);
   const ut = anteckningUt(atk.db, ny);
   ut.versioner = versionskedja(atk.db, ny.id).map(v => anteckningUt(atk.db, v));
   return ut;

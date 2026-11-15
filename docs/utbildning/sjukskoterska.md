@@ -14,7 +14,6 @@ I demon väljer du en demoroll under Personal på startsidan. Demorollerna för 
 
 - Johan Ek, Sjuksköterska
 - Hanna Lilja, Distriktssköterska
-- Sofia Ekdahl, Barnmorska
 - Therese Hedberg, Operationskoordinator (operationssjuksköterska)
 - Elias Wickman, Onkologisjuksköterska
 - Linnea Forsman, Röntgensjuksköterska
@@ -157,12 +156,6 @@ Börjar i: Graviditetsjournalen i vecka 30. Klickbudget: högst 5 steg. I demon 
 
 Sussa 4.7.1.2. Ett fältbyte vardera för blodtryck, vikt, symfys-fundusmått och fosterljud och ett klick på Spara besöket. Systemet sätter veckan, varnar för blodtryck, protein, symfys-fundusmått och fosterljud och registrerar blodtryck och vikt som mätvärden.
 
-### Bedöma CTG under en förlossning
-
-Börjar i: Förlossningens översikt. Klickbudget: högst 2 steg. I demon gör Sofia Ekdahl flödet.
-
-Sussa 4.7.1.3. Ett klick på patienten och ett på Bekräfta bedömningen. Systemet hämtar kurvan från monitorn, räknar basalfrekvens, variabilitet och decelerationer, klassar kurvan och föreslår åtgärden, så barnmorskan skriver något bara när hon bedömer annorlunda.
-
 ### Lägga in en bild från datorn i journalen
 
 Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan Ek flödet.
@@ -204,6 +197,12 @@ Sussa 11.2.1.8. Ett klick på Läkemedel att ge och ett på Reservdator för lä
 Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan Ek flödet.
 
 Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning och cirkulation, som systemet har fällt ut som förslag, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
+
+### Kontrasignera studentens anteckning
+
+Börjar i: Inkorgen med en students anteckning. Klickbudget: högst 2 steg. I demon gör Johan Ek flödet.
+
+Ett klick på anteckningen under Att kontrasignera i inkorgen och ett på Kontrasignera. Systemet har själv skickat anteckningen till handledaren när studenten signerade.
 
 ## Instruktionsfilmer
 
@@ -345,6 +344,16 @@ Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb
 
 Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p01/journal).
 
+### Övning 14
+
+Din student har signerat en anteckning. Var hittar du den, och vad gör du?
+
+Rätt svar: Den ligger i din inkorg under Att kontrasignera. Du läser den, går igenom den med studenten om något behöver rättas, och kontrasignerar med ett klick.
+
+Systemet skickar varje anteckning som studenten signerar till handledaren. Anteckningen är märkt som inte kontrasignerad tills du har kontrasignerat den.
+
+Pröva i demon: logga in som Johan Ek och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/inkorg).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -409,25 +418,6 @@ Du arbetar som Johan Ek, sjuksköterska på avdelning 72, som motsvarar Sussas m
 12. Skriv ut en patient.
    En av patienterna på avdelningen går hem i dag. Skriv ut patienten.
 
-### Barnmorska
-
-Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har inga uppdrag för barnmorskor, så uppdragen här är förlossningens vanliga arbetsflöden.
-
-1. Ta emot på förlossningen.
-   Se vilka kvinnor som är inne på förlossningen och öppna journalen för den som föder nu.
-2. Bedöm CTG.
-   Bedöm det pågående CTG:t för kvinnan som föder.
-3. Fyll i partogrammet.
-   Registrera hur mycket modermunnen har öppnat sig.
-4. Registrera smärtlindring.
-   Kvinnan vill ha lustgas. Registrera smärtlindringen.
-5. Registrera barnet.
-   Barnet är fött. Registrera kön, vikt, längd, huvudomfång och Apgar.
-6. Gör födelseanmälan.
-   Gör födelseanmälan för ett barn som saknar en.
-7. Gör en kontroll på BB.
-   Gör en kontroll av en mamma eller ett barn på BB.
-
 ## Det här ska du kunna efter utbildningen
 
 - Ge en dos från Läkemedel att ge och förstå varningen för dubbel dos.
@@ -437,4 +427,4 @@ Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har 
 - Skriva och signera en omvårdnadsanteckning.
 - Bedöma resultatet mot vårdplanens mål i omvårdnadsanteckningen och se varför systemet föreslår ett område.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 13 övningar och få intyget.
+- Svara rätt på alla 14 övningar och få intyget.

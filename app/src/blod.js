@@ -365,7 +365,7 @@ function lasVidSangen(atk, b, e, body, nu) {
 // behörighetsmotorn, aldrig den som förberedde transfusionen.
 export function kontrollKandidater(db, e) {
   const ve = vardenhetFor(db, e.enhet_id);
-  return db.query("SELECT * FROM personal WHERE aktiv = 1 AND yrke IN ('sjukskoterska', 'lakare') ORDER BY namn").all()
+  return db.query("SELECT * FROM personal WHERE aktiv = 1 AND yrke IN ('sjukskoterska', 'barnmorska', 'lakare') ORDER BY namn").all()
     .filter(p => p.id !== e.forberedd_av && vardenhetFor(db, p.enhet_id) === ve && kanRoll(p, 'ge_lakemedel')
       && new Atkomst(db, p, e.patient_id, {}, 'las_prover').prova('las_prover', { enhet_id: e.enhet_id }).tillaten)
     .map(p => ({ id: p.id, namn: p.namn }));

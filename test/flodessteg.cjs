@@ -1496,6 +1496,44 @@ function skapa(BAS) {
     await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
     await synlig(page, '.anteckning .ant-fakta', 'Signerad');
   };
+  // Runda 16, r3: de nya rollernas vanligaste anteckning och barnmorskans förskrivning. Se klickbudget.js.
+  const oversikt = (pid) => async (page) => { await gaTill(page, `#/patient/${pid}`); await page.waitForSelector('.tidslinje'); };
+  startI['Översikten för en patient på ortopeden i Karlskoga'] = oversikt('p07');
+  startI['Översikten för en patient på medicinkliniken i Lindesberg'] = oversikt('p10');
+  startI['Översikten för en patient på psykiatrin'] = oversikt('p15');
+  startI['Översikten för en patient på förlossningen'] = oversikt('obs3');
+  const yrkesanteckning = (text) => async (m, page) => {
+    await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
+    await page.waitForSelector('#ant-form #ny-sokord textarea');
+    await m.skriv(page.locator('#ny-sokord textarea').first(), text, 'första sökordet');
+    await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
+    await synlig(page, '.anteckning .ant-fakta', 'Signerad');
+  };
+  GOR.arbetsterapianteckning = yrkesanteckning('Klarar påklädning med strumppådragare. Rollator inomhus.');
+  GOR.dietistanteckning = yrkesanteckning('Äter hälften av portionerna. Vikten har gått ned två kilo på en månad.');
+  GOR.logopedanteckning = yrkesanteckning('Remiss för bedömning av sväljningen efter stroke.');
+  GOR.kuratorsanteckning = yrkesanteckning('Bor ensam, dottern hjälper till med inköp. Oro inför utskrivningen.');
+  GOR.psykologanteckning = yrkesanteckning('Andra samtalet. Sömnen har blivit bättre.');
+  GOR.barnmorskeanteckning = yrkesanteckning('Önskar preventivmedelsrådgivning.');
+  GOR['student-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Sov gott i natt enligt patienten.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['lakarstudent-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Återbesök efter hjärtsviktsdekompensation.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['barnmorskestudent-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Värkar var tredje minut, mår bra.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['forskriv-preventivmedel'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Läkemedel' }), 'fliken Läkemedel');
+    await m.klicka(page.locator('[data-preventivmedel]'), 'Förskriv preventivmedel');
+    await page.waitForSelector('dialog[open] input[name="lakemedelId"]');
+    await m.klicka(page.locator('dialog[open] [data-varde="ok"]'), 'Förskriv');
+    await synlig(page, '.notis', 'är förskrivet');
+  };
   return { synlig, gaTill, loggaIn, startI, GOR };
 }
 

@@ -52,7 +52,8 @@ export const session = (db, personal) => obs.session(db, personal);
 // så att den som provar förlossningen inte behöver hitta knappen. Bara en gång per sandlåda (inställningen
 // obstetrik_demo, som obstetrik-seed.js sätter).
 export function efterInloggning(db, personal) {
-  if (personal?.id !== 'bm-uso') return;
+  // Runda 16, r3: också barnmorskestudenten på förlossningen.
+  if (!['bm-uso', 'stud-bm'].includes(personal?.id)) return;
   obs.sakra(db);
   if (db.query("SELECT 1 FROM installningar WHERE nyckel = 'obstetrik_demo'").get()) return;
   seed.seeda(db, new Date());

@@ -82,6 +82,8 @@ export const PROVA = {
   '#/nationella-tjanster': 'forvalta_api',
   // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
   '#/flyttar': 'godkanna_flytt',
+  // Runda 16, r3: handledningen av studenter och barnmorskans förskrivning för demopatienten på vårdcentralen.
+  '#/handledning': null, '#/patient/p11/lakemedel': 'patient',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

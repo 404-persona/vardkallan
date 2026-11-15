@@ -14,6 +14,8 @@ import { medR15r4 } from '../runda15-r4.js';
 import { INFARTER, MATVARDEN } from '../runda10-r4.js';
 // Runda 9, r2: värden från medicinteknisk utrustning (sussa/medicinteknik-r9.js).
 import { T as MT } from '../medicinteknik-r9.js';
+// Runda 16, r3: de nya yrkesrollerna, barnmorskan och studenterna (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
 
 const { J, KV, FS, MJ, GK } = TEST;
 // Runda 6, r1: skalor, NEWS2 och kurvor (skalor.js och vitalparametrar.js).
@@ -115,4 +117,4 @@ const POSTERNA = [
   { id: '3.1.3.10', kategori: 'system', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: 'Rättstavning och grammatikkontroll med medicinska termer är inte byggd.' },
 ];
-export default medR15r4(medR15r5(medR10r3(medR8r5(POSTERNA))));
+export default medR16r3(medR15r4(medR15r5(medR10r3(medR8r5(POSTERNA)))));

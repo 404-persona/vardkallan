@@ -1978,3 +1978,9 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .ant-ref { background: var(--kalla-ljus); border-bottom: 1px dotted var(--kalla); }
 .lasordning-rad { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .fraser-dialog { max-width: min(40rem, calc(100vw - 32px)); }
+/* Runda 16, r3: demorollerna i grupper på inloggningssidan, och handledningen av studenter. */
+.rollgrupper { display: grid; gap: 18px; }
+.rollgrupp h3 { font-size: var(--f-m); margin: 0 0 8px; }
+.hl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hl-rad { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; background: var(--yta); border: 1px solid var(--linje); border-radius: 10px; padding: 10px 14px; }
+.hl-rad > span { min-width: 0; overflow-wrap: anywhere; }

@@ -167,3 +167,51 @@ OVNINGAR_V1.push(
     ['c', 'En hel mall med många sökord.'],
   ], 'b', 'Fraserna är dina egna korta texter och skrivs in med punkt, kortnamnet och tabb. Värden ur journalen förs in med underlaget, så att de alltid har datum och källa. Högst 20 fraser per person.', '#/patient/p01/journal'),
 );
+// Runda 16, r3: de nya yrkesrollerna och studenterna. Paramedicinarna och barnmorskan gör journalens övningar om andra
+// vårdenheter, spärr och skyddad identitet, och alla som skriver gör övningarna om underlaget och utkastet. Studenterna
+// har egna övningar om handledningen, och handledarna om att kontrasignera.
+{
+  const NYA = ['arbetsterapeut', 'dietist', 'logoped', 'kurator', 'psykolog', 'barnmorska'];
+  const STUDENTER = ['lakarstudent', 'sjukskoterskestudent', 'barnmorskestudent'];
+  const lagg = (id, roller) => { const x = OVNINGAR_V1.find(v => v.id === id); for (const r of roller) if (!x.roller.includes(r)) x.roller.push(r); };
+  for (const id of ['andra-enheter', 'sparr', 'skyddad', 'egna-fraser']) lagg(id, NYA);
+  for (const id of ['underlag', 'utkast-sparas']) lagg(id, [...NYA, ...STUDENTER]);
+  lagg('sparr', STUDENTER);
+  OVNINGAR_V1.push(
+    o('student-signera', STUDENTER, 'Du är student och har skrivit en anteckning efter ett samtal med patienten. Vad händer när du signerar den?', [
+      ['a', 'Anteckningen blir signerad i handledarens namn.'],
+      ['b', 'Anteckningen blir signerad i ditt namn, märkt att du skrev den under handledning, och systemet skickar den till din handledare för kontrasignering.'],
+      ['c', 'Du kan inte signera, så anteckningen ligger kvar som utkast.'],
+    ], 'b', 'Journalen ska visa vem som har skrivit varje anteckning. Det du signerar är märkt med din handledare och syns som inte kontrasignerat tills handledaren har läst och kontrasignerat det i sin inkorg.', '#/arbetslista'),
+    o('student-lakemedel', STUDENTER, 'Patienten ber om något mot smärtan. Vad gör du som student?', [
+      ['a', 'Ordinerar paracetamol, eftersom det är ett vanligt läkemedel.'],
+      ['b', 'Ger en dos från läkemedelslistan på egen hand.'],
+      ['c', 'Säger till din handledare. Studenter ordinerar aldrig och ger läkemedel bara under tillsyn av den som har legitimation, så systemet har inga sådana knappar för dig.'],
+    ], 'c', 'Bara läkare och vissa andra yrken med legitimation får ordinera, och en student ger läkemedel bara under tillsyn (HSLF-FS 2017:37 5 kap. och 7 kap. 7 §). Därför saknar studentens roll de handlingarna.'),
+    o('student-handledning', STUDENTER, 'Din praktikperiod tog slut i går. Vad händer när du försöker öppna en journal?', [
+      ['a', 'Journalen öppnas som vanligt i en vecka till.'],
+      ['b', 'Systemet säger att du inte har någon pågående handledning, och journalen öppnas inte. Övningarna kan du fortfarande göra.'],
+      ['c', 'Du får öppna journalen om du anger ett syfte.'],
+    ], 'b', 'Studentens åtkomst gäller bara under en pågående handledning hos en handledare på samma vårdenhet. Systemet prövar det vid varje anrop, och handledaren registrerar en ny handledning om perioden förlängs.', '#/handledning'),
+    o('handleda-kontrasignera', ['lakare', 'sjukskoterska', 'barnmorska'], 'Din student har signerat en anteckning. Var hittar du den, och vad gör du?', [
+      ['a', 'Du söker upp patienten och letar i journalen.'],
+      ['b', 'Den ligger i din inkorg under Att kontrasignera. Du läser den, går igenom den med studenten om något behöver rättas, och kontrasignerar med ett klick.'],
+      ['c', 'Du behöver inte göra något, studentens signatur räcker.'],
+    ], 'b', 'Systemet skickar varje anteckning som studenten signerar till handledaren. Anteckningen är märkt som inte kontrasignerad tills du har kontrasignerat den.', '#/inkorg'),
+    o('preventivmedel', ['barnmorska'], 'En patient på barnmorskemottagningen vill börja med p-piller. Hur förskriver du?', [
+      ['a', 'Du ber en läkare ordinera, eftersom barnmorskan inte får förskriva läkemedel.'],
+      ['b', 'Du väljer Förskriv preventivmedel och preventivmedlet. Systemet fyller i orsak, dosering och uppföljning om ett år och kontrollerar mot överkänslighet och andra läkemedel.'],
+      ['c', 'Du ordinerar som en läkare, med alla läkemedel i katalogen.'],
+    ], 'b', 'Barnmorskans förskrivningsrätt gäller hormonella preventivmedel, akut-p-piller, p-ring och hormonspiral. Systemet visar bara dem, och en allvarlig varning skickar dig till en läkare.', '#/patient/p11/lakemedel'),
+    o('yrkets-mall', ['arbetsterapeut', 'dietist', 'logoped', 'kurator', 'psykolog'], 'Du ska dokumentera ett besök. Hur vet du vilken mall du ska använda?', [
+      ['a', 'Du väljer bland alla mallar i journalen och hoppas att det är rätt.'],
+      ['b', 'Systemet väljer ditt yrkes mall, till exempel psykologanteckningen eller logopedanteckningen, med de sökord som yrket dokumenterar.'],
+      ['c', 'Du skriver i en läkares daganteckning.'],
+    ], 'b', 'Varje yrke ser bara sina mallar, och vårdgivaren bestämmer vilka mallar yrket skriver med. Anteckningen hör till omvårdnadens dokumentation och har samma behörighet, spärr och loggning som andra anteckningar.', '#/arbetslista'),
+    o('kurator-vem-ser', ['kurator', 'psykolog'], 'Vem kan läsa en anteckning som du skriver om patientens sociala förhållanden eller psykiska mående?', [
+      ['a', 'All personal i regionen.'],
+      ['b', 'Den som vårdar patienten på din vårdenhet. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.'],
+      ['c', 'Bara du själv.'],
+    ], 'b', 'Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.'),
+  );
+}

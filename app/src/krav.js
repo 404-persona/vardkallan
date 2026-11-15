@@ -318,6 +318,9 @@ export const KRAV = [
 // Runda 15, r3: läsåtkomsten vid avbrott med läskopian och reservservern (D4), och mellanarkivet i exporten och FHIR (M12).
 import { EGNA as R15R3_EGNA } from './sussa/runda15-r3.js';
 for (const [id, tester] of Object.entries(R15R3_EGNA)) { const x = KRAV.find(k => k.id === id); if (x) x.tester.push(...tester.filter(t => !x.tester.includes(t))); }
+// Runda 16, r3: minsta åtkomst för de nya yrkesrollerna, barnmorskan och studenterna (D8).
+import { TESTER_ROLLER as R16R3_ROLLER, TESTER_STUDENT as R16R3_STUDENT } from './sussa/runda16-r3.js';
+{ const x = KRAV.find(k => k.id === 'D8'); for (const t of [...R16R3_ROLLER, ...R16R3_STUDENT]) if (!x.tester.includes(t)) x.tester.push(t); }
 
 export function lasTestresultat(fil) {
   try {
