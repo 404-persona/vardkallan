@@ -323,5 +323,10 @@ describe('Stödet vid sjukskrivning', () => {
     expect(svar.perioderUrSimSvar({ fran: '2026-11-01', till: '2026-11-10', nedsattning: 'okand' })).toEqual([]);
     expect(svar.lasSvar([{ '@id': '32', delsvar: [{ '@id': '32.1', $any: [] }] }, null, 'x']).perioder).toEqual([]);
     expect(svar.simSvarUrForifyllnad([])).toEqual({});
+    // Svar med frågans id som nyckel läses likadant.
+    const id = { '6': [{ kod: 'M544', text: 'Lumbago-ischias' }], '28': ['STUDIER'], '32': [{ kod: 'HALFTEN', fran: '2026-11-01', till: '2026-11-14' }], '37': 'Skäl' };
+    expect(svar.perioderUrSimSvar(id, '2026-11-12')).toEqual([{ fran: '2026-11-01', till: '2026-11-14', grad: 50 }]);
+    expect(svar.simSvar(id)).toMatchObject({ diagnosKod: 'M544', sysselsattning: 'studier', motiveringFmb: 'Skäl' });
+    expect(svar.harFrageNycklar(id)).toBe(true);
   });
 });

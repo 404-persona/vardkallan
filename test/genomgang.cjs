@@ -207,6 +207,10 @@ MENY.logg.splice(MENY.logg.indexOf('Logguppföljning') + 1, 0, 'Begäranden');
 // beredningsenheten har Beredning efter Inkorg, och onkologen har Cytostatika före Blodcentralen.
 for (const k of ['klinisk', 'psykiatri', 'bvc']) MENY[k].splice(MENY[k].indexOf('Inkorg') + 1, 0, 'Blodcentralen');
 MENY.sjukskoterska.splice(MENY.sjukskoterska.indexOf('Intensivvård') + 1, 0, 'Blodcentralen');
+// Runda 16, r2: läkarna har Sjukskrivningar och verksamhetschefen Sjukskrivningar på vårdenheten, efter Remisser i
+// menyn (efter Läkemedelsansvar för verksamhetschefen, som inte har Remisser). Före kopiorna av läkarnas menyer nedan.
+for (const k of ['klinisk', 'psykiatri', 'bvc']) MENY[k].splice(MENY[k].indexOf('Remisser') + 1, 0, 'Sjukskrivningar');
+MENY.verksamhetschef.splice(MENY.verksamhetschef.indexOf('Läkemedelsansvar') + 1, 0, 'Sjukskrivningar på vårdenheten');
 MENY.beredning = [...MENY.farmaceut];
 MENY.beredning.splice(MENY.beredning.indexOf('Inkorg') + 1, 0, 'Beredning');
 MENY.onkologi = [...MENY.klinisk];
@@ -1502,6 +1506,35 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await bild(page, '99-eremiss');
       await page.waitForLoadState('networkidle');
     });
+    // Runda 16, r2: stödet vid sjukskrivning. Läkarens översikt, patientens sjukskrivning, förlängningen med ett klick och
+    // Socialstyrelsens beslutsstöd i intygsapplikationen.
+    await s('Läkaren på vårdcentralen ser sina sjukskrivningar, med den som närmar sig dag 90 överst', async () => {
+      await gaTill(page, '#/sjukskrivningar');
+      await forvanta(page, 'main h1', 'Mina sjukskrivningar');
+      await forvanta(page, '#sjk-forst + ul', 'Mikael Svensson');
+      await forvanta(page, '#sjk-forst + ul', 'Dag 90 om');
+      await forvanta(page, 'main', 'Skyddad identitet');
+      await saknas(page, 'Malin Engberg');
+      await bild(page, '99-sjukskrivningar');
+    });
+    await s('Läkaren på vårdcentralen ser Mikael Svenssons sjukfall och förlänger sjukskrivningen med ett klick, med beslutsstödet i intygsapplikationen', async () => {
+      await page.click('#sjk-forst + ul a:has-text("Mikael Svensson")');
+      await forvanta(page, '.flikhuvud h2', 'Sjukskrivning');
+      await forvanta(page, '.sjk-kort', 'Dag 89 i sjukfallet');
+      await forvanta(page, '.sjk-kort', 'rehabiliteringskedjan');
+      await forvanta(page, '.sjk-kort', 'längre än Socialstyrelsens rekommendation');
+      await forvanta(page, '.sjk-forlang', 'Förlängningen börjar');
+      await bild(page, '99-sjukskrivning');
+      await page.click('[data-forlang]');
+      await page.waitForURL(/#\/intygsapplikation\//);
+      await forvanta(page, '.fmb-panel', 'Lumbago-ischias');
+      await forvanta(page, '.fmb-panel .sjk-varning', 'Den sammanlagda sjukskrivningen blir');
+      await forvanta(page, '#fmb-motivering', 'ryggkirurg');
+      await bild(page, '99-beslutsstod');
+      await page.click('[data-atgard="signera"]');
+      await forvanta(page, '.notis', 'signerat');
+      await page.waitForLoadState('networkidle');
+    });
     // Runda 7, r6: vårdnadshavaren ser barnets tillväxt och skickar en mätning hemifrån.
     await s('Linnea Holmqvist ser Idas kurvor och vaccinationer i Min journal och skickar en mätning hemifrån', async () => {
       await loggaInPatient(page, 'inv-vh02');
@@ -1936,6 +1969,14 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '#la-medicinskt_ansvarig', 'Göran Malm');
       await saknas(page, 'Ansvarsdokumentet för läkemedelshanteringen har inte setts över');
       await page.waitForLoadState('networkidle');
+    });
+    // Runda 16, r2: vårdenhetens sjukskrivningar som antal, utan patientuppgifter.
+    await s('Ulrika Sandell ser vårdenhetens sjukskrivningar som antal, och små antal som färre än 5', async () => {
+      await gaTill(page, '#/sjukskrivningar/enhet');
+      await forvanta(page, 'main h1', 'Sjukskrivningar på vårdenheten');
+      await forvanta(page, '.sjk-fordelningar', 'färre än 5');
+      await saknas(page, 'Elin Sandberg');
+      await bild(page, '99-sjukskrivningar-enhet');
     });
     await allaVyer(page, 'Ulrika Sandell', MENY.verksamhetschef);
     // Fredrik Alm, ekonom (runda 7, r3)
@@ -2948,7 +2989,9 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         // Runda 14, r1: inloggningen genom vårdgivarens inloggningstjänst.
         'inloggning-extern',
         // Runda 15, r4: sjuksköterskans anteckning och den senaste bedömningen.
-        'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'omvardnadsanteckning', 'senaste-bedomning', 'usk-anteckning',
+        // Runda 16, r2: förlängningen av en sjukskrivning.
+        'forlang-sjukskrivning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

@@ -7,6 +7,7 @@
 // motiveringen.
 import { Fel } from './db.js';
 import * as intygsapp from './intygsapplikation-simulerad.js';
+import { harFrageNycklar } from './sjukfall-intygssvar.js';
 
 export const MAX_TECKEN = 2000;
 
@@ -18,7 +19,9 @@ export async function sparaMotivering(db, personal, intygsId, body = {}, val = {
   if (fore.typ !== 'LISJP') throw new Fel(400, 'Motiveringen till beslutsstödet hör till läkarintyget för sjukpenning.', 'ogiltig');
   const r = db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(intygsId);
   const svar = JSON.parse(r.svar);
-  if (text) svar.motiveringFmb = text; else delete svar.motiveringFmb;
+  // Svar med frågans id som nyckel får motiveringen som fråga 37, annars som motiveringFmb.
+  const nyckel = harFrageNycklar(svar) ? '37' : 'motiveringFmb';
+  if (text) svar[nyckel] = text; else delete svar[nyckel];
   db.query('UPDATE sim_intygsapplikation SET svar = ? WHERE intygs_id = ?').run(JSON.stringify(svar), intygsId);
   return { motivering: text || null, text: text ? 'Motiveringen är sparad i intyget.' : 'Motiveringen är borttagen ur intyget.' };
 }

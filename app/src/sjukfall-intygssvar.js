@@ -62,8 +62,25 @@ export function provaPeriod(fran, till, dag = idag()) {
 // Perioderna i den simulerade intygsapplikationens svar. Den har i dag en period (fran, till och nedsattning). En lista
 // med perioder (perioder: [{ fran, till, nedsattning }]) läses på samma sätt, så att flera sjukskrivningsnivåer i samma
 // intyg, som FK 7804 tillåter, räknas rätt när intygsapplikationen får dem.
+// Den simulerade intygsapplikationens svar på ett gemensamt sätt. Två former läses: den med namngivna fält (diagnosKod,
+// sysselsattning, nedsattning, fran, till och motiveringFmb) och den där svaren har frågans id som nyckel ('6' diagnoser,
+// '28' sysselsättningar, '32' perioder med kod i KV_FKMU_0003 och '37' motiveringen), så att stödet fungerar med båda.
+export function simSvar(s = {}) {
+  const per = Array.isArray(s?.['32']) ? s['32'].map(p => ({ fran: p?.fran, till: p?.till, nedsattning: NIVA_AV_KOD.get(p?.kod)?.nyckel ?? p?.kod }))
+    : Array.isArray(s?.perioder) ? s.perioder : [{ fran: s?.fran, till: s?.till, nedsattning: s?.nedsattning }];
+  const d = Array.isArray(s?.['6']) ? s['6'][0] : null;
+  const sy = Array.isArray(s?.['28']) ? s['28'][0] : null;
+  return {
+    diagnosKod: s?.diagnosKod ?? d?.kod ?? null, diagnosText: s?.diagnosText ?? d?.text ?? null,
+    sysselsattning: s?.sysselsattning ?? (typeof sy === 'string' ? SYSS_AV_KOD.get(sy) ?? sy : null),
+    perioder: per, motiveringFmb: typeof s?.motiveringFmb === 'string' ? s.motiveringFmb : typeof s?.['37'] === 'string' ? s['37'] : null,
+  };
+}
+// Om svaren har frågans id som nyckel, så att motiveringen sparas som fråga 37.
+export const harFrageNycklar = (s = {}) => ['6', '28', '32', '37'].some(k => Object.hasOwn(s ?? {}, k));
+
 export function perioderUrSimSvar(s = {}, dag = idag()) {
-  const lista = Array.isArray(s.perioder) ? s.perioder : [{ fran: s.fran, till: s.till, nedsattning: s.nedsattning }];
+  const lista = simSvar(s).perioder;
   return lista
     .map(p => ({ fran: datum(p?.fran), till: datum(p?.till), niva: Object.hasOwn(NIVAER, p?.nedsattning ?? '') ? p.nedsattning : null }))
     .filter(p => p.fran && p.till && p.niva && !provaPeriod(p.fran, p.till, dag))
@@ -75,13 +92,14 @@ const cv = (code, codeSystem, displayName) => el(NS_TYPES, 'cv', [el(NS_TYPES, '
 
 // Svaren för sysselsättning, sjukskrivningens perioder och motiveringen, i kontraktets form. Diagnosen (fråga 6) bygger
 // intygsapplikationen själv.
-export function rivSvar(s = {}) {
+export function rivSvar(s0 = {}) {
+  const s = simSvar(s0);
   const ut = [];
   if (Object.hasOwn(SYSSELSATTNINGAR, s.sysselsattning ?? '')) {
     const x = SYSSELSATTNINGAR[s.sysselsattning];
     ut.push({ '@id': '28', instans: 1, delsvar: [{ '@id': '28.1', $any: [cv(x.kod, KV_SYSSELSATTNING, x.text)] }] });
   }
-  perioderUrSimSvar(s).forEach((p, i) => {
+  perioderUrSimSvar(s0).forEach((p, i) => {
     const n = NIVAER[nivaForGrad(p.grad)];
     ut.push({ '@id': '32', instans: i + 1, delsvar: [
       { '@id': '32.1', $any: [cv(n.kod, KV_NIVA, n.text)] },

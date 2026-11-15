@@ -84,6 +84,8 @@ export const STARTPUNKT = {
   'Tillväxten för ett barn som har flyttat hit': { hash: '#/patient/p09/tillvaxt', klar: '#tv-import', forbered: 'aterstall' },
   // Runda 14, r3: intyg och e-remiss från journalen för en patient på vårdcentralen.
   'Journalen för patienten på vårdcentralen': { hash: '#/patient/p11', klar: '.patientband h1' },
+  // Runda 16, r2: demons sjukskrivna patient på vårdcentralen.
+  'Journalen för en sjukskriven patient på vårdcentralen': { hash: '#/patient/p14', klar: '.patientband h1' },
   // Runda 14, r4: arkivariens sida för e-arkiv, gallring och mellanarkiv.
   'E-arkiv och gallring': { hash: '#/arkiv', klar: '#ar-form' },
 };
@@ -762,6 +764,12 @@ UPPGIFTER.push({
   id: 'usk-anteckning', namn: 'Skriva och signera undersköterskans anteckning', roll: 'usk-kard', start: 'Patientens översikt',
   text: 'Gunnar är pigg och har ätit frukost. Skriv det som din observation tillsammans med det senaste mätvärdet, och signera anteckningen.',
   kontroll: { notis: 'Anteckningen är signerad' },
+});
+// Runda 16, r2: att förlänga en sjukskrivning.
+UPPGIFTER.push({
+  id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', roll: 'lak-vc', start: 'Journalen för en sjukskriven patient på vårdcentralen',
+  text: 'Mikael Svensson är sjukskriven för ryggen och behöver vara sjukskriven en tid till. Förläng sjukskrivningen och signera intyget.',
+  kontroll: { notis: 'signerat' },
 });
 
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.

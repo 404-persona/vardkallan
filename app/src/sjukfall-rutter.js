@@ -3,6 +3,7 @@
 import { Atkomst } from './atkomst.js';
 import * as sjukfall from './sjukfall.js';
 import * as beslutsstod from './intygsapplikation-beslutsstod-simulerad.js';
+import { simSvar } from './sjukfall-intygssvar.js';
 
 export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Patientens sjukfall, beslutsstödet för det pågående och förslaget till förlängning.
@@ -15,11 +16,11 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
     const u = beslutsstod.utkastFor(c.db, personal, iid, valForIntyg(c, iid));
     // Det som står i formuläret men inte är sparat räknas med, bara för bedömningen och bara i ett utkast. Datum och
     // nivå prövas som de sparade svaren (sjukfall-intygssvar.js).
+    const sv = simSvar(u.svar);
+    u.svar = { diagnosKod: sv.diagnosKod, diagnosText: sv.diagnosText, motiveringFmb: sv.motiveringFmb, perioder: sv.perioder };
     if (u.status === 'utkast') {
-      for (const k of ['fran', 'till', 'nedsattning']) {
-        const v = c.url.searchParams.get(k);
-        if (typeof v === 'string' && v.length <= 20) u.svar[k] = v;
-      }
+      const q = Object.fromEntries(['fran', 'till', 'nedsattning'].map(k => [k, c.url.searchParams.get(k)]).filter(([, v]) => typeof v === 'string' && v.length && v.length <= 20));
+      if (Object.keys(q).length) u.svar.perioder = [{ ...(sv.perioder.at(-1) ?? {}), ...q }];
     }
     return sjukfall.forUtkast(new Atkomst(c.db, personal, u.patientId, valFor(c.s, u.patientId), 'las_intyg'), u);
   });

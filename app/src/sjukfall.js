@@ -25,7 +25,7 @@ import { loggaRad } from './logg.js';
 import * as lakarintyg from './lakarintyg.js';
 import * as fmb from './fmb.js';
 import { skydda } from './analys.js';
-import { lasSvar, rivSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar } from './sjukfall-intygssvar.js';
+import { lasSvar, rivSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar, simSvar } from './sjukfall-intygssvar.js';
 
 // Intygen som räknas till sjukfallet. Intyg till arbetsgivaren räknas inte, som i Rehabstöd.
 export const SJUKINTYG = new Set(['LISJP']);
@@ -368,11 +368,12 @@ export async function forlang(atk, p, body = {}, dag = idag()) {
 export function forUtkast(atk, utkast, dag = idag()) {
   atk.krav('las_intyg');
   const perioder = perioderUrSimSvar(utkast.svar ?? {});
-  const b = bedom(synligaIntyg(atk), { diagnosKod: utkast.svar?.diagnosKod ?? null, perioder, intygsId: utkast.intygsId }, { dag });
+  const sv = simSvar(utkast.svar ?? {});
+  const b = bedom(synligaIntyg(atk), { diagnosKod: sv.diagnosKod, perioder, intygsId: utkast.intygsId }, { dag });
   return {
     ...b,
     sjukintyg: SJUKINTYG.has(utkast.typ),
-    motiveringIIntyget: utkast.svar?.motiveringFmb ?? null,
+    motiveringIIntyget: sv.motiveringFmb,
     kanMotivera: utkast.status === 'utkast' && kanRoll(atk.personal, 'skriv_intyg'),
     dolda: atk.doldaVal > 0 ? { kraverVal: true, text: 'Det finns intyg från andra vårdenheter. Gör ett aktivt val i journalen för att räkna in dem.' } : null,
   };
