@@ -77,6 +77,10 @@ export const STANDARD = {
 export const ENDAST_LISTADE = new Set(['underskoterska']);
 // Runda 16, r3: studenterna skriver bara med de mallar som står i yrkets lista, och bara i yrkets kategori.
 for (const y of ['lakarstudent', 'sjukskoterskestudent', 'barnmorskestudent']) ENDAST_LISTADE.add(y);
+// Runda 16, r3 (beslut 2026-11-15): kuratorns och psykologens anteckningar läses inte av undersköterskan (journal.js
+// lasHandling), och de yrkena skriver bara med de mallarna.
+export const PSYKOSOCIALA_YRKEN = new Set(['kurator', 'psykolog']);
+export const PSYKOSOCIALA_MALLAR = new Set([KURATOR.typ, PSYKOLOG.typ]);
 export const STUDENTKATEGORI = { lakarstudent: ['lakare'], sjukskoterskestudent: ['omvardnad'], barnmorskestudent: ['omvardnad'] };
 
 const journal = () => require('./journal.js');
@@ -114,6 +118,11 @@ export function yrkesparameter(yrke) {
         if (!m) return `${typ} är ingen av journalens mallar eller formulär. Mallarna är ${[...finns.keys()].join(', ')}, och formulären står under Formulär.`;
         if (sett.has(m.typ)) return `${m.typ} står två gånger.`;
         sett.add(m.typ);
+        // Runda 16, r3 (beslut 2026-11-15): kuratorn och psykologen skriver bara med kuratorns och psykologens mallar,
+        // som undersköterskan inte läser.
+        if (PSYKOSOCIALA_YRKEN.has(yrke) && !PSYKOSOCIALA_MALLAR.has(m.typ)) {
+          return `${YRKEN[yrke]} skriver bara med kuratorns och psykologens mallar, eftersom de anteckningarna inte läses av undersköterskan. ${m.typ} kan därför inte ges till yrket.`;
+        }
         if (!harBehorighet(yrke, m.kategori)) {
           return `${YRKEN[yrke]} har inte behörighet att skriva ${m.kategori === 'omvardnad' ? 'omvårdnadsanteckningar' : 'läkaranteckningar'}, så ${m.typ} kan inte ges till yrket. Behörigheten följer patientdatalagen och ändras inte här.`;
         }
@@ -145,6 +154,8 @@ export function mallarForYrke(db, yrke, nu = new Date()) {
 // lista, en mall som systemförvaltningen har skapat mot kategorin, och ett formulär mot formulärets egna yrken.
 export function far(db, personal, mall, nu = new Date()) {
   if (!personal || !mall) return false;
+  // Runda 16, r3 (beslut 2026-11-15): kuratorn och psykologen skriver bara med sina egna inbyggda mallar.
+  if (PSYKOSOCIALA_YRKEN.has(personal.yrke)) return !mall.egen && !mall.formular && PSYKOSOCIALA_MALLAR.has(mall.typ) && mallarForYrke(db, personal.yrke, nu).includes(mall.typ);
   if (inbyggda().has(mall.typ) && !mall.egen && !mall.formular) return mallarForYrke(db, personal.yrke, nu).includes(mall.typ);
   // Beslut 2026-11-14: ett formulär för omvårdnad som vårdgivaren har gett yrket i samma parameter.
   if (ENDAST_LISTADE.has(personal.yrke)) return Boolean(mall.formular) && mall.kategori === 'omvardnad' && mallarForYrke(db, personal.yrke, nu).includes(mall.typ);

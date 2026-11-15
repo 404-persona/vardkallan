@@ -1,5 +1,8 @@
 // Sussa 4.3 Samordnad individuell plan och samordnad plan för utskrivning: hur Vårdkällan möter posterna i avsnittet.
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
+// Runda 16, r3: kuratorn och SIP (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
+
 const SP = 'Samordnad planering > ';
 const SKYDD = [
   `${SP}skyddad identitet: ingen adress skickas och kommunen ser inte namnet`,
@@ -7,7 +10,7 @@ const SKYDD = [
   `${SP}kommunen ser bara det som har skickats till den och når ingen journal`,
 ];
 
-export default [
+const POSTERNA_R16R3 = [
   {
     id: '4.3.1.1', kategori: 'system', egna: [], avsedd: 'uppfyllt_demo',
     tester: [
@@ -40,3 +43,4 @@ export default [
     anmarkning: 'Kostnaden för utskrivningsklara vårddygn räknas inte, eftersom beloppet bestäms enligt 5 kap. 6 § lag (2017:612) eller i en överenskommelse mellan region och kommun.',
   },
 ];
+export default medR16r3(POSTERNA_R16R3);

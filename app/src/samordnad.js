@@ -243,6 +243,12 @@ export function skapa(atk, body = {}) {
   const pers = atk.personal;
   const typ = body.typ;
   const t = iso();
+  // Runda 16, r3 (beslut 2026-11-15): kuratorn upprättar samordnade individuella planer. Inskrivningsmeddelandet och planen
+  // vid tvångsvård upprättas av läkare och sjuksköterskor på den vårdande enheten.
+  if (pers.yrke === 'kurator' && typ !== 'sip') {
+    atk.logga('samordna', 'nekad', `samordning:${['spu', 'lpt7a'].includes(typ) ? typ : 'okand'}`, 'nekad');
+    throw new Fel(403, 'Som kurator upprättar du samordnade individuella planer. Inskrivningsmeddelandet och planen vid tvångsvård upprättas av läkare och sjuksköterskor.', 'nekad');
+  }
   if (typ === 'spu') {
     const f = spuForslag(atk);
     const vt = db.query('SELECT * FROM vardtillfallen WHERE patient_id = ? AND utskriven IS NULL').get(atk.patientId);

@@ -1255,7 +1255,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
         const l = journal.listaAnteckningar(ny('las_journal'));
         const senaste = l.anteckningar.slice(0, LASKOPIA_ANTECKNINGAR);
         post.anteckningar = { anteckningar: senaste, dolda: l.dolda, iLaskopian: senaste.length, totalt: l.anteckningar.length };
-        for (const a of senaste) post.anteckning[a.id] = utdata.anteckning(db, pers, journal.hamtaAnteckning(ny(journal.lasHandling(a.kategori)), journal.hamtaAnteckningRad(db, a.id)));
+        for (const a of senaste) post.anteckning[a.id] = utdata.anteckning(db, pers, journal.hamtaAnteckning(ny(journal.lasHandling(a)), journal.hamtaAnteckningRad(db, a.id)));
       }
       const grunder = new Set(delar.flatMap(a => [...a.grunder]));
       const grund = starkasteGrund(grunder, pers.yrke === 'vardadministrator' ? 'administrativ' : 'vardrelation');
@@ -1853,13 +1853,13 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const a = journal.hamtaAnteckningRad(c.db, id);
     return medPatient(c, a.patient_id, handling(a), (atk) => fn(atk, a));
   };
-  rutt('GET', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => utdata.anteckning(c.db, c.personal, journal.hamtaAnteckning(atk, a))));
+  rutt('GET', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a), (atk, a) => utdata.anteckning(c.db, c.personal, journal.hamtaAnteckning(atk, a))));
   rutt('PUT', '/api/anteckning/:id', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.andraUtkast(atk, a, c.body)));
   rutt('POST', '/api/anteckning/:id/signera', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => journal.signera(atk, a)));
   rutt('POST', '/api/anteckning/:id/ratta', (c, id) => medAnteckning(c, id, a => journal.skrivHandling(a.kategori, c.personal), (atk, a) => [201, journal.ratta(atk, a, c.body)]));
   // Runda 13, r3 (beslut från Jonas): den som skrev anteckningen eller patientens ansvariga läkare begär att den undantas
   // från visning eller publicering. Begäran kräver att anteckningen får läsas, och den ger ingen åtkomst.
-  rutt('POST', '/api/anteckning/:id/undantag', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a.kategori), (atk, a) => {
+  rutt('POST', '/api/anteckning/:id/undantag', (c, id) => medAnteckning(c, id, a => journal.lasHandling(a), (atk, a) => {
     if (undantag.provare(c.db, 'visning')(a, 'anteckning')) throw new Fel(404, 'Anteckningen finns inte.', 'saknas');
     return [201, undantag.begar(atk, a, c.body)];
   }));

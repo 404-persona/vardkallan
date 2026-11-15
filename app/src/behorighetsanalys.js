@@ -34,8 +34,8 @@ export const ANALYS = {
   underskoterska: {
     namn: "Undersköterska",
     behov: "Omvårdnad, mätvärden och provtagning. Behöver se läkemedel, mätvärden, överkänslighet och omvårdnadsanteckningar.",
-    risker: "Tillgång till känsliga läkaranteckningar och diagnoser som inte behövs för uppgiften.",
-    atgarder: "Läser inga läkaranteckningar och inga diagnoser. Ger läkemedel bara med en giltig delegering i dag. Ingen nödåtkomst.",
+    risker: "Tillgång till känsliga läkaranteckningar, diagnoser och kuratorns och psykologens anteckningar, som inte behövs för uppgiften.",
+    atgarder: "Läser inga läkaranteckningar, inga diagnoser och sedan runda 16 inte kuratorns och psykologens anteckningar, som läses med las_journal. Ger läkemedel bara med en giltig delegering i dag. Ingen nödåtkomst.",
     inte: ["las_journal", "las_diagnoser", "ordinera", "nodatkomst", "skriv_journal"],
   },
   vardadministrator: {
@@ -142,7 +142,7 @@ Object.assign(ANALYS, {
   },
   kurator: {
     namn: "Hälso- och sjukvårdskurator",
-    behov: "Arbetar med patientens sociala förhållanden, krisstöd och samtal. Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.",
+    behov: "Arbetar med patientens sociala förhållanden, krisstöd och samtal, och upprättar samordnade individuella planer (SIP). Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.",
     risker: "Kuratorns anteckningar är ofta känsliga, och läsning utan behov är en risk för integriteten. Läkemedel och mätvärden behövs inte i arbetet.",
     atgarder: "Läser inte läkemedelslistan och mätvärdena, ordinerar och ger inga läkemedel och har ingen nödåtkomst. Anteckningarna har samma inre sekretess, spärr och loggning som andra anteckningar, och andra vårdenheter ser dem bara efter ett aktivt val.",
     inte: ["las_lakemedel", "las_matvarden", "ordinera", "ge_lakemedel", "nodatkomst"],
@@ -158,7 +158,7 @@ Object.assign(ANALYS, {
     namn: "Barnmorska",
     behov: "För graviditetsjournalen och förlossningsjournalen, ger läkemedel och gör det sjuksköterskan gör på förlossningen och BB, rapporterar till Graviditetsregistret, förskriver preventivmedel och handleder barnmorskestudenter.",
     risker: "Läkemedel som förskrivs utanför förskrivningsrätten, och läsning utan behov.",
-    atgarder: "Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.",
+    atgarder: "Kräver vid inloggning genom en extern tjänst både barnmorskans och sjuksköterskans legitimation, eftersom rollen har sjuksköterskans handlingar. Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.",
     inte: ["ordinera", "vaccinera", "skriv_journal", "skriv_intyg"],
   },
   lakarstudent: {

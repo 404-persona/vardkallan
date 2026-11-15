@@ -118,9 +118,9 @@ Pröva i demon: logga in som David Sjöström och öppna [samma ställe i demon]
 
 Vem kan läsa en anteckning som du skriver om patientens sociala förhållanden eller psykiska mående?
 
-Rätt svar: Den som vårdar patienten på din vårdenhet. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.
+Rätt svar: Läkare, sjuksköterskor, barnmorskor och annan personal som läser journalen och vårdar patienten på din vårdenhet, men inte undersköterskan. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.
 
-Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.
+Kuratorns och psykologens anteckningar läses inte av undersköterskan, som inte behöver dem i sitt arbete. Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.
 
 ## Det här ska du kunna efter utbildningen
 

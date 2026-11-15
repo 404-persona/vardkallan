@@ -73,7 +73,7 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 | [Arbetsterapeut](arbetsterapeut.md) | 1 | 0 | 9 | 0 |
 | [Dietist](dietist.md) | 1 | 0 | 9 | 0 |
 | [Logoped](logoped.md) | 1 | 0 | 9 | 0 |
-| [Hälso- och sjukvårdskurator](kurator.md) | 1 | 0 | 10 | 0 |
+| [Hälso- och sjukvårdskurator](kurator.md) | 1 | 0 | 11 | 0 |
 | [Psykolog](psykolog.md) | 1 | 0 | 10 | 0 |
 | [Barnmorska](barnmorska.md) | 3 | 0 | 10 | 7 |
 | [Läkarstudent](lakarstudent.md) | 1 | 0 | 10 | 0 |

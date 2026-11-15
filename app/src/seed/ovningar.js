@@ -268,8 +268,14 @@ OVNINGAR_V1.push(
     ], 'b', 'Varje yrke ser bara sina mallar, och vårdgivaren bestämmer vilka mallar yrket skriver med. Anteckningen hör till omvårdnadens dokumentation och har samma behörighet, spärr och loggning som andra anteckningar.', '#/arbetslista'),
     o('kurator-vem-ser', ['kurator', 'psykolog'], 'Vem kan läsa en anteckning som du skriver om patientens sociala förhållanden eller psykiska mående?', [
       ['a', 'All personal i regionen.'],
-      ['b', 'Den som vårdar patienten på din vårdenhet. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.'],
+      ['b', 'Läkare, sjuksköterskor, barnmorskor och annan personal som läser journalen och vårdar patienten på din vårdenhet, men inte undersköterskan. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.'],
       ['c', 'Bara du själv.'],
-    ], 'b', 'Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.'),
+    ], 'b', 'Kuratorns och psykologens anteckningar läses inte av undersköterskan, som inte behöver dem i sitt arbete. Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.'),
+    // Runda 16, r3 (beslut 2026-11-15): kuratorn och SIP.
+    o('kurator-sip', ['kurator'], 'En patient behöver insatser både från vården och från kommunen. Vad gör du?', [
+      ['a', 'Ber läkaren upprätta planen, eftersom kuratorn inte får.'],
+      ['b', 'Upprättar en samordnad individuell plan (SIP) under Planer i journalen, med patientens samtycke, insatserna per huvudman och vem som har det övergripande ansvaret.'],
+      ['c', 'Skriver insatserna i en kuratorsanteckning.'],
+    ], 'b', 'Kuratorn upprättar samordnade individuella planer med samma behörighet som läkaren och sjuksköterskan. Planen kräver patientens samtycke, och kommunen ser bara det som har skickats till den.'),
   );
 }

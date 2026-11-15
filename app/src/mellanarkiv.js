@@ -708,7 +708,7 @@ const LAKEMEDEL = new Set(['ordination', 'administrering']);
 // remissernas, där den som bara får läsa remissens status ser statusen och inget av innehållet (remiss.js, forPatient).
 const HANDLING = { matvarde: 'las_matvarden', ordination: 'las_lakemedel', administrering: 'las_lakemedel', vardkontakt: 'las_admin', diagnos: 'las_diagnoser' };
 const remissHandling = (personal) => (personal && kanRoll(personal, 'las_remiss') ? 'las_remiss' : 'las_remiss_status');
-export const handlingFor = (r, personal = null) => (r.slag === 'anteckning' ? lasHandling(r.kategori) : r.slag === 'remiss' ? remissHandling(personal) : HANDLING[r.slag]);
+export const handlingFor = (r, personal = null) => (r.slag === 'anteckning' ? lasHandling(r) : r.slag === 'remiss' ? remissHandling(personal) : HANDLING[r.slag]);
 const LASHANDLINGAR = ['las_journal', 'las_omvardnad', 'las_matvarden', 'las_lakemedel', 'las_diagnoser', 'las_admin', 'las_remiss', 'las_remiss_status'];
 export const kanLasaNagot = (personal) => LASHANDLINGAR.some(h => kanRoll(personal, h));
 export const listHandling = (personal) => LASHANDLINGAR.find(h => kanRoll(personal, h)) ?? 'las_journal';

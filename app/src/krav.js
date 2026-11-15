@@ -324,8 +324,8 @@ for (const [id, tester] of Object.entries(R15R3_EGNA)) { const x = KRAV.find(k =
 // mdr-bedomning.js (vårt D10).
 { const x = KRAV.find(k => k.id === 'D10'); x.tester.push(...[T16R2.fmbDiagnos, T16R2.fmbTid, T16R2.fmbUtdrag].filter(t => !x.tester.includes(t))); }
 // Runda 16, r3: minsta åtkomst för de nya yrkesrollerna, barnmorskan och studenterna (D8).
-import { TESTER_ROLLER as R16R3_ROLLER, TESTER_STUDENT as R16R3_STUDENT } from './sussa/runda16-r3.js';
-{ const x = KRAV.find(k => k.id === 'D8'); for (const t of [...R16R3_ROLLER, ...R16R3_STUDENT]) if (!x.tester.includes(t)) x.tester.push(t); }
+import { TESTER_ROLLER as R16R3_ROLLER, TESTER_STUDENT as R16R3_STUDENT, TESTER_BESLUT as R16R3_BESLUT } from './sussa/runda16-r3.js';
+{ const x = KRAV.find(k => k.id === 'D8'); for (const t of [...R16R3_ROLLER, ...R16R3_STUDENT, ...R16R3_BESLUT]) if (!x.tester.includes(t)) x.tester.push(t); }
 
 export function lasTestresultat(fil) {
   try {

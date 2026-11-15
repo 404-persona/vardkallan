@@ -87,7 +87,7 @@ export const TILLITSNIVAER = [...tillit.IDENTIFIERARE].filter(([, v]) => v.niva 
 // Runda 16, r3: koderna för varje roll står i atkomst.js, kontrollerade mot Ineras kodverk. Barnmorskan är en egen roll
 // och kräver BM. Sjuksköterskans roll kräver SJ, och en barnmorska som arbetar som sjuksköterska har båda.
 export { LEGITIMATION_FOR_ROLL as LEGITIMATION, LEGITIMATION_NAMN } from './atkomst.js';
-import { LEGITIMATION_FOR_ROLL as LEGITIMATION, LEGITIMATION_NAMN } from './atkomst.js';
+import { LEGITIMATION_FOR_ROLL as LEGITIMATION, LEGITIMATION_NAMN, LEGITIMATION_ALLA } from './atkomst.js';
 export const REDIRECT = '/api/inloggning/svar';
 const KLOCKMARGINAL_S = 60;
 const MAX_BILJETTALDER_S = 600;
@@ -673,6 +673,13 @@ export function provaMotMasterdata(db, k, a, p) {
   if (a.vardenhetHsaId !== u.healthCareUnitHsaId) nek(`Medarbetaruppdraget i biljetten gäller en annan vårdenhet än ${u.healthCareUnitName}, där ${pers.namn} arbetar enligt katalogen. Välj uppdraget för ${u.healthCareUnitName} när du loggar in, eller be den som administrerar HSA rätta uppdraget.`);
   if (a.uppdragHsaId !== u.commissionHsaId) nek('Medarbetaruppdraget i biljetten finns inte i katalogen. Be den som administrerar HSA kontrollera uppdraget.');
   if (a.andamal !== u.commissionPurpose) nek(`Medarbetaruppdraget gäller ändamålet ${a.andamal}, men rollen kräver ett uppdrag för ${u.commissionPurpose.toLowerCase()}. Be den som administrerar HSA rätta uppdragets ändamål.`);
+  // Runda 16, r3 (beslut 2026-11-15): en roll i LEGITIMATION_ALLA kräver alla koderna, till exempel barnmorskan både
+  // barnmorskans och sjuksköterskans legitimation.
+  const alla = Object.hasOwn(LEGITIMATION_ALLA, pers.yrke) ? LEGITIMATION_ALLA[pers.yrke] : null;
+  const saknas = alla ? alla.filter(l => !a.legitimation.includes(l)) : [];
+  if (saknas.length) {
+    nek(`Rollen kräver legitimation både ${alla.map(l => `som ${LEGITIMATION_NAMN[l]}`).join(' och ')} enligt katalogen, och biljetten saknar legitimationen ${saknas.map(l => `som ${LEGITIMATION_NAMN[l]}`).join(' och ')}. Barnmorskan gör det som sjuksköterskan gör på förlossningen och BB, och därför krävs båda. Legitimationen kommer från Socialstyrelsens register genom HSA. Kontakta din chef om den saknas.`);
+  }
   const kravs = LEGITIMATION[pers.yrke];
   if (kravs && !a.legitimation.some(l => kravs.includes(l))) {
     nek(`Biljetten saknar legitimationen som ${kravs.map(l => LEGITIMATION_NAMN[l]).join(' eller ')}, som rollen kräver enligt katalogen. Legitimationen kommer från Socialstyrelsens register genom HSA. Kontakta din chef om den saknas.`);

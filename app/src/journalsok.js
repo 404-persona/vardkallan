@@ -116,7 +116,7 @@ function synligaAnteckningar(atk) {
     AND NOT EXISTS (SELECT 1 FROM anteckningar b WHERE b.ersatter_id = a.id) ORDER BY skapad DESC, id DESC`).all(atk.patientId, atk.personal.id);
   // Runda 7, r4: en anteckning som är undantagen från visning hittas inte heller vid sökning.
   const undantagen = undantagProvare(atk.db, 'visning');
-  return atk.filtrera(rader, a => journal.lasHandling(a.kategori)).filter(a => !undantagen(a, 'anteckning'));
+  return atk.filtrera(rader, a => journal.lasHandling(a)).filter(a => !undantagen(a, 'anteckning'));
 }
 
 // Runda 10, r2: filtren på typ, tid och vårdenhet. Ett filter som inte finns förklaras.

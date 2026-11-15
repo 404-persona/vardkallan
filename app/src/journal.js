@@ -60,7 +60,16 @@ export function kategoriFor(db, typ) {
   return r ? JSON.parse(r.definition).kategori : undefined;
 }
 
-export const lasHandling = (kategori) => (kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal');
+// Runda 16, r3 (beslut 2026-11-15): kuratorns och psykologens anteckningar hör till omvårdnadens kategori men läses med
+// las_journal, så att undersköterskan inte läser dem (minsta åtkomst, patientdatalagen 4 kap. 2 §). lasHandling tar
+// anteckningens rad, eller bara kategorin där ingen rad finns. Kuratorn och psykologen skriver bara med de här mallarna
+// (mallar-yrken.js), så att alla deras anteckningar omfattas.
+export const PSYKOSOCIALA = new Set(['Kuratorsanteckning', 'Psykologanteckning']);
+export const lasHandling = (x) => {
+  const kategori = typeof x === 'string' ? x : x?.kategori;
+  if (kategori === 'omvardnad' && x && typeof x === 'object' && PSYKOSOCIALA.has(x.typ)) return 'las_journal';
+  return kategori === 'omvardnad' ? 'las_omvardnad' : 'las_journal';
+};
 // Runda 15, r5: ett yrke som bara har den smala handlingen skriv_observation (undersköterskan) skriver omvårdnadens
 // anteckningar med den, och bara med de mallar som vårdgivaren har gett yrket (yrkesmallar.provaMall).
 export const skrivHandling = (kategori, personal = null) => (
@@ -132,7 +141,7 @@ export function synligaAnteckningar(atk, { baraAktuella = true } = {}) {
   rader = rader.filter(a => a.status === 'signerad' || a.forfattare_id === atk.personal.id);
   if (baraAktuella) rader = rader.filter(a => ersattAv(db, a.id) == null);
   // Runda 7, r4: undantagen prövas efter behörighetsmotorn, så att en spärrad anteckning varken visas eller räknas.
-  return filtreraVisning(atk, atk.filtrera(rader, a => lasHandling(a.kategori)), 'anteckning');
+  return filtreraVisning(atk, atk.filtrera(rader, a => lasHandling(a)), 'anteckning');
 }
 
 export function listaAnteckningar(atk) {
@@ -174,7 +183,7 @@ export function hamtaAnteckningRad(db, id) {
 
 export function hamtaAnteckning(atk, a) {
   if (a.status !== 'signerad' && a.forfattare_id !== atk.personal.id) throw new Fel(404, 'Anteckningen finns inte.', 'saknas');
-  atk.krav(lasHandling(a.kategori), { resurs: { enhet_id: a.enhet_id }, beskrivning: `anteckning:${a.id}` });
+  atk.krav(lasHandling(a), { resurs: { enhet_id: a.enhet_id }, beskrivning: `anteckning:${a.id}` });
   // Runda 7, r4: en anteckning som är undantagen från visning visas inte heller när den öppnas direkt.
   // Runda 13, r3 (säkerhetsfynd 6): samma svar som för en anteckning som inte finns. Journalens rad om att något inte
   // visas har motiveringen.

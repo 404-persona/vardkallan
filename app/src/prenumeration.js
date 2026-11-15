@@ -48,7 +48,7 @@ export const KALLOR = {
   MedicationRequest: { tabell: 'ordinationer', handling: () => 'las_lakemedel', gemensam: true },
   AllergyIntolerance: { tabell: 'overkanslighet', handling: () => 'las_oversikt', gemensam: true },
   ServiceRequest: { tabell: 'remisser', handling: () => 'las_remiss', enhet: 'fran_enhet_id' },
-  Composition: { tabell: 'anteckningar', handling: (r) => lasHandling(r.kategori), extra: 'kategori', villkor: (r) => r.status === 'signerad' },
+  Composition: { tabell: 'anteckningar', handling: (r) => lasHandling(r), extra: 'kategori', villkor: (r) => r.status === 'signerad' },
   Encounter: { tabell: 'vardkontakter', handling: () => 'las_admin' },
 };
 const TYP_FOR = Object.fromEntries(Object.entries(KALLOR).map(([typ, k]) => [k.tabell, typ]));
@@ -275,6 +275,8 @@ export function behandla(db, base) {
       // Runda 10, r1: en prenumeration på en population ('*') gäller alla patienter, och behörighetsmotorn avgör nedan.
       if (p.typ !== typ || (p.patient_id !== '*' && p.patient_id !== a.patient_id) || !a.patient_id) continue;
       const rad = { id: a.rad_id, enhet_id: a.enhet_id, kategori: a.extra, status: a.villkor };
+      // Runda 16, r3: anteckningens typ avgör om den läses med las_journal (kuratorns och psykologens, journal.lasHandling).
+      if (a.tabell === 'anteckningar') rad.typ = db.query('SELECT typ FROM anteckningar WHERE id = ?').get(a.rad_id)?.typ ?? null;
       const k = KALLOR[typ];
       if (k.villkor && a.handelse !== 'borttagen' && !k.villkor(rad)) continue;
       if (p.kod && typ === 'Observation') {

@@ -43,7 +43,7 @@ export function handelsekedja(atk, v) {
   const undantagen = undantagProvare(db, 'visning');
   for (const a of db.query("SELECT * FROM anteckningar WHERE vardkontakt_id = ? AND status = 'signerad'").all(v.id)) {
     if (undantagen(a, 'anteckning')) continue;
-    if (synlig(a.enhet_id, lasHandling(a.kategori))) egen(a.signerad_tid, `${a.typ} signerad`, { objekt: `anteckning:${a.id}` });
+    if (synlig(a.enhet_id, lasHandling(a))) egen(a.signerad_tid, `${a.typ} signerad`, { objekt: `anteckning:${a.id}` });
   }
   for (const d of db.query('SELECT * FROM diagnoser WHERE vardkontakt_id = ?').all(v.id)) if (synlig(d.enhet_id, 'las_diagnoser')) egen(`${d.datum}T12:00:00.000Z`, `Diagnos ${d.kod} registrerad`);
   for (const r of db.query('SELECT * FROM remisser WHERE vardkontakt_id = ?').all(v.id)) {

@@ -118,9 +118,17 @@ Pröva i demon: logga in som Malin Ekström och öppna [samma ställe i demon](h
 
 Vem kan läsa en anteckning som du skriver om patientens sociala förhållanden eller psykiska mående?
 
-Rätt svar: Den som vårdar patienten på din vårdenhet. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.
+Rätt svar: Läkare, sjuksköterskor, barnmorskor och annan personal som läser journalen och vårdar patienten på din vårdenhet, men inte undersköterskan. Andra vårdenheter ser den bara efter ett aktivt val med syfte, och om patienten har spärrat din vårdenhet bara med patientens samtycke.
 
-Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.
+Kuratorns och psykologens anteckningar läses inte av undersköterskan, som inte behöver dem i sitt arbete. Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.
+
+### Övning 11
+
+En patient behöver insatser både från vården och från kommunen. Vad gör du?
+
+Rätt svar: Upprättar en samordnad individuell plan (SIP) under Planer i journalen, med patientens samtycke, insatserna per huvudman och vem som har det övergripande ansvaret.
+
+Kuratorn upprättar samordnade individuella planer med samma behörighet som läkaren och sjuksköterskan. Planen kräver patientens samtycke, och kommunen ser bara det som har skickats till den.
 
 ## Det här ska du kunna efter utbildningen
 
@@ -128,4 +136,4 @@ Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser 
 - Veta vem som kan läsa anteckningen och vad ett aktivt val och en spärr betyder.
 - Bedöma och besvara en remiss.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 10 övningar och få intyget.
+- Svara rätt på alla 11 övningar och få intyget.

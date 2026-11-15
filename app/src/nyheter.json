@@ -94,6 +94,28 @@
           "text": "Under Handledning registrerar du en handledning för en student på din vårdenhet, med en tid som systemet föreslår. Det studenten signerar hamnar i din inkorg under Att kontrasignera."
         },
         {
+          "id": "roller-psykosocial-1-6-0",
+          "roller": [
+            "underskoterska",
+            "kurator",
+            "psykolog"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Kuratorns och psykologens anteckningar",
+          "text": "Kuratorns och psykologens anteckningar visas inte för undersköterskan, eftersom de inte behövs i hennes arbete. Läkare, sjuksköterskor, barnmorskor och den övriga personal som läser journalen ser dem som förut."
+        },
+        {
+          "id": "roller-kurator-sip-1-6-0",
+          "roller": [
+            "kurator"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Samordnad individuell plan",
+          "text": "Som kurator upprättar du samordnade individuella planer (SIP) under Planer i journalen, med patientens samtycke, på samma sätt som läkaren och sjuksköterskan."
+        },
+        {
           "id": "sjukskrivning-1-6-0",
           "roller": [
             "lakare",
