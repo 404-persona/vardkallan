@@ -721,7 +721,8 @@ ROLLER.kurator = [...PARAMEDICIN.filter(h => !['las_lakemedel', 'las_matvarden',
 // Barnmorskan är en egen roll med egen legitimation. I Sverige bygger barnmorskeutbildningen på legitimation som
 // sjuksköterska, och barnmorskan gör på förlossningen och BB det som sjuksköterskan gör där, så rollen har sjuksköterskans
 // handlingar utom barnhälsovårdens. Barnmorskans egen befogenhet är att förskriva preventivmedel (preventivmedel.js),
-// och inget annat läkemedel: rollen har inte handlingen ordinera.
+// och inget annat läkemedel på egen hand: rollen har inte handlingen ordinera. Som sjuksköterskan ordinerar barnmorskan
+// enligt ett generellt direktiv som en läkare har fastställt för vårdenheten, och dokumenterar en muntlig ordination.
 export const BARNMORSKAN_INTE = new Set(['vaccinera', 'boka_bhv', 'rapportera_bhvq']);
 HANDLINGAR.forskriva_preventivmedel = 'förskriva preventivmedel som barnmorska';
 ROLLER.barnmorska = [...ROLLER.sjukskoterska.filter(h => !BARNMORSKAN_INTE.has(h)), 'forskriva_preventivmedel'];
@@ -753,7 +754,7 @@ export const STUDENTER = {
 for (const r of ['lakare', 'sjukskoterska', 'barnmorska']) ROLLER[r].push('handleda');
 
 // Den pågående handledningen för en student: handledaren är aktiv, har ett yrke som får handleda studenten och arbetar
-// på samma vårdenhet som studenten, och dagen ligger inom handledningens tid. Slås upp i databasen vid varje prövning.
+// på samma vårdenhet som studenten och som handledningen registrerades på, och dagen ligger inom handledningens tid. Slås upp i databasen vid varje prövning.
 // Saknas tabellen eller går något inte att avgöra finns ingen handledning (fail closed).
 const dagI = (nu) => nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
 export function aktivHandledning(db, student, nu = new Date()) {
@@ -766,7 +767,7 @@ export function aktivHandledning(db, student, nu = new Date()) {
   } catch { return null; }
   const minEnhet = vardenhetFor(db, student.enhet_id);
   return rader.find(h => h.handledare_aktiv !== 0 && STUDENTER[student.yrke].handledare.includes(h.handledare_yrke)
-    && h.handledare_id !== student.id && vardenhetFor(db, h.handledare_enhet) === minEnhet) ?? null;
+    && h.handledare_id !== student.id && vardenhetFor(db, h.handledare_enhet) === minEnhet && vardenhetFor(db, h.enhet_id) === minEnhet) ?? null;
 }
 export const UTAN_HANDLEDNING = 'Du har ingen pågående handledning på vårdenheten och kan därför inte öppna journalen. Handledaren registrerar handledningen.';
 // Den legitimerade yrkesgrupp (tvåställig kod i Socialstyrelsens HOSP-register, Ineras kodverk HSA Innehåll Legitimerad

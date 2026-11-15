@@ -2795,6 +2795,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     if (!c.db) throw new Fel(401, 'Logga in först.', 'ej_inloggad');
+    // Runda 16, r3: en student utan pågående handledning stoppas också i FHIR, som i resten av API:t.
+    if (require('./handledning.js').stoppasUtanHandledning(c.db, c.personal, url.pathname)) throw new Fel(403, UTAN_HANDLEDNING, 'nekad');
     const langd = Number(req.headers.get('content-length') || 0);
     const kropp = langd > MAX_KROPP ? '' : await req.text();
     if (kropp.length > MAX_KROPP) throw new Fel(413, 'För stor förfrågan.', 'ogiltig');
@@ -2817,6 +2819,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (sess && !reserv) labbEfterTid(sess.s.db);
     if (sess && !reserv) mtEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
+    // Runda 16, r3: en student utan pågående handledning stoppas också i FHIR, som i resten av API:t.
+    if (require('./handledning.js').stoppasUtanHandledning(c.db, c.personal, url.pathname)) throw new Fel(403, UTAN_HANDLEDNING, 'nekad');
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     const base = origin || `${url.protocol}//${url.host}`;
     if (req.method !== 'GET') throw new Fel(405, 'Bara läsning stöds i FHIR-API:t.', 'ogiltig');

@@ -214,6 +214,17 @@ describe('Runda 16, r3: studenterna under handledning', () => {
     expect(efter.handledning.kontrasignerad).toBeTruthy();
     // En annan sjuksköterska kan inte kontrasignera en vanlig begäran, bara handledaren den egna studentens.
     expect(kanRoll(personal(s, 'ssk-kard'), 'kontrasignera')).toBe(false);
+    // En rättelse går också till handledaren, och den rättade versionen kontrasigneras inte.
+    const ny2 = await k.post('/api/patient/p01/anteckningar', { typ: 'Omvårdnadsanteckning', sokord: [{ sokord: 'Sömn', text: 'Sov oroligt.' }] });
+    await k.post(`/api/anteckning/${ny2.data.id}/signera`, {});
+    const ratt = await k.post(`/api/anteckning/${ny2.data.id}/ratta`, { orsak: 'Fel ord', sokord: [{ sokord: 'Sömn', text: 'Sov gott.' }] });
+    expect(ratt.status).toBe(201);
+    expect(ratt.data.handledning).toMatchObject({ handledare: { id: 'ssk-kard' }, kontrasignerad: null });
+    const ink2 = (await h.get('/api/inkorg')).data.kontrasigneringar;
+    const gammal = ink2.find(x => x.postId === ny2.data.id);
+    expect((await h.post(`/api/kontrasignering/${gammal.id}/kontrasignera`, {})).status).toBe(400);
+    const ny2b = ink2.find(x => x.postId === ratt.data.id);
+    expect((await h.post(`/api/kontrasignering/${ny2b.id}/kontrasignera`, {})).status).toBe(200);
   }, 30_000);
 
   test('studenten ordinerar inte, ger inga läkemedel, registrerar inga mätvärden och använder inte nödåtkomst', async () => {
@@ -246,6 +257,10 @@ describe('Runda 16, r3: studenterna under handledning', () => {
     expect(prova(db, { personal: st, patient: 'p01', handling: 'las_omvardnad', nu: NU }).skal).toBe(require('../src/atkomst.js').UTAN_HANDLEDNING);
     db.query("UPDATE personal SET enhet_id = 'uso-kard-72' WHERE id = 'ssk-kard'").run();
     expect(kan()).toBe(true);
+    // Handledaren och studenten flyttas båda till en annan vårdenhet: handledningen gäller inte där.
+    db.query("UPDATE personal SET enhet_id = 'uso-med' WHERE id IN ('ssk-kard', 'stud-ssk')").run();
+    expect(aktivHandledning(db, personal(db, 'stud-ssk'), NU)).toBeNull();
+    db.query("UPDATE personal SET enhet_id = 'uso-kard-72' WHERE id IN ('ssk-kard', 'stud-ssk')").run();
     // Handledaren är inte längre aktiv.
     db.query("UPDATE personal SET aktiv = 0 WHERE id = 'ssk-kard'").run();
     expect(kan()).toBe(false);
@@ -294,6 +309,10 @@ describe('Runda 16, r3: studenterna under handledning', () => {
       expect({ v, status: r.status }).toEqual({ v, status: 403 });
       expect(JSON.stringify(r.data)).not.toContain('Åkesson');
     }
+    // FHIR stoppas på samma sätt.
+    const fh = await k.get('/fhir/Patient/p01');
+    expect(fh.status).toBe(403);
+    expect(JSON.stringify(fh.data)).not.toContain('Åkesson');
     for (const v of ['/api/session', '/api/handledning', '/api/utbildning', '/api/nyheter']) expect({ v, status: (await k.get(v)).status }).toEqual({ v, status: 200 });
     const s = (await k.get('/api/session')).data;
     expect(s.behorigheter).toEqual(['utbildning']);
@@ -324,12 +343,13 @@ describe('Runda 16, r3: barnmorskan', () => {
     const f = (await k.get('/api/patient/p11/preventivmedel')).data;
     expect(f.lakemedel.map(x => x.atc)).toContain('G03AC09');
     expect(f.lakemedel.every(x => preventivmedel.arPreventivmedel(x.atc))).toBe(true);
-    const r = await k.post('/api/patient/p11/preventivmedel', { lakemedelId: f.lakemedel[0].id });
+    const r = await k.post('/api/patient/p11/preventivmedel', { lakemedelId: f.lakemedel[0].id, dosering: '3 tabletter dagligen' });
     expect(r.status).toBe(201);
     expect(r.data.ordination).toMatchObject({ ordinationsorsak: 'Antikonception' });
     const db = sandlada(app, k).db;
     const o = db.query('SELECT * FROM ordinationer WHERE id = ?').get(r.data.ordination.id);
-    expect(o).toMatchObject({ ordinerad_av: 'bm-vc', orsak: 'Antikonception', uppfoljning: addDagar(o.start, 365) });
+    // Doseringen är systemets för produkten, också när klienten skickar en annan text.
+    expect(o).toMatchObject({ ordinerad_av: 'bm-vc', orsak: 'Antikonception', uppfoljning: addDagar(o.start, 365), dosering: f.lakemedel[0].dosering });
     expect(db.query("SELECT handling FROM atkomstlogg WHERE personal_id = 'bm-vc' AND patient_id = 'p11' ORDER BY id DESC LIMIT 1").get().handling).toBe('forskriva_preventivmedel');
   }, 30_000);
 

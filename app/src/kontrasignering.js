@@ -107,6 +107,8 @@ export function kontrasignera(atk, k) {
   if (k.status !== 'begard') throw new Fel(400, 'Uppgiften är redan kontrasignerad.', 'ogiltig');
   const post = hamtaPost(atk.db, k.typ, k.post_id);
   if (post.signeradAv === atk.personal.id) throw new Fel(403, 'Den som har signerat uppgiften kan inte kontrasignera den.', 'nekad');
+  // Runda 16, r3: en students anteckning som har rättats kontrasigneras i den gällande versionen, som har en egen begäran.
+  if (!post.aktuell && require('./handledning.js').arHandledd(atk.db, k)) throw new Fel(400, 'Anteckningen har rättats. Kontrasignera den gällande versionen.', 'ogiltig');
   // Runda 16, r3: handledaren kontrasignerar studentens anteckning med handlingen handleda (handledning.js).
   atk.krav(require('./handledning.js').arHandledd(atk.db, k) ? 'handleda' : 'kontrasignera');
   atk.krav(post.handling, { resurs: { enhet_id: post.enhetId }, beskrivning: `kontrasignering:${k.id}` });

@@ -55,7 +55,8 @@ export function forskriv(atk, inp = {}) {
   const s = standard(lm);
   const start = typeof inp.start === 'string' && inp.start ? inp.start : idag();
   const kropp = {
-    lakemedelId: lm.id, dosering: typeof inp.dosering === 'string' && inp.dosering.trim() ? inp.dosering : s.dosering,
+    // Doseringen är systemets för produkten, så att texten aldrig säger något annat än dosen.
+    lakemedelId: lm.id, dosering: s.dosering,
     dos: s.dos, dosEnhet: s.dosEnhet, tider: s.tider, typ: s.typ,
     ordinationsorsak: ORSAK, start, uppfoljningsdatum: typeof inp.uppfoljningsdatum === 'string' && inp.uppfoljningsdatum ? inp.uppfoljningsdatum : addDagar(start, UPPFOLJNING_DAGAR),
   };
