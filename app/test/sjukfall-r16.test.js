@@ -289,7 +289,7 @@ describe('Stödet vid sjukskrivning', () => {
     expect(sjukfall.enhetensSjukfall(db2, chef, DAG)).toMatchObject({ totalt: null, totaltText: 'färre än 5' });
   });
 
-  test(`${T}demon har sjukfall för läkaren på vårdcentralen: nära dag 90 och längre än rekommendationen, nära dag 180 och en skyddad patient`, () => {
+  test(`${T}demon har sjukfall för läkaren på vårdcentralen: nära dag 90 och längre än rekommendationen, nära dag 180 och en skyddad patient`, async () => {
     // Demons mall har sjukskrivningarna, relativt till dagen då mallen byggdes.
     expect(nyDbMedDemo().query("SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = 'demo'").get().n).toBeGreaterThan(5);
     // Samma sjukskrivningar vid en fast dag.
@@ -306,6 +306,9 @@ describe('Stödet vid sjukskrivning', () => {
     const sim = app.lasSvar(db.query("SELECT * FROM sim_intygsapplikation WHERE intygs_id = (SELECT intygs_id FROM lakarintyg WHERE id = ?)").get(r.lakarintyg_id));
     expect(sim['37']).toContain('ryggkirurg');
     expect(IT.saknas(IT.aktuell('LISJP'), sim)).toEqual([]);
+    // Demons sjukskrivning förlängs genom förnyelsen av förra intyget.
+    const f = await sjukfall.forlang(atk(db, 'lak-vc', 'p18', {}, 'skriv_intyg'), patient(db, 'p18'), {}, DAG);
+    expect(db.query('SELECT relation_typ FROM sim_intygsapplikation WHERE intygs_id = ?').get(f.oppna.split('/').pop()).relation_typ).toBe('FRLANG');
     // Seeden läggs bara in en gång.
     const n = db.query("SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = 'demotest'").get().n;
     sjukfall.seedaDemo(db, DAG, { kalla: 'demotest' });

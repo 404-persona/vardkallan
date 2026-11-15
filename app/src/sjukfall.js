@@ -123,7 +123,8 @@ export function seedaDemo(db, dag = idag(), { kalla = 'demo' } = {}) {
       const slut = addDagar(dag, till);
       const signeradDag = fran > 0 ? dag : start;
       const signerad = `${signeradDag}T09:00:00.000Z`;
-      const intygsId = `${kalla}-${d.pid}-${i + 1}-${randomUUID().slice(0, 8)}`;
+      // Intygets id är ett UUID, som intygsapplikationen kräver.
+      const intygsId = randomUUID();
       let lakarintygId = null;
       if (harSim && p.personnummer) {
         const version = IT.aktuell('LISJP', new Date(signerad))?.version ?? '2.0';
