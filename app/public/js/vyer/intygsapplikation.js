@@ -192,7 +192,10 @@ export async function visa(main, iid) {
     e.preventDefault();
     if (await spara(e.submitter ?? form.querySelector('button'))) { notis('Utkastet är sparat.'); visa(main, iid); }
   });
-  main.addEventListener('click', async (e) => {
+  // Runda 16, r2: huvudytan finns kvar mellan vyerna för samma inloggade, så lyssnaren från ett tidigare intyg tas bort
+  // först. Annars gällde ett klick på Signera också det förra intyget (två anrop och fel som 409).
+  if (main.iaKlick) main.removeEventListener('click', main.iaKlick);
+  main.iaKlick = async (e) => {
     const b = e.target.closest('[data-atgard]');
     if (b) {
       const a = b.dataset.atgard;
@@ -221,5 +224,6 @@ export async function visa(main, iid) {
         <button type="button" class="knapp" data-skriv>Skriv ut intyget</button>`;
       rutan.querySelector('h2').focus?.();
     }
-  });
+  };
+  main.addEventListener('click', main.iaKlick);
 }
