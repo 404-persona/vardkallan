@@ -102,6 +102,20 @@ function patientFor(db, personal, patientId, handling, vardenhet) {
   return pr.tillaten ? { p, grund: pr.grund } : null;
 }
 
+// Säkerhetsgranskningen av rehabkoordinatorn: åtkomsten till patienten prövas först, och den som inte får se patienten
+// får samma svar som när sjukfallet inte finns, så att svaret aldrig röjer om patienten har ett sjukfall på vårdenheten.
+// Det nekade försöket loggas på patienten.
+export const SAKNAS = 'Patienten har inget sjukfall på din vårdenhet som du kan se.';
+const saknas = () => new Fel(404, SAKNAS, 'saknas');
+function kravPatient(db, personal, patientId, handling, vardenhet) {
+  const pt = patientFor(db, personal, patientId, handling, vardenhet);
+  if (pt) return pt;
+  if (typeof patientId === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(patientId)) {
+    loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: patientId, handling, resurs: 'reko:patient', grund: 'nekad', resultat: 'nekad' });
+  }
+  throw saknas();
+}
+
 function rad(db, p, s, vardenhet, dag) {
   const nuvarande = s.intyg.find(i => i.id === s.nuvarandeIntygId) ?? s.intyg.at(-1);
   return {
@@ -153,8 +167,7 @@ export function lista(db, personal, q = {}, dag = idag()) {
 export function forPatient(db, personal, patientId, dag = idag()) {
   if (!kanRoll(personal, 'reko_lasa')) throw new Fel(403, 'REKO-statusen är för rehabkoordinatorn.', 'nekad');
   const vardenhet = vardenhetFor(db, personal.enhet_id);
-  const pt = patientFor(db, personal, patientId, 'reko_lasa', vardenhet);
-  if (!pt) throw new Fel(404, 'Patienten har inget sjukfall på din vårdenhet som du kan se.', 'saknas');
+  const pt = kravPatient(db, personal, patientId, 'reko_lasa', vardenhet);
   const lista = sjukfallPaEnheten(db, patientId, vardenhet, dag, { alla: true });
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: patientId, handling: 'reko_lasa', resurs: 'reko:patient', grund: pt.grund, resultat: 'tillaten' });
   return {
@@ -169,12 +182,9 @@ export function satt(db, personal, patientId, body = {}, dag = idag()) {
   const kod = typeof body.status === 'string' ? body.status : '';
   if (!Object.hasOwn(STATUS, kod)) throw new Fel(400, 'Välj en REKO-status: Ingen, Kontaktad, Aktiv, Uppföljning, Avslutad eller Avböjt.', 'valideringsfel');
   const vardenhet = vardenhetFor(db, personal.enhet_id);
-  const saknas = () => new Fel(404, 'Sjukfallet finns inte på din vårdenhet, eller har tagit slut.', 'saknas');
-  if (typeof patientId !== 'string' || !db.query('SELECT 1 FROM patienter WHERE id = ? AND coalesce(skyddad, 0) = 0').get(patientId)) throw saknas();
+  const pt = kravPatient(db, personal, patientId, 'reko_satta', vardenhet);
   const s = sjukfallPaEnheten(db, patientId, vardenhet, dag, { alla: true }).find(x => x.start === body.start);
   if (!s) throw saknas();
-  const pt = patientFor(db, personal, patientId, 'reko_satta', vardenhet);
-  if (!pt) throw new Fel(403, 'Det finns ingen vårdrelation till patienten på din vårdenhet.', 'nekad');
   const nu = rekoFor(db, patientId, vardenhet, s.start, s.slut);
   let samtycke = 0;
   let samtyckeSatt = null;

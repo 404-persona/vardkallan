@@ -121,6 +121,28 @@ describe('Rehabkoordinatorn', () => {
     expect(fel(() => db.query('DELETE FROM reko_status').run())).toBeTruthy();
   });
 
+  test(`${T}utan åtkomst till patienten röjs inte om ett sjukfall finns: samma svar för ett verkligt och ett påhittat sjukfall, och försöket loggas som nekat`, () => {
+    const db = nyDb();
+    const utan = db.query('SELECT id FROM patienter WHERE coalesce(skyddad, 0) = 0').all().map(r => r.id)
+      .find(pid => !prova(db, { personal: rk(db), patient: pid, handling: 'reko_satta', resurs: { enhet_id: 'vc-tybble' } }).tillaten);
+    lagg(db, { pid: utan });
+    lagg(db, { pid: 'p03' });
+    for (const pid of [utan, 'p03']) {
+      const verkligt = fel(() => reko.satt(db, rk(db), pid, { start: '2026-10-20', status: 'kontaktad' }, DAG));
+      const pahittat = fel(() => reko.satt(db, rk(db), pid, { start: '2025-01-01', status: 'kontaktad' }, DAG));
+      expect(verkligt?.status).toBe(404);
+      expect([pahittat.status, pahittat.message, pahittat.kod]).toEqual([verkligt.status, verkligt.message, verkligt.kod]);
+      const lasning = fel(() => reko.forPatient(db, rk(db), pid, DAG));
+      expect([lasning.status, lasning.message]).toEqual([verkligt.status, verkligt.message]);
+    }
+    const nekade = db.query("SELECT * FROM atkomstlogg WHERE personal_id = 'rk-vc' AND resultat = 'nekad' ORDER BY id").all();
+    expect(nekade.filter(r => r.patient_id === utan && r.handling === 'reko_satta').length).toBe(2);
+    expect(nekade.filter(r => r.patient_id === utan && r.handling === 'reko_lasa').length).toBe(1);
+    expect(nekade.filter(r => r.patient_id === 'p03').length).toBe(3);
+    // Inget sparades.
+    expect(db.query('SELECT count(*) AS n FROM reko_status WHERE patient_id IN (?, ?)').get(utan, 'p03').n).toBe(0);
+  });
+
   test(`${T}filtret på REKO-status visar bara sjukfall med den statusen`, () => {
     const db = nyDb();
     lagg(db);
