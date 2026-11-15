@@ -11,6 +11,7 @@
 //
 // Filen beror inte på journalen eller simuleringen, så att båda kan använda den.
 import { el } from './rivta/xml.js';
+import { idag, addDagar } from './db.js';
 
 export const NS_TYPES = 'urn:riv:clinicalprocess:healthcond:certificate:types:3';
 export const KV_SYSSELSATTNING = 'KV_FKMU_0002';
@@ -37,16 +38,35 @@ export const SYSSELSATTNINGAR = {
 const SYSS_AV_KOD = new Map(Object.entries(SYSSELSATTNINGAR).map(([nyckel, s]) => [s.kod, nyckel]));
 
 const DATUM = /^\d{4}-\d\d-\d\d$/;
-const datum = (v) => (typeof v === 'string' && DATUM.test(v) && !Number.isNaN(Date.parse(v)) ? v : null);
+// Ett datum som finns i kalendern (2026-02-30 gör det inte).
+const datum = (v) => (typeof v === 'string' && DATUM.test(v) && !Number.isNaN(Date.parse(v)) && new Date(`${v}T12:00:00Z`).toISOString().slice(0, 10) === v ? v : null);
+
+// Perioden i ett sjukintyg (Vårdkällans demoregel): giltiga datum, start före slut, båda inom två år från i dag och
+// högst ett år per period. En längre sjukskrivning skrivs som flera intyg. Ger förklaringen på vanlig svenska, eller
+// null när perioden går. Regeln gäller både när perioden sparas och när den läses, så att ett orimligt intervall aldrig
+// når beräkningen av sjukfallet.
+export const PERIOD_FONSTER_DAGAR = 730;
+export const PERIOD_HOGST_DAGAR = 366;
+export function provaPeriod(fran, till, dag = idag()) {
+  const f = fran == null ? null : datum(fran);
+  const t = till == null ? null : datum(till);
+  if ((fran != null && !f) || (till != null && !t)) return 'Datum ska skrivas ÅÅÅÅ-MM-DD och finnas i kalendern.';
+  const forsta = addDagar(dag, -PERIOD_FONSTER_DAGAR);
+  const sista = addDagar(dag, PERIOD_FONSTER_DAGAR);
+  for (const d of [f, t]) if (d && (d < forsta || d > sista)) return `Perioden ska ligga inom två år från i dag, mellan ${forsta} och ${sista}.`;
+  if (f && t && t < f) return 'Slutdatumet kan inte vara före startdatumet.';
+  if (f && t && (Date.parse(t) - Date.parse(f)) / 86_400_000 + 1 > PERIOD_HOGST_DAGAR) return 'En period i sjukintyget kan vara högst ett år. Skriv ett nytt intyg när perioden går ut.';
+  return null;
+}
 
 // Perioderna i den simulerade intygsapplikationens svar. Den har i dag en period (fran, till och nedsattning). En lista
 // med perioder (perioder: [{ fran, till, nedsattning }]) läses på samma sätt, så att flera sjukskrivningsnivåer i samma
 // intyg, som FK 7804 tillåter, räknas rätt när intygsapplikationen får dem.
-export function perioderUrSimSvar(s = {}) {
+export function perioderUrSimSvar(s = {}, dag = idag()) {
   const lista = Array.isArray(s.perioder) ? s.perioder : [{ fran: s.fran, till: s.till, nedsattning: s.nedsattning }];
   return lista
     .map(p => ({ fran: datum(p?.fran), till: datum(p?.till), niva: Object.hasOwn(NIVAER, p?.nedsattning ?? '') ? p.nedsattning : null }))
-    .filter(p => p.fran && p.till && p.niva && p.till >= p.fran)
+    .filter(p => p.fran && p.till && p.niva && !provaPeriod(p.fran, p.till, dag))
     .map(p => ({ fran: p.fran, till: p.till, grad: NIVAER[p.niva].grad }))
     .sort((a, b) => (a.fran < b.fran ? -1 : a.fran > b.fran ? 1 : 0));
 }
@@ -76,7 +96,7 @@ export function rivSvar(s = {}) {
 // Läser svaren ur ett mottaget intyg. Det som inte går att läsa hoppas över, så att ett felaktigt svar aldrig ger en
 // period som inte finns.
 const barnText = (nod, namn) => (nod?.barn ?? []).find(b => b.lokal === namn)?.text?.trim() ?? null;
-export function lasSvar(svar = []) {
+export function lasSvar(svar = [], dag = idag()) {
   const ut = { diagnosKod: null, diagnosText: null, sysselsattning: null, perioder: [], motivering: null };
   for (const sv of Array.isArray(svar) ? svar : []) {
     if (!sv || typeof sv !== 'object') continue;
@@ -95,7 +115,7 @@ export function lasSvar(svar = []) {
       const niva = c && barnText(c, 'codeSystem') === KV_NIVA ? NIVA_AV_KOD.get(barnText(c, 'code')) : null;
       const fran = datum(barnText(p, 'start'));
       const till = datum(barnText(p, 'end'));
-      if (niva && fran && till && till >= fran) ut.perioder.push({ fran, till, grad: niva.grad });
+      if (niva && fran && till && !provaPeriod(fran, till, dag)) ut.perioder.push({ fran, till, grad: niva.grad });
     } else if (sv['@id'] === '37') {
       const t = typeof d('37.1')?.$ === 'string' ? d('37.1').$.trim() : '';
       if (t) ut.motivering = t.slice(0, 4000);

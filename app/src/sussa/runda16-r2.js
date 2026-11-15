@@ -24,6 +24,7 @@ export const T16R2 = {
   enhet: `${SJ}vårdenhetens översikt för verksamhetschefen visar antal utan patientuppgifter, och små antal som färre än 5`,
   demo: `${SJ}demon har sjukfall för läkaren på vårdcentralen: nära dag 90 och längre än rekommendationen, nära dag 180 och en skyddad patient`,
   svar: `${SJ}svaren om sjukskrivningen byggs och läses i kontraktets form, och ett felaktigt svar ger ingen period`,
+  period: `${SJ}en period med orimligt långt intervall avvisas med en förklaring, och ett stort intervall i databasen räknas snabbt`,
   api: `${API}API: läkaren signerar ett sjukintyg, ser sjukfallet och beslutsstödet, motiverar och förlänger med ett klick`,
   apiEnhet: `${API}API: verksamhetschefen ser vårdenhetens sjukfall som antal, och läkaren gör det inte`,
   fmbDiagnos: `${FMB}diagnosen ger diagnosrubriken, funktionsnedsättningar, aktivitetsbegränsningar och typfall ur Socialstyrelsens data`,
@@ -39,7 +40,7 @@ const FMB_ANM = ' FMB är ett utdrag ur Socialstyrelsens öppna API (villkor CC0
 
 const TILLAGG = {
   '3.2.1.1': {
-    tester: [T.fmbDiagnos, T.fmbTid, T.varning, T.motivering, T.sparr],
+    tester: [T.fmbDiagnos, T.fmbTid, T.varning, T.motivering, T.sparr, T.period],
     losning: FMB_LOSNING,
     anmarkning: `${FMB_ANM} Systemet hämtar rekommendationen för diagnosen själv, så läkaren behöver inte söka i beslutsstödet.`,
   },

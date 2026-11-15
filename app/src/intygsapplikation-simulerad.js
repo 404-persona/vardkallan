@@ -16,7 +16,7 @@ import { avlidenFor } from './avliden.js';
 import * as r3 from './rivta-r3.js';
 import { KV, INTYGSTYPER, LOGISK_ADRESS_INTYGSAPPLIKATION, DEF, personId, sattTransport } from './lakarintyg.js';
 // Runda 16, r2: svaren om sjukskrivningen (fråga 28, 32 och 37 i FK 7804) i förifyllnaden och statusuppdateringen.
-import { simSvarUrForifyllnad, sjukskrivningSvar } from './sjukfall-intygssvar.js';
+import { simSvarUrForifyllnad, sjukskrivningSvar, provaPeriod } from './sjukfall-intygssvar.js';
 
 export const NAMN = 'Intygsapplikation (simulerad, inte Webcert)';
 // Påhittade värden som kontraktet kräver men som demon inte har. Märkta som demo.
@@ -221,6 +221,10 @@ export async function spara(db, personal, intygsId, body = {}, val = {}) {
   const ny = { ...s, sysselsattning: val2(body.sysselsattning, SYSSELSATTNING) ?? s.sysselsattning ?? null, nedsattning: val2(body.nedsattning, NEDSATTNING) ?? s.nedsattning ?? null,
     fran: datum(body.fran) ?? s.fran ?? null, till: datum(body.till) ?? s.till ?? null, ovrigt: body.ovrigt !== undefined ? textv(body.ovrigt, 2000) : s.ovrigt ?? null };
   if (ny.fran && ny.till && ny.till < ny.fran) throw new Fel(400, 'Slutdatumet kan inte vara före startdatumet.', 'ogiltig');
+  // Runda 16, r2 (säkerhetsgranskningen): perioden ska vara rimlig, inom två år från i dag och högst ett år lång
+  // (provaPeriod i sjukfall-intygssvar.js), så att ett orimligt intervall aldrig sparas.
+  const periodFel = provaPeriod(ny.fran, ny.till);
+  if (periodFel) throw new Fel(400, periodFel, 'ogiltig', { falt: ['fran', 'till'] });
   db.query('UPDATE sim_intygsapplikation SET svar = ? WHERE intygs_id = ?').run(JSON.stringify(ny), r.intygs_id);
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling: 'skriv_intyg', resurs: `intygsapplikation:${r.intygs_id}`, grund, resultat: 'tillaten' });
   await handelse(db, r.intygs_id, 'ANDRAT');

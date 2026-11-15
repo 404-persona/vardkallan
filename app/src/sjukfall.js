@@ -80,8 +80,8 @@ export function efterStatus(db, rad, { kod, intyg }) {
 lakarintyg.EFTER_STATUS.push(efterStatus);
 
 // ---------------------------------------------------------------------------------------------------------------
-// Demons sjukskrivningar: intyg som läkaren på vårdcentralen har signerat före demons start, relativt till i dag, så att
-// översikten och fliken Sjukskrivning har något att visa. Påhittade och märkta som demodata. Läggs bara in i demons
+// Demons sjukskrivningar: intyg som läkaren på vårdcentralen och läkaren på kardiologen har signerat före demons start,
+// relativt till i dag, så att översikterna och fliken Sjukskrivning har något att visa. Påhittade och märkta som demodata. Läggs bara in i demons
 // mall (db.js mallen), en gång.
 // ---------------------------------------------------------------------------------------------------------------
 const DEMO = [
@@ -92,21 +92,25 @@ const DEMO = [
   { pid: 'p18', kod: 'F438', text: 'Utmattningssyndrom', intyg: [[-170, -111, 100], [-110, -51, 75], [-50, 10, 50]] },
   // En patient med skyddade personuppgifter.
   { pid: 'p03', kod: 'F432', text: 'Anpassningsstörning', intyg: [[-10, 11, 100]] },
+  // Kardiologen: efter hjärtinfarkt och vid kärlkramp, för vårdenhetens översikt.
+  { pid: 'p04', kod: 'I214', text: 'Akut subendokardiell hjärtinfarkt', enhet: 'uso-kard', pers: 'lak-kard', intyg: [[-20, 9, 100]] },
+  { pid: 'p05', kod: 'I209', text: 'Angina pectoris, ospecificerad', enhet: 'uso-kard', pers: 'lak-kard', intyg: [[-12, 2, 100], [3, 16, 50]] },
 ];
 // kalla anges bara av testerna, som lägger in samma sjukskrivningar vid en fast dag.
 export function seedaDemo(db, dag = idag(), { kalla = 'demo' } = {}) {
   sakra(db);
   if (db.query('SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = ?').get(kalla).n) return;
-  const lak = db.query("SELECT id, namn FROM personal WHERE id = 'lak-vc'").get();
-  const vc = db.query("SELECT id FROM enheter WHERE id = 'vc-tybble'").get();
-  if (!lak || !vc) return;
   const ins = db.query(`INSERT INTO sjukskrivningar (patient_id, enhet_id, intygs_id, typ, personal_id, personal_namn, signerad, status, diagnos_kod, diagnos_text,
-    sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, 'vc-tybble', ?, 'LISJP', ?, ?, ?, 'skickat', ?, ?, 'nuvarande_arbete', ?, ?, ?, ?)`);
+    sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, 'LISJP', ?, ?, ?, 'skickat', ?, ?, 'nuvarande_arbete', ?, ?, ?, ?)`);
   for (const d of DEMO) {
-    if (!db.query('SELECT 1 FROM patienter WHERE id = ?').get(d.pid)) continue;
+    const lak = db.query('SELECT id, namn FROM personal WHERE id = ?').get(d.pers ?? 'lak-vc');
+    const enhet = db.query('SELECT id FROM enheter WHERE id = ?').get(d.enhet ?? 'vc-tybble');
+    if (!lak || !enhet || !db.query('SELECT 1 FROM patienter WHERE id = ?').get(d.pid)) continue;
     d.intyg.forEach(([fran, till, grad, motivering], i) => {
+      // Ett intyg som börjar i framtiden har signerats i dag.
       const start = addDagar(dag, fran);
-      ins.run(d.pid, `${kalla}-${d.pid}-${d.kod}-${i + 1}`, lak.id, lak.namn, `${start}T09:00:00.000Z`, d.kod, d.text,
+      const signerad = fran > 0 ? dag : start;
+      ins.run(d.pid, enhet.id, `${kalla}-${d.pid}-${d.kod}-${i + 1}`, lak.id, lak.namn, `${signerad}T09:00:00.000Z`, d.kod, d.text,
         JSON.stringify([{ fran: start, till: addDagar(dag, till), grad }]), motivering ?? null, kalla, iso());
     });
   }
@@ -171,16 +175,20 @@ export function byggSjukfall(intyg, { dag = idag(), mellan = DAGAR_MELLAN } = {}
     if (g && dagarMellan(g.slut, i.start) - 1 <= mellan) { g.intyg.push(i); if (i.slut > g.slut) g.slut = i.slut; } else grupper.push({ start: i.start, slut: i.slut, intyg: [i] });
   }
   return grupper.map(g => {
-    // Graden över tiden, som sammanhängande avsnitt.
+    // Graden över tiden, som sammanhängande avsnitt. Säkerhetsgranskningen: räknas över intervallen mellan periodernas
+    // gränser, aldrig dag för dag, så att tiden beror på antalet perioder och inte på hur långa de är.
     const tidslinje = [];
     let dagar = 0;
-    for (let d = g.start; d <= g.slut; d = addDagar(d, 1)) {
-      const x = gradPa(g.intyg, d);
+    const granser = [...new Set(g.intyg.flatMap(i => i.perioder.flatMap(p => [p.fran, addDagar(p.till, 1)])))].sort();
+    for (let k = 0; k < granser.length - 1; k++) {
+      const fran = granser[k];
+      const till = addDagar(granser[k + 1], -1);
+      const x = gradPa(g.intyg, fran);
       if (!x) continue;
-      dagar++;
+      dagar += antalDagar(fran, till);
       const sista = tidslinje.at(-1);
-      if (sista && sista.grad === x.grad && sista.intygId === x.intyg.id && addDagar(sista.till, 1) === d) sista.till = d;
-      else tidslinje.push({ fran: d, till: d, grad: x.grad, intygId: x.intyg.id });
+      if (sista && sista.grad === x.grad && sista.intygId === x.intyg.id && addDagar(sista.till, 1) === fran) sista.till = till;
+      else tidslinje.push({ fran, till, grad: x.grad, intygId: x.intyg.id });
     }
     const idagX = dag >= g.start && dag <= g.slut ? gradPa(g.intyg, dag) : null;
     const senaste = [...g.intyg].sort((a, b) => (a.slut < b.slut ? 1 : a.slut > b.slut ? -1 : a.signerad < b.signerad ? 1 : -1))[0];

@@ -286,6 +286,34 @@ describe('Stödet vid sjukskrivning', () => {
     expect(db.query("SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = 'demotest'").get().n).toBe(n);
   });
 
+  test(`${T}en period med orimligt långt intervall avvisas med en förklaring, och ett stort intervall i databasen räknas snabbt`, async () => {
+    // Regeln: giltiga datum, start före slut, inom två år från i dag och högst ett år per period.
+    expect(svar.provaPeriod('2026-11-01', '2026-11-30', DAG)).toBeNull();
+    expect(svar.provaPeriod('1900-01-01', '9999-12-31', DAG)).toContain('två år');
+    expect(svar.provaPeriod('2026-11-01', '2028-01-01', DAG)).toContain('ett år');
+    expect(svar.provaPeriod('2026-11-30', '2026-11-01', DAG)).toContain('före');
+    expect(svar.provaPeriod('2026-02-30', '2026-03-01', DAG)).toContain('kalendern');
+    // Intygsapplikationen sparar inte en sådan period.
+    const db = nyDb();
+    const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
+    const f = await fel(() => app.spara(db, personal(db, 'lak-vc'), r.oppna.split('/').pop(), { fran: '1900-01-01', till: '9999-12-31' }));
+    expect(f.status).toBe(400);
+    expect(f.message).toContain('två år');
+    // Svaren ur ett meddelande och ur intygsapplikationen ger ingen sådan period.
+    expect(svar.perioderUrSimSvar({ fran: '1900-01-01', till: '9999-12-31', nedsattning: 'heltid' }, DAG)).toEqual([]);
+    const giltig = svar.rivSvar({ fran: '2026-11-01', till: '2026-11-30', nedsattning: 'heltid' });
+    expect(svar.lasSvar(giltig, DAG).perioder).toEqual([{ fran: '2026-11-01', till: '2026-11-30', grad: 100 }]);
+    const lang = JSON.parse(JSON.stringify(giltig).replace('2026-11-01', '1900-01-01').replace('2026-11-30', '9999-12-31'));
+    expect(svar.lasSvar(lang, DAG).perioder).toEqual([]);
+    // En rad som redan ligger i databasen med ett jättelikt intervall räknas utan att gå dag för dag.
+    const t0 = performance.now();
+    const s = sjukfall.byggSjukfall([intygRad(1, [{ fran: '1900-01-01', till: '9998-12-31', grad: 100 }]), intygRad(2, [{ fran: '2026-11-01', till: '2026-11-30', grad: 50 }])], { dag: DAG });
+    expect(performance.now() - t0).toBeLessThan(200);
+    expect(s[0].dagar).toBe(sjukfall.antalDagar('1900-01-01', '9998-12-31'));
+    expect(s[0].tidslinje.map(t => t.grad)).toEqual([100, 50, 100]);
+    expect(s[0].aktuellGrad).toBe(50);
+  });
+
   test(`${T}svaren om sjukskrivningen byggs och läses i kontraktets form, och ett felaktigt svar ger ingen period`, () => {
     const s = svar.rivSvar({ sysselsattning: 'studier', fran: '2026-11-01', till: '2026-11-14', nedsattning: 'en_fjardedel', motiveringFmb: ' Skäl ' });
     expect(s.map(x => x['@id'])).toEqual(['28', '32', '37']);
