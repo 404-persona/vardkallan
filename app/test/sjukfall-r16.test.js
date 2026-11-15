@@ -255,7 +255,7 @@ describe('Stödet vid sjukskrivning', () => {
     expect(() => sjukfall.minaSjukfall(db, personal(db, 'ssk-vc'), () => ({}), DAG)).toThrow();
   });
 
-  test(`${T}vårdenhetens översikt för verksamhetschefen visar antal utan patientuppgifter, och små antal som färre än 5`, () => {
+  test(`${T}vårdenhetens översikt för verksamhetschefen visar antal utan patientuppgifter, och små antal döljs`, () => {
     const db = nyDb();
     const pids = ['p11', 'p14', 'p18', 'p06', 'p01', 'p07', 'p09'];
     pids.forEach((pid, i) => lagg(db, { pid, perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: i < 5 ? 100 : i === 5 ? 50 : 25 }] }));
@@ -265,14 +265,15 @@ describe('Stödet vid sjukskrivning', () => {
     const e = sjukfall.enhetensSjukfall(db, chef, DAG);
     expect(e.totalt).toBe(7);
     const g = Object.fromEntries(e.grad.map(r => [r.namn, r.text]));
-    expect(g).toEqual({ '100 %': '5', '75 %': '0', '50 %': 'färre än 5', '25 %': 'färre än 5' });
+    // 50 % och 25 % är 1 var och skulle gå att räkna fram ur totalen, så också 100 % döljs.
+    expect(g).toEqual({ '100 %': 'dolt', '75 %': '0', '50 %': 'dolt', '25 %': 'dolt' });
     // När bara en ruta skulle döljas döljs också den näst minsta, så att den dolda inte kan räknas fram ur totalen.
     lagg(db, { pid: 'p10', perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: 50 }] });
     lagg(db, { pid: 'p12', perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: 50 }] });
     lagg(db, { pid: 'p13', perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: 50 }] });
     lagg(db, { pid: 'p15', perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: 50 }] });
     const g2 = Object.fromEntries(sjukfall.enhetensSjukfall(db, chef, DAG).grad.map(r => [r.namn, r.text]));
-    expect(g2).toEqual({ '100 %': 'dolt för att skydda små antal', '75 %': '0', '50 %': '5', '25 %': 'färre än 5' });
+    expect(g2).toEqual({ '100 %': 'dolt', '75 %': '0', '50 %': '5', '25 %': 'dolt' });
     // Inget i svaret pekar ut en patient.
     const allt = JSON.stringify(e);
     for (const pid of [...pids, 'p03']) {
@@ -357,5 +358,76 @@ describe('Stödet vid sjukskrivning', () => {
     expect(svar.perioderUrSimSvar(id, '2026-11-12')).toEqual([{ fran: '2026-11-01', till: '2026-11-14', grad: 50 }]);
     expect(svar.simSvar(id)).toMatchObject({ diagnosKod: 'M544', sysselsattning: 'studier', motiveringFmb: 'Skäl' });
     expect(svar.harFrageNycklar(id)).toBe(true);
+  });
+
+  test(`${T}beslutsstödet loggar läsningen av sjukintygen med den grund som användes, också ett aktivt val`, async () => {
+    const db = nyDb();
+    lagg(db, { enhet: 'uso-kard', pers: 'lak-kard', perioder: [{ fran: '2026-10-01', till: '2026-10-29', grad: 100 }] });
+    const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
+    const iid = r.oppna.split('/').pop();
+    const q = new URLSearchParams({ perioder: JSON.stringify([{ kod: 'HELT_NEDSATT', fran: '2026-11-01', till: '2026-11-14' }]) });
+    const b = sjukfall.beslutsstodForUtkast(db, personal(db, 'lak-vc'), iid, { andra_enheter: true }, q, DAG);
+    expect(b.total).toBe(29 + 14);
+    const rad = db.query('SELECT * FROM atkomstlogg WHERE resurs = ? ORDER BY id DESC').get(`sjukfall:beslutsstod:${iid}`);
+    expect(rad).toMatchObject({ patient_id: 'p11', handling: 'las_intyg', grund: 'aktivt_val', resultat: 'tillaten' });
+    // Utan aktivt val räknas intyget inte, och grunden är den egna vårdenheten.
+    sjukfall.beslutsstodForUtkast(db, personal(db, 'lak-vc'), iid, {}, q, DAG);
+    expect(db.query('SELECT grund FROM atkomstlogg WHERE resurs = ? ORDER BY id DESC').get(`sjukfall:beslutsstod:${iid}`).grund).not.toBe('aktivt_val');
+  });
+
+  test(`${T}vårdenhetens översikt röjer inga små antal genom skillnaden mot totalen, och alla diagnoskapitel visas`, () => {
+    // Exemplet från säkerhetsgranskningen: totalt 7, M 5, F 1 och O 1. Med M synlig skulle F och O kunna räknas fram.
+    const sjukfallen = [...Array(5).fill('M544'), 'F432', 'O210'];
+    const db = nyDb();
+    const pids = ['p11', 'p14', 'p18', 'p06', 'p01', 'p07', 'p09'];
+    pids.forEach((pid, i) => lagg(db, { pid, diagnos: sjukfallen[i], perioder: [{ fran: '2026-11-01', till: '2026-11-30', grad: 100 }] }));
+    const e = sjukfall.enhetensSjukfall(db, personal(db, 'chef-vc-tybble'), DAG);
+    expect(e.totalt).toBe(7);
+    const k = Object.fromEntries(e.diagnoskapitel.map(r => [r.namn, r]));
+    // Alla kapitel visas, också de utan sjukfall, så att listan inte röjer vilka kapitel som förekommer.
+    expect(e.diagnoskapitel.length).toBeGreaterThan(10);
+    expect(k['Infektionssjukdomar'].text).toBe('0');
+    // De dolda rutornas summa (totalen minus de synliga) går inte att fördela entydigt.
+    for (const f of [e.grad, e.langd, e.diagnoskapitel, e.rehabkedjan, e.overFmb]) {
+      const dolda = f.filter(r => r.antal == null);
+      const summa = e.totalt - f.filter(r => r.antal != null).reduce((n, r) => n + r.antal, 0);
+      if (dolda.length) expect(summa === dolda.length, JSON.stringify(f)).toBe(false);
+      expect(dolda.length === 1).toBe(false);
+    }
+    expect(k['Sjukdomar i muskler, skelett och bindväv'].antal).toBeNull();
+    expect(k['Psykiska sjukdomar och syndrom'].antal).toBeNull();
+    expect(k['Graviditet och förlossning'].antal).toBeNull();
+    // Hela svaret har inga patientuppgifter.
+    expect(JSON.stringify(e)).not.toContain('p11');
+  });
+
+  test(`${T}sjukskrivningen hör till läkaren som signerade intyget, också när vårdadministratören skapade utkastet`, async () => {
+    const db = nyDb();
+    db.query("INSERT INTO diagnoser (patient_id, enhet_id, kod, text, typ, datum) VALUES ('p04', 'uso-kard', 'I21.4', 'Akut subendokardiell hjärtinfarkt', 'huvud', ?)").run(DAG);
+    const adm = personal(db, 'adm-kard');
+    const r = await intyg.skapa(atk(db, 'adm-kard', 'p04', {}, 'utkast_intyg'), patient(db, 'p04'), { typ: 'LISJP' }, DAG);
+    const id = r.oppna.split('/').pop();
+    await app.spara(db, adm, id, { svar: { ...svarFor({ fran: '2026-11-02', till: '2026-11-20' }), '6': [{ kod: 'I214', text: 'Akut subendokardiell hjärtinfarkt' }] } });
+    await app.atgard(db, adm, id, 'klar');
+    await app.atgard(db, personal(db, 'lak-kard'), id, 'signera');
+    const rad = db.query('SELECT personal_id, personal_namn FROM sjukskrivningar WHERE intygs_id = ?').get(id);
+    expect(rad.personal_id).toBe('lak-kard');
+    expect(rad.personal_namn).toBe(personal(db, 'lak-kard').namn);
+    expect(sjukfall.minaSjukfall(db, personal(db, 'lak-kard'), () => ({}), DAG).sjukfall.map(s => s.patientId)).toContain('p04');
+  });
+
+  test(`${T}fråga 32 har en period per sjukskrivningsnivå, högst fyra, som i FK 7804`, async () => {
+    const db = nyDb();
+    const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
+    const id = r.oppna.split('/').pop();
+    const lak = personal(db, 'lak-vc');
+    const dubbel = await fel(() => app.spara(db, lak, id, { svar: { '32': [{ kod: 'HELT_NEDSATT', fran: '2026-11-01', till: '2026-11-07' }, { kod: 'HELT_NEDSATT', fran: '2026-11-08', till: '2026-11-14' }] } }));
+    expect(dubbel.status).toBe(400);
+    expect(dubbel.message).toContain('en period per nivå');
+    // Fyra nivåer går, och alla räknas.
+    const fyra = [['HELT_NEDSATT', '2026-11-01', '2026-11-07'], ['TRE_FJARDEDEL', '2026-11-08', '2026-11-14'], ['HALFTEN', '2026-11-15', '2026-11-21'], ['EN_FJARDEDEL', '2026-11-22', '2026-11-28']]
+      .map(([kod, fran, till]) => ({ kod, fran, till }));
+    await app.spara(db, lak, id, { svar: { '32': fyra } });
+    expect(svar.perioderUrSimSvar(app.lasSvar(db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(id)), DAG).map(p => p.grad)).toEqual([100, 75, 50, 25]);
   });
 });

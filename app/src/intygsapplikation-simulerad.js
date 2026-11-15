@@ -187,7 +187,10 @@ function intygObjekt(db, r, { med } = {}) {
     signeringstidpunkt: sek(r.signerad), skickatTidpunkt: sek(r.skickad),
     patient: { 'person-id': personId(p), fornamn: p.fornamn, efternamn: p.efternamn, postadress: p.skyddad ? '' : (p.adress ?? ''), postnummer: p.skyddad ? '' : (p.postnr ?? ''), postort: p.skyddad ? '' : (p.ort ?? '') },
     skapadAv: {
-      'personal-id': hsa(r.personal_hsa), fullstandigtNamn: r.personal_namn,
+      // Runda 16, r2 (säkerhetsgranskningen): ett signerat intyg är utfärdat av den som signerade det, som i Intygstjänsten,
+      // också när en vårdadministratör skapade utkastet. Journalens sjukskrivning hör då till rätt läkare.
+      'personal-id': hsa(r.signerad_av ?? r.personal_hsa),
+      fullstandigtNamn: r.signerad_av ? (db.query('SELECT namn FROM personal WHERE hsa_id = ?').get(r.signerad_av)?.namn ?? r.personal_namn) : r.personal_namn,
       enhet: {
         'enhets-id': hsa(enhet.hsa_id), arbetsplatskod: { root: '1.2.752.29.4.71', extension: ARBETSPLATSKOD }, enhetsnamn: enhet.namn,
         postadress: '', postnummer: '', postort: '', telefonnummer: TELEFON,
@@ -410,7 +413,10 @@ export async function spara(db, personal, intygsId, body = {}, val = {}) {
   const ny0 = nyaSvar(t, gamla, body);
   // Runda 16, r2 (säkerhetsgranskningen): sjukskrivningens perioder ska vara rimliga, inom två år från i dag och högst ett
   // år långa (provaPeriod i sjukfall-intygssvar.js), så att ett orimligt intervall aldrig sparas.
-  for (const per of IT.fragorFor(t).some(q => q.id === '32' && q.typ === 'perioder') && Array.isArray(ny0['32']) ? ny0['32'] : []) {
+  // FK 7804 har en period per sjukskrivningsnivå (25, 50, 75 och 100 procent), alltså högst fyra.
+  const per32 = IT.fragorFor(t).some(q => q.id === '32' && q.typ === 'perioder') && Array.isArray(ny0['32']) ? ny0['32'] : [];
+  if (per32.length > 4 || new Set(per32.map(x => x.kod)).size !== per32.length) throw new Fel(400, 'Fråga 32 har en period per nivå, högst fyra. Ange varje nivå en gång.', 'ogiltig', { falt: ['q-32'] });
+  for (const per of per32) {
     const periodFel = provaPeriod(per.fran, per.till);
     if (periodFel) throw new Fel(400, periodFel, 'ogiltig', { falt: ['q-32'] });
   }

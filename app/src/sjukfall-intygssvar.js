@@ -139,6 +139,7 @@ export function lasSvar(svar = [], dag = idag()) {
       if (t) ut.motivering = t.slice(0, 4000);
     }
   }
+  // FK 7804 har en period per sjukskrivningsnivå, högst fyra, och intygsapplikationen sparar inte fler.
   ut.perioder.sort((a, b) => (a.fran < b.fran ? -1 : a.fran > b.fran ? 1 : 0)).splice(4);
   return ut;
 }

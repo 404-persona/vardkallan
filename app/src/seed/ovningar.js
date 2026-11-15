@@ -185,11 +185,11 @@ OVNINGAR_V1.push(
     ['b', 'Ja. Intyg med högst 5 dagars uppehåll hör till samma sjukfall, men dagarna mellan intygen räknas inte i sjukskrivningens längd.'],
     ['c', 'Ja, och dagarna mellan intygen räknas med i längden.'],
   ], 'b', 'Regeln är densamma som i Rehabstöd och Webcert. Systemet räknar sjukfallet själv och visar var patienten är i rehabiliteringskedjan.', '#/sjukskrivningar'),
-  o('sjukfall-enhet', ['verksamhetschef'], 'Varför står det färre än 5 på flera rader i Sjukskrivningar på vårdenheten?', [
+  o('sjukfall-enhet', ['verksamhetschef'], 'Varför står det dolt på flera rader i Sjukskrivningar på vårdenheten?', [
     ['a', 'Uppgifterna har inte hunnit räknas.'],
     ['b', 'Små antal visas inte, så att översikten inte pekar ut enskilda patienter. Patienter med skyddade personuppgifter räknas inte alls.'],
     ['c', 'Det är ett fel som ska anmälas.'],
-  ], 'b', 'Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 visas som färre än 5, och ibland döljs också en till ruta så att det dolda inte kan räknas fram ur totalen.', '#/sjukskrivningar/enhet'),
+  ], 'b', 'Översikten visar bara antal, utan patientuppgifter. Antal mellan 1 och 4 döljs, och fler rutor döljs när de dolda antalen annars skulle gå att räkna fram ur totalen.', '#/sjukskrivningar/enhet'),
 );
 
 // Runda 16, r1: intygen i intygsapplikationen, för läkaren och vårdadministratören.

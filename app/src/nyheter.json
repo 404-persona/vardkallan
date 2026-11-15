@@ -132,7 +132,7 @@
           "omfattning": "liten",
           "var": "#/sjukskrivningar/enhet",
           "rubrik": "Sjukskrivningar på vårdenheten",
-          "text": "Du ser vårdenhetens pågående sjukfall som antal per grad, längd, diagnoskapitel och gräns i rehabiliteringskedjan, utan patientuppgifter. Små antal visas som färre än 5."
+          "text": "Du ser vårdenhetens pågående sjukfall som antal per grad, längd, diagnoskapitel och gräns i rehabiliteringskedjan, utan patientuppgifter. Små antal döljs, så att ingen patient pekas ut."
         }
       ]
     },

@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-15T08:42:49.187Z",
-  "bas": "http://127.0.0.1:18161",
+  "tid": "2026-11-15T09:48:22.880Z",
+  "bas": "http://127.0.0.1:18162",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "c85a09334065d704edd055a700275ed0a7ccc66d0e9d038eec20df12b1750426",
+  "gransnittHash": "bf66f3f5180a8ca574ac4a378faae19f454c70d7e61eb2124f3dced351f6f09a",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2744,6 +2744,20 @@
       "teckenKundeSystemet": 0
     },
     {
+      "id": "forlang-sjukskrivning",
+      "namn": "Förlänga en sjukskrivning",
+      "roll": "lak-vc",
+      "start": "Journalen för en sjukskriven patient på vårdcentralen",
+      "budget": 7,
+      "motivering": "Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Fyll i förslaget, där systemet har räknat sjukfallet och föreslår perioden från dagen efter förra intyget med samma längd och nivå. Förnyelsen har tagit med svaren som inte har ändrats, också motiveringen till beslutsstödet. Läkaren tar ställning på nytt till underlaget, arbetstidens förläggning och prognosen (högst tre klick, underlaget är ofta föreslaget ur vårdkontakten) och signerar.",
+      "klick": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 0,
+      "inomBudget": false,
+      "steg": []
+    },
+    {
       "id": "skriv-sjukintyg",
       "namn": "Skriva och signera ett läkarintyg för sjukpenning",
       "roll": "lak-vc",
@@ -2784,6 +2798,216 @@
       "steg": [
         "klick: Intyg",
         "klick: Skriv TS 8071 i stället"
+      ],
+      "teckenSkrivna": 0,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "arbetsterapianteckning",
+      "namn": "Skriva och signera en arbetsterapianteckning",
+      "roll": "at-kkoga",
+      "start": "Översikten för en patient på ortopeden i Karlskoga",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Arbetsterapianteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Arbetsterapeuten ser bara sitt yrkes mallar och behöver inte välja.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 56,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "dietistanteckning",
+      "namn": "Skriva och signera en dietistanteckning",
+      "roll": "diet-lind",
+      "start": "Översikten för en patient på medicinkliniken i Lindesberg",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Dietistanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Dietisten ser bara sitt yrkes mallar och behöver inte välja.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 70,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "logopedanteckning",
+      "namn": "Skriva och signera en logopedanteckning",
+      "roll": "log-lind",
+      "start": "Översikten för en patient på medicinkliniken i Lindesberg",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Logopedanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Logopeden ser bara sitt yrkes mallar och behöver inte välja.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 49,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "kuratorsanteckning",
+      "namn": "Skriva och signera en kuratorsanteckning",
+      "roll": "kur-vc",
+      "start": "Översikten för en patient på mottagningen",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Kuratorsanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Kuratorn ser bara sitt yrkes mallar och behöver inte välja.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 67,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "psykologanteckning",
+      "namn": "Skriva och signera en psykologanteckning",
+      "roll": "psy-psyk",
+      "start": "Översikten för en patient på psykiatrin",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Psykologanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Psykologen ser bara sitt yrkes mallar och behöver inte välja.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 41,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "barnmorskeanteckning",
+      "namn": "Skriva och signera en barnmorskeanteckning",
+      "roll": "bm-vc",
+      "start": "Översikten för en patient på mottagningen",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Barnmorskeanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Barnmorskeanteckningen står först bland barnmorskans mallar.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 33,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "student-anteckning",
+      "namn": "Skriva och signera en anteckning som sjuksköterskestudent",
+      "roll": "stud-ssk",
+      "start": "Patientens översikt",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 33,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "lakarstudent-anteckning",
+      "namn": "Skriva och signera en anteckning som läkarstudent",
+      "roll": "stud-lak",
+      "start": "Patientens översikt",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Mottagningsanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 42,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "barnmorskestudent-anteckning",
+      "namn": "Skriva och signera en anteckning som barnmorskestudent",
+      "roll": "stud-bm",
+      "start": "Översikten för en patient på förlossningen",
+      "budget": 2,
+      "motivering": "Ett klick för att öppna en ny anteckning, där Barnmorskeanteckning är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Ny anteckning",
+        "har redan fokus: första sökordet",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 33,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "forskriv-preventivmedel",
+      "namn": "Förskriva preventivmedel som barnmorska",
+      "roll": "bm-vc",
+      "start": "Översikten för en patient på mottagningen",
+      "budget": 3,
+      "motivering": "Ett klick på fliken Läkemedel, ett på Förskriv preventivmedel och ett på Förskriv. Systemet visar bara de preventivmedel som förskrivningsrätten omfattar, med det första förvalt och doseringen för produkten, och fyller i orsak och uppföljning om ett år.",
+      "klick": 3,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "steg": [
+        "klick: fliken Läkemedel",
+        "klick: Förskriv preventivmedel",
+        "klick: Förskriv"
       ],
       "teckenSkrivna": 0,
       "teckenSystemet": 0,
@@ -3308,11 +3532,55 @@
       "status": "grön"
     },
     {
+      "namn": "Gränssnitt > Klickbudget > Förlänga en sjukskrivning inom budget",
+      "status": "röd"
+    },
+    {
       "namn": "Gränssnitt > Klickbudget > Skriva och signera ett läkarintyg för sjukpenning inom budget",
       "status": "grön"
     },
     {
       "namn": "Gränssnitt > Klickbudget > Byta ett ersatt intyg mot det som gäller nu inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en arbetsterapianteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en dietistanteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en logopedanteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en kuratorsanteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en psykologanteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en barnmorskeanteckning inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en anteckning som sjuksköterskestudent inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en anteckning som läkarstudent inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Skriva och signera en anteckning som barnmorskestudent inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Förskriva preventivmedel som barnmorska inom budget",
       "status": "grön"
     }
   ]

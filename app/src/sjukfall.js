@@ -22,11 +22,11 @@
 import { randomUUID } from 'node:crypto';
 import { Fel, iso, idag, addDagar } from './db.js';
 import * as IT from './intygstyper.js';
-import { kanRoll, vardenhetFor, prova, visningsnamn, visningsPnr, alder } from './atkomst.js';
+import { kanRoll, vardenhetFor, prova, visningsnamn, visningsPnr, alder, Atkomst } from './atkomst.js';
+import * as beslutsstodUtkast from './intygsapplikation-beslutsstod-simulerad.js';
 import { loggaRad } from './logg.js';
 import * as lakarintyg from './lakarintyg.js';
 import * as fmb from './fmb.js';
-import { skydda } from './analys.js';
 import { lasSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar, simSvar } from './sjukfall-intygssvar.js';
 
 // Intygen som räknas till sjukfallet. Intyg till arbetsgivaren räknas inte, som i Rehabstöd.
@@ -437,6 +437,30 @@ export function forUtkast(atk, utkast, dag = idag()) {
   };
 }
 
+// Beslutsstödet för ett utkast genom API:t. Det som står i formuläret men inte är sparat räknas med, bara för bedömningen
+// och bara i ett utkast: perioderna i fråga 32 (som JSON, högst fyra), diagnoskoden och om fråga 37 har en motivering.
+// Datum och nivå prövas som de sparade svaren, och inget sparas. Läsningen av patientens sjukintyg loggas med den
+// starkaste grund som användes, till exempel ett aktivt val för intyg från en annan vårdenhet. Motiveringarnas text
+// skickas inte tillbaka, bara att de finns: den står i intyget och i fliken Sjukskrivning.
+export function beslutsstodForUtkast(db, personal, intygsId, val = {}, q = new URLSearchParams(), dag = idag()) {
+  const u = beslutsstodUtkast.utkastFor(db, personal, intygsId, val);
+  if (u.status === 'utkast' || u.status === 'klart_for_signering') {
+    const per = q.get('perioder');
+    if (typeof per === 'string' && per.length <= 600) {
+      try { const l = JSON.parse(per); if (Array.isArray(l)) u.svar['32'] = l.slice(0, 4).filter(x => x && typeof x === 'object').map(x => ({ kod: String(x.kod ?? ''), fran: String(x.fran ?? ''), till: String(x.till ?? '') })); } catch { /* ogiltigt räknas inte */ }
+    }
+    const d = q.get('diagnos');
+    if (typeof d === 'string' && /^[A-Za-z]\d{2}(\.?\w{0,4})$/.test(d)) u.svar['6'] = [{ kod: d.replace('.', '').toUpperCase(), text: null }];
+    const m = q.get('motivering');
+    if (m === '1' && !simSvar(u.svar).motiveringFmb) u.svar['37'] = 'ifylld';
+    if (m === '0') delete u.svar['37'];
+  }
+  const atk = new Atkomst(db, personal, u.patientId, val, 'las_intyg');
+  const svar = forUtkast(atk, u, dag);
+  if (!svar.begransad) atk.logga('las_intyg', atk.grund(), `sjukfall:beslutsstod:${u.intygsId}`);
+  return { ...svar, motivering: svar.motivering ? true : null, motiveringIIntyget: svar.motiveringIIntyget ? true : null };
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Läkarens översikt: mina pågående sjukfall, där jag har signerat det nuvarande intyget, på min vårdenhet (som i
 // Rehabstöd). Varje patient prövas för sig med behörighetsmotorn, och den som inte får ses tas inte med. Varje patient
@@ -498,6 +522,28 @@ export const kapitelFor = (kod) => {
 };
 const LANGDER = [['Högst 14 dagar', 0, 14], ['15 till 90 dagar', 15, 90], ['91 till 180 dagar', 91, 180], ['181 till 365 dagar', 181, 365], ['Mer än 365 dagar', 366, Infinity]];
 
+// Döljer små antal i en fördelning så att de inte går att räkna fram (säkerhetsgranskningen av runda 16). Antal mellan 1
+// och 4 döljs, och sedan döljs fler rutor, minsta först, så länge de dolda rutornas summa (totalen minus de synliga)
+// skulle avslöja deras värden: när bara en ruta är dold, eller när summan är lika med antalet dolda rutor (alla är 1).
+// Nollor visas, och alla dolda rutor har samma text, så att det inte syns vilka som döljs för att skydda andra.
+export function skyddaFordelning(rader, totalt) {
+  const ut = rader.map(r => ({ namn: r.namn, varde: r.varde, dolt: r.varde > 0 && r.varde < MINSTA }));
+  const avslojar = () => {
+    const dolda = ut.filter(r => r.dolt);
+    if (!dolda.length) return false;
+    const summa = totalt - ut.filter(r => !r.dolt).reduce((n, r) => n + r.varde, 0);
+    return dolda.length === 1 || summa === dolda.length;
+  };
+  while (avslojar()) {
+    const nasta = ut.filter(r => !r.dolt && r.varde > 0).sort((a, b) => a.varde - b.varde)[0];
+    if (!nasta) break;
+    nasta.dolt = true;
+  }
+  // Går det inte att skydda genom fler dolda rutor döljs hela fördelningen.
+  const allt = avslojar();
+  return ut.map(r => (r.dolt || (allt && r.varde > 0) ? { namn: r.namn, antal: null, text: 'dolt' } : { namn: r.namn, antal: r.varde, text: String(r.varde) }));
+}
+
 export function enhetensSjukfall(db, personal, dag = idag()) {
   if (!kanRoll(personal, 'sjukfall_enhet')) throw new Fel(403, 'Vårdenhetens översikt över sjukskrivningar är för verksamhetschefen.', 'nekad');
   sakra(db);
@@ -509,7 +555,7 @@ export function enhetensSjukfall(db, personal, dag = idag()) {
   const pagaende = [];
   for (const intyg of perPatient.values()) { const s = byggSjukfall(intyg, { dag }).find(x => x.pagaende); if (s) pagaende.push(s); }
   const rakna = (namn, villkor) => ({ namn, varde: pagaende.filter(villkor).length });
-  const fordelning = (lista) => skydda(lista).map(r => ({ namn: r.namn, antal: r.varde, text: r.doltForAttSkydda ? 'dolt för att skydda små antal' : r.dolt ? 'färre än 5' : String(r.varde) }));
+  const fordelning = (lista) => skyddaFordelning(lista, totalt);
   const totalt = pagaende.length;
   const ut = {
     vardenhet: enhetsnamn(db, enhet),
@@ -517,10 +563,11 @@ export function enhetensSjukfall(db, personal, dag = idag()) {
     totaltText: totalt > 0 && totalt < MINSTA ? 'färre än 5' : String(totalt),
     grad: fordelning([100, 75, 50, 25].map(g => rakna(`${g} %`, s => s.aktuellGrad === g))),
     langd: fordelning(LANGDER.map(([n, a, b]) => rakna(n, s => s.dagar >= a && s.dagar <= b))),
-    diagnoskapitel: fordelning([...new Set(KAPITEL.map(k => k[2]).concat('Övriga'))].map(k => rakna(k, s => kapitelFor(s.diagnos?.kod) === k)).filter(r => r.varde > 0)),
+    // Alla kapitel visas, också de utan sjukfall, så att listan inte röjer vilka kapitel som förekommer.
+    diagnoskapitel: fordelning([...new Set(KAPITEL.map(k => k[2]).concat('Övriga'))].map(k => rakna(k, s => kapitelFor(s.diagnos?.kod) === k))),
     rehabkedjan: fordelning(GRANSER.map(g => rakna(`Närmar sig dag ${g.dag}`, s => s.rehabkedjan?.nara && s.rehabkedjan.nastaGrans === g.dag))),
     overFmb: fordelning([rakna('Längre än beslutsstödets rekommendation', s => s.fmb?.over), rakna('Inom rekommendationen eller utan rekommendation', s => !s.fmb?.over)]),
-    regel: 'Pågående sjukfall på vårdenheten i dag. Patienter med skyddade personuppgifter räknas inte. Antal mellan 1 och 4 visas som färre än 5.',
+    regel: 'Pågående sjukfall på vårdenheten i dag. Patienter med skyddade personuppgifter räknas inte. Antal mellan 1 och 4 visas inte, och när de dolda antalen skulle gå att räkna fram ur totalen döljs fler.',
   };
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: null, handling: 'sjukfall_enhet', resurs: 'sjukfall:enhet', grund: 'administrativ', resultat: 'tillaten' });
   return ut;

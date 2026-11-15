@@ -2053,10 +2053,10 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.waitForLoadState('networkidle');
     });
     // Runda 16, r2: vårdenhetens sjukskrivningar som antal, utan patientuppgifter.
-    await s('Ulrika Sandell ser vårdenhetens sjukskrivningar som antal, och små antal som färre än 5', async () => {
+    await s('Ulrika Sandell ser vårdenhetens sjukskrivningar som antal, och små antal döljs', async () => {
       await gaTill(page, '#/sjukskrivningar/enhet');
       await forvanta(page, 'main h1', 'Sjukskrivningar på vårdenheten');
-      await forvanta(page, '.sjk-fordelningar', 'färre än 5');
+      await forvanta(page, '.sjk-fordelningar', 'dolt');
       await saknas(page, 'Elin Sandberg');
       await bild(page, '99-sjukskrivningar-enhet');
     });
