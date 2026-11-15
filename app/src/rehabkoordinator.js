@@ -53,11 +53,30 @@ CREATE TRIGGER IF NOT EXISTS reko_status_raderas_ej BEFORE DELETE ON reko_status
 `;
 export const sakra = (db) => db.exec(SCHEMA);
 
+// Vilka statusrader som hör till sjukfallet (säkerhetsgranskningen av rehabkoordinatorn). En rad sparar sjukfallets start
+// när den sattes, men starten kan flytta sig framåt om sjukfallets första intyg makuleras. Därför räknas sjukfallets
+// gränser också med de makulerade intygen: en rad hör till sjukfallet när den sattes inom samma sammanhängande följd av
+// intyg på vårdenheten, makulerade eller inte, som det pågående sjukfallet. Raderna följer så med sjukfallet, och
+// patientens Avböjt försvinner inte. Ett senare sjukfall efter ett längre uppehåll börjar om, och ett sjukfall vars alla
+// intyg har makulerats tar inte med sig sin status till nästa. Sjukfallen räknas bara ur intygen på vårdenheten, också när
+// läkaren ser ett sjukfall med intyg från andra vårdenheter.
+function granser(db, patientId, vardenhet, start, slut) {
+  sjukfall.sakra(db);
+  const rader = db.query('SELECT * FROM sjukskrivningar WHERE patient_id = ?').all(patientId).filter(r => vardenhetFor(db, r.enhet_id) === vardenhet);
+  const bygg = (rr) => (rr.length ? sjukfall.byggSjukfall(rr.map(r => ({ ...sjukfall.somIntyg(r), status: 'signerat' })), { dag: idag() }) : []);
+  const levande = bygg(rader.filter(r => r.status !== 'makulerat')).filter(s => s.start <= slut && s.slut >= start)
+    .sort((a, b) => (a.start < b.start ? 1 : -1))[0];
+  if (!levande) return { fran: start, till: slut };
+  const alla = bygg(rader).find(s => s.start <= levande.start && s.slut >= levande.start);
+  return alla ? { fran: alla.start, till: alla.slut } : { fran: levande.start, till: levande.slut };
+}
+
 // Historiken för ett sjukfall på en vårdenhet, äldst först, med samtycket som det gällde efter varje ändring.
 function historikFor(db, patientId, vardenhet, start, slut) {
   sakra(db);
+  const g = granser(db, patientId, vardenhet, start, slut);
   const rader = db.query('SELECT * FROM reko_status WHERE patient_id = ? AND vardenhet_id = ? AND sjukfall_start >= ? AND sjukfall_start <= ? ORDER BY tid, id')
-    .all(patientId, vardenhet, start, slut);
+    .all(patientId, vardenhet, g.fran, g.till);
   let galler = false;
   let satt = null;
   return rader.map(r => {
@@ -169,6 +188,9 @@ export function forPatient(db, personal, patientId, dag = idag()) {
   const vardenhet = vardenhetFor(db, personal.enhet_id);
   const pt = kravPatient(db, personal, patientId, 'reko_lasa', vardenhet);
   const lista = sjukfallPaEnheten(db, patientId, vardenhet, dag, { alla: true });
+  // Säkerhetsgranskningen: utan sjukfall att visa blir svaret detsamma som utan åtkomst, och inget loggas för ett sjukfall
+  // som inte finns.
+  if (!lista.length) throw saknas();
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: patientId, handling: 'reko_lasa', resurs: 'reko:patient', grund: pt.grund, resultat: 'tillaten' });
   return {
     statusar: STATUSAR, samtycke: LAG,

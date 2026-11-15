@@ -40,6 +40,9 @@ export const T16R2 = {
   rkSok: `${RK}tabellen är tom tills koordinatorn söker, och sökningen visar och loggar bara det Rehabstöd visar för rollen`,
   rkSamtycke: `${RK}koordineringsinsatser ges bara med patientens samtycke (lagen (2019:1297) 3 §): Aktiv och Uppföljning kräver ett bekräftat samtycke`,
   rkRojs: `${RK}utan åtkomst till patienten röjs inte om ett sjukfall finns: samma svar för ett verkligt och ett påhittat sjukfall, och försöket loggas som nekat`,
+  rkSaknas: `${RK}en patient utan sjukfall på vårdenheten ger samma 404 som utan åtkomst, och ingen loggrad för ett sjukfall som inte finns`,
+  rkAvbojt: `${RK}patientens Avböjt följer med sjukfallet när starten flyttas, för koordinatorn och för läkaren`,
+  rkTabell: `${RK}handlingen för tabellen ger ingen åtkomst till en enskild patient`,
   rkLakare: `${RK}läkaren ser REKO-statusen i sin översikt och på fliken Sjukskrivning men kan inte sätta den, och andra roller når inte listan`,
   rkApi: 'Stödet vid sjukskrivning i API:t > Rehabkoordinatorn > API: koordinatorn söker fram sjukfallen, sätter REKO-status med samtycke, och läkaren ser statusen',
 };
@@ -67,7 +70,7 @@ const TILLAGG = {
     anmarkning: `${FMB_ANM} Bedömningen enligt MDR finns i docs/mdr-bedomning.md.`,
   },
   '3.4.1.3': {
-    tester: [T.mina, T.enhet, T.kedjan, T.demo, T.apiEnhet, T.smaAntal, T.signerare, T.rkRoll, T.rkSok, T.rkSamtycke, T.rkRojs, T.rkLakare, T.rkApi],
+    tester: [T.mina, T.enhet, T.kedjan, T.demo, T.apiEnhet, T.smaAntal, T.signerare, T.rkRoll, T.rkSok, T.rkSamtycke, T.rkRojs, T.rkSaknas, T.rkAvbojt, T.rkTabell, T.rkLakare, T.rkApi],
     losning: ' Runda 16: sjukskrivningarna bevakas på individnivå (läkarens pågående sjukfall med intyg som snart går ut, gränser i rehabiliteringskedjan och sjukfall som är längre än rekommendationen) och på enhetsnivå (vårdenhetens sjukfall som antal för verksamhetschefen).',
     anmarkning: ' Systemet räknar bevakningarna ur intygen själv, och ingen behöver lägga upp en påminnelse om dag 90, 180 eller 365. Rehabkoordinatorn ser vårdenhetens pågående sjukfall och sätter REKO-status per sjukfall, med patientens samtycke till koordineringsinsatser, och läkaren ser statusen.',
   },

@@ -23,11 +23,16 @@ const fel = (fn) => { try { fn(); } catch (e) { return e; } return null; };
 let nr = 0;
 function lagg(db, { pid = 'p11', enhet = 'vc-tybble', pers = 'lak-vc', fran = '2026-10-20', till = '2026-11-30', grad = 100, diagnos = 'M54.4', text = 'Lumbago-ischias' } = {}) {
   const p = personal(db, pers);
+  const id = `rk-${++nr}`;
   db.query(`INSERT INTO sjukskrivningar (patient_id, enhet_id, intygs_id, typ, personal_id, personal_namn, signerad, status, diagnos_kod, diagnos_text,
     sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, 'LISJP', ?, ?, ?, 'signerat', ?, ?, 'nuvarande_arbete', ?, 'Hemlig motivering', 'test', ?)`)
-    .run(pid, enhet, `rk-${++nr}`, p.id, p.namn, `${fran}T10:00:00Z`, diagnos.replace('.', ''), text, JSON.stringify([{ fran, till, grad }]), iso());
+    .run(pid, enhet, id, p.id, p.namn, `${fran}T10:00:00Z`, diagnos.replace('.', ''), text, JSON.stringify([{ fran, till, grad }]), iso());
+  return id;
 }
 const rk = (db) => personal(db, 'rk-vc');
+// En patient med vårdrelation till vårdcentralen, utan skyddade personuppgifter och utan demons sjukskrivningar.
+const annan = (db) => db.query('SELECT id FROM patienter WHERE coalesce(skyddad, 0) = 0 ORDER BY id').all().map(r => r.id)
+  .find(pid => !['p11', 'p18'].includes(pid) && prova(db, { personal: rk(db), patient: pid, handling: 'reko_satta', resurs: { enhet_id: 'vc-tybble' } }).tillaten);
 const lista = (db, q = { sok: true }, p = rk(db)) => reko.lista(db, p, q, DAG);
 const loggar = (db, handling) => db.query('SELECT * FROM atkomstlogg WHERE personal_id = ? AND handling = ? ORDER BY id').all('rk-vc', handling);
 
@@ -143,13 +148,59 @@ describe('Rehabkoordinatorn', () => {
     expect(db.query('SELECT count(*) AS n FROM reko_status WHERE patient_id IN (?, ?)').get(utan, 'p03').n).toBe(0);
   });
 
+  test(`${T}en patient utan sjukfall på vårdenheten ger samma 404 som utan åtkomst, och ingen loggrad för ett sjukfall som inte finns`, () => {
+    const db = nyDb();
+    expect(prova(db, { personal: rk(db), patient: 'p11', handling: 'reko_lasa', resurs: { enhet_id: 'vc-tybble' } }).tillaten).toBe(true);
+    const e = fel(() => reko.forPatient(db, rk(db), 'p11', DAG));
+    expect([e?.status, e?.message]).toEqual([404, reko.SAKNAS]);
+    expect(db.query("SELECT count(*) AS n FROM atkomstlogg WHERE personal_id = 'rk-vc' AND patient_id = 'p11'").get().n).toBe(0);
+  });
+
+  test(`${T}patientens Avböjt följer med sjukfallet när starten flyttas, för koordinatorn och för läkaren`, () => {
+    const db = nyDb();
+    const forsta = lagg(db, { fran: '2026-10-01', till: '2026-10-19' });
+    lagg(db, { fran: '2026-10-20', till: '2026-11-30' });
+    const satt = (body) => reko.satt(db, rk(db), 'p11', body, DAG);
+    satt({ start: '2026-10-01', status: 'aktiv', samtycke: true, samtyckeSatt: 'muntligt' });
+    satt({ start: '2026-10-01', status: 'avbojt' });
+    // Sjukfallets första intyg makuleras, och sjukfallet börjar nu 2026-10-20.
+    db.query("UPDATE sjukskrivningar SET status = 'makulerat' WHERE intygs_id = ?").run(forsta);
+    const s = lista(db).sjukfall.find(x => x.patientId === 'p11');
+    expect(s.start).toBe('2026-10-20');
+    expect(s.reko).toMatchObject({ kod: 'avbojt', text: 'Avböjt', samtycke: false });
+    expect(reko.forPatient(db, rk(db), 'p11', DAG).sjukfall[0].historik.map(h => h.kod)).toEqual(['avbojt', 'aktiv']);
+    expect(sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), null, DAG).pagaende[0].reko.kod).toBe('avbojt');
+    expect(sjukfall.minaSjukfall(db, personal(db, 'lak-vc'), () => ({}), DAG).sjukfall.find(x => x.patientId === 'p11').reko.kod).toBe('avbojt');
+    // Nejet gäller: att börja igen kräver ett nytt samtycke.
+    expect(fel(() => satt({ start: '2026-10-20', status: 'aktiv' }))?.status).toBe(400);
+    // Ett senare sjukfall efter ett uppehåll längre än 5 dagar börjar om med Ingen.
+    const b = annan(db);
+    lagg(db, { pid: b, fran: '2026-09-01', till: '2026-09-10' });
+    reko.satt(db, rk(db), b, { start: '2026-09-01', status: 'kontaktad' }, '2026-09-05');
+    lagg(db, { pid: b, fran: '2026-11-01', till: '2026-11-20' });
+    expect(lista(db).sjukfall.find(x => x.patientId === b).reko.kod).toBe('ingen');
+    // Ett sjukfall vars alla intyg har makulerats tar inte med sig sin status.
+    const c = lagg(db, { pid: b, fran: '2026-06-01', till: '2026-06-10' });
+    reko.satt(db, rk(db), b, { start: '2026-06-01', status: 'avbojt' }, '2026-06-05');
+    db.query("UPDATE sjukskrivningar SET status = 'makulerat' WHERE intygs_id = ?").run(c);
+    expect(lista(db).sjukfall.find(x => x.patientId === b).reko.kod).toBe('ingen');
+  });
+
+  test(`${T}handlingen för tabellen ger ingen åtkomst till en enskild patient`, () => {
+    const db = nyDb();
+    const utan = db.query('SELECT id FROM patienter WHERE coalesce(skyddad, 0) = 0').all().map(r => r.id)
+      .find(pid => !prova(db, { personal: rk(db), patient: pid, handling: 'reko_lasa', resurs: { enhet_id: 'vc-tybble' } }).tillaten);
+    expect(prova(db, { personal: rk(db), patient: utan, handling: 'sjukfall_reko' }).tillaten).toBe(false);
+  });
+
   test(`${T}filtret på REKO-status visar bara sjukfall med den statusen`, () => {
     const db = nyDb();
     lagg(db);
-    lagg(db, { pid: 'p18', fran: '2026-11-01', till: '2026-11-20' });
+    const b = annan(db);
+    lagg(db, { pid: b, fran: '2026-11-01', till: '2026-11-20' });
     reko.satt(db, rk(db), 'p11', { start: '2026-10-20', status: 'kontaktad' }, DAG);
     expect(lista(db, { sok: true, reko: 'kontaktad' }).sjukfall.map(s => s.patientId)).toEqual(['p11']);
-    expect(lista(db, { sok: true, reko: 'ingen' }).sjukfall.map(s => s.patientId)).toContain('p18');
+    expect(lista(db, { sok: true, reko: 'ingen' }).sjukfall.map(s => s.patientId)).toContain(b);
     expect(lista(db, { sok: true, reko: 'ingen' }).sjukfall.map(s => s.patientId)).not.toContain('p11');
     expect(fel(() => lista(db, { sok: true, reko: 'x' }))?.status).toBe(400);
   });

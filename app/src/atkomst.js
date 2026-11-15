@@ -818,5 +818,6 @@ Object.assign(HANDLINGAR, {
   reko_lasa: 'se sjukfallet för en patient på vårdenheten och dess REKO-status',
   reko_satta: 'sätta REKO-status för ett sjukfall',
 });
-UTAN_PATIENT.add('sjukfall_reko');
+// sjukfall_reko står inte i UTAN_PATIENT: den används bara som rollkrav för tabellen (kanRoll), och prövad mot en patient
+// ger den samma krav på vårdrelation som andra handlingar, så att den aldrig blir en väg till en enskild patient.
 ROLLER.rehabkoordinator = ['sjukfall_reko', 'reko_lasa', 'reko_satta', 'utbildning'];
