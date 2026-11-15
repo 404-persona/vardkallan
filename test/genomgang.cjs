@@ -1867,6 +1867,8 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.selectOption('dialog[open] #rf-mekanism', 'W01');
       await page.click('dialog[open] [data-varde="ok"]');
       await forvanta(page, '.notis', 'W01.99');
+      // Runda 16, r3: förnyelsen av läskopian startar efter en kort stund och ska bli klar före utloggningen, som ovan.
+      await page.waitForTimeout(800);
       await page.waitForLoadState('networkidle');
     });
     await s('Daniel Sund granskar rapporten till patientregistret utan patientuppgifter och ser tjänstekontrakten', async () => {
