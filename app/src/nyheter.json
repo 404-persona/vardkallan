@@ -23,7 +23,7 @@
           "omfattning": "liten",
           "var": null,
           "rubrik": "Intyg till arbetsgivaren skrivs ut",
-          "text": "Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan bara skrivas ut, och patienten kan välja att dölja diagnosen på utskriften. Dödsbevis och dödsorsaksintyg skickas när de signeras, och övriga intyg skickas i samråd med patienten."
+          "text": "Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan bara skrivas ut, och patienten kan välja att dölja diagnosen på utskriften. Ur läkarintyget för sjukpenning skapar du intyget till arbetsgivaren med ett klick. Dödsbevis och dödsorsaksintyg skickas när de signeras, och övriga intyg skickas i samråd med patienten."
         },
         {
           "id": "intyg-vardadministrator-1-6-0",

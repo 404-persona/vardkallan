@@ -222,6 +222,25 @@ describe('Intygen i Webcert, runda 16', () => {
     expect(JSON.stringify(app.utskrift(db, lak, iid(r2)).rader)).not.toContain('J069');
   });
 
+  test(`${T}ett läkarintyg till arbetsgivaren skapas ur läkarintyget för sjukpenning med de svar som är desamma`, async () => {
+    const db = nyDb();
+    diagnos(db, 'p11', 'vc-tybble', 'J06.9', 'Akut övre luftvägsinfektion');
+    const lak = personal(db, 'lak-vc');
+    const r = await skapa(db, 'lak-vc', 'p11', 'LISJP');
+    await app.spara(db, lak, iid(r), { svar: SJUKPENNING });
+    await app.atgard(db, lak, iid(r), 'signera');
+    expect(app.visa(db, lak, iid(r)).kan.arbetsgivare).toBe(true);
+    const ag = await app.atgard(db, lak, iid(r), 'arbetsgivare');
+    expect(ag.typ).toBe('AG7804');
+    expect(ag.foljde).toEqual(expect.arrayContaining(['6', '28', '29', '35', '17']));
+    expect(ag.foljde).not.toContain('32');
+    expect(ag.meddelande).toContain('diagnosen');
+    const rad = db.query('SELECT * FROM lakarintyg WHERE intygs_id = ?').get(ag.intygsId);
+    expect(rad).toMatchObject({ typ: 'AG7804', relation_typ: 'KOPIA', status: 'utkast', patient_id: 'p11' });
+    // Frågan om diagnosen till arbetsgivaren är obesvarad, så att patienten själv tar ställning.
+    expect(app.visa(db, lak, ag.intygsId).svar['100']).toBeUndefined();
+  });
+
   test(`${T}dödsbeviset skickas när det signeras, och övriga intyg skickas bara i samråd med patienten`, async () => {
     const db = nyDb();
     db.query("INSERT INTO avlidna (patient_id, datum, registrerad, registrerad_av) VALUES ('p10', ?, ?, 'lak-vc')").run(DAG, iso());

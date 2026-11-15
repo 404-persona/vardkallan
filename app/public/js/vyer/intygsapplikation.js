@@ -140,6 +140,7 @@ export async function visa(main, iid) {
         ${d.kan.skicka ? '<button type="button" class="knapp" data-atgard="skicka">Skicka till mottagaren</button>' : ''}
         ${d.kan.skrivUt ? '<button type="button" class="knapp sekundar" data-utskrift>Skriv ut</button>' : ''}
         ${d.kan.fornya && !d.giltighet ? '<button type="button" class="knapp sekundar" data-atgard="fornya">Förnya</button>' : ''}
+        ${d.kan.arbetsgivare ? '<button type="button" class="knapp sekundar" data-atgard="arbetsgivare">Skapa intyg till arbetsgivaren</button>' : ''}
         ${d.kan.radera ? '<button type="button" class="knapp sekundar" data-atgard="radera">Radera utkastet</button>' : ''}
       </div>
     </form>

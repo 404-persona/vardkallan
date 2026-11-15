@@ -308,6 +308,7 @@ function ut(db, r, personal, visad, nu = new Date()) {
       makulera: SIGNERAT.includes(r.status) && Boolean(b.signera),
       radera: UTKAST.includes(r.status) && skriva,
       fornya: SIGNERAT.includes(r.status) && skriva && Boolean(ny ? true : t.fornyas),
+      arbetsgivare: r.typ === 'LISJP' && ['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status) && Boolean(IT.aktuell('AG7804', nu) && (behorighet(personal, IT.aktuell('AG7804', nu)).signera || behorighet(personal, IT.aktuell('AG7804', nu)).utkast)),
     },
     byttMot: ny && !galler ? { kod: ny.kod, version: ny.version, blankett: ny.blankett, text: ny.text } : null,
     vemSignerar: vemSignerar(t),
@@ -392,8 +393,8 @@ export async function fyllI(db, personal, intygsId, forifyllt) {
 // Ett nytt utkast ur ett intyg: förnyelse eller förlängning av ett signerat intyg (FRLANG), och byte från ett ersatt
 // intyg eller ett utkast av en version som inte gäller längre (KOPIA). Svaren som får följa med tas med (overfor), och
 // journalen får det nya utkastet med en statusuppdatering som har relationen. Ett utkast som byts raderas.
-async function nyttUr(db, personal, r, t, relation, nu = new Date()) {
-  const till = efterfoljare(t, nu) ?? (IT.galler(t, nu) ? t : null);
+async function nyttUr(db, personal, r, t, relation, nu = new Date(), mal = null) {
+  const till = mal ?? efterfoljare(t, nu) ?? (IT.galler(t, nu) ? t : null);
   if (!till) throw new Fel(409, 'Det finns ingen version av intyget som gäller nu.', 'konflikt');
   const b = behorighet(personal, till);
   if (!b.signera && !b.utkast) throw new Fel(403, 'Du får inte skriva det nya intyget.', 'nekad');
@@ -431,6 +432,20 @@ const forklaring = (fran, u) => {
   if (nyBed) delar.push(`${nyBed} ${nyBed === 1 ? 'fråga' : 'frågor'} tar du ställning till på nytt.`);
   return delar.join(' ');
 };
+
+// Runda 16, r1: ett läkarintyg till arbetsgivaren (AG7804) ur ett läkarintyg för sjukpenning, som Intygstjänsten
+// erbjuder för version 2. Svaren på frågor som är desamma i båda följer med, och frågan om diagnosen till arbetsgivaren
+// besvarar läkaren tillsammans med patienten. Patienten slipper berätta allt två gånger.
+export async function arbetsgivarintyg(db, personal, intygsId, nu = new Date()) {
+  const { r, t, grund, handling } = hamta(db, personal, intygsId);
+  if (r.typ !== 'LISJP') throw new Fel(409, 'Ett läkarintyg till arbetsgivaren skapas ur ett läkarintyg för sjukpenning.', 'konflikt');
+  if (!['utkast', 'klart_for_signering', 'signerat', 'skickat'].includes(r.status)) throw new Fel(409, 'Intyget är makulerat eller raderat.', 'konflikt');
+  const mal = IT.aktuell('AG7804', nu);
+  if (!mal) throw new Fel(409, 'Läkarintyget till arbetsgivaren kan inte skrivas just nu.', 'konflikt');
+  const u = await nyttUr(db, personal, r, t, 'KOPIA', nu, mal);
+  loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: r.patient_id, handling, resurs: `intygsapplikation:${r.intygs_id}:arbetsgivare`, grund, resultat: 'tillaten' });
+  return { ...u, meddelande: `${forklaring(t, u)} Fråga patienten om diagnosen ska förmedlas till arbetsgivaren.` };
+}
 
 // Utskriften av ett signerat intyg. För ett intyg till arbetsgivaren kan patienten välja att dölja diagnosen, och om
 // patienten har sagt nej till att förmedla diagnosen finns den aldrig med. För en patient med skyddade personuppgifter
@@ -474,9 +489,10 @@ export function svarText(q, v) {
 }
 
 export async function atgard(db, personal, intygsId, atgardNamn, val = {}, body = {}) {
-  const VILKEN = { signera: 'signera', skicka: 'skriv', makulera: 'signera', radera: 'skriv', klar: 'skriv', byt: 'skriv', fornya: 'las' };
+  const VILKEN = { signera: 'signera', skicka: 'skriv', makulera: 'signera', radera: 'skriv', klar: 'skriv', byt: 'skriv', fornya: 'las', arbetsgivare: 'las' };
   if (!Object.hasOwn(VILKEN, atgardNamn)) throw new Fel(404, 'Åtgärden finns inte.', 'saknas');
   if (atgardNamn === 'fornya') return fornya(db, personal, intygsId);
+  if (atgardNamn === 'arbetsgivare') return arbetsgivarintyg(db, personal, intygsId);
   const { r, t, b, grund, handling } = hamta(db, personal, intygsId, VILKEN[atgardNamn]);
   const tid = iso();
   let extra = {};

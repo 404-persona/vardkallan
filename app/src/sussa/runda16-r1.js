@@ -15,6 +15,7 @@ export const T16R1 = {
   skyddad: `${IN}för en patient med skyddade personuppgifter skapar bara den som signerar intyget, och vårdadministratören når inte utkastet`,
   graviditet: `${IN}sjuksköterskan på mödrahälsovården skriver och signerar intyg om graviditet, med beräknad förlossning ur graviditetsjournalen`,
   arbetsgivare: `${IN}intyg till arbetsgivaren skrivs bara ut, och patienten kan dölja diagnosen på utskriften`,
+  agUrSjukpenning: `${IN}ett läkarintyg till arbetsgivaren skapas ur läkarintyget för sjukpenning med de svar som är desamma`,
   sandning: `${IN}dödsbeviset skickas när det signeras, och övriga intyg skickas bara i samråd med patienten`,
   forslag: `${IN}systemet föreslår intyget för barnets sjukdom efter ålder och allvar, och körkortsintyget när besöket gäller körkortet`,
   sparr: `${IN}förifyllnaden räknas bara på det läkaren får se: en diagnos på en spärrad vårdenhet ändrar ingenting`,
@@ -28,7 +29,7 @@ const INTYGEN = 'Intygen är de som finns i Webcert i dag enligt Ineras sidor (h
 
 const POSTER = {
   '2.2.1.9': {
-    tester: [T.giltighet, T.version, T.overfor, T.fornya, T.ersatt, T.admin, T.skyddad, T.graviditet, T.arbetsgivare, T.sandning, T.forslag, T.sparr, T.alder, T.svar, flode('skriv-sjukintyg'), flode('byt-ersatt-intyg')],
+    tester: [T.giltighet, T.version, T.overfor, T.fornya, T.ersatt, T.admin, T.skyddad, T.graviditet, T.arbetsgivare, T.agUrSjukpenning, T.sandning, T.forslag, T.sparr, T.alder, T.svar, flode('skriv-sjukintyg'), flode('byt-ersatt-intyg')],
     losning: 'Fliken Intyg i journalen öppnar en integrerad intygsapplikation för patienten, som Webcert i integrerat läge: journalen skapar utkastet med CreateDraftCertificate, tar emot intygets händelser med CertificateStatusUpdateForCare adresserat till vårdenheten och stämmer av med ListCertificatesForCareWithQA. Alla intyg som finns i Webcert i dag finns med blankettens frågor, med giltighet i tid per version, så att ett byte av blankett eller version är en ändring av en rad. Ett signerat intyg förnyas med den version som gäller, och journalen får det nya utkastet med relationen till det gamla.',
     expert: 'Den inloggade väljer bara vilket intyg som ska skrivas. Systemet visar bara de intyg som får skrivas för patienten, av den som är inloggad och just nu, förklarar varför de andra inte går och föreslår det som passar (graviditet, barnets ålder och allvar, körkortet, sjukskrivning), och fyller i diagnoser, underlag, graviditet, läkemedel och diabetesuppgifter ur det den inloggade får se, med källa. Vid förnyelse följer bara svar på oförändrade frågor, aldrig det som läkaren ska ta ställning till på nytt.',
     anmarkning: `Byggt och validerat mot tjänstekontraktet riv.clinicalprocess.healthcond.certificate 4.0.5 (CreateDraftCertificate 3.3, CertificateStatusUpdateForCare 3.2, ListCertificatesForCareWithQA 3.3), testat lokalt mot tjänsteplattformen; ${INTE_ANSLUTET}. ${SIMULERAT} ${INTYGEN} Förifyllda svar som inte är diagnoser skickas i en egen namnrymd i förifyllnaden (förenkling i demon). I de stora blanketterna (TS8071, FK 7800 till 7810, TSTRK1031) är följdfrågorna sammanförda i en beskrivning per område, och tidpunkten för releasen i november 2025 är antagen för alla intyg i den utom FK 7804. Frågor och svar från mottagaren (ärendekommunikation) hanteras inte.`,
