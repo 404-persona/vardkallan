@@ -203,7 +203,7 @@ Sussa 11.2.1.8. Ett klick på Läkemedel att ge och ett på Reservdator för lä
 
 Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan Ek flödet.
 
-Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning/cirkulation, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
+Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning och cirkulation, som systemet har fällt ut som förslag, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
 
 ## Instruktionsfilmer
 
