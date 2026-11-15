@@ -77,7 +77,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
   // Bara den som skriver i journalen har fraser och egen ordning.
   function kravPersonal(c) {
     const p = kravInloggad(c);
-    if (!['skriv_journal', 'skriv_omvardnad'].some(h => require('./atkomst.js').kanRoll(p, h))) throw new Fel(403, 'Egna fraser finns för den som skriver i journalen.', 'nekad');
+    // Runda 16, r3: också den som skriver med yrkets mallar (skriv_observation) eller under handledning (skriv_handledd).
+    if (!['skriv_journal', 'skriv_omvardnad', 'skriv_observation', 'skriv_handledd'].some(h => require('./atkomst.js').kanRoll(p, h))) throw new Fel(403, 'Egna fraser finns för den som skriver i journalen.', 'nekad');
     return p;
   }
 }

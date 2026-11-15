@@ -390,7 +390,8 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
     if (d) new MutationObserver(() => { if (!diktatAktiv() && ctrl) ctrl.schemalagg(); }).observe(d, { attributes: true, attributeFilter: ['aria-pressed'] });
     // Runda 15, r5: omvårdnadsprocessen under sökorden, med systemets förslag. Vilka statusområden som står utfällda
     // avgör anteckningsvyn (anteckningsstod.sokordLista) ur samma förslag, så att det bara finns ett sätt att fälla in.
-    if (mall().process) {
+    // Runda 16, r3: bara för den som skriver omvårdnadsanteckningar med processen, inte för studenten.
+    if (mall().process && far('skriv_omvardnad')) {
       const m = mall();
       omvardnadsprocess.hamta(ctx.id).then((d) => {
         if (!d || !form.isConnected || mall() !== m || form.querySelector('[data-omvardnadsprocess]')) return;
