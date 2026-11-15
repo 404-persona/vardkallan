@@ -165,6 +165,46 @@ describe('Runda 16, r3, beslut C: kuratorn och SIP', () => {
   }, 30_000);
 });
 
+describe('Runda 16, r3, beslut B: prenumerationer på kuratorns och psykologens anteckningar', () => {
+  const pren = require('../src/prenumeration.js');
+  const prenumerera = (db, personalId) => db.query("INSERT INTO prenumerationer (personal_id, typ, patient_id, kriterier, mottagare, status, skapad) VALUES (?, 'Composition', 'p04', 'Composition?patient=p04', 'https://mottagare.example/notis', 'aktiv', ?)")
+    .run(personalId, new Date().toISOString()).lastInsertRowid;
+  const notiser = (db, id) => db.query('SELECT handelse, fokus FROM prenumeration_notiser WHERE prenumeration_id = ? ORDER BY id').all(id);
+  const ny = (db, typ, av) => Number(db.query("INSERT INTO anteckningar (patient_id, enhet_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av) VALUES ('p04', 'uso-psyk', ?, 'omvardnad', '[]', ?, ?, 'signerad', ?, ?)")
+    .run(typ, av, new Date().toISOString(), new Date().toISOString(), av).lastInsertRowid);
+
+  test('undersköterskan får inget meddelande om att en psykologanteckning har skapats eller raderats, men läkaren får det, och en vanlig omvårdnadsanteckning syns som förut', () => {
+    const db = byggSeed();
+    pren.sakraSchema(db);
+    pren.behandla(db, 'https://vardkallan.example');
+    const usk = prenumerera(db, 'sk-psyk');
+    const lak = prenumerera(db, 'lak-psyk');
+    const psy = ny(db, 'Psykologanteckning', 'psy-psyk');
+    const omv = ny(db, 'Omvårdnadsanteckning', 'ssk-psyk');
+    pren.behandla(db, 'https://vardkallan.example');
+    db.exec('DROP TRIGGER IF EXISTS anteckning_signerad_raderas_ej');
+    for (const t of db.query("SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'anteckningar' AND sql LIKE '%BEFORE DELETE%'").all()) db.exec(`DROP TRIGGER "${t.name}"`);
+    db.query('DELETE FROM anteckningar WHERE id IN (?, ?)').run(psy, omv);
+    pren.behandla(db, 'https://vardkallan.example');
+    const u = notiser(db, usk), l = notiser(db, lak);
+    expect(u.filter(n => n.fokus === `Composition/${psy}`)).toEqual([]);
+    expect(u.map(n => `${n.handelse} ${n.fokus}`)).toEqual([`ny Composition/${omv}`, `borttagen Composition/${omv}`]);
+    expect(l.map(n => `${n.handelse} ${n.fokus}`)).toEqual([`ny Composition/${psy}`, `ny Composition/${omv}`, `borttagen Composition/${psy}`, `borttagen Composition/${omv}`]);
+  });
+
+  test('ett raderingsmeddelande utan typen, från en äldre sandlåda, prövas med den striktare handlingen', () => {
+    const db = byggSeed();
+    pren.sakraSchema(db);
+    pren.behandla(db, 'https://vardkallan.example');
+    const usk = prenumerera(db, 'sk-psyk');
+    const lak = prenumerera(db, 'lak-psyk');
+    db.query("INSERT INTO fhir_andringar (tabell, rad_id, patient_id, enhet_id, extra, villkor, handelse, tid) VALUES ('anteckningar', 999999, 'p04', 'uso-psyk', 'omvardnad', 'signerad', 'borttagen', ?)").run(new Date().toISOString());
+    pren.behandla(db, 'https://vardkallan.example');
+    expect(notiser(db, usk)).toEqual([]);
+    expect(notiser(db, lak).map(n => n.handelse)).toEqual(['borttagen']);
+  });
+});
+
 describe('Runda 16, r3, beslut B: bilder och media till kuratorns och psykologens anteckningar', () => {
   test('en bild som kuratorn eller psykologen har laddat upp, eller som hör till deras anteckning, läses inte av undersköterskan', async () => {
     const bilder = require('../src/bilder.js');

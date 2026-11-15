@@ -48,7 +48,8 @@ export const KALLOR = {
   MedicationRequest: { tabell: 'ordinationer', handling: () => 'las_lakemedel', gemensam: true },
   AllergyIntolerance: { tabell: 'overkanslighet', handling: () => 'las_oversikt', gemensam: true },
   ServiceRequest: { tabell: 'remisser', handling: () => 'las_remiss', enhet: 'fran_enhet_id' },
-  Composition: { tabell: 'anteckningar', handling: (r) => lasHandling(r), extra: 'kategori', villkor: (r) => r.status === 'signerad' },
+  // Runda 16, r3: utan typen (en radering från en äldre sandlåda) prövas meddelandet med las_journal, den striktare handlingen.
+  Composition: { tabell: 'anteckningar', handling: (r) => (r.typ === undefined ? 'las_journal' : lasHandling(r)), extra: 'kategori', villkor: (r) => r.status === 'signerad' },
   Encounter: { tabell: 'vardkontakter', handling: () => 'las_admin' },
 };
 const TYP_FOR = Object.fromEntries(Object.entries(KALLOR).map(([typ, k]) => [k.tabell, typ]));
@@ -68,7 +69,9 @@ export function sakraSchema(db) {
     const enhet = k.enhet ?? 'enhet_id';
     const extra = k.extra ?? 'NULL';
     const villkor = typ === 'Composition' ? 'status' : 'NULL';
-    const radv = (x) => `${x}.id, ${x}.patient_id, ${x}.${enhet}, ${extra === 'NULL' ? 'NULL' : `${x}.${extra}`}, ${villkor === 'NULL' ? 'NULL' : `${x}.${villkor}`}`;
+    // Runda 16, r3: en anteckning sparar också typen (kategori|typ), så att också en radering prövas med anteckningens läshandling.
+    const extraV = (x) => (typ === 'Composition' ? `${x}.kategori || '|' || coalesce(${x}.typ, '')` : extra === 'NULL' ? 'NULL' : `${x}.${extra}`);
+    const radv = (x) => `${x}.id, ${x}.patient_id, ${x}.${enhet}, ${extraV(x)}, ${villkor === 'NULL' ? 'NULL' : `${x}.${villkor}`}`;
     const ins = (handelse, x) => `INSERT INTO fhir_andringar (tabell, rad_id, patient_id, enhet_id, extra, villkor, handelse, tid) VALUES ('${k.tabell}', ${radv(x)}, '${handelse}', strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;
     db.exec(`CREATE TRIGGER IF NOT EXISTS fhir_ny_${k.tabell} AFTER INSERT ON ${k.tabell} BEGIN ${ins('ny', 'NEW')}; END;
       CREATE TRIGGER IF NOT EXISTS fhir_andrad_${k.tabell} AFTER UPDATE ON ${k.tabell} BEGIN ${ins('andrad', 'NEW')}; END;
@@ -276,7 +279,15 @@ export function behandla(db, base) {
       if (p.typ !== typ || (p.patient_id !== '*' && p.patient_id !== a.patient_id) || !a.patient_id) continue;
       const rad = { id: a.rad_id, enhet_id: a.enhet_id, kategori: a.extra, status: a.villkor };
       // Runda 16, r3: anteckningens typ avgör om den läses med las_journal (kuratorns och psykologens, journal.lasHandling).
-      if (a.tabell === 'anteckningar') rad.typ = db.query('SELECT typ FROM anteckningar WHERE id = ?').get(a.rad_id)?.typ ?? null;
+      // Typen följer med i meddelandet (kategori|typ) och finns kvar också när anteckningen är raderad. Ett meddelande från
+      // en äldre sandlåda har bara kategorin: då läses typen ur raden, och saknas raden lämnas typen odefinierad, så att
+      // meddelandet prövas med den striktare handlingen (fail closed).
+      if (a.tabell === 'anteckningar') {
+        const [kategori, typ] = String(a.extra ?? '').split('|');
+        rad.kategori = kategori;
+        if (typ !== undefined) rad.typ = typ;
+        else { const finns = db.query('SELECT typ FROM anteckningar WHERE id = ?').get(a.rad_id); if (finns) rad.typ = finns.typ; }
+      }
       const k = KALLOR[typ];
       if (k.villkor && a.handelse !== 'borttagen' && !k.villkor(rad)) continue;
       if (p.kod && typ === 'Observation') {
