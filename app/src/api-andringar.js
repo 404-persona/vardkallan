@@ -14,11 +14,19 @@ export const ANDRINGAR = [
   // Runda 16: version 1.6. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.6.0', datum: '2026-11-15',
-    text: 'Stödet vid sjukskrivning, intygen och de nya rollerna.',
+    text: 'Intygen, stödet vid sjukskrivning och nya roller.',
     resurser: [], skrivning: [], annat: [
+      // Runda 16, r1: intygen (docs/api-avvikelser.md).
+      'Intygstyperna har version och blankett, och svaren i intygsapplikationen ligger per fråga i fältet "svar" med frågans id som nyckel i GET och POST /api/intygsapplikation/:id. Fälten från version 1.5 tas emot som förut för sjukpenningen (docs/api-avvikelser.md)',
+      'Nya rutter för förnyelse och byte från ett ersatt intyg, utskrift och åtgärderna för klart för signering och byte (docs/api-avvikelser.md). Sändning kräver att patienten har bekräftat den, och makulering en orsak',
+      // Runda 16, r3: de nya rollerna, handledningen och preventivmedlen (docs/api-avvikelser.md).
+      'Nya yrken i personalkatalogen och sessionen: arbetsterapeut, dietist, logoped, kurator, psykolog, barnmorska och tre studenter (läkarstudent, sjuksköterskestudent och barnmorskestudent). Barnmorskan har ett eget yrke i stället för sjuksköterskans',
+      'GET och POST /api/handledning och POST /api/handledning/{id}/avsluta för studenternas handledning, och fältet handledning på en anteckning som en student har skrivit',
+      'GET och POST /api/patient/{id}/preventivmedel för barnmorskans förskrivning av preventivmedel',
+      'En inloggning genom en extern tjänst kräver legitimationen för rollen ur Ineras kodverk för legitimerad yrkesgrupp. Barnmorskans roll kräver barnmorskans legitimation, och sjuksköterskans roll sjuksköterskans',
       // Runda 16, r2: stödet vid sjukskrivning (docs/api-avvikelser.md).
-      'Nya rutter i det interna API:t: patientens sjukfall med beslutsstöd och förslag till förlängning (GET /api/patient/:id/sjukskrivning), förlängning med ett klick (POST /api/patient/:id/sjukskrivning/forlang), läkarens pågående sjukfall (GET /api/sjukskrivningar), vårdenhetens sjukfall som antal (GET /api/sjukskrivningar/enhet) och Socialstyrelsens försäkringsmedicinska beslutsstöd för ett utkast med motiveringen (GET /api/intygsapplikation/:id/beslutsstod och POST /api/intygsapplikation/:id/beslutsstod/motivering)',
-      'Statusuppdateringen för ett signerat sjukintyg har svaren 28, 32 och 37 (sysselsättning, sjukskrivningens perioder och motiveringen till beslutsstödet), och CreateDraftCertificate har dem i förifyllnaden vid en förlängning',
+      'Nya rutter i det interna API:t: patientens sjukfall med beslutsstöd och förslag till förlängning (GET /api/patient/:id/sjukskrivning), förlängning med ett klick (POST /api/patient/:id/sjukskrivning/forlang), läkarens pågående sjukfall (GET /api/sjukskrivningar), vårdenhetens sjukfall som antal (GET /api/sjukskrivningar/enhet) och Socialstyrelsens försäkringsmedicinska beslutsstöd för ett utkast med förslaget till perioden (GET /api/intygsapplikation/:id/beslutsstod)',
+      'Statusuppdateringen för ett signerat sjukintyg har svaren 28, 32 och 37 (sysselsättning, sjukskrivningens perioder och motiveringen till beslutsstödet), och förlängningen förnyar förra intyget',
     ],
   },
   // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.

@@ -26,10 +26,10 @@ export const ANALYS = {
   },
   sjukskoterska: {
     namn: "Sjuksköterska",
-    behov: "Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar.",
+    behov: "Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar. Utfärdar intyg om graviditet på mödrahälsovården och intyg om tillfällig föräldrapenning, som Försäkringskassan tar emot från sjuksköterskor.",
     risker: "Läsning utan behov, och läkemedel som ges utan giltig ordination.",
     atgarder: "Kan inte ordinera läkemedel annat än enligt generella direktiv och muntliga ordinationer som läkaren signerar. Samma regler för vårdrelation, aktivt val, spärr och nödåtkomst som för läkaren. Administreringen kontrollerar ordinationen.",
-    inte: ["ordinera", "skriv_journal", "kontrasignera", "ordinera_cytostatika", "las_logg", "konfigurera"],
+    inte: ["ordinera", "skriv_journal", "kontrasignera", "ordinera_cytostatika", "las_logg", "konfigurera", "skriv_intyg"],
   },
   underskoterska: {
     namn: "Undersköterska",
@@ -40,10 +40,10 @@ export const ANALYS = {
   },
   vardadministrator: {
     namn: "Vårdadministratör",
-    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt.",
+    behov: "Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt. Skapar och fyller i utkast till intyg åt läkaren och markerar dem klara för signering, som i Webcert.",
     risker: "Insyn i journaltext eller läkemedel utan vårdbehov.",
-    atgarder: "Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift.",
-    inte: ["las_journal", "las_omvardnad", "las_lakemedel", "las_diagnoser", "ordinera"],
+    atgarder: "Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift. Signerar aldrig intyg, och förifyllnaden av ett utkast tar inget ur journalen som rollen inte får läsa. För en patient med skyddade personuppgifter når rollen inte intygen.",
+    inte: ["las_journal", "las_omvardnad", "las_lakemedel", "las_diagnoser", "ordinera", "skriv_intyg"],
   },
   logggranskare: {
     namn: "Logggranskare",
@@ -116,6 +116,73 @@ export const ANALYS = {
     inte: ["skriv_journal", "ordinera", "nodatkomst"],
   },
 };
+
+// Runda 16, r3: de nya yrkesrollerna och studenterna.
+Object.assign(ANALYS, {
+  arbetsterapeut: {
+    namn: "Arbetsterapeut",
+    behov: "Bedömer vad patienten klarar i vardagen, anpassar och förskriver hjälpmedel och planerar inför utskrivningen. Behöver läsa journalen, skriva arbetsterapianteckningar, registrera mätvärden och skicka, ta emot och besvara remisser.",
+    risker: "Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.",
+    atgarder: "Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.",
+    inte: ["ordinera", "ge_lakemedel", "nodatkomst", "skriv_journal"],
+  },
+  dietist: {
+    namn: "Dietist",
+    behov: "Utreder och behandlar nutritionen. Behöver läsa journalen, läkemedelslistan och mätvärdena som vikt och provsvar, skriva dietistanteckningar och ta emot och besvara remisser.",
+    risker: "Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.",
+    atgarder: "Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.",
+    inte: ["ordinera", "ge_lakemedel", "nodatkomst", "skriv_journal"],
+  },
+  logoped: {
+    namn: "Logoped",
+    behov: "Utreder och behandlar kommunikation, språk, tal, röst och sväljning och förskriver kommunikationshjälpmedel. Behöver läsa journalen, skriva logopedanteckningar och ta emot och besvara remisser.",
+    risker: "Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.",
+    atgarder: "Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.",
+    inte: ["ordinera", "ge_lakemedel", "nodatkomst", "skriv_journal"],
+  },
+  kurator: {
+    namn: "Hälso- och sjukvårdskurator",
+    behov: "Arbetar med patientens sociala förhållanden, krisstöd och samtal. Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.",
+    risker: "Kuratorns anteckningar är ofta känsliga, och läsning utan behov är en risk för integriteten. Läkemedel och mätvärden behövs inte i arbetet.",
+    atgarder: "Läser inte läkemedelslistan och mätvärdena, ordinerar och ger inga läkemedel och har ingen nödåtkomst. Anteckningarna har samma inre sekretess, spärr och loggning som andra anteckningar, och andra vårdenheter ser dem bara efter ett aktivt val.",
+    inte: ["las_lakemedel", "las_matvarden", "ordinera", "ge_lakemedel", "nodatkomst"],
+  },
+  psykolog: {
+    namn: "Psykolog",
+    behov: "Utreder och behandlar, också med psykoterapi (psykoterapeuten är en titel inom rollen). Behöver läsa journalen, läkemedelslistan och mätvärdena, registrera skattningar, skriva psykologanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.",
+    risker: "Psykologens anteckningar är känsliga, och läsning utan behov är en risk för integriteten.",
+    atgarder: "Ordinerar och ger inga läkemedel, beslutar inte om tvångsvård och har ingen nödåtkomst. Anteckningarna har samma inre sekretess, spärr och loggning som andra anteckningar.",
+    inte: ["ordinera", "ge_lakemedel", "tvangsvard", "nodatkomst"],
+  },
+  barnmorska: {
+    namn: "Barnmorska",
+    behov: "För graviditetsjournalen och förlossningsjournalen, ger läkemedel och gör det sjuksköterskan gör på förlossningen och BB, rapporterar till Graviditetsregistret, förskriver preventivmedel och handleder barnmorskestudenter.",
+    risker: "Läkemedel som förskrivs utanför förskrivningsrätten, och läsning utan behov.",
+    atgarder: "Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.",
+    inte: ["ordinera", "vaccinera", "skriv_journal", "skriv_intyg"],
+  },
+  lakarstudent: {
+    namn: "Läkarstudent",
+    behov: "Lär sig under handledning av en läkare. Behöver läsa journalen för patienterna på handledarens vårdenhet och skriva anteckningar som handledaren kontrasignerar.",
+    risker: "Att studenten fattar beslut eller dokumenterar utan handledning, och att åtkomsten finns kvar efter praktiken.",
+    atgarder: "Åtkomst bara under en pågående handledning hos en läkare på samma vårdenhet, prövad i varje anrop. Ordinerar inte, ger inga läkemedel, signerar inga intyg och har ingen nödåtkomst, inga aktiva val och ingen visning av skyddad identitet. Varje signerad anteckning går till handledaren för kontrasignering.",
+    inte: ["ordinera", "ge_lakemedel", "skriv_intyg", "nodatkomst", "skriv_journal", "andra_enheter"],
+  },
+  sjukskoterskestudent: {
+    namn: "Sjuksköterskestudent",
+    behov: "Lär sig under handledning av en sjuksköterska eller barnmorska. Behöver läsa journalen och läkemedelslistan för patienterna på handledarens vårdenhet och skriva omvårdnadsanteckningar som handledaren kontrasignerar.",
+    risker: "Att studenten ger läkemedel eller dokumenterar utan handledning, och att åtkomsten finns kvar efter praktiken.",
+    atgarder: "Åtkomst bara under en pågående handledning på samma vårdenhet, prövad i varje anrop. Ger inga läkemedel på egen hand, ordinerar inte och har ingen nödåtkomst. Varje signerad anteckning går till handledaren för kontrasignering.",
+    inte: ["ordinera", "ge_lakemedel", "skriv_omvardnad", "nodatkomst", "delegera"],
+  },
+  barnmorskestudent: {
+    namn: "Barnmorskestudent",
+    behov: "Lär sig under handledning av en barnmorska. Behöver läsa journalen och graviditetsjournalen för patienterna på handledarens vårdenhet och skriva anteckningar som handledaren kontrasignerar.",
+    risker: "Att studenten för graviditets- eller förlossningsjournalen eller ger läkemedel utan handledning, och att åtkomsten finns kvar efter praktiken.",
+    atgarder: "Åtkomst bara under en pågående handledning hos en barnmorska på samma vårdenhet, prövad i varje anrop. Läser graviditetsjournalen men för den inte, ger inga läkemedel på egen hand, förskriver inte och har ingen nödåtkomst. Varje signerad anteckning går till handledaren för kontrasignering.",
+    inte: ["graviditet", "ordinera", "ge_lakemedel", "forskriva_preventivmedel", "nodatkomst"],
+  },
+});
 
 export function markdown() {
   const ut = ['# Behovs- och riskanalys per roll', '', ...INLEDNING.flatMap(s => [s, '']).slice(0, -1)];

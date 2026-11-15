@@ -6,6 +6,94 @@
       "datum": "2026-11-15",
       "nyheter": [
         {
+          "id": "intyg-alla-1-6-0",
+          "roller": [
+            "lakare"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Alla intyg i Webcert, och de nya versionerna",
+          "text": "Under fliken Intyg finns nu alla intyg som går att skriva i Webcert, med blankettens frågor. TS8071 har ersatt TSTRK1007, och läkarintyget för sjukpenning är i version 2. Ett äldre intyg förnyar du med ett klick: svaren på oförändrade frågor följer med, och det du ska ta ställning till på nytt fyller du i själv. Systemet föreslår intyget som passar patienten och fyller i diagnoser, graviditet, läkemedel och underlag ur journalen med källa."
+        },
+        {
+          "id": "intyg-arbetsgivare-1-6-0",
+          "roller": [
+            "lakare"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Intyg till arbetsgivaren skrivs ut",
+          "text": "Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan bara skrivas ut, och patienten kan välja att dölja diagnosen på utskriften. Ur läkarintyget för sjukpenning skapar du intyget till arbetsgivaren med ett klick. Dödsbevis och dödsorsaksintyg skickas när de signeras, och övriga intyg skickas i samråd med patienten."
+        },
+        {
+          "id": "intyg-vardadministrator-1-6-0",
+          "roller": [
+            "vardadministrator"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Utkast till intyg",
+          "text": "Du kan skapa och fylla i utkast till intyg under fliken Intyg och markera dem klara för signering. Läkaren signerar. För en patient med skyddade personuppgifter skapar den som signerar intyget."
+        },
+        {
+          "id": "intyg-graviditet-1-6-0",
+          "roller": [
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Intyg om graviditet och tillfällig föräldrapenning",
+          "text": "På mödrahälsovården skriver och signerar du intyg om graviditet. Beräknad förlossning fylls i ur graviditetsjournalen. Du kan också skriva intyg om tillfällig föräldrapenning för ett barn under 12 år."
+        },
+        {
+          "id": "roller-yrken-1-6-0",
+          "roller": [
+            "arbetsterapeut",
+            "dietist",
+            "logoped",
+            "kurator",
+            "psykolog"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Din egen roll i Vårdkällan",
+          "text": "Du loggar nu in med din egen yrkesroll. Systemet väljer ditt yrkes mall när du dokumenterar, och du ser det som yrket behöver i vården av patienten och inget mer. Du ordinerar och ger inga läkemedel."
+        },
+        {
+          "id": "roller-barnmorska-1-6-0",
+          "roller": [
+            "barnmorska"
+          ],
+          "omfattning": "stor",
+          "var": null,
+          "rubrik": "Barnmorskan har en egen roll",
+          "text": "Du loggar in som barnmorska och gör allt som förut på förlossningen, BB och mödrahälsovården. På barnmorskemottagningen förskriver du preventivmedel med Förskriv preventivmedel under Läkemedel: systemet visar bara de preventivmedel som förskrivningsrätten omfattar och fyller i orsak, dosering och uppföljning."
+        },
+        {
+          "id": "roller-student-1-6-0",
+          "roller": [
+            "lakarstudent",
+            "sjukskoterskestudent",
+            "barnmorskestudent"
+          ],
+          "omfattning": "stor",
+          "var": "#/handledning",
+          "rubrik": "Du dokumenterar under handledning",
+          "text": "Under Handledning ser du din handledare och hur länge handledningen gäller. Det du signerar går till handledaren för kontrasignering och är märkt att du skrev det under handledning. Du ordinerar inte, ger inga läkemedel på egen hand och signerar inga intyg."
+        },
+        {
+          "id": "roller-handledare-1-6-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "barnmorska"
+          ],
+          "omfattning": "liten",
+          "var": "#/handledning",
+          "rubrik": "Handleda studenter",
+          "text": "Under Handledning registrerar du en handledning för en student på din vårdenhet, med en tid som systemet föreslår. Det studenten signerar hamnar i din inkorg under Att kontrasignera."
+        },
+        {
           "id": "sjukskrivning-1-6-0",
           "roller": [
             "lakare",

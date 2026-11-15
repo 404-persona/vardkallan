@@ -7,6 +7,7 @@ import * as sjukfall from '../src/sjukfall.js';
 import * as intyg from '../src/lakarintyg.js';
 import * as app from '../src/intygsapplikation-simulerad.js';
 import * as beslutsstod from '../src/intygsapplikation-beslutsstod-simulerad.js';
+import * as IT from '../src/intygstyper.js';
 import * as svar from '../src/sjukfall-intygssvar.js';
 import * as rivta from '../src/rivta/index.js';
 import { atk, personal } from './hjalp.js';
@@ -30,14 +31,20 @@ function lagg(db, { pid = 'p11', enhet = 'vc-tybble', pers = 'lak-vc', perioder,
     sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, 'LISJP', ?, ?, ?, ?, ?, ?, 'nuvarande_arbete', ?, ?, 'test', ?)`)
     .run(pid, enhet, `test-${++nr}`, p.id, p.namn, signerad ?? '2026-10-15T10:00:00Z', status, diagnos.replace('.', ''), text, JSON.stringify(perioder), motivering, iso());
 }
+// Svaren i ett läkarintyg för sjukpenning (version 2) som läkaren fyller i, med frågans id som nyckel.
+const NEDS = { heltid: 'HELT_NEDSATT', tre_fjardedelar: 'TRE_FJARDEDEL', halften: 'HALFTEN', en_fjardedel: 'EN_FJARDEDEL' };
+const svarFor = ({ fran, till, nedsattning = 'heltid', motivering = null }) => ({
+  '1': { FYSISKUNDERSOKNING: fran }, '28': ['NUVARANDE_ARBETE'], '29': 'Lagerarbetare', '6': [{ kod: 'M544', text: 'Lumbago-ischias' }],
+  '35': 'Smärta i ländryggen.', '17': 'Kan inte lyfta.', '32': [{ kod: NEDS[nedsattning], fran, till }], ...(nedsattning !== 'heltid' ? { '33': false } : {}),
+  '39': 'STOR_SANNOLIKHET', ...(motivering ? { '37': motivering } : {}),
+});
 // Ett sjukintyg som skrivs och signeras i intygsapplikationen, som läkaren gör.
-async function signera(db, { pid = 'p11', pers = 'lak-vc', fran, till, nedsattning = 'heltid', motivering = null }) {
+async function signera(db, { pid = 'p11', pers = 'lak-vc', ...v }) {
   db.query("INSERT INTO diagnoser (patient_id, enhet_id, kod, text, typ, datum) VALUES (?, 'vc-tybble', 'M54.4', 'Lumbago-ischias', 'huvud', ?)").run(pid, DAG);
   const r = await intyg.skapa(atk(db, pers, pid, {}, 'skriv_intyg'), patient(db, pid), { typ: 'LISJP' }, DAG);
   const id = r.oppna.split('/').pop();
   const lak = personal(db, pers);
-  await app.spara(db, lak, id, { sysselsattning: 'nuvarande_arbete', nedsattning, fran, till });
-  if (motivering) await beslutsstod.sparaMotivering(db, lak, id, { motivering });
+  await app.spara(db, lak, id, { svar: svarFor(v) });
   await app.atgard(db, lak, id, 'signera');
   return id;
 }
@@ -85,13 +92,13 @@ describe('Stödet vid sjukskrivning', () => {
     const u = sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG);
     expect(u.pagaende[0]).toMatchObject({ start: '2026-11-02', slut: '2026-11-15', dagar: 14, aktuellGrad: 50, uppskattadDag: 11, diagnos: { kod: 'M54.4' } });
     // Skickat ändrar status, makulerat tar bort intyget ur sjukfallet.
-    await app.atgard(db, personal(db, 'lak-vc'), id, 'skicka');
+    await app.atgard(db, personal(db, 'lak-vc'), id, 'skicka', {}, { samrad: true });
     expect(db.query('SELECT status FROM sjukskrivningar WHERE intygs_id = ?').get(id).status).toBe('skickat');
-    await app.atgard(db, personal(db, 'lak-vc'), id, 'makulera');
+    await app.atgard(db, personal(db, 'lak-vc'), id, 'makulera', {}, { orsak: 'Utfärdat på fel patient.' });
     expect(sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG).pagaende).toEqual([]);
     // Ett utkast som aldrig signeras blir ingen sjukskrivning.
     const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
-    await app.spara(db, personal(db, 'lak-vc'), r.oppna.split('/').pop(), { sysselsattning: 'studier', nedsattning: 'heltid', fran: DAG, till: '2026-11-20' });
+    await app.spara(db, personal(db, 'lak-vc'), r.oppna.split('/').pop(), { svar: { '32': [{ kod: 'HELT_NEDSATT', fran: DAG, till: '2026-11-20' }] } });
     expect(db.query('SELECT count(*) AS n FROM sjukskrivningar WHERE intygs_id = ?').get(r.oppna.split('/').pop()).n).toBe(0);
   });
 
@@ -101,8 +108,7 @@ describe('Stödet vid sjukskrivning', () => {
     const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
     const id = r.oppna.split('/').pop();
     const lak = personal(db, 'lak-vc');
-    await app.spara(db, lak, id, { nedsattning: 'halften', fran: '2026-11-01', till: '2026-11-30' });
-    db.query('UPDATE sim_intygsapplikation SET svar = json_set(svar, \'$.diagnosKod\', \'M544\') WHERE intygs_id = ?').run(id);
+    await app.spara(db, lak, id, { svar: { '6': [{ kod: 'M544', text: 'Lumbago-ischias' }], '32': [{ kod: 'HALFTEN', fran: '2026-11-01', till: '2026-11-30' }] } });
     const b = sjukfall.forUtkast(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), beslutsstod.utkastFor(db, lak, id), DAG);
     expect(b.beslutsstod.diagnosrubrik).toBe('Lumbago-ischias');
     expect(b.total).toBe(83 + 30);
@@ -114,13 +120,13 @@ describe('Stödet vid sjukskrivning', () => {
     // Intyget sträcker sig över dag 90 i rehabiliteringskedjan.
     expect(b.passerar.map(x => x.dag)).toEqual([90]);
     // Inom rekommendationen: ingen varning.
-    await app.spara(db, lak, id, { till: '2026-11-05' });
+    await app.spara(db, lak, id, { svar: { '32': [{ kod: 'HALFTEN', fran: '2026-11-01', till: '2026-11-05' }] } });
     expect(sjukfall.forUtkast(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), beslutsstod.utkastFor(db, lak, id), DAG)).toMatchObject({ over: false, varning: null, total: 88 });
     // Utan diagnos förklarar systemet vad som behövs.
     expect(sjukfall.bedom([], { diagnosKod: null, perioder: [] }).utanDiagnos).toContain('Välj en diagnos');
   });
 
-  test(`${T}motiveringen skrivs en gång, följer med i intyget och i förlängningen`, async () => {
+  test(`${T}motiveringen skrivs en gång i fråga 37, följer med i intyget och i förlängningen`, async () => {
     const db = nyDb();
     lagg(db, { perioder: [{ fran: '2026-08-10', till: '2026-10-31', grad: 100 }] });
     const id = await signera(db, { fran: '2026-11-01', till: '2026-11-20', motivering: 'Väntar på operation, tungt arbete.' });
@@ -128,43 +134,59 @@ describe('Stödet vid sjukskrivning', () => {
     expect(db.query('SELECT fmb_motivering FROM sjukskrivningar WHERE intygs_id = ?').get(id).fmb_motivering).toBe('Väntar på operation, tungt arbete.');
     const u = sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG);
     expect(u.pagaende[0].fmb).toMatchObject({ over: true, motiverat: true });
+    // Förlängningen förnyar intyget, och motiveringen följer med som ett svar som inte har ändrats.
     const f = await sjukfall.forlang(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), {}, DAG);
-    const nytt = JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(f.oppna.split('/').pop()).svar);
-    expect(nytt.motiveringFmb).toBe('Väntar på operation, tungt arbete.');
-    expect(f.forifyllt).toContain('Motiveringen till beslutsstödet');
-    // Bara läkaren med skriv_intyg i ett utkast kan skriva motiveringen, och text måste vara text.
-    const ssk = personal(db, 'ssk-vc');
-    expect((await fel(() => beslutsstod.sparaMotivering(db, ssk, f.oppna.split('/').pop(), { motivering: 'x' }))).status).toBe(404);
-    expect((await fel(() => beslutsstod.sparaMotivering(db, personal(db, 'lak-vc'), id, { motivering: 'x' }))).status).toBe(409);
-    expect((await fel(() => beslutsstod.sparaMotivering(db, personal(db, 'lak-vc'), f.oppna.split('/').pop(), { motivering: 5 }))).status).toBe(400);
+    const nytt = app.lasSvar(db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(f.oppna.split('/').pop()));
+    expect(nytt['37']).toBe('Väntar på operation, tungt arbete.');
+    // Beslutsstödet i utkastet ser att motiveringen finns, men lämnar inte ut texten genom API:t (sjukfall-rutter.js).
+    const b = sjukfall.forUtkast(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), beslutsstod.utkastFor(db, personal(db, 'lak-vc'), f.oppna.split('/').pop()), DAG);
+    expect(b.motiveringIIntyget).toBe('Väntar på operation, tungt arbete.');
   });
 
-  test(`${T}förlängningen skapar med ett klick ett utkast som börjar dagen efter förra intyget, med det som inte har ändrats`, async () => {
+  test(`${T}förlängningen förnyar med ett klick förra intyget, och beslutsstödet föreslår perioden från dagen efter`, async () => {
     const db = nyDb();
     await signera(db, { fran: '2026-11-02', till: '2026-11-15', nedsattning: 'tre_fjardedelar' });
     const u = sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG);
     expect(u.forlangning).toMatchObject({ fran: '2026-11-16', till: '2026-11-29', grad: 75, dagar: 14 });
     const f = await sjukfall.forlang(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), {}, DAG);
-    expect(f.intyg.status).toBe('utkast');
+    expect(f.forslag).toMatchObject({ fran: '2026-11-16', till: '2026-11-29', grad: 75 });
     const id = f.oppna.split('/').pop();
-    const s = JSON.parse(db.query('SELECT svar FROM sim_intygsapplikation WHERE intygs_id = ?').get(id).svar);
-    expect(s).toMatchObject({ diagnosKod: 'M544', sysselsattning: 'nuvarande_arbete', nedsattning: 'tre_fjardedelar', fran: '2026-11-16', till: '2026-11-29' });
-    // Utkastet går att signera direkt, och sjukfallet blir ett med 28 dagar.
+    // Förnyelsen i intygsapplikationen: svaren som inte har ändrats följer med, och grad, period, underlag och prognos tar
+    // läkaren ställning till på nytt (intygstyper.overfor). Inget sparas i utkastet av förlängningen själv.
+    const rad = db.query('SELECT * FROM sim_intygsapplikation WHERE intygs_id = ?').get(id);
+    expect(rad.relation_typ).toBe('FRLANG');
+    const s = app.lasSvar(rad);
+    expect(s).toMatchObject({ '6': [{ kod: 'M544' }], '28': ['NUVARANDE_ARBETE'], '29': 'Lagerarbetare' });
+    expect(s['32']).toBeUndefined();
+    expect(s['39']).toBeUndefined();
+    // Beslutsstödet föreslår perioden, som läkaren fyller i och sparar själv.
+    const b = sjukfall.forUtkast(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), beslutsstod.utkastFor(db, personal(db, 'lak-vc'), id), DAG);
+    expect(b.forslagPeriod).toMatchObject({ kod: 'TRE_FJARDEDEL', fran: '2026-11-16', till: '2026-11-29' });
+    await app.spara(db, personal(db, 'lak-vc'), id, { svar: { '1': { FYSISKUNDERSOKNING: DAG }, '32': [{ kod: 'TRE_FJARDEDEL', fran: '2026-11-16', till: '2026-11-29' }], '33': false, '39': 'STOR_SANNOLIKHET' } });
     await app.atgard(db, personal(db, 'lak-vc'), id, 'signera');
     const e = sjukfall.forPatient(atk(db, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG);
     expect(e.pagaende.length).toBe(1);
     expect(e.pagaende[0]).toMatchObject({ dagar: 28, antalIntyg: 2, slut: '2026-11-29' });
-    // CreateDraftCertificate med förifyllnaden följde schemat.
-    expect(rivta.anropslogg(db).filter(x => x.kontrakt === 'CreateDraftCertificate').every(x => x.resultat === 'ok')).toBe(true);
     // Ett sjukfall som tog slut för mer än 5 dagar sedan förlängs inte: det blir ett nytt sjukfall.
     const db2 = nyDb();
     lagg(db2, { perioder: [{ fran: '2026-10-01', till: '2026-11-05', grad: 100 }] });
     expect(sjukfall.forPatient(atk(db2, 'lak-vc', 'p11', {}, 'las_intyg'), patient(db2, 'p11'), DAG).forlangning).toBeNull();
     expect((await fel(() => sjukfall.forlang(atk(db2, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db2, 'p11'), {}, DAG))).message).toContain('nytt sjukfall');
-    // Sjuksköterskan ser sjukfallet men förlänger inte.
+    // Ett sjukfall som bara finns i journalens tabell (utan intyget i journalen) förlängs med ett nytt sjukintyg, som skapas
+    // med journalens förifyllnad från den egna vårdenheten.
+    const db3 = nyDb();
+    lagg(db3, { perioder: [{ fran: '2026-11-01', till: '2026-11-15', grad: 100 }] });
+    const f3 = await sjukfall.forlang(atk(db3, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db3, 'p11'), {}, DAG);
+    expect(db3.query('SELECT relation_typ FROM sim_intygsapplikation WHERE intygs_id = ?').get(f3.oppna.split('/').pop()).relation_typ).toBeNull();
+    // Sjuksköterskan ser sjukfallet men förlänger inte, och vårdadministratören ser inte sjukskrivningen.
     const ssk = sjukfall.forPatient(atk(db, 'ssk-vc', 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG);
     expect(ssk.forlangning).toBeNull();
     expect((await fel(() => sjukfall.forlang(atk(db, 'ssk-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), {}, DAG))).status).toBe(403);
+    const adm = db.query("SELECT id FROM personal WHERE yrke = 'vardadministrator' AND enhet_id = 'vc-tybble' LIMIT 1").get()?.id;
+    if (adm) expect((await fel(() => sjukfall.forPatient(atk(db, adm, 'p11', {}, 'las_intyg'), patient(db, 'p11'), DAG))).status).toBe(403);
+    // Reglerna för intyget gäller också förlängningen: en avliden patient får inget nytt sjukintyg.
+    db.query("INSERT INTO avlidna (patient_id, datum, registrerad_av, registrerad) VALUES ('p11', ?, 'lak-vc', ?)").run(DAG, iso());
+    expect((await fel(() => sjukfall.forlang(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), {}, DAG)))?.status).toBe(400);
   });
 
   test(`${T}ett intyg på en spärrad vårdenhet räknas inte och röjs inte i dagar, summa eller varning, och räknas in med samtycke`, async () => {
@@ -274,12 +296,16 @@ describe('Stödet vid sjukskrivning', () => {
     const db = nyDb();
     sjukfall.seedaDemo(db, DAG, { kalla: 'demotest' });
     const m = sjukfall.minaSjukfall(db, personal(db, 'lak-vc'), () => ({}), DAG);
-    expect(m.sjukfall.map(s => s.patientId).sort()).toEqual(['p03', 'p14', 'p18']);
-    expect(m.sjukfall.find(s => s.patientId === 'p14')).toMatchObject({ uppskattadDag: 89, dagar: 95, aktuellGrad: 50, gaarUtSnart: true, rehabkedjan: { nastaGrans: 90, nara: true }, fmb: { over: true, motiverat: true } });
-    expect(m.sjukfall.find(s => s.patientId === 'p18')).toMatchObject({ uppskattadDag: 171, rehabkedjan: { nastaGrans: 180, nara: true }, grader: [50] });
-    expect(m.sjukfall.find(s => s.patientId === 'p03').namn).toBe('Skyddad identitet');
-    // Det tidigare sjukfallet syns på patienten.
-    expect(sjukfall.forPatient(atk(db, 'lak-vc', 'p14', {}, 'las_intyg'), patient(db, 'p14'), DAG).tidigare[0]).toMatchObject({ dagar: 21, fmb: { over: true, motiverat: false } });
+    expect(m.sjukfall.map(s => s.patientId).sort()).toEqual(['p03', 'p18']);
+    expect(m.sjukfall.find(s => s.patientId === 'p18')).toMatchObject({ uppskattadDag: 89, dagar: 95, aktuellGrad: 50, gaarUtSnart: true, rehabkedjan: { nastaGrans: 90, nara: true }, fmb: { over: true, motiverat: true } });
+    const p03 = m.sjukfall.find(s => s.patientId === 'p03');
+    expect(p03).toMatchObject({ namn: 'Skyddad identitet', uppskattadDag: 171, rehabkedjan: { nastaGrans: 180, nara: true }, grader: [50] });
+    // Intygen finns också i journalen och i intygsapplikationen, så att förlängningen kan förnya dem.
+    const r = db.query("SELECT s.lakarintyg_id, l.status, l.typ FROM sjukskrivningar s JOIN lakarintyg l ON l.id = s.lakarintyg_id WHERE s.kalla = 'demotest' AND s.patient_id = 'p18' ORDER BY s.signerad DESC").get();
+    expect(r).toMatchObject({ status: 'skickat', typ: 'LISJP' });
+    const sim = app.lasSvar(db.query("SELECT * FROM sim_intygsapplikation WHERE intygs_id = (SELECT intygs_id FROM lakarintyg WHERE id = ?)").get(r.lakarintyg_id));
+    expect(sim['37']).toContain('ryggkirurg');
+    expect(IT.saknas(IT.aktuell('LISJP'), sim)).toEqual([]);
     // Seeden läggs bara in en gång.
     const n = db.query("SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = 'demotest'").get().n;
     sjukfall.seedaDemo(db, DAG, { kalla: 'demotest' });
@@ -296,7 +322,7 @@ describe('Stödet vid sjukskrivning', () => {
     // Intygsapplikationen sparar inte en sådan period.
     const db = nyDb();
     const r = await intyg.skapa(atk(db, 'lak-vc', 'p11', {}, 'skriv_intyg'), patient(db, 'p11'), { typ: 'LISJP' }, DAG);
-    const f = await fel(() => app.spara(db, personal(db, 'lak-vc'), r.oppna.split('/').pop(), { fran: '1900-01-01', till: '9999-12-31' }));
+    const f = await fel(() => app.spara(db, personal(db, 'lak-vc'), r.oppna.split('/').pop(), { svar: { '32': [{ kod: 'HELT_NEDSATT', fran: '1900-01-01', till: '9999-12-31' }] } }));
     expect(f.status).toBe(400);
     expect(f.message).toContain('två år');
     // Svaren ur ett meddelande och ur intygsapplikationen ger ingen sådan period.

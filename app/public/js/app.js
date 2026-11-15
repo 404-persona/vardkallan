@@ -21,6 +21,8 @@ import * as servicenivaer from './vyer/servicenivaer.js';
 import * as nationellaTjanster from './vyer/nationella-tjanster.js';
 // Runda 15, r2, tredje omgången: flyttar till rätt patient som väntar på godkännande.
 import * as flyttar from './vyer/flyttar.js';
+// Runda 16, r3: handledningen av studenter.
+import * as handledning from './vyer/handledning.js';
 import * as oppetApi from './vyer/oppet-api.js';
 import * as drift from './vyer/drift.js';
 import * as anvandartest from './anvandartest.js';
@@ -216,6 +218,8 @@ const MENY = [
   // Runda 7, r2: övningar och intyg för all personal (Sussa 10.1.1.5).
   // Runda 15, r2, tredje omgången: flyttar till rätt patient med fyra ögon, för verksamhetschefen och vårdadministratören.
   ['#/flyttar', 'Flyttar till rätt patient', 'pil', () => far('godkanna_flytt')],
+  // Runda 16, r3: för studenten och för handledaren när det finns studenter på vårdenheten.
+  ['#/handledning', 'Handledning', 'person', () => Boolean(S.session?.handledning)],
   ['#/utbildning', 'Utbildning', 'person', () => far('utbildning')],
   // Runda 7, r1: testledaren läser och exporterar svaren från användartesterna.
   ['#/sussatest', 'Användartester', 'krav', () => far('anvandartest_las')],
@@ -288,6 +292,8 @@ const RUTTER = [
   // Runda 15, r2.
   [/^#\/nationella-tjanster$/, nationellaTjanster, () => far('forvalta_api')],
   [/^#\/flyttar$/, flyttar, () => far('godkanna_flytt')],
+  // Runda 16, r3.
+  [/^#\/handledning$/, handledning, () => Boolean(S.session?.handledning)],
   // Runda 9, r4.
   [/^#\/kodverk$/, kodverk, () => far('konfigurera')],
   // Runda 12, r1.

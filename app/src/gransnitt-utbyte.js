@@ -104,7 +104,9 @@ export const GRANSSNITT = [
     // Runda 14, sammanslagningen: r3:s rutter och filer för intyg, e-remiss och processkontrakten.
     prefix: ['/api/intyg', '/api/webcert', '/api/eremiss', '/api/intygsapplikation', '/api/patient/:id/intyg', '/api/patient/:id/eremiss'], hanvisning: 'docs/rivta.md',
     kod: ['src/lakarintyg.js', 'src/intygsapplikation-simulerad.js', 'src/eremiss.js', 'src/eremiss-simulerad.js', 'src/r14r3-rutter.js', 'src/rivta-r3.js', 'src/rivta-vaccination.js',
-      'src/rivta-etjanster.js', 'src/rivta-etjanster-simulerade.js', 'src/rivta-dos.js', 'src/rivta-dos-simulerad.js', 'src/rivta-infektion.js', 'src/rivta-infektion-simulerad.js'],
+      'src/rivta-etjanster.js', 'src/rivta-etjanster-simulerade.js', 'src/rivta-dos.js', 'src/rivta-dos-simulerad.js', 'src/rivta-infektion.js', 'src/rivta-infektion-simulerad.js',
+      // Runda 16, r1: intygstyperna med frågor och giltighet.
+      'src/intygstyper.js'],
     simulerat: 'Intygsapplikationen är simulerad och är inte Webcert, och mottagarna av e-remisser och de nationella tjänsterna är simulerade. Inget är anslutet till den nationella tjänsteplattformen.',
     text: 'Intyg och processkontrakten byggs på den gemensamma RIVTA-grunden och beskrivs i docs/rivta.md: Intygstjänsten och Webcert, e-remiss, vaccination, Infektionsverktyget, kvalitetsregister, formulärtjänsten, e-recept och dos.',
     behorighet: 'Se docs/rivta.md och docs/sakerhetsarkitektur.md.',

@@ -14,17 +14,25 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   rutt('GET', '/api/intygsapplikation/:iid/beslutsstod', (c, iid) => {
     const personal = kravInloggad(c);
     const u = beslutsstod.utkastFor(c.db, personal, iid, valForIntyg(c, iid));
-    // Det som står i formuläret men inte är sparat räknas med, bara för bedömningen och bara i ett utkast. Datum och
-    // nivå prövas som de sparade svaren (sjukfall-intygssvar.js).
-    const sv = simSvar(u.svar);
-    u.svar = { diagnosKod: sv.diagnosKod, diagnosText: sv.diagnosText, motiveringFmb: sv.motiveringFmb, perioder: sv.perioder };
-    if (u.status === 'utkast') {
-      const q = Object.fromEntries(['fran', 'till', 'nedsattning'].map(k => [k, c.url.searchParams.get(k)]).filter(([, v]) => typeof v === 'string' && v.length && v.length <= 20));
-      if (Object.keys(q).length) u.svar.perioder = [{ ...(sv.perioder.at(-1) ?? {}), ...q }];
+    // Det som står i formuläret men inte är sparat räknas med, bara för bedömningen och bara i ett utkast: perioderna i
+    // fråga 32 (som JSON, högst fyra), diagnoskoden och om fråga 37 har en motivering. Datum och nivå prövas som de
+    // sparade svaren (sjukfall-intygssvar.js), och inget sparas.
+    if (u.status === 'utkast' || u.status === 'klart_for_signering') {
+      const q = c.url.searchParams;
+      const per = q.get('perioder');
+      if (typeof per === 'string' && per.length <= 600) {
+        try { const l = JSON.parse(per); if (Array.isArray(l)) u.svar['32'] = l.slice(0, 4).filter(x => x && typeof x === 'object').map(x => ({ kod: String(x.kod ?? ''), fran: String(x.fran ?? ''), till: String(x.till ?? '') })); } catch { /* ogiltigt räknas inte */ }
+      }
+      const d = q.get('diagnos');
+      if (typeof d === 'string' && /^[A-Za-z]\d{2}(\.?\w{0,4})$/.test(d)) u.svar['6'] = [{ kod: d.replace('.', '').toUpperCase(), text: null }];
+      const m = q.get('motivering');
+      if (m === '1' && !simSvar(u.svar).motiveringFmb) u.svar['37'] = 'ifylld';
+      if (m === '0') delete u.svar['37'];
     }
-    return sjukfall.forUtkast(new Atkomst(c.db, personal, u.patientId, valFor(c.s, u.patientId), 'las_intyg'), u);
+    const svar = sjukfall.forUtkast(new Atkomst(c.db, personal, u.patientId, valFor(c.s, u.patientId), 'las_intyg'), u);
+    // Motiveringarnas text skickas inte tillbaka, bara att de finns: den står i intyget och i fliken Sjukskrivning.
+    return { ...svar, motivering: svar.motivering ? true : null, motiveringIIntyget: svar.motiveringIIntyget ? true : null };
   });
-  rutt('POST', '/api/intygsapplikation/:iid/beslutsstod/motivering', async (c, iid) => beslutsstod.sparaMotivering(c.db, kravInloggad(c), iid, c.body, valForIntyg(c, iid)));
   // Läkarens pågående sjukfall och vårdenhetens översikt för verksamhetschefen.
   rutt('GET', '/api/sjukskrivningar', (c) => sjukfall.minaSjukfall(c.db, kravInloggad(c), (pid) => valFor(c.s, pid)));
   rutt('GET', '/api/sjukskrivningar/enhet', (c) => sjukfall.enhetensSjukfall(c.db, kravInloggad(c)));

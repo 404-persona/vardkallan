@@ -1354,6 +1354,31 @@ function skapa(BAS) {
     await page.waitForURL(/#\/intygsapplikation\//);
     await synlig(page, '.ruta-info', 'simulerad, inte Webcert');
   };
+  // Runda 16, r1: ett läkarintyg för sjukpenning i version 2 och bytet från ett ersatt intyg till TS8071.
+  GOR['skriv-sjukintyg'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Intyg' }), 'Intyg');
+    await page.waitForSelector('.intyg-nytt');
+    if (await page.locator('#in-typ').inputValue() !== 'LISJP') throw new Error('systemet föreslog inte läkarintyget för sjukpenning');
+    await m.klicka(page.locator('.intyg-nytt [type="submit"]'), 'Skriv intyget');
+    await page.waitForURL(/#\/intygsapplikation\//);
+    await page.waitForSelector('.ia-form #ia-29', { state: 'attached' });
+    if (!(await page.locator('[name="q-1"]:checked').count())) await m.klicka(page.locator('[name="q-1"][value="FYSISKUNDERSOKNING"]'), 'min undersökning vid fysiskt vårdmöte');
+    await m.klicka(page.locator('[name="q-28"][value="NUVARANDE_ARBETE"]'), 'Nuvarande arbete');
+    await m.skriv(page.locator('#ia-29'), 'Lagerarbetare', 'yrke och arbetsuppgifter');
+    if (!(await page.locator('#ia-35').inputValue())) await m.skriv(page.locator('#ia-35'), 'Nedsatt rörlighet.', 'funktionsnedsättning');
+    await m.skriv(page.locator('#ia-17'), 'Kan inte lyfta.', 'aktivitetsbegränsning');
+    await m.klicka(page.locator('[name="q-32"][value="HELT_NEDSATT"]'), '100 procent');
+    await m.klicka(page.locator('[name="q-39"][value="STOR_SANNOLIKHET"]'), 'prognos');
+    await m.klicka(page.locator('[data-atgard="signera"]'), 'Signera');
+    await synlig(page, '.notis', 'Journalen har fått statusen');
+  };
+  startI['Journalen för Mikael Svensson på vårdcentralen'] = async (page) => { await gaTill(page, '#/patient/p14'); await page.waitForSelector('.patientband h1'); await page.waitForLoadState('networkidle'); };
+  GOR['byt-ersatt-intyg'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Intyg' }), 'Intyg');
+    await m.klicka(page.locator('[data-fornya]', { hasText: 'Skriv TS 8071 i stället' }), 'Skriv TS 8071 i stället');
+    await page.waitForURL(/#\/intygsapplikation\//);
+    await synlig(page, '.ruta-info', 'TS 8071');
+  };
   GOR['skicka-eremiss'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Remisser' }), 'Remisser');
     await page.waitForSelector('[data-eremiss]');
@@ -1363,16 +1388,20 @@ function skapa(BAS) {
     await m.klicka(page.locator('.eremiss-form [type="submit"]'), 'Skicka e-remissen');
     await synlig(page, '.notis', 'E-remissen är skickad');
   };
-  // Runda 16, r2: förlänga en sjukskrivning för demons sjukskrivna patient på vårdcentralen (Mikael Svensson).
-  startI['Journalen för en sjukskriven patient på vårdcentralen'] = async (page) => { await gaTill(page, '#/patient/p14'); await page.waitForSelector('.patientband h1'); await page.waitForLoadState('networkidle'); };
+  // Runda 16, r2: förlänga en sjukskrivning för demons sjukskrivna patient på vårdcentralen (Marek Zieliński).
+  startI['Journalen för en sjukskriven patient på vårdcentralen'] = async (page) => { await gaTill(page, '#/patient/p18'); await page.waitForSelector('.patientband h1'); await page.waitForLoadState('networkidle'); };
   GOR['forlang-sjukskrivning'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Sjukskrivning' }), 'Sjukskrivning');
     await page.waitForSelector('[data-forlang]');
     await m.klicka(page.locator('[data-forlang]'), 'Förläng sjukskrivningen');
     await page.waitForURL(/#\/intygsapplikation\//);
-    await synlig(page, '.fmb-panel', 'Försäkringsmedicinskt beslutsstöd');
+    await page.waitForSelector('.fmb-panel [data-fyll-period]');
+    await m.klicka(page.locator('[data-fyll-period]'), 'Fyll i förslaget');
+    if (!(await page.locator('[name="q-1"]:checked').count())) await m.klicka(page.locator('[name="q-1"][value="FYSISKUNDERSOKNING"]'), 'min undersökning vid fysiskt vårdmöte');
+    if (await page.locator('[name="q-33"][value="nej"]').isVisible()) await m.klicka(page.locator('[name="q-33"][value="nej"]'), 'arbetstiden');
+    await m.klicka(page.locator('[name="q-39"][value="STOR_SANNOLIKHET"]'), 'prognos');
     await m.klicka(page.locator('[data-atgard="signera"]'), 'Signera');
-    await synlig(page, '.notis', 'signerat');
+    await synlig(page, '.notis', 'Journalen har fått statusen');
   };
   // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.
   GOR['las-mellanarkiv'] = async (m, page) => {
@@ -1506,6 +1535,48 @@ function skapa(BAS) {
     await m.infoga(page.locator('.underlag-post[data-infoga*="matvarde"]').first(), 'det senaste mätvärdet i underlaget');
     await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
     await synlig(page, '.anteckning .ant-fakta', 'Signerad');
+  };
+  // Runda 16, r3: de nya rollernas vanligaste anteckning och barnmorskans förskrivning. Se klickbudget.js.
+  const oversikt = (pid) => async (page) => { await gaTill(page, `#/patient/${pid}`); await page.waitForSelector('.tidslinje'); };
+  startI['Översikten för en patient på ortopeden i Karlskoga'] = oversikt('p07');
+  startI['Översikten för en patient på medicinkliniken i Lindesberg'] = oversikt('p10');
+  startI['Översikten för en patient på psykiatrin'] = oversikt('p15');
+  startI['Översikten för en patient på förlossningen'] = async (page) => {
+    await gaTill(page, '#/arbetslista');
+    await page.evaluate(() => fetch('/api/demo/obstetrik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
+    await oversikt('obs3')(page);
+  };
+  const yrkesanteckning = (text) => async (m, page) => {
+    await m.klicka(page.locator('.snabbval a', { hasText: 'Ny anteckning' }), 'Ny anteckning');
+    await page.waitForSelector('#ant-form #ny-sokord textarea');
+    await m.skriv(page.locator('#ny-sokord textarea').first(), text, 'första sökordet');
+    await m.klicka(page.locator('.ant-form [data-signera]'), 'Signera');
+    await synlig(page, '.anteckning .ant-fakta', 'Signerad');
+  };
+  GOR.arbetsterapianteckning = yrkesanteckning('Klarar påklädning med strumppådragare. Rollator inomhus.');
+  GOR.dietistanteckning = yrkesanteckning('Äter hälften av portionerna. Vikten har gått ned två kilo på en månad.');
+  GOR.logopedanteckning = yrkesanteckning('Remiss för bedömning av sväljningen efter stroke.');
+  GOR.kuratorsanteckning = yrkesanteckning('Bor ensam, dottern hjälper till med inköp. Oro inför utskrivningen.');
+  GOR.psykologanteckning = yrkesanteckning('Andra samtalet. Sömnen har blivit bättre.');
+  GOR.barnmorskeanteckning = yrkesanteckning('Önskar preventivmedelsrådgivning.');
+  GOR['student-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Sov gott i natt enligt patienten.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['lakarstudent-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Återbesök efter hjärtsviktsdekompensation.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['barnmorskestudent-anteckning'] = async (m, page) => {
+    await yrkesanteckning('Värkar var tredje minut, mår bra.')(m, page);
+    await synlig(page, '.anteckning [data-handledd]', 'Inte kontrasignerad');
+  };
+  GOR['forskriv-preventivmedel'] = async (m, page) => {
+    await m.klicka(page.locator('.flikar a', { hasText: 'Läkemedel' }), 'fliken Läkemedel');
+    await m.klicka(page.locator('[data-preventivmedel]'), 'Förskriv preventivmedel');
+    await page.waitForSelector('dialog[open] input[name="lakemedelId"]');
+    await m.klicka(page.locator('dialog[open] [data-varde="ok"]'), 'Förskriv');
+    await synlig(page, '.notis', 'är förskrivet');
   };
   return { synlig, gaTill, loggaIn, startI, GOR };
 }

@@ -405,9 +405,21 @@ Ett klick på fliken Journal och ett på Senaste bedömning, som systemet har r�
 
 ### Förlänga en sjukskrivning
 
-Börjar i: Journalen för en sjukskriven patient på vårdcentralen. Klickbudget: högst 3 steg. I demon gör Per Holm flödet.
+Börjar i: Journalen för en sjukskriven patient på vårdcentralen. Klickbudget: högst 7 steg. I demon gör Per Holm flödet.
 
-Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Signera i intygsapplikationen. Systemet har räknat sjukfallet, föreslår perioden från dagen efter förra intyget med samma längd och nivå, fyller i diagnos, sysselsättning och motiveringen till beslutsstödet och visar Socialstyrelsens rekommendation och var patienten är i rehabiliteringskedjan.
+Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Fyll i förslaget, där systemet har räknat sjukfallet och föreslår perioden från dagen efter förra intyget med samma längd och nivå. Förnyelsen har tagit med svaren som inte har ändrats, också motiveringen till beslutsstödet. Läkaren tar ställning på nytt till underlaget, arbetstidens förläggning och prognosen (högst tre klick, underlaget är ofta föreslaget ur vårdkontakten) och signerar.
+
+### Skriva och signera ett läkarintyg för sjukpenning
+
+Börjar i: Journalen för patienten på vårdcentralen. Klickbudget: högst 10 steg. I demon gör Per Holm flödet.
+
+Sussa 2.2.1.9. Ett klick på fliken Intyg och ett på Skriv intyget, där systemet har föreslagit läkarintyget för sjukpenning. Underlaget (den senaste vårdkontakten), diagnosen och funktionsnedsättningen ur anteckningens status har systemet fyllt i med källa. Läkaren kryssar nuvarande arbete, skriver yrket och aktivitetsbegränsningen (två fältbyten), kryssar graden, där systemet fyller i perioden från i dag i två veckor, väljer prognos och signerar. Vem som signerar, vårdenheten och patienten behöver ingen ange.
+
+### Byta ett ersatt intyg mot det som gäller nu
+
+Börjar i: Journalen för Mikael Svensson på vårdcentralen. Klickbudget: högst 2 steg. I demon gör Per Holm flödet.
+
+Sussa 2.2.1.9 och 3.1.4.2. Ett klick på fliken Intyg och ett på Skriv TS 8071 i stället vid det ersatta läkarintyget för högre körkortsbehörigheter. Systemet vet att TSTRK1007 ersattes av TS8071, skapar det nya utkastet med de svar som får följa med och öppnar det. Ingen behöver veta vilken blankett som gäller.
 
 ## Instruktionsfilmer
 
@@ -545,19 +557,19 @@ Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](h
 
 ### Övning 12
 
-Demopatienten Mikael Svensson är sjukskriven och intyget går snart ut. Hur förlänger du sjukskrivningen?
+Demopatienten Marek Zieliński är sjukskriven och intyget går snart ut. Hur förlänger du sjukskrivningen?
 
-Rätt svar: Klickar på Förläng sjukskrivningen i fliken Sjukskrivning. Utkastet börjar dagen efter förra intyget och har diagnos, sysselsättning, nivå och motivering ifyllda.
+Rätt svar: Klickar på Förläng sjukskrivningen i fliken Sjukskrivning. Förra intyget förnyas med de svar som inte har ändrats, och systemet föreslår perioden från dagen efter förra intyget.
 
-Ett signerat intyg ändras aldrig. Systemet föreslår perioden och fyller i det som inte har ändrats, och du tar ställning till resten och signerar.
+Ett signerat intyg ändras aldrig. Systemet föreslår perioden, som du fyller i med ett klick, och du tar ställning till grad, underlag och prognos och signerar.
 
-Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/sjukskrivning).
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p18/sjukskrivning).
 
 ### Övning 13
 
 Beslutsstödet säger att den sammanlagda sjukskrivningen blir längre än Socialstyrelsens rekommendation. Vad gör du?
 
-Rätt svar: Bedömer patienten. Behövs en längre sjukskrivning skriver du varför i rutan under varningen, en gång, och motiveringen följer med i intyget och i förlängningar.
+Rätt svar: Bedömer patienten. Behövs en längre sjukskrivning skriver du varför i fråga 37, en gång, och motiveringen följer med när intyget förnyas.
 
 Rekommendationen är ett stöd, inte en gräns. Systemet räknar dagarna ur patientens tidigare intyg, och Försäkringskassan får din motivering i intyget.
 
@@ -570,6 +582,44 @@ Rätt svar: Ja. Intyg med högst 5 dagars uppehåll hör till samma sjukfall, me
 Regeln är densamma som i Rehabstöd och Webcert. Systemet räknar sjukfallet själv och visar var patienten är i rehabiliteringskedjan.
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar).
+
+### Övning 15
+
+Demopatienten Mikael Svensson har ett läkarintyg för högre körkortsbehörigheter (TSTRK1007) från 2024. Han behöver ett nytt. Hur gör du?
+
+Rätt svar: Klickar på Skriv TS 8071 i stället vid det gamla intyget. Systemet vet att TS8071 har ersatt TSTRK1007 och tar med de svar som får följa med.
+
+TSTRK1007 kan inte utfärdas sedan den 31 januari 2025. Systemet visar bara de intyg som gäller nu, säger vad som ersatte det gamla och byter med ett klick.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
+
+### Övning 16
+
+Du förnyar ett läkarintyg för sjukpenning som skrevs i version 1 av blanketten. Vad följer med till det nya utkastet?
+
+Rätt svar: Svaren på frågor som inte har ändrats i version 2. Grad och period, underlag och prognos tar du ställning till på nytt.
+
+Bara svar på oförändrade frågor följer med, som Inera beskriver för FK 7804 och AG7804. Det du ska bedöma på nytt följer aldrig med, och systemet säger hur många frågor det gäller.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/patient/p14/intyg).
+
+### Övning 17
+
+Patienten vill ha ett läkarintyg till sin arbetsgivare men vill inte att arbetsgivaren får veta diagnosen. Vad gäller?
+
+Rätt svar: Intyget skrivs ut och lämnas av patienten. Svarar patienten nej på frågan om att förmedla diagnosen finns den inte med, och patienten kan dölja den på utskriften.
+
+Läkarintyg om arbetsförmåga till arbetsgivaren och under sjuklöneperioden kan inte skickas digitalt. Diagnosen är patientens att dela.
+
+### Övning 18
+
+Din student har signerat en anteckning. Var hittar du den, och vad gör du?
+
+Rätt svar: Den ligger i din inkorg under Att kontrasignera. Du läser den, går igenom den med studenten om något behöver rättas, och kontrasignerar med ett klick.
+
+Systemet skickar varje anteckning som studenten signerar till handledaren. Anteckningen är märkt som inte kontrasignerad tills du har kontrasignerat den.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/inkorg).
 
 ## Praktiska prov
 
@@ -697,4 +747,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 14 övningar och få intyget.
+- Svara rätt på alla 18 övningar och få intyget.

@@ -25,6 +25,8 @@ import { vardenhetFor, visningsnamn, visningsPnr, Atkomst } from './atkomst.js';
 import { SPADNINGSREGLER } from './lakemedelsstod.js';
 import { synligaAdministreringar, kravVardande } from './administrering.js';
 import { synligaMatvarden } from './journal.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const DEMOREGLER_BEREDNING = 'Vilka beredningar som kontrolleras av en annan person, hur länge en beredning håller och gränserna för syrgas är demoregler, inte en vårdgivares rutin.';
 const TIMME = 3600_000;
@@ -178,7 +180,7 @@ export function kontrollera(atk, beredningId, inp = {}) {
   // En beredning till en dos som användaren inte får se behandlas som om den inte finns.
   if (!b || !synligaAdministreringar(atk).some(a => a.id === b.administrering_id)) throw new Fel(404, 'Beredningen finns inte.', 'saknas');
   kravVardande(atk, 'ge_lakemedel', { enhet_id: b.enhet_id }, `beredning:${b.id}:kontroll`);
-  if (!['sjukskoterska', 'lakare'].includes(atk.personal.yrke)) {
+  if (!['sjukskoterska', 'lakare'].includes(somYrke(atk.personal.yrke))) {
     atk.logga('ge_lakemedel', 'nekad', `beredning:${b.id}:kontroll`, 'nekad');
     throw new Fel(403, 'En beredning kontrolleras av en sjuksköterska eller läkare.', 'nekad');
   }
@@ -200,7 +202,7 @@ export function kontrollera(atk, beredningId, inp = {}) {
 // Beredningar på den egna vårdenheten som väntar på kontroll av den inloggade, för inkorgen: bara antal, utan
 // patientuppgifter, och aldrig den inloggades egna.
 export function vantarPaKontroll(db, personal) {
-  if (!['sjukskoterska', 'lakare'].includes(personal?.yrke)) return 0;
+  if (!['sjukskoterska', 'lakare'].includes(somYrke(personal?.yrke))) return 0;
   const ve = vardenhetFor(db, personal.enhet_id);
   return db.query('SELECT enhet_id, beredd_av FROM beredningar WHERE kontroll_kravs = 1 AND kontrollerad_tid IS NULL AND hallbar_till > ?').all(iso())
     .filter(b => b.beredd_av !== personal.id && vardenhetFor(db, b.enhet_id) === ve).length;

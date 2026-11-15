@@ -34,7 +34,7 @@ const ENHETEN = { id: 'enheten', namn: 'Hela vårdenheten', titel: null };
 // Personal på samma vårdenhet som kan vara ansvarig.
 function ansvariga(db, personal) {
   const ve = vardenhetFor(db, personal.enhet_id);
-  return db.query("SELECT id, namn, titel, enhet_id, yrke FROM personal WHERE aktiv = 1 AND yrke IN ('lakare', 'sjukskoterska', 'vardadministrator', 'underskoterska') ORDER BY namn").all()
+  return db.query("SELECT id, namn, titel, enhet_id, yrke FROM personal WHERE aktiv = 1 AND yrke IN ('lakare', 'sjukskoterska', 'barnmorska', 'vardadministrator', 'underskoterska') ORDER BY namn").all()
     .filter(p => vardenhetFor(db, p.enhet_id) === ve).map(p => ({ id: p.id, namn: p.namn, titel: p.titel }));
 }
 

@@ -16,19 +16,19 @@ Så begränsas risken: Åtkomst bara med vårdrelation på den egna vårdenheten
 
 Får inte: `las_logg`, `konfigurera`, `datauttag`, `faktureringsunderlag`, `sla_samman`, `gallra`.
 
-Handlingar i koden (94): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_journal`, `skriv_omvardnad`, `las_lakemedel`, `ordinera`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `vantrum`, `nodatkomst`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `registrera_vardkontakt`, `vardtillfalle`, `halsoarende`, `skriv_ut`, `utlamna`, `begara_kontrasignering`, `kontrasignera`, `ge_lakemedel`, `delegera`, `faststalla_direktiv`, `faststalla_mall`, `utvardera_lakemedel`, `lakemedelsgenomgang`, `las_vardplan`, `vardplan`, `vardplan_atgard`, `las_tvangsvard`, `tvangsvard`, `samordna`, `godkanna_mall`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `fardigbehandlad`, `hjalpmedel`, `registrera_diagnos`, `kvalitetsregister`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `las_prover`, `bestalla_prov`, `ta_prov`, `vidimera_provsvar`, `ordinera_kontroll`, `koppla_utrustning`, `godkanna_matvarde`, `anestesibedomning`, `las_operation`, `operation_anmala`, `operation_planera`, `operation_registrera`, `las_graviditet`, `graviditet`, `las_cytostatika`, `ordinera_cytostatika`, `ge_cytostatika`, `forskriva_forbrukning`, `bestalla_lakemedel`, `rapportera_graviditetsregistret`, `undersokning_utfora`, `patientgrupp`, `infart`, `restjournal`, `signeringslista`, `registrera_overkanslighet`, `donation`, `meddelande_invanare`, `las_intyg`, `skriv_intyg`, `sjukfall_mina`, `vaccinera`, `boka_bhv`, `rapportera_bhvq`.
+Handlingar i koden (95): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_journal`, `skriv_omvardnad`, `las_lakemedel`, `ordinera`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `vantrum`, `nodatkomst`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `registrera_vardkontakt`, `vardtillfalle`, `halsoarende`, `skriv_ut`, `utlamna`, `begara_kontrasignering`, `kontrasignera`, `ge_lakemedel`, `delegera`, `faststalla_direktiv`, `faststalla_mall`, `utvardera_lakemedel`, `lakemedelsgenomgang`, `las_vardplan`, `vardplan`, `vardplan_atgard`, `las_tvangsvard`, `tvangsvard`, `samordna`, `godkanna_mall`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `fardigbehandlad`, `hjalpmedel`, `registrera_diagnos`, `kvalitetsregister`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `las_prover`, `bestalla_prov`, `ta_prov`, `vidimera_provsvar`, `ordinera_kontroll`, `koppla_utrustning`, `godkanna_matvarde`, `anestesibedomning`, `las_operation`, `operation_anmala`, `operation_planera`, `operation_registrera`, `las_graviditet`, `graviditet`, `las_cytostatika`, `ordinera_cytostatika`, `ge_cytostatika`, `forskriva_forbrukning`, `bestalla_lakemedel`, `rapportera_graviditetsregistret`, `undersokning_utfora`, `patientgrupp`, `infart`, `restjournal`, `signeringslista`, `registrera_overkanslighet`, `donation`, `meddelande_invanare`, `las_intyg`, `skriv_intyg`, `sjukfall_mina`, `handleda`, `vaccinera`, `boka_bhv`, `rapportera_bhvq`.
 
 ## Sjuksköterska (sjukskoterska)
 
-Behov: Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar.
+Behov: Planerar och ger omvårdnad, ger läkemedel, tar prover och registrerar mätvärden. Behöver läsa journalen och läkemedelslistan och skriva omvårdnadsanteckningar. Utfärdar intyg om graviditet på mödrahälsovården och intyg om tillfällig föräldrapenning, som Försäkringskassan tar emot från sjuksköterskor.
 
 Risker: Läsning utan behov, och läkemedel som ges utan giltig ordination.
 
 Så begränsas risken: Kan inte ordinera läkemedel annat än enligt generella direktiv och muntliga ordinationer som läkaren signerar. Samma regler för vårdrelation, aktivt val, spärr och nödåtkomst som för läkaren. Administreringen kontrollerar ordinationen.
 
-Får inte: `ordinera`, `skriv_journal`, `kontrasignera`, `ordinera_cytostatika`, `las_logg`, `konfigurera`.
+Får inte: `ordinera`, `skriv_journal`, `kontrasignera`, `ordinera_cytostatika`, `las_logg`, `konfigurera`, `skriv_intyg`.
 
-Handlingar i koden (71): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `ge_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `vantrum`, `nodatkomst`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `registrera_vardkontakt`, `vardtillfalle`, `halsoarende`, `skriv_ut`, `utlamna`, `begara_kontrasignering`, `delegera`, `ordinera_direktiv`, `registrera_muntlig_ordination`, `utvardera_lakemedel`, `las_vardplan`, `vardplan`, `vardplan_atgard`, `las_tvangsvard`, `samordna`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `hjalpmedel`, `kvalitetsregister`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `las_prover`, `bestalla_prov_uppdrag`, `ta_prov`, `koppla_utrustning`, `godkanna_matvarde`, `las_operation`, `operation_planera`, `operation_registrera`, `las_graviditet`, `graviditet`, `las_cytostatika`, `ge_cytostatika`, `forskriva_forbrukning`, `bestalla_lakemedel`, `rapportera_graviditetsregistret`, `undersokning_utfora`, `patientgrupp`, `infart`, `restjournal`, `registrera_overkanslighet`, `donation`, `meddelande_invanare`, `las_intyg`, `vaccinera`, `boka_bhv`, `rapportera_bhvq`.
+Handlingar i koden (74): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `ge_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `vantrum`, `nodatkomst`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `registrera_vardkontakt`, `vardtillfalle`, `halsoarende`, `skriv_ut`, `utlamna`, `begara_kontrasignering`, `delegera`, `ordinera_direktiv`, `registrera_muntlig_ordination`, `utvardera_lakemedel`, `las_vardplan`, `vardplan`, `vardplan_atgard`, `las_tvangsvard`, `samordna`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `hjalpmedel`, `kvalitetsregister`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `las_prover`, `bestalla_prov_uppdrag`, `ta_prov`, `koppla_utrustning`, `godkanna_matvarde`, `las_operation`, `operation_planera`, `operation_registrera`, `las_graviditet`, `graviditet`, `las_cytostatika`, `ge_cytostatika`, `forskriva_forbrukning`, `bestalla_lakemedel`, `rapportera_graviditetsregistret`, `undersokning_utfora`, `patientgrupp`, `infart`, `restjournal`, `registrera_overkanslighet`, `donation`, `meddelande_invanare`, `las_intyg`, `intyg_graviditet`, `intyg_tfp`, `handleda`, `vaccinera`, `boka_bhv`, `rapportera_bhvq`.
 
 ## Undersköterska (underskoterska)
 
@@ -44,15 +44,15 @@ Handlingar i koden (25): `las_oversikt`, `las_omvardnad`, `las_lakemedel`, `las_
 
 ## Vårdadministratör (vardadministrator)
 
-Behov: Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt.
+Behov: Tar emot remisser, bokar, kallar, checkar in, registrerar vårdkontakter och patienter och hanterar kassan. Flyttar uppgifter som har registrerats på fel patient till rätt patient, och godkänner en annan vårdadministratörs förslag om flytt. Skapar och fyller i utkast till intyg åt läkaren och markerar dem klara för signering, som i Webcert.
 
 Risker: Insyn i journaltext eller läkemedel utan vårdbehov.
 
-Så begränsas risken: Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift.
+Så begränsas risken: Ser kontaktuppgifter, vårdkontakter och remissernas status men ingen journaltext och inga läkemedel. Åtkomsten grundas som administrativ uppgift. Signerar aldrig intyg, och förifyllnaden av ett utkast tar inget ur journalen som rollen inte får läsa. För en patient med skyddade personuppgifter når rollen inte intygen.
 
-Får inte: `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_diagnoser`, `ordinera`.
+Får inte: `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_diagnoser`, `ordinera`, `skriv_intyg`.
 
-Handlingar i koden (38): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `godkanna_flytt`, `las_flytt`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`.
+Handlingar i koden (40): `las_admin`, `las_remiss_status`, `mottag_remiss`, `sok`, `vantrum`, `andra_enheter`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `sla_samman`, `registrera_vardkontakt`, `skriv_ut`, `utlamna`, `boka`, `kalla`, `checka_in`, `vantelista`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `lma`, `registrera_sparr`, `utbildning`, `remittera_pa_uppdrag`, `fordela_remiss`, `remisskonferens`, `registrera_beslut_pa_uppdrag`, `registrera_extern_remiss`, `undersokning_utfora`, `restjournal`, `godkanna_flytt`, `las_flytt`, `meddelande_invanare`, `fullmakt`, `kassa`, `kapacitet`, `las_intyg`, `utkast_intyg`.
 
 ## Logggranskare (logggranskare)
 
@@ -173,3 +173,111 @@ Så begränsas risken: Prövas mot kontots vårdenheter och informationsmängder
 Får inte: `skriv_journal`, `ordinera`, `nodatkomst`.
 
 Handlingar i koden (6): `las_oversikt`, `las_diagnoser`, `las_matvarden`, `las_lakemedel`, `las_admin`, `las_journal`.
+
+## Arbetsterapeut (arbetsterapeut)
+
+Behov: Bedömer vad patienten klarar i vardagen, anpassar och förskriver hjälpmedel och planerar inför utskrivningen. Behöver läsa journalen, skriva arbetsterapianteckningar, registrera mätvärden och skicka, ta emot och besvara remisser.
+
+Risker: Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.
+
+Så begränsas risken: Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.
+
+Får inte: `ordinera`, `ge_lakemedel`, `nodatkomst`, `skriv_journal`.
+
+Handlingar i koden (34): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `hjalpmedel`.
+
+## Dietist (dietist)
+
+Behov: Utreder och behandlar nutritionen. Behöver läsa journalen, läkemedelslistan och mätvärdena som vikt och provsvar, skriva dietistanteckningar och ta emot och besvara remisser.
+
+Risker: Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.
+
+Så begränsas risken: Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.
+
+Får inte: `ordinera`, `ge_lakemedel`, `nodatkomst`, `skriv_journal`.
+
+Handlingar i koden (33): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`.
+
+## Logoped (logoped)
+
+Behov: Utreder och behandlar kommunikation, språk, tal, röst och sväljning och förskriver kommunikationshjälpmedel. Behöver läsa journalen, skriva logopedanteckningar och ta emot och besvara remisser.
+
+Risker: Läsning utan behov och läkemedel som ordineras eller ges utanför yrkets ansvar.
+
+Så begränsas risken: Ordinerar och ger inga läkemedel och har ingen nödåtkomst. Skriver bara med yrkets mallar i omvårdnadens kategori. Samma regler för vårdrelation, aktivt val och spärr som för övrig vårdpersonal.
+
+Får inte: `ordinera`, `ge_lakemedel`, `nodatkomst`, `skriv_journal`.
+
+Handlingar i koden (34): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `hjalpmedel`.
+
+## Psykolog (psykolog)
+
+Behov: Utreder och behandlar, också med psykoterapi (psykoterapeuten är en titel inom rollen). Behöver läsa journalen, läkemedelslistan och mätvärdena, registrera skattningar, skriva psykologanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.
+
+Risker: Psykologens anteckningar är känsliga, och läsning utan behov är en risk för integriteten.
+
+Så begränsas risken: Ordinerar och ger inga läkemedel, beslutar inte om tvångsvård och har ingen nödåtkomst. Anteckningarna har samma inre sekretess, spärr och loggning som andra anteckningar.
+
+Får inte: `ordinera`, `ge_lakemedel`, `tvangsvard`, `nodatkomst`.
+
+Handlingar i koden (34): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `las_tvangsvard`.
+
+## Hälso- och sjukvårdskurator (kurator)
+
+Behov: Arbetar med patientens sociala förhållanden, krisstöd och samtal. Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.
+
+Risker: Kuratorns anteckningar är ofta känsliga, och läsning utan behov är en risk för integriteten. Läkemedel och mätvärden behövs inte i arbetet.
+
+Så begränsas risken: Läser inte läkemedelslistan och mätvärdena, ordinerar och ger inga läkemedel och har ingen nödåtkomst. Anteckningarna har samma inre sekretess, spärr och loggning som andra anteckningar, och andra vårdenheter ser dem bara efter ett aktivt val.
+
+Får inte: `las_lakemedel`, `las_matvarden`, `ordinera`, `ge_lakemedel`, `nodatkomst`.
+
+Handlingar i koden (31): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `las_tvangsvard`.
+
+## Barnmorska (barnmorska)
+
+Behov: För graviditetsjournalen och förlossningsjournalen, ger läkemedel och gör det sjuksköterskan gör på förlossningen och BB, rapporterar till Graviditetsregistret, förskriver preventivmedel och handleder barnmorskestudenter.
+
+Risker: Läkemedel som förskrivs utanför förskrivningsrätten, och läsning utan behov.
+
+Så begränsas risken: Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.
+
+Får inte: `ordinera`, `vaccinera`, `skriv_journal`, `skriv_intyg`.
+
+Handlingar i koden (71): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_lakemedel`, `ge_lakemedel`, `las_matvarden`, `registrera_matvarde`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `vantrum`, `nodatkomst`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `registrera_patient`, `andra_identitet`, `registrera_vardkontakt`, `vardtillfalle`, `halsoarende`, `skriv_ut`, `utlamna`, `begara_kontrasignering`, `delegera`, `ordinera_direktiv`, `registrera_muntlig_ordination`, `utvardera_lakemedel`, `las_vardplan`, `vardplan`, `vardplan_atgard`, `las_tvangsvard`, `samordna`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `las_kostnader`, `hjalpmedel`, `kvalitetsregister`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `las_prover`, `bestalla_prov_uppdrag`, `ta_prov`, `koppla_utrustning`, `godkanna_matvarde`, `las_operation`, `operation_planera`, `operation_registrera`, `las_graviditet`, `graviditet`, `las_cytostatika`, `ge_cytostatika`, `forskriva_forbrukning`, `bestalla_lakemedel`, `rapportera_graviditetsregistret`, `undersokning_utfora`, `patientgrupp`, `infart`, `restjournal`, `registrera_overkanslighet`, `donation`, `meddelande_invanare`, `las_intyg`, `intyg_graviditet`, `forskriva_preventivmedel`, `handleda`.
+
+## Läkarstudent (lakarstudent)
+
+Behov: Lär sig under handledning av en läkare. Behöver läsa journalen för patienterna på handledarens vårdenhet och skriva anteckningar som handledaren kontrasignerar.
+
+Risker: Att studenten fattar beslut eller dokumenterar utan handledning, och att åtkomsten finns kvar efter praktiken.
+
+Så begränsas risken: Åtkomst bara under en pågående handledning hos en läkare på samma vårdenhet, prövad i varje anrop. Ordinerar inte, ger inga läkemedel, signerar inga intyg och har ingen nödåtkomst, inga aktiva val och ingen visning av skyddad identitet. Varje signerad anteckning går till handledaren för kontrasignering.
+
+Får inte: `ordinera`, `ge_lakemedel`, `skriv_intyg`, `nodatkomst`, `skriv_journal`, `andra_enheter`.
+
+Handlingar i koden (14): `las_oversikt`, `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_matvarden`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `las_vardplan`, `las_prover`, `las_planering`, `skriv_handledd`, `utbildning`.
+
+## Sjuksköterskestudent (sjukskoterskestudent)
+
+Behov: Lär sig under handledning av en sjuksköterska eller barnmorska. Behöver läsa journalen och läkemedelslistan för patienterna på handledarens vårdenhet och skriva omvårdnadsanteckningar som handledaren kontrasignerar.
+
+Risker: Att studenten ger läkemedel eller dokumenterar utan handledning, och att åtkomsten finns kvar efter praktiken.
+
+Så begränsas risken: Åtkomst bara under en pågående handledning på samma vårdenhet, prövad i varje anrop. Ger inga läkemedel på egen hand, ordinerar inte och har ingen nödåtkomst. Varje signerad anteckning går till handledaren för kontrasignering.
+
+Får inte: `ordinera`, `ge_lakemedel`, `skriv_omvardnad`, `nodatkomst`, `delegera`.
+
+Handlingar i koden (14): `las_oversikt`, `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_matvarden`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `las_vardplan`, `las_prover`, `las_planering`, `skriv_handledd`, `utbildning`.
+
+## Barnmorskestudent (barnmorskestudent)
+
+Behov: Lär sig under handledning av en barnmorska. Behöver läsa journalen och graviditetsjournalen för patienterna på handledarens vårdenhet och skriva anteckningar som handledaren kontrasignerar.
+
+Risker: Att studenten för graviditets- eller förlossningsjournalen eller ger läkemedel utan handledning, och att åtkomsten finns kvar efter praktiken.
+
+Så begränsas risken: Åtkomst bara under en pågående handledning hos en barnmorska på samma vårdenhet, prövad i varje anrop. Läser graviditetsjournalen men för den inte, ger inga läkemedel på egen hand, förskriver inte och har ingen nödåtkomst. Varje signerad anteckning går till handledaren för kontrasignering.
+
+Får inte: `graviditet`, `ordinera`, `ge_lakemedel`, `forskriva_preventivmedel`, `nodatkomst`.
+
+Handlingar i koden (15): `las_oversikt`, `las_journal`, `las_omvardnad`, `las_lakemedel`, `las_matvarden`, `las_diagnoser`, `las_remiss`, `las_admin`, `sok`, `las_vardplan`, `las_prover`, `las_planering`, `las_graviditet`, `skriv_handledd`, `utbildning`.

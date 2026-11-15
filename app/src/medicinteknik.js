@@ -27,6 +27,8 @@ import { faktor } from './iva-dosenhet.js';
 import { Atkomst, kanRoll, vardenhetFor, enheterUnder, visningsPnr } from './atkomst.js';
 import { kravVardande, synligaAdministreringar } from './administrering.js';
 import { loggaRad } from './logg.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 export const DEMO = 'Utrustningen är simulerad i demon. Ingen riktig medicinteknisk utrustning är ansluten, och värdena räknas fram av systemet.';
 export const TYPER = { monitor: 'Patientmonitor', pump: 'Infusionspump' };
@@ -682,7 +684,7 @@ export function pumpstatus(db, k, nu = new Date()) {
 }
 // POST /api/mt/pumphandelse/:id/kvittera { motivering }: sjuksköterskan kvitterar en varning från pumpen.
 export function kvittera(atk, h, body = {}, nu = new Date()) {
-  if (!['lakare', 'sjukskoterska'].includes(atk.personal.yrke)) throw new Fel(403, 'En varning från pumpen kvitteras av sjuksköterska eller läkare.', 'nekad');
+  if (!['lakare', 'sjukskoterska'].includes(somYrke(atk.personal.yrke))) throw new Fel(403, 'En varning från pumpen kvitteras av sjuksköterska eller läkare.', 'nekad');
   kravVardande(atk, 'ge_lakemedel', { enhet_id: h.enhet_id, gemensam: true }, `mt:pump:${h.id}`);
   if (!h.varningar) throw new Fel(400, 'Rapporten har ingen varning att kvittera.', 'ogiltig');
   if (h.kvitterad_tid) throw new Fel(400, 'Varningen är redan kvitterad.', 'ogiltig');

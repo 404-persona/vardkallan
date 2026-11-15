@@ -13,8 +13,10 @@
 // (journal.yrkesmallar.<yrke>), som ändras med fyra ögon och giltighetsdatum. Det som följer av behörighetsmodellen går
 // inte att ändra där: ett yrke kan bara få en mall i en kategori som yrket har behörighet att skriva i.
 //
-// Arbetsterapeut, kurator och dietist är inte inloggningsroller i demon. Deras mallar finns och kan ges till ett yrke
-// som parameter, men ingen i demon har de yrkena.
+// Runda 16, r3: arbetsterapeut, dietist, logoped, hälso- och sjukvårdskurator, psykolog och barnmorska är egna roller,
+// och studenterna skriver med yrkets mallar under handledning (handledning.js). Psykologens mall följer Psykologförbundets
+// struktur för journalföring (frågeställning, aktuellt, psykiskt status, utredning med test, bedömning och åtgärd), och
+// logopedens mall de områden som logopeden bedömer och behandlar (kommunikation, språk, tal, röst och sväljning).
 //
 // Modulen importerar inte konfiguration.js och journal.js när den läses in, så att de kan importera den.
 import { Fel } from './db.js';
@@ -31,14 +33,25 @@ export const KURATOR = mall('Kuratorsanteckning', ['Sociala förhållanden', 'Ps
   'Kuratorns anteckning om patientens sociala förhållanden och mående, målet, åtgärden och resultatet.');
 export const DIETIST = mall('Dietistanteckning', ['Nutrition', 'Mål', 'Åtgärd', 'Resultat'],
   'Dietistens anteckning om nutritionen, målet, åtgärden och resultatet.');
-export const MALLAR = [OBSERVATION, FYSIOTERAPI, ARBETSTERAPI, KURATOR, DIETIST];
+// Runda 16, r3: psykologens, logopedens och barnmorskans mallar.
+export const PSYKOLOG = mall('Psykologanteckning', ['Kontaktorsak', 'Aktuellt', 'Psykiskt status', 'Psykologisk utredning', 'Bedömning', 'Åtgärd'],
+  'Psykologens anteckning om frågeställningen, det aktuella, psykiskt status, utredningen med test och skattningar, bedömningen och åtgärden.');
+export const LOGOPED = mall('Logopedanteckning', ['Kontaktorsak', 'Kommunikation', 'Sväljning', 'Bedömning', 'Mål', 'Åtgärd', 'Resultat'],
+  'Logopedens anteckning om kommunikationen (språk, tal och röst), sväljningen, bedömningen, målet, åtgärden och resultatet.');
+export const BARNMORSKA = mall('Barnmorskeanteckning', ['Kontaktorsak', 'Anamnes', 'Status', 'Bedömning', 'Åtgärd', 'Uppföljning'],
+  'Barnmorskans anteckning vid besök på barnmorskemottagningen, till exempel preventivmedelsrådgivning, med kontaktorsaken, anamnesen, status, bedömningen, åtgärden och uppföljningen.');
+export const MALLAR = [OBSERVATION, FYSIOTERAPI, ARBETSTERAPI, KURATOR, DIETIST, PSYKOLOG, LOGOPED, BARNMORSKA];
 
-// Yrkena och deras namn. Arbetsterapeut, kurator och dietist finns inte som roller i demon.
+// Yrkena och deras namn. Runda 16, r3: alla är roller i demon.
 export const YRKEN = {
   lakare: 'Läkare', sjukskoterska: 'Sjuksköterska', underskoterska: 'Undersköterska', fysioterapeut: 'Fysioterapeut',
   arbetsterapeut: 'Arbetsterapeut', kurator: 'Kurator', dietist: 'Dietist',
+  // Runda 16, r3.
+  psykolog: 'Psykolog', logoped: 'Logoped', barnmorska: 'Barnmorska', lakarstudent: 'Läkarstudent', sjukskoterskestudent: 'Sjuksköterskestudent', barnmorskestudent: 'Barnmorskestudent',
 };
-const plural = { lakare: 'läkare', sjukskoterska: 'sjuksköterskor', underskoterska: 'undersköterskor', fysioterapeut: 'fysioterapeuter', arbetsterapeut: 'arbetsterapeuter', kurator: 'kuratorer', dietist: 'dietister' };
+const plural = { lakare: 'läkare', sjukskoterska: 'sjuksköterskor', underskoterska: 'undersköterskor', fysioterapeut: 'fysioterapeuter', arbetsterapeut: 'arbetsterapeuter', kurator: 'kuratorer', dietist: 'dietister',
+  // Runda 16, r3.
+  psykolog: 'psykologer', logoped: 'logopeder', barnmorska: 'barnmorskor', lakarstudent: 'läkarstudenter', sjukskoterskestudent: 'sjuksköterskestudenter', barnmorskestudent: 'barnmorskestudenter' };
 
 // Förvalet per yrke, i den ordning mallarna visas. Det första är yrkets huvudmall, som systemet väljer.
 export const STANDARD = {
@@ -50,17 +63,29 @@ export const STANDARD = {
   arbetsterapeut: ['Arbetsterapianteckning'],
   kurator: ['Kuratorsanteckning'],
   dietist: ['Dietistanteckning'],
+  // Runda 16, r3: de nya rollerna, och studenterna med yrkets vanligaste mallar. Barnmorskan skriver också sjuksköterskans.
+  psykolog: ['Psykologanteckning'],
+  logoped: ['Logopedanteckning'],
+  barnmorska: ['Barnmorskeanteckning', 'Omvårdnadsanteckning', 'Tobaksvanor', 'Levnadsvanor'],
+  lakarstudent: ['Mottagningsanteckning', 'Daganteckning', 'Inskrivningsanteckning', 'Akutanteckning'],
+  sjukskoterskestudent: ['Omvårdnadsanteckning'],
+  barnmorskestudent: ['Barnmorskeanteckning', 'Omvårdnadsanteckning'],
 };
 // Yrken som bara skriver med de mallar och formulär som står i deras lista, och inte med systemförvaltningens egna
 // mallar. Undersköterskans dokumentation är avgränsad, och vårdgivaren lägger till en mall eller ett formulär för
 // omvårdnad med parametern (beslut 2026-11-14).
 export const ENDAST_LISTADE = new Set(['underskoterska']);
+// Runda 16, r3: studenterna skriver bara med de mallar som står i yrkets lista, och bara i yrkets kategori.
+for (const y of ['lakarstudent', 'sjukskoterskestudent', 'barnmorskestudent']) ENDAST_LISTADE.add(y);
+export const STUDENTKATEGORI = { lakarstudent: ['lakare'], sjukskoterskestudent: ['omvardnad'], barnmorskestudent: ['omvardnad'] };
 
 const journal = () => require('./journal.js');
 const konfiguration = () => require('./konfiguration.js');
 // Behörigheten som en mall i kategorin kräver av yrket. Omvårdnadens mallar godtar också den smala handlingen
 // skriv_observation (atkomst.js), som bara anteckningsflödet prövar.
-const harBehorighet = (yrke, kategori) => (kategori === 'omvardnad' ? ['skriv_omvardnad', 'skriv_observation'] : ['skriv_journal']).some(h => (ROLLER[yrke] ?? []).includes(h));
+const harBehorighet = (yrke, kategori) => (kategori === 'omvardnad' ? ['skriv_omvardnad', 'skriv_observation'] : ['skriv_journal']).some(h => (ROLLER[yrke] ?? []).includes(h))
+  // Runda 16, r3: studenten skriver under handledning i yrkets kategori.
+  || (Object.hasOwn(STUDENTKATEGORI, yrke) && (ROLLER[yrke] ?? []).includes('skriv_handledd') && STUDENTKATEGORI[yrke].includes(kategori));
 // De inbyggda mallarna, efter typ.
 const inbyggda = () => new Map(journal().MALLAR.map(m => [m.typ, m]));
 // Ett aktivt formulär med namnet, som en mall { typ, kategori }, eller null.

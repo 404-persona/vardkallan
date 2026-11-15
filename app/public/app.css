@@ -1998,3 +1998,30 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .fmb-panel h2 { font-size: var(--f-l); margin: 0 0 6px; }
 .fmb-panel details { margin: 6px 0; }
 .fmb-panel details > ul:not(.enkel-lista) { margin: 4px 0 4px 1.2em; }
+/* Runda 16, r1: blanketterna i den simulerade intygsapplikationen och utskriften. */
+.ia-kategori { border-top: 1px solid var(--linje); padding-top: .5rem; margin-top: 1rem; }
+.ia-rubrik { font-size: 1.05rem; margin: .25rem 0 .5rem; }
+.ia-rad { display: flex; flex-wrap: wrap; gap: .25rem .75rem; align-items: center; margin-bottom: .35rem; }
+.ia-rad input[type="date"], .ia-rad input[type="text"] { max-width: 100%; }
+.ia-fraga fieldset > label { display: block; }
+.ia-kalla { display: block; }
+.ia-utskrift-svar dt { font-weight: 600; margin-top: .5rem; }
+.ia-utskrift-svar dd { margin: 0 0 0 1rem; }
+@media print {
+  body:has(.ia-utskrift:not([hidden])) .ia-form, body:has(.ia-utskrift:not([hidden])) .ruta, body:has(.ia-utskrift:not([hidden])) nav { display: none !important; }
+  .ia-utskrift button, .ia-utskrift .falt-kryss { display: none !important; }
+}
+.ia-fraga fieldset { border: 0; padding: 0; margin: 8px 0; }
+.ia-fraga fieldset > legend { font-weight: 600; margin-bottom: 4px; }
+.ia-fraga label:has(> input[type="checkbox"]), .ia-fraga label:has(> input[type="radio"]) { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-weight: 400; }
+.ia-fraga label > input[type="checkbox"], .ia-fraga label > input[type="radio"] { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; flex: none; accent-color: var(--kalla); }
+.ia-rad input[type="date"] { width: auto; }
+.ia-rad input[type="text"] { width: auto; flex: 1 1 10rem; min-width: 0; }
+.ia-form .falt-kryss label { display: flex; gap: 8px; align-items: flex-start; }
+.ia-form .falt-kryss input[type="checkbox"] { width: 18px; height: 18px; min-height: 0; margin: 2px 0 0; flex: none; }
+/* Runda 16, r3: demorollerna i grupper på inloggningssidan, och handledningen av studenter. */
+.rollgrupper { display: grid; gap: 18px; }
+.rollgrupp h3 { font-size: var(--f-m); margin: 0 0 8px; }
+.hl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hl-rad { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; background: var(--yta); border: 1px solid var(--linje); border-radius: 10px; padding: 10px 14px; }
+.hl-rad > span { min-width: 0; overflow-wrap: anywhere; }

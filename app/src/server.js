@@ -7,6 +7,8 @@ import { existsSync, readFileSync, writeFileSync, renameSync, unlinkSync } from 
 import { createDecipheriv } from 'node:crypto';
 import { Fel, nySessionsDb, lasSandlada, idag, installning, migrera, mallen } from './db.js';
 import { Atkomst, ROLLER, kanRoll, vardenhetFor, harVardrelation, aktivaSparrar, visningsnamn, visningsPnr, alder, starkasteGrund } from './atkomst.js';
+// Runda 16, r3: texten när en student saknar pågående handledning (handledning.js).
+import { UTAN_HANDLEDNING } from './atkomst.js';
 import * as logg from './logg.js';
 import * as journal from './journal.js';
 import * as lakemedel from './lakemedel.js';
@@ -186,6 +188,8 @@ import * as reservserverMod from './reservserver.js';
 import { registreraRutter as reservloggRutter } from './reservlogg-rutter.js';
 // Runda 15, r4: anteckningsvyn med underlag, utkast som sparas av sig självt och egna fraser (r15r4-rutter.js).
 import { registreraRutter as r15r4Rutter } from './r15r4-rutter.js';
+// Runda 16, r3: handledningen av studenter och barnmorskans förskrivning av preventivmedel (r16r3-rutter.js).
+import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -917,6 +921,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       ut.obstetrik = r11r3Session(s.db, p);
       // Runda 11, r4: beredningsenheten och vårdenheter som ger cytostatika.
       ut.r11r4 = r11r4.session(s.db, p);
+      // Runda 16, r3: studentens handledning, eller att handledaren har studenter på vårdenheten (handledning.js). En
+      // student utan pågående handledning har bara övningarna.
+      ut.handledning = require('./handledning.js').session(s.db, p);
+      if (ut.handledning?.student && !ut.handledning.pagar) ut.behorigheter = ut.behorigheter.filter(h => h === 'utbildning');
       sakraKopia(s);
       ut.lasnyckel = s.lasnyckel;
     }
@@ -1049,6 +1057,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (p.yrke === 'verksamhetschef') return [];
     // Runda 7, r4: systemförvaltaren läser inte journalen.
     if (p.yrke === 'systemforvaltare') return [];
+    // Runda 16, r3: en student utan pågående handledning har ingen arbetslista, också när listan hämtas genom SMART.
+    if (require('./handledning.js').stoppasUtanHandledning(db, p, '/api/arbetslista')) return [];
     const ve = vardenhetFor(db, p.enhet_id);
     const enheter = db.query("SELECT id FROM enheter WHERE id = ? OR (forald_id = ? AND typ = 'arbetsplats')").all(ve, ve).map(r => r.id);
     const ph = enheter.map(() => '?').join(', ');
@@ -2614,6 +2624,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r15r5Rutter({ rutt, kravInloggad, medPatient });
   // Runda 15, r4 (r15r4-rutter.js).
   r15r4Rutter({ rutt, kravInloggad, medPatient });
+  // Runda 16, r3 (r16r3-rutter.js).
+  r16r3Rutter({ rutt, kravInloggad, medPatient });
   // Runda 15, r2.
   r15r2Rutter({ rutt, kravInloggad, medPatient, valFor });
   // Runda 13, r1 (r13r1-rutter.js).
@@ -2716,6 +2728,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (c.personal) {
       const k = tillit.kanslig(metod, url.pathname, c.body);
       if (k && !tillit.forUppdrag(c.s.uppdrag).flerfaktor) throw new Fel(403, tillit.kanslighetsText(k, c.s.uppdrag), 'kraver_flerfaktor');
+      // Runda 16, r3: en student utan pågående handledning når bara sessionen, inloggningen, övningarna, nyheterna och
+      // handledningen. Allt annat stoppas här, före rutten, också listor som räknar sina rader utan behörighetsmotorn
+      // (arbetslistan och inkorgen). Behörighetsmotorn prövar dessutom handledningen i varje prövning.
+      if (require('./handledning.js').stoppasUtanHandledning(c.db, c.personal, url.pathname)) throw new Fel(403, UTAN_HANDLEDNING, 'nekad');
     }
     // Runda 11, r5: en rutt kan svara med ett löfte (avkodning och miniatyrer av bilder görs asynkront i bildmedia.js).
     let ut = await traff[0](c, ...traff[1]);
@@ -2783,6 +2799,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     if (!c.db) throw new Fel(401, 'Logga in först.', 'ej_inloggad');
+    // Runda 16, r3: en student utan pågående handledning stoppas också i FHIR, som i resten av API:t.
+    if (require('./handledning.js').stoppasUtanHandledning(c.db, c.personal, url.pathname)) throw new Fel(403, UTAN_HANDLEDNING, 'nekad');
     const langd = Number(req.headers.get('content-length') || 0);
     const kropp = langd > MAX_KROPP ? '' : await req.text();
     if (kropp.length > MAX_KROPP) throw new Fel(413, 'För stor förfrågan.', 'ogiltig');
@@ -2805,6 +2823,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (sess && !reserv) labbEfterTid(sess.s.db);
     if (sess && !reserv) mtEfterTid(sess.s.db);
     if (sess) Object.assign(c, { s: sess.s, db: sess.s.db, ...inloggade(sess.s) });
+    // Runda 16, r3: en student utan pågående handledning stoppas också i FHIR, som i resten av API:t.
+    if (require('./handledning.js').stoppasUtanHandledning(c.db, c.personal, url.pathname)) throw new Fel(403, UTAN_HANDLEDNING, 'nekad');
     if (c.invanare) avvisaFranAnnanWebbplats(req);
     const base = origin || `${url.protocol}//${url.host}`;
     if (req.method !== 'GET') throw new Fel(405, 'Bara läsning stöds i FHIR-API:t.', 'ogiltig');

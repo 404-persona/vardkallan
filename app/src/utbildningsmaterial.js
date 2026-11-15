@@ -82,8 +82,45 @@ export const ROLLER = {
       'ange lägsta tillitsnivå för en inloggningstjänst och förklara vad en lägre nivå betyder för personalen'],
   ),
   fysioterapeut: R(
-    'Som fysioterapeut tar du emot och bedömer remisser, skriver anteckningar efter besök, registrerar mätvärden och bockar av planerade uppgifter som träning. Fysioterapeuten spelar också Sussas paramedicinare, alltså arbetsterapeut, dietist och kurator.',
+    'Som fysioterapeut tar du emot och bedömer remisser, skriver anteckningar efter besök, registrerar mätvärden och bockar av planerade uppgifter som träning. Fysioterapeuten spelar också paramedicinaren i Sussas testfall. Arbetsterapeut, dietist, logoped, kurator och psykolog har egna roller.',
     ['bedöma och besvara en remiss', 'skriva och signera en fysioterapianteckning med funktion, aktivitet, mål, åtgärd och resultat', 'bocka av en planerad uppgift'],
+  ),
+  // Runda 16, r3: de nya yrkesrollerna och studenterna.
+  arbetsterapeut: R(
+    'Som arbetsterapeut bedömer du vad patienten klarar i vardagen, anpassar och registrerar hjälpmedel, skriver arbetsterapianteckningar med aktivitet, funktion, mål, åtgärd och resultat och tar emot och besvarar remisser. Du ordinerar och ger inga läkemedel.',
+    ['skriva och signera en arbetsterapianteckning', 'registrera ett utlämnat hjälpmedel', 'bedöma och besvara en remiss'],
+  ),
+  dietist: R(
+    'Som dietist läser du journalen, läkemedelslistan och mätvärden som vikt och provsvar, skriver dietistanteckningar om nutritionen, målet, åtgärden och resultatet och tar emot och besvarar remisser. Du ordinerar och ger inga läkemedel.',
+    ['följa vikten i mätvärdena', 'skriva och signera en dietistanteckning', 'bedöma och besvara en remiss'],
+  ),
+  logoped: R(
+    'Som logoped bedömer och behandlar du kommunikation, språk, tal, röst och sväljning, skriver logopedanteckningar och tar emot och besvarar remisser. Du registrerar kommunikationshjälpmedel och ordinerar och ger inga läkemedel.',
+    ['skriva och signera en logopedanteckning om kommunikation och sväljning', 'registrera ett utlämnat hjälpmedel', 'bedöma och besvara en remiss'],
+  ),
+  kurator: R(
+    'Som hälso- och sjukvårdskurator arbetar du med patientens sociala förhållanden och mående och skriver kuratorsanteckningar. Du läser journalen och diagnoserna men inte läkemedelslistan och mätvärdena, som du inte behöver i arbetet. Dina anteckningar har samma inre sekretess och spärr som andra anteckningar.',
+    ['skriva och signera en kuratorsanteckning', 'veta vem som kan läsa anteckningen och vad ett aktivt val och en spärr betyder', 'bedöma och besvara en remiss'],
+  ),
+  psykolog: R(
+    'Som psykolog eller psykoterapeut utreder och behandlar du och skriver psykologanteckningar med frågeställning, det aktuella, psykiskt status, utredningen, bedömningen och åtgärden. Du läser läkemedelslistan och mätvärdena, ser om patienten vårdas med tvång och ordinerar och ger inga läkemedel.',
+    ['skriva och signera en psykologanteckning', 'se om patienten vårdas med tvång', 'veta vem som kan läsa anteckningen'],
+  ),
+  barnmorska: R(
+    'Som barnmorska för du graviditetsjournalen och förlossningsjournalen, ger läkemedel och gör det sjuksköterskan gör på förlossningen och BB. På barnmorskemottagningen förskriver du preventivmedel: systemet visar bara de läkemedel som förskrivningsrätten omfattar och fyller i orsak, dosering och uppföljning. Du handleder barnmorskestudenter och kontrasignerar deras anteckningar.',
+    ['skriva in en graviditet och registrera ett besök', 'förskriva ett preventivmedel', 'kontrasignera en students anteckning från inkorgen'],
+  ),
+  lakarstudent: R(
+    'Som läkarstudent läser du journalen för patienterna på din handledares vårdenhet och skriver anteckningar med läkarnas mallar. Det du signerar går till handledaren för kontrasignering. Du ordinerar inte, ger inga läkemedel och signerar inga intyg, och åtkomsten gäller bara under handledningen.',
+    ['se din handledare och handledningens tid under Handledning', 'skriva och signera en anteckning som handledaren kontrasignerar', 'veta vad du inte får göra som student'],
+  ),
+  sjukskoterskestudent: R(
+    'Som sjuksköterskestudent läser du journalen för patienterna på din handledares vårdenhet och skriver omvårdnadsanteckningar. Det du signerar går till handledaren för kontrasignering. Du ger läkemedel bara under tillsyn av handledaren, och åtkomsten gäller bara under handledningen.',
+    ['se din handledare och handledningens tid under Handledning', 'skriva och signera en omvårdnadsanteckning som handledaren kontrasignerar', 'veta vad du inte får göra som student'],
+  ),
+  barnmorskestudent: R(
+    'Som barnmorskestudent läser du journalen och graviditetsjournalen för patienterna på din handledares vårdenhet och skriver barnmorske- och omvårdnadsanteckningar. Det du signerar går till handledaren för kontrasignering. Du för inte graviditetsjournalen själv, och åtkomsten gäller bara under handledningen.',
+    ['se din handledare och handledningens tid under Handledning', 'läsa graviditetsjournalen', 'skriva och signera en anteckning som handledaren kontrasignerar'],
   ),
   [INVANARE]: R(
     'Som invånare loggar du in i Min journal med en simulerad e-legitimation. Där läser du din journal, ser vilka vårdenheter som har läst den, bokar och bokar om tider, lämnar egna mätningar, skriver till vården och begär loggutdrag eller spärr.',

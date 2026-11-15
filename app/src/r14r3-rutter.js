@@ -12,7 +12,9 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   rutt('GET', '/api/patient/:id/intyg', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_intyg', (atk, p) => lakarintyg.forPatient(atk, p)); });
   rutt('POST', '/api/patient/:id/intyg', async (c, id) => { kravInloggad(c); return [201, await medPatient(c, id, 'skriv_intyg', (atk, p) => lakarintyg.skapa(atk, p, c.body))]; });
   rutt('POST', '/api/patient/:id/intyg/avstam', async (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_intyg', (atk, p) => lakarintyg.avstam(atk, p)); });
-  rutt('GET', '/api/patient/:id/intyg/:iid/oppna', (c, id, iid) => { kravInloggad(c); return medPatient(c, id, 'las_intyg', (atk) => lakarintyg.oppna(atk, iid)); });
+  rutt('GET', '/api/patient/:id/intyg/:iid/oppna', async (c, id, iid) => { kravInloggad(c); return medPatient(c, id, 'las_intyg', (atk) => lakarintyg.oppna(atk, iid)); });
+  // Runda 16, r1: förnya eller förlänga ett signerat intyg, eller byta ett ersatt intyg mot det som gäller nu.
+  rutt('POST', '/api/patient/:id/intyg/:iid/fornya', async (c, id, iid) => { kravInloggad(c); return [201, await medPatient(c, id, 'las_intyg', (atk, p) => lakarintyg.fornya(atk, p, iid))]; });
   // Den simulerade intygsapplikationen, som läkaren öppnar från journalen. Inloggningen följer med som i integrerat läge.
   const val = (c, iid) => {
     const r = typeof iid === 'string' && /^[0-9a-f-]{36}$/.test(iid) ? c.db.query('SELECT patient_id FROM sim_intygsapplikation WHERE intygs_id = ?').get(iid) : null;
@@ -20,7 +22,9 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   };
   rutt('GET', '/api/intygsapplikation/:iid', (c, iid) => intygsapp.visa(c.db, kravInloggad(c), iid, val(c, iid)));
   rutt('POST', '/api/intygsapplikation/:iid', async (c, iid) => intygsapp.spara(c.db, kravInloggad(c), iid, c.body, val(c, iid)));
-  rutt('POST', '/api/intygsapplikation/:iid/:atgard', async (c, iid, atgard) => intygsapp.atgard(c.db, kravInloggad(c), iid, atgard, val(c, iid)));
+  // Runda 16, r1: utskriften (patienten kan välja att dölja diagnosen på ett intyg till arbetsgivaren).
+  rutt('GET', '/api/intygsapplikation/:iid/utskrift', (c, iid) => intygsapp.utskrift(c.db, kravInloggad(c), iid, { doljDiagnos: c.url.searchParams.get('dolj_diagnos') === '1', val: val(c, iid) }));
+  rutt('POST', '/api/intygsapplikation/:iid/:atgard', async (c, iid, atgard) => intygsapp.atgard(c.db, kravInloggad(c), iid, atgard, val(c, iid), c.body ?? {}));
 
   // Sussa 2.2.1.12 och 3.3.1.2: e-remiss till en vårdgivare utanför Vårdkällan.
   rutt('GET', '/api/eremiss/mottagare', (c) => { kravInloggad(c); return { mottagare: eremiss.mottagare(), simulerat: 'Mottagarna är påhittade och simulerade i demon. Inget lämnar demon.' }; });

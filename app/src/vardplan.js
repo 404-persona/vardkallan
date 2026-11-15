@@ -13,6 +13,8 @@
 // alla. Nödåtkomst ger bara läsning. Planernas historik ändras och raderas aldrig.
 import { Fel, iso, idag, addDagar, giltigtDatum } from './db.js';
 import { kanRoll, vardenhetFor, enheterUnder, alder } from './atkomst.js';
+// Runda 16, r3: barnmorskan utför sjuksköterskans åtgärder i vårdplanen (somYrke i atkomst.js).
+import { somYrke } from './atkomst.js';
 // Runda 10, r5: kunskapsstöd och kunskapsgenererande stöd i vårdplanen (Sussa 3.2.1).
 import * as kunskapsstod from './kunskapsstod.js';
 import * as utfallsstod from './utfallsstod.js';
@@ -151,7 +153,7 @@ export function planUt(atk, plan, nu = Date.now()) {
     vardforlopp: kunskapsstod.vardforlopp(plan.mall, atgarder), utfall: plan.mall ? utfallsstod.vardplan(db, atk.personal, plan.mall) : null,
     kan: {
       andra: egen && kanRoll(atk.personal, 'vardplan') && plan.status !== 'avslutad',
-      utfora: egen && kanRoll(atk.personal, 'vardplan_atgard') && plan.status === 'aktiv' ? atgarder.filter(x => (FAR_UTFORA[x.ansvarig] ?? []).includes(atk.personal.yrke)).map(x => x.id) : [],
+      utfora: egen && kanRoll(atk.personal, 'vardplan_atgard') && plan.status === 'aktiv' ? atgarder.filter(x => (FAR_UTFORA[x.ansvarig] ?? []).includes(somYrke(atk.personal.yrke))).map(x => x.id) : [],
     },
   };
 }
@@ -248,7 +250,7 @@ export function andra(atk, plan, atgard, body = {}) {
       const x = db.query('SELECT * FROM vardplan_atgarder WHERE id = ? AND plan_id = ? AND borttagen IS NULL').get(Number(body.atgard), plan.id);
       if (!x) throw new Fel(400, 'Åtgärden finns inte i planen.', 'ogiltig', { falt: ['atgard'] });
       if (plan.status !== 'aktiv') throw new Fel(400, 'Planen har uppehåll. Återuppta den först.', 'ogiltig');
-      if (!(FAR_UTFORA[x.ansvarig] ?? []).includes(pers.yrke)) {
+      if (!(FAR_UTFORA[x.ansvarig] ?? []).includes(somYrke(pers.yrke))) {
         atk.logga(handling, 'nekad', `vardplan:${plan.id}:utfort:${x.id}`, 'nekad');
         throw new Fel(403, `Åtgärden har ${ANSVARIGA[x.ansvarig].toLowerCase()} som ansvarig. Den registreras av den yrkesrollen.`, 'nekad');
       }

@@ -15,6 +15,8 @@ import * as vaccinationsprogram from './vaccinationsprogram.js';
 import * as vardkontakt from './vardkontakt.js';
 import * as sammanhallen from './sammanhallen.js';
 import * as akut from './akutflode.js';
+// Runda 16, r3: barnmorskan prövas som sjuksköterskan där regeln gäller läkare eller sjuksköterska.
+import { somYrke } from './atkomst.js';
 
 // Läkemedelsinformationen för ett läkemedel och patienten: eGFR enligt samma regel som säkerhetskontrollerna (från alla
 // vårdenheter utan aktivt val men aldrig från en spärrad vårdenhet utan samtycke), patientens ålder och vårdenhetens
@@ -33,7 +35,7 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Sussa 3.5.1.5: läkemedelsinformation vid ordination och administrering.
   rutt('GET', '/api/patient/:id/lakemedelsinfo/:lm', (c, id, lm) => { kravInloggad(c); return medPatient(c, id, 'las_lakemedel', (atk, p) => lakemedelsinfo(atk, p, decodeURIComponent(lm))); });
   // Sussa 3.2.1.3: vårdenhetens utfall för en standardplan, utan patientuppgifter.
-  rutt('GET', '/api/utfall/vardplan/:mall', (c, mall) => { const pers = kravInloggad(c); if (!['lakare', 'sjukskoterska'].includes(pers.yrke)) throw new Fel(403, 'Utfallen visas för läkare och sjuksköterskor.', 'nekad'); return utfallsstod.vardplan(c.db, pers, mall); });
+  rutt('GET', '/api/utfall/vardplan/:mall', (c, mall) => { const pers = kravInloggad(c); if (!['lakare', 'sjukskoterska'].includes(somYrke(pers.yrke))) throw new Fel(403, 'Utfallen visas för läkare och sjuksköterskor.', 'nekad'); return utfallsstod.vardplan(c.db, pers, mall); });
   // Kollegakontrollen av ett högriskläkemedel, i kollegans egen inloggning.
   rutt('POST', '/api/patient/:id/kollegakontroll/:kid', (c, id, kid) => { kravInloggad(c); return medPatient(c, id, 'ge_lakemedel', (atk) => hogrisk.kontrollera(atk, kid, { synligaAdministreringar, kravVardande }, c.body)); });
   // Sussa 3.5.1.1: läkemedelsberättelsen, läkemedelslistan och epikrisen till nästa vårdgivare.

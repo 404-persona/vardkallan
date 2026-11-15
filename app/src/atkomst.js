@@ -447,6 +447,8 @@ export function prova(db, { personal, patient, handling, resurs = null, val = {}
   if (!kanRoll(personal, handling)) {
     return svar(false, 'nekad', null, `Yrkesrollen får inte ${HANDLINGAR[handling]}.`);
   }
+  // Runda 16, r3: en student har åtkomst bara under en pågående handledning på vårdenheten. Övningarna gör studenten ändå.
+  if (Object.hasOwn(STUDENTER, personal.yrke ?? '') && handling !== 'utbildning' && !aktivHandledning(db, personal, nu)) return svar(false, 'nekad', null, UTAN_HANDLEDNING);
   // Runda 10, r1: ett systemkonto prövas mot sina vårdenheter och informationsmängder, aldrig med vårdrelation.
   if (personal.yrke === 'systemkonto') return provaSystemkonto(db, personal, patient, handling, resurs);
   if (handling === 'las_logg') return svar(true, 'logggranskning');
@@ -705,3 +707,100 @@ ROLLER.lakare.push('sjukfall_mina');
 ROLLER.verksamhetschef.push('sjukfall_enhet');
 UTAN_PATIENT.add('sjukfall_mina');
 UTAN_PATIENT.add('sjukfall_enhet');
+// Runda 16, r1: intygen (lakarintyg.js, intygstyper.js och intygsapplikation-simulerad.js, Sussa 2.2.1.9). Som i
+// Webcert skapar och fyller vårdadministratören i utkast och markerar dem klara för signering, men signerar aldrig
+// (utkast_intyg), och ser intygen och deras status. Intyg om graviditet (FK 7210) utfärdas enligt Försäkringskassan av
+// läkare, barnmorska eller sjuksköterska vid mödrahälsovården (intyg_graviditet), och intyg om tillfällig
+// föräldrapenning (FK 7472) av läkare eller sjuksköterska (intyg_tfp), som i Intygstjänstens behörighetsregler. Rollen
+// barnmorska (runda 16, r3) får intyg_graviditet. Läkaren har skriv_intyg, som omfattar alla intyg.
+Object.assign(HANDLINGAR, {
+  utkast_intyg: 'skapa och fylla i utkast till intyg och markera dem klara för signering',
+  intyg_graviditet: 'skriva och signera intyg om graviditet', intyg_tfp: 'skriva och signera intyg om tillfällig föräldrapenning',
+});
+ROLLER.vardadministrator.push('las_intyg', 'utkast_intyg');
+ROLLER.sjukskoterska.push('intyg_graviditet', 'intyg_tfp');
+// Runda 16, r3: de nya yrkesrollerna (beslut från Jonas 2026-11-15). Minsta åtkomst för yrket (patientdatalagen 4 kap.
+// 2 §): varje roll får det som yrket behöver i vården av patienten och inget mer. Blocket ska stå sist i filen, efter
+// alla andra tillägg i ROLLER, eftersom de nya rollerna räknas ur fysioterapeutens och sjuksköterskans handlingar.
+// Testet i roller-r16r3.test.js stoppar bygget om ett senare tillägg hos sjuksköterskan inte kommer med hos barnmorskan.
+//
+// Arbetsterapeuten, dietisten och logopeden arbetar som fysioterapeuten: läser journalen, skriver anteckningar med sin
+// egen mall i omvårdnadens kategori, registrerar mätvärden och skickar, tar emot och besvarar remisser. Arbetsterapeuten
+// och logopeden förskriver hjälpmedel. Ingen av dem ordinerar eller ger läkemedel, och ingen har nödåtkomst.
+const PARAMEDICIN = [...ROLLER.fysioterapeut];
+ROLLER.arbetsterapeut = [...PARAMEDICIN, 'hjalpmedel'];
+ROLLER.dietist = [...PARAMEDICIN];
+ROLLER.logoped = [...PARAMEDICIN, 'hjalpmedel'];
+// Psykologen (och psykoterapeuten, som är en titel inom rollen) utreder och behandlar. Psykologen läser läkemedelslistan
+// och mätvärdena, registrerar skattningar som mätvärden och ser om patienten vårdas med tvång, eftersom det avgör
+// behandlingen på en psykiatrisk avdelning. Hälso- och sjukvårdskuratorn arbetar med patientens sociala förhållanden och
+// mående och behöver varken läkemedelslistan eller mätvärdena.
+ROLLER.psykolog = [...PARAMEDICIN, 'las_tvangsvard'];
+ROLLER.kurator = [...PARAMEDICIN.filter(h => !['las_lakemedel', 'las_matvarden', 'registrera_matvarde'].includes(h)), 'las_tvangsvard'];
+
+// Barnmorskan är en egen roll med egen legitimation. I Sverige bygger barnmorskeutbildningen på legitimation som
+// sjuksköterska, och barnmorskan gör på förlossningen och BB det som sjuksköterskan gör där, så rollen har sjuksköterskans
+// handlingar utom barnhälsovårdens. Barnmorskans egen befogenhet är att förskriva preventivmedel (preventivmedel.js),
+// och inget annat läkemedel på egen hand: rollen har inte handlingen ordinera. Som sjuksköterskan ordinerar barnmorskan
+// enligt ett generellt direktiv som en läkare har fastställt för vårdenheten, och dokumenterar en muntlig ordination.
+// Intyg om tillfällig föräldrapenning (FK 7472) utfärdas enligt Intygstjänstens behörighetsregler av läkare eller
+// sjuksköterska, inte av barnmorskan i den rollen, så barnmorskan får inte intyg_tfp (runda 16, sammanslagningen).
+export const BARNMORSKAN_INTE = new Set(['vaccinera', 'boka_bhv', 'rapportera_bhvq', 'intyg_tfp']);
+HANDLINGAR.forskriva_preventivmedel = 'förskriva preventivmedel som barnmorska';
+ROLLER.barnmorska = [...ROLLER.sjukskoterska.filter(h => !BARNMORSKAN_INTE.has(h)), 'forskriva_preventivmedel'];
+// Systemet behandlar barnmorskan som sjuksköterskan där en regel gäller "läkare eller sjuksköterska" (kollegakontroll,
+// överföring av läkemedel, mödrahälsovårdens och förlossningens sidor). somYrke ger det yrke som regeln prövar.
+export const GRUNDYRKE = { barnmorska: 'sjukskoterska' };
+export const somYrke = (yrke) => (Object.hasOwn(GRUNDYRKE, yrke ?? '') ? GRUNDYRKE[yrke] : yrke);
+
+// Studenterna (handledning.js). En student dokumenterar under en namngiven handledare, och varje anteckning som studenten
+// signerar går till handledaren för kontrasignering. Studenten läser det som yrket behöver, skriver anteckningar med en
+// egen, smal handling som bara anteckningsflödet godtar (skriv_handledd, som skriv_observation), och ordinerar, ger
+// läkemedel, signerar intyg, delegerar och använder nödåtkomst aldrig. Åtkomsten gäller bara under en pågående
+// handledning hos en handledare på samma vårdenhet (aktivHandledning nedan, prövas i prova). Inga aktiva val, inget
+// samtycke till spärrade uppgifter och ingen visning av skyddad identitet.
+HANDLINGAR.skriv_handledd = 'skriva anteckningar under handledning, som handledaren kontrasignerar';
+HANDLINGAR.handleda = 'handleda studenter och kontrasignera deras anteckningar';
+UTAN_PATIENT.add('handleda');
+const STUDENT_LASER = ['las_oversikt', 'las_journal', 'las_omvardnad', 'las_lakemedel', 'las_matvarden', 'las_diagnoser', 'las_remiss', 'las_admin', 'sok',
+  'las_vardplan', 'las_prover', 'las_planering'];
+ROLLER.lakarstudent = [...STUDENT_LASER, 'skriv_handledd', 'utbildning'];
+ROLLER.sjukskoterskestudent = [...STUDENT_LASER, 'skriv_handledd', 'utbildning'];
+ROLLER.barnmorskestudent = [...STUDENT_LASER, 'las_graviditet', 'skriv_handledd', 'utbildning'];
+// Vilka yrken som handleder vilken student.
+export const STUDENTER = {
+  lakarstudent: { namn: 'Läkarstudent', handledare: ['lakare'] },
+  sjukskoterskestudent: { namn: 'Sjuksköterskestudent', handledare: ['sjukskoterska', 'barnmorska'] },
+  barnmorskestudent: { namn: 'Barnmorskestudent', handledare: ['barnmorska'] },
+};
+for (const r of ['lakare', 'sjukskoterska', 'barnmorska']) ROLLER[r].push('handleda');
+
+// Den pågående handledningen för en student: handledaren är aktiv, har ett yrke som får handleda studenten och arbetar
+// på samma vårdenhet som studenten och som handledningen registrerades på, och dagen ligger inom handledningens tid. Slås upp i databasen vid varje prövning.
+// Saknas tabellen eller går något inte att avgöra finns ingen handledning (fail closed).
+const dagI = (nu) => nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+export function aktivHandledning(db, student, nu = new Date()) {
+  if (!student || !Object.hasOwn(STUDENTER, student.yrke ?? '')) return null;
+  let rader;
+  try {
+    rader = db.query(`SELECT h.*, p.yrke AS handledare_yrke, p.enhet_id AS handledare_enhet, p.aktiv AS handledare_aktiv, p.namn AS handledare_namn
+      FROM handledningar h JOIN personal p ON p.id = h.handledare_id
+      WHERE h.student_id = ? AND h.avslutad IS NULL AND h.fran <= ? AND h.till >= ? ORDER BY h.id DESC`).all(student.id, dagI(nu), dagI(nu));
+  } catch { return null; }
+  const minEnhet = vardenhetFor(db, student.enhet_id);
+  return rader.find(h => h.handledare_aktiv !== 0 && STUDENTER[student.yrke].handledare.includes(h.handledare_yrke)
+    && h.handledare_id !== student.id && vardenhetFor(db, h.handledare_enhet) === minEnhet && vardenhetFor(db, h.enhet_id) === minEnhet) ?? null;
+}
+export const UTAN_HANDLEDNING = 'Du har ingen pågående handledning på vårdenheten och kan därför inte öppna journalen. Handledaren registrerar handledningen.';
+// Den legitimerade yrkesgrupp (tvåställig kod i Socialstyrelsens HOSP-register, Ineras kodverk HSA Innehåll Legitimerad
+// yrkesgrupp, version 3.7) som en roll kräver vid inloggning genom en extern tjänst (inloggningstjanster.js). Studenterna
+// har ingen legitimation och prövas i stället mot handledningen. Undersköterska är en skyddad yrkestitel och ingen
+// legitimation, och skötare är ingen av delarna, så de rollerna har inget krav här.
+export const LEGITIMATION_FOR_ROLL = {
+  lakare: ['LK'], sjukskoterska: ['SJ'], barnmorska: ['BM'], fysioterapeut: ['FT', 'SG'], farmaceut: ['AP', 'RC'],
+  arbetsterapeut: ['AT'], dietist: ['DT'], logoped: ['LG'], kurator: ['HK'], psykolog: ['PS', 'PT'],
+};
+export const LEGITIMATION_NAMN = {
+  LK: 'läkare', SJ: 'sjuksköterska', BM: 'barnmorska', FT: 'fysioterapeut', SG: 'sjukgymnast', AP: 'apotekare', RC: 'receptarie',
+  AT: 'arbetsterapeut', DT: 'dietist', LG: 'logoped', HK: 'hälso- och sjukvårdskurator', PS: 'psykolog', PT: 'psykoterapeut',
+};

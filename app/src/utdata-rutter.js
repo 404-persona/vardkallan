@@ -143,7 +143,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor, versi
 // Det som servern lägger till i befintliga svar. Samlat här så att ändringarna i server.js blir några rader.
 export const tillagg = {
   inkorg: (db, p) => ({
-    kontrasigneringar: kanRoll(p, 'kontrasignera') ? ks.inkorg(db, p) : [],
+    // Runda 16, r3: handledaren får studenternas anteckningar att kontrasignera.
+    kontrasigneringar: kanRoll(p, 'kontrasignera') || kanRoll(p, 'handleda') ? ks.inkorg(db, p) : [],
     aterlamnanden: kanRoll(p, 'utlamna') ? utskrift.forsenadeAterlamnanden(db, p) : [],
   }),
   drift: (db) => { if (!db) return {}; datauttag.uppdateraOmDags(db); return { datauttag: datauttag.status(db) }; },

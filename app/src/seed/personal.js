@@ -22,6 +22,16 @@ export const YRKEN = {
   systemforvaltare: 'Systemförvaltare',
   // Runda 7, r1: paramedicinare i Sussas användbarhetstester.
   fysioterapeut: 'Fysioterapeut',
+  // Runda 16, r3: de nya yrkesrollerna och studenterna (atkomst.js).
+  arbetsterapeut: 'Arbetsterapeut',
+  dietist: 'Dietist',
+  logoped: 'Logoped',
+  kurator: 'Hälso- och sjukvårdskurator',
+  psykolog: 'Psykolog',
+  barnmorska: 'Barnmorska',
+  lakarstudent: 'Läkarstudent',
+  sjukskoterskestudent: 'Sjuksköterskestudent',
+  barnmorskestudent: 'Barnmorskestudent',
 };
 
 export const PERSONAL = [
@@ -78,9 +88,9 @@ export const PERSONAL = [
   // Runda 7, r1: en fysioterapeut på kardiologiska mottagningen (hjärtrehabilitering), som spelar paramedicinaren i Sussas
   // testfall. Sist i listan, så att de andras HSA-id inte ändras.
   { id: 'fys-kard', namn: 'Jenny Holmberg', yrke: 'fysioterapeut', titel: 'Fysioterapeut (hjärtrehabilitering)', enhet: 'uso-kard-mott', demo: true },
-  // Runda 9, r3: barnmorskan och läkaren på kvinnoklinikens förlossning (obstetrik.js). Barnmorskan har sjuksköterskans
-  // behörigheter i demon. Runda 11, r3: barnmorskan går att logga in som (förlossningen och BB), läkaren inte.
-  { id: 'bm-uso', namn: 'Sofia Ekdahl', yrke: 'sjukskoterska', titel: 'Barnmorska', enhet: 'uso-kk-forl', demo: true },
+  // Runda 9, r3: barnmorskan och läkaren på kvinnoklinikens förlossning (obstetrik.js). Runda 11, r3: barnmorskan går att
+  // logga in som (förlossningen och BB), läkaren inte. Runda 16, r3: barnmorskan har en egen roll (atkomst.js).
+  { id: 'bm-uso', namn: 'Sofia Ekdahl', yrke: 'barnmorska', titel: 'Barnmorska', enhet: 'uso-kk-forl', demo: true },
   { id: 'lak-kk', namn: 'Johanna Rehn', yrke: 'lakare', titel: 'Läkare (obstetrik)', enhet: 'uso-kk' },
   // Runda 11, r2: operationsplaneringen och anestesin (operation.js och anestesijournal.js). Operationskoordinatorn på
   // Ortopediska kliniken Karlskoga lasarett går att logga in som. Anestesiläkaren och anestesisjuksköterskan arbetar på
@@ -121,4 +131,19 @@ export const PERSONAL = [
   { id: 'chef-uso-rtg', namn: 'Helena Ottosson', yrke: 'verksamhetschef', titel: 'Verksamhetschef', enhet: 'uso-rtg' },
   { id: 'chef-vc-kumla', namn: 'Kristina Alm', yrke: 'verksamhetschef', titel: 'Verksamhetschef', enhet: 'vc-kumla' },
   { id: 'chef-vc-tybble', namn: 'Peter Nordqvist', yrke: 'verksamhetschef', titel: 'Verksamhetschef', enhet: 'vc-tybble' },
+  // Runda 16, r3: de nya yrkesrollerna och studenterna, på vårdenheter där yrket arbetar med demopatienterna. Sist, så att
+  // de andras HSA-id inte ändras. r16: true betyder att personen läggs in också i en sandlåda från före runda 16
+  // (roller-r16r3.js). Studenterna har en handledare på sin vårdenhet (handledning.js).
+  { id: 'at-kkoga', namn: 'Camilla Hedin', yrke: 'arbetsterapeut', titel: 'Arbetsterapeut', enhet: 'kkoga-ort', demo: true, r16: true },
+  { id: 'diet-lind', namn: 'Hedvig Lund', yrke: 'dietist', titel: 'Dietist', enhet: 'lind-med', demo: true, r16: true },
+  { id: 'log-lind', namn: 'Oskar Bergman', yrke: 'logoped', titel: 'Logoped', enhet: 'lind-med', demo: true, r16: true },
+  { id: 'kur-vc', namn: 'Malin Ekström', yrke: 'kurator', titel: 'Hälso- och sjukvårdskurator', enhet: 'vc-tybble', demo: true, r16: true },
+  { id: 'psy-psyk', namn: 'David Sjöström', yrke: 'psykolog', titel: 'Psykolog', enhet: 'uso-psyk', demo: true, r16: true },
+  { id: 'pt-psyk', namn: 'Ylva Hägg', yrke: 'psykolog', titel: 'Psykoterapeut', enhet: 'uso-psyk', r16: true },
+  { id: 'bm-vc', namn: 'Emma Lövgren', yrke: 'barnmorska', titel: 'Barnmorska (barnmorskemottagningen)', enhet: 'vc-tybble', demo: true, r16: true },
+  // Skötaren på psykiatrin har undersköterskans roll med titeln skötare (atkomst.js, runda 16, r3).
+  { id: 'sk-psyk', namn: 'Tobias Ahl', yrke: 'underskoterska', titel: 'Skötare', enhet: 'uso-psyk', r16: true },
+  { id: 'stud-lak', namn: 'Leo Andersson', yrke: 'lakarstudent', titel: 'Läkarstudent, termin 9', enhet: 'uso-kard', demo: true, r16: true },
+  { id: 'stud-ssk', namn: 'Wilma Karlsson', yrke: 'sjukskoterskestudent', titel: 'Sjuksköterskestudent, termin 5', enhet: 'uso-kard-72', demo: true, r16: true },
+  { id: 'stud-bm', namn: 'Alice Persson', yrke: 'barnmorskestudent', titel: 'Barnmorskestudent', enhet: 'uso-kk-forl', demo: true, r16: true },
 ];

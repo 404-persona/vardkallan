@@ -520,8 +520,11 @@ export function byggSeed(bas = nu()) {
   require('./schema-runda14-r3.js').sakraR14r3(db);
   // Runda 16, r2: sjukskrivningarna ur de signerade sjukintygen (sjukfall.js). Inget läggs in i efterhand.
   require('./sjukfall.js').sakra(db);
-  // Runda 16, r2: tabellerna för makulerade vårdkontakter skapades först vid den första läsningen av översikten, och i en
-  // sandlåda som har nått taket för databasen gick det inte. De skapas nu med de andra (vardkontakt-makulering.js).
+  // Runda 16, r1: ett läkarintyg för sjukpenning i version 1 och ett ersatt intyg (TSTRK1007) för Mikael Svensson, så
+  // att förnyelsen till version 2 och bytet till TS8071 går att pröva (intyg-seed.js).
+  require('./intyg-seed.js').seeda(db);
+  // Runda 16, r1: tabellerna för makulering och flytt av vårdkontakter skapas när sandlådan skapas, inte först när de
+  // används, så att en sandlåda som har nått taket för databasen fortfarande kan läsa översikten (missbruk-r13.test.js).
   require('./vardkontakt-makulering.js').sakra(db);
   // Runda 14, r4: mellanarkivet med de äldre uppgifter ur VAS som fördes dit vid migreringen (mellanarkiv.js).
   require('./mellanarkiv.js').seeda(db);
@@ -529,6 +532,8 @@ export function byggSeed(bas = nu()) {
   require('./servicenivaer.js').sakra(db);
   // Runda 14, r1: de betrodda inloggningstjänsterna (inloggningstjanster.js).
   require('./inloggningstjanster.js').sakra(db);
+  // Runda 16, r3: de nya yrkesrollerna och studenternas handledningar (roller-r16r3.js och handledning.js).
+  require('./roller-r16r3.js').sakra(db, bas);
   db.query('INSERT INTO installningar VALUES (?, ?)').run('seed_datum', datumAv(bas));
   db.query('INSERT INTO installningar VALUES (?, ?)').run('seed_tid', bas.toISOString());
   // Runda 12, r2: de versionerade migreringarna från version 1.2 (releaser.js). Sist, så att schemaversionen gäller allt.
@@ -697,6 +702,8 @@ export function migrera(db) {
   require('./servicenivaer.js').sakra(db);
   // Runda 14, r1: de betrodda inloggningstjänsterna (inloggningstjanster.js).
   require('./inloggningstjanster.js').sakra(db);
+  // Runda 16, r3: den nya personalen, barnmorskans roll och handledningarna i en sandlåda från före runda 16.
+  require('./roller-r16r3.js').sakra(db, nu());
   // Runda 12, r2: kontrollen av schemaversionen när en sandlåda läses in (releaser.js). Saknade migreringar tillämpas och
   // migreringar från en nyare version av programmet backas med de återställningar som sparades i databasen.
   require('./releaser.js').kontrolleraVidStart(db);

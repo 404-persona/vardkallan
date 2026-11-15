@@ -83,7 +83,11 @@ export const PROVA = {
   // Tredje omgången: flyttar till rätt patient som väntar på godkännande.
   '#/flyttar': 'godkanna_flytt',
   // Runda 16, r2: sjukskrivningen för demons sjukskrivna patient och översikterna över sjukskrivningar.
-  '#/patient/p14/sjukskrivning': 'las_intyg', '#/sjukskrivningar': 'sjukfall_mina', '#/sjukskrivningar/enhet': 'sjukfall_enhet',
+  '#/patient/p18/sjukskrivning': 'las_intyg', '#/sjukskrivningar': 'sjukfall_mina', '#/sjukskrivningar/enhet': 'sjukfall_enhet',
+  // Runda 16, r1: intygen för demopatienterna med ett ersatt intyg och ett utlåtande på kardiologin.
+  '#/patient/p14/intyg': 'las_intyg', '#/patient/p01/intyg': 'las_intyg',
+  // Runda 16, r3: handledningen av studenter och barnmorskans förskrivning för demopatienten på vårdcentralen.
+  '#/handledning': null, '#/patient/p11/lakemedel': 'patient',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

@@ -154,7 +154,7 @@ Behörighet och loggning: Se docs/rivta.md och docs/sakerhetsarkitektur.md.
 
 Simulerat: Intygsapplikationen är simulerad och är inte Webcert, och mottagarna av e-remisser och de nationella tjänsterna är simulerade. Inget är anslutet till den nationella tjänsteplattformen.
 
-Koden: `app/src/lakarintyg.js`, `app/src/intygsapplikation-simulerad.js`, `app/src/eremiss.js`, `app/src/eremiss-simulerad.js`, `app/src/r14r3-rutter.js`, `app/src/rivta-r3.js`, `app/src/rivta-vaccination.js`, `app/src/rivta-etjanster.js`, `app/src/rivta-etjanster-simulerade.js`, `app/src/rivta-dos.js`, `app/src/rivta-dos-simulerad.js`, `app/src/rivta-infektion.js`, `app/src/rivta-infektion-simulerad.js`, `app/src/sjukfall-intygssvar.js`, `app/src/intygsapplikation-beslutsstod-simulerad.js`.
+Koden: `app/src/lakarintyg.js`, `app/src/intygsapplikation-simulerad.js`, `app/src/eremiss.js`, `app/src/eremiss-simulerad.js`, `app/src/r14r3-rutter.js`, `app/src/rivta-r3.js`, `app/src/rivta-vaccination.js`, `app/src/rivta-etjanster.js`, `app/src/rivta-etjanster-simulerade.js`, `app/src/rivta-dos.js`, `app/src/rivta-dos-simulerad.js`, `app/src/rivta-infektion.js`, `app/src/rivta-infektion-simulerad.js`, `app/src/intygstyper.js`, `app/src/sjukfall-intygssvar.js`, `app/src/intygsapplikation-beslutsstod-simulerad.js`.
 
 Dokumentation: `docs/rivta.md`.
 

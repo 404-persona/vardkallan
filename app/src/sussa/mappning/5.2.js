@@ -5,6 +5,8 @@ import { TEST } from '../../krav.js';
 import { medR8r5 } from '../runda8-r5.js';
 // Runda 9, r5: inloggning med biljett, skyddsbehov, signering, certifikat, e-arkiv, gallring och miljöer (sussa/runda9-r5.js).
 import { medR9r5 } from '../runda9-r5.js';
+// Runda 16, r3: de nya yrkesrollerna, barnmorskan och studenterna (sussa/runda16-r3.js).
+import { medR16r3 } from '../runda16-r3.js';
 
 const { B, A, L, F, LK, MJ, GA, GK } = TEST;
 
@@ -153,4 +155,4 @@ function medR15r1(poster) {
 }
 
 const R15_FORE = medR14r5(R14_FORE);
-export default medR15r1(R15_FORE);
+export default medR16r3(medR15r1(R15_FORE));

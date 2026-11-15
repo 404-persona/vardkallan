@@ -101,8 +101,9 @@ FLIKAR.splice(FLIKAR.findIndex(f => f[0] === 'prover') + 1, 0, ['bilder', 'Bilde
 FLIKAR.splice(FLIKAR.findIndex(f => f[0] === 'matvarden') + 1, 0, ['iva', 'Intensivvård', () => Boolean(S.session?.iva) && far('las_matvarden'), ivaFlik]);
 // Runda 14, r3: fliken Intyg efter Remisser, för läkare och sjuksköterskor (Sussa 2.2.1.9).
 FLIKAR.splice(FLIKAR.findIndex(f => f[0] === 'remisser') + 1, 0, ['intyg', 'Intyg', () => far('las_intyg'), intygFlik]);
-// Runda 16, r2: fliken Sjukskrivning efter Intyg, för dem som ser intygen och för patienter i arbetsför ålder.
-FLIKAR.splice(FLIKAR.findIndex(f => f[0] === 'intyg') + 1, 0, ['sjukskrivning', 'Sjukskrivning', (h) => far('las_intyg') && (!h || (h.alder >= 16 && h.alder < 70)), sjukskrivningFlik]);
+// Runda 16, r2: fliken Sjukskrivning efter Intyg, för dem som ser intygen och diagnoserna (inte vårdadministratörens
+// begränsade vy), för patienter i arbetsför ålder.
+FLIKAR.splice(FLIKAR.findIndex(f => f[0] === 'intyg') + 1, 0, ['sjukskrivning', 'Sjukskrivning', (h) => far('las_intyg') && far('las_diagnoser') && (!h || (h.alder >= 16 && h.alder < 70)), sjukskrivningFlik]);
 
 let huvud = null;
 

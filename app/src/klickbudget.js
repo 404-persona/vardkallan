@@ -621,7 +621,41 @@ FLODEN.push(
 // Runda 16, r2: att förlänga en sjukskrivning. Flödet finns i test/flodessteg.cjs (GOR['forlang-sjukskrivning']).
 FLODEN.push(
   {
-    id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', roll: 'lak-vc', start: 'Journalen för en sjukskriven patient på vårdcentralen', budget: 3,
-    motivering: 'Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Signera i intygsapplikationen. Systemet har räknat sjukfallet, föreslår perioden från dagen efter förra intyget med samma längd och nivå, fyller i diagnos, sysselsättning och motiveringen till beslutsstödet och visar Socialstyrelsens rekommendation och var patienten är i rehabiliteringskedjan.',
+    id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', roll: 'lak-vc', start: 'Journalen för en sjukskriven patient på vårdcentralen', budget: 7,
+    motivering: 'Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Fyll i förslaget, där systemet har räknat sjukfallet och föreslår perioden från dagen efter förra intyget med samma längd och nivå. Förnyelsen har tagit med svaren som inte har ändrats, också motiveringen till beslutsstödet. Läkaren tar ställning på nytt till underlaget, arbetstidens förläggning och prognosen (högst tre klick, underlaget är ofta föreslaget ur vårdkontakten) och signerar.',
   },
 );
+// Runda 16, r1: ett läkarintyg för sjukpenning i version 2, och bytet från ett ersatt intyg (TSTRK1007) till TS8071.
+FLODEN.push(
+  {
+    id: 'skriv-sjukintyg', namn: 'Skriva och signera ett läkarintyg för sjukpenning', roll: 'lak-vc', start: 'Journalen för patienten på vårdcentralen', budget: 10,
+    motivering: 'Sussa 2.2.1.9. Ett klick på fliken Intyg och ett på Skriv intyget, där systemet har föreslagit läkarintyget för sjukpenning. Underlaget (den senaste vårdkontakten), diagnosen och funktionsnedsättningen ur anteckningens status har systemet fyllt i med källa. Läkaren kryssar nuvarande arbete, skriver yrket och aktivitetsbegränsningen (två fältbyten), kryssar graden, där systemet fyller i perioden från i dag i två veckor, väljer prognos och signerar. Vem som signerar, vårdenheten och patienten behöver ingen ange.',
+  },
+  {
+    id: 'byt-ersatt-intyg', namn: 'Byta ett ersatt intyg mot det som gäller nu', roll: 'lak-vc', start: 'Journalen för Mikael Svensson på vårdcentralen', budget: 2,
+    motivering: 'Sussa 2.2.1.9 och 3.1.4.2. Ett klick på fliken Intyg och ett på Skriv TS 8071 i stället vid det ersatta läkarintyget för högre körkortsbehörigheter. Systemet vet att TSTRK1007 ersattes av TS8071, skapar det nya utkastet med de svar som får följa med och öppnar det. Ingen behöver veta vilken blankett som gäller.',
+  },
+);
+// Runda 16, r3: den vanligaste anteckningen för varje ny roll, och barnmorskans förskrivning av preventivmedel. Flödena
+// finns i test/flodessteg.cjs (GOR med samma id). Yrkets mall är förvald, eftersom systemet väljer den efter yrket.
+{
+  const yrkesanteckning = (id, namn, roll, start, mall, vem) => ({
+    id, namn, roll, start, budget: 2,
+    motivering: `Ett klick för att öppna en ny anteckning, där ${mall} är förvald eftersom det är yrkets mall och fokus står i det första sökordet, och ett klick för att signera. ${vem}`,
+  });
+  FLODEN.push(
+    yrkesanteckning('arbetsterapianteckning', 'Skriva och signera en arbetsterapianteckning', 'at-kkoga', 'Översikten för en patient på ortopeden i Karlskoga', 'Arbetsterapianteckning', 'Arbetsterapeuten ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('dietistanteckning', 'Skriva och signera en dietistanteckning', 'diet-lind', 'Översikten för en patient på medicinkliniken i Lindesberg', 'Dietistanteckning', 'Dietisten ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('logopedanteckning', 'Skriva och signera en logopedanteckning', 'log-lind', 'Översikten för en patient på medicinkliniken i Lindesberg', 'Logopedanteckning', 'Logopeden ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('kuratorsanteckning', 'Skriva och signera en kuratorsanteckning', 'kur-vc', 'Översikten för en patient på mottagningen', 'Kuratorsanteckning', 'Kuratorn ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('psykologanteckning', 'Skriva och signera en psykologanteckning', 'psy-psyk', 'Översikten för en patient på psykiatrin', 'Psykologanteckning', 'Psykologen ser bara sitt yrkes mallar och behöver inte välja.'),
+    yrkesanteckning('barnmorskeanteckning', 'Skriva och signera en barnmorskeanteckning', 'bm-vc', 'Översikten för en patient på mottagningen', 'Barnmorskeanteckning', 'Barnmorskeanteckningen står först bland barnmorskans mallar.'),
+    yrkesanteckning('student-anteckning', 'Skriva och signera en anteckning som sjuksköterskestudent', 'stud-ssk', 'Patientens översikt', 'Omvårdnadsanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    yrkesanteckning('lakarstudent-anteckning', 'Skriva och signera en anteckning som läkarstudent', 'stud-lak', 'Patientens översikt', 'Mottagningsanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    yrkesanteckning('barnmorskestudent-anteckning', 'Skriva och signera en anteckning som barnmorskestudent', 'stud-bm', 'Översikten för en patient på förlossningen', 'Barnmorskeanteckning', 'Systemet skickar anteckningen till handledaren för kontrasignering, så studenten behöver inte begära det.'),
+    {
+      id: 'forskriv-preventivmedel', namn: 'Förskriva preventivmedel som barnmorska', roll: 'bm-vc', start: 'Översikten för en patient på mottagningen', budget: 3,
+      motivering: 'Ett klick på fliken Läkemedel, ett på Förskriv preventivmedel och ett på Förskriv. Systemet visar bara de preventivmedel som förskrivningsrätten omfattar, med det första förvalt och doseringen för produkten, och fyller i orsak och uppföljning om ett år.',
+    },
+  );
+}

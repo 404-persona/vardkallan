@@ -19,13 +19,15 @@
 // Behörigheten är densamma som för intygen: intyg från en annan vårdenhet räknas bara in när läkaren får se dem (aktivt
 // val, samtycke till en spärr), och allt som räknas fram, som antal dagar, en summa eller en varning, räknas bara på de
 // intyg som syns. Översikten för läkaren och vårdenhetens översikt räknar bara på den egna vårdenheten.
+import { randomUUID } from 'node:crypto';
 import { Fel, iso, idag, addDagar } from './db.js';
+import * as IT from './intygstyper.js';
 import { kanRoll, vardenhetFor, prova, visningsnamn, visningsPnr, alder } from './atkomst.js';
 import { loggaRad } from './logg.js';
 import * as lakarintyg from './lakarintyg.js';
 import * as fmb from './fmb.js';
 import { skydda } from './analys.js';
-import { lasSvar, rivSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar, simSvar } from './sjukfall-intygssvar.js';
+import { lasSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar, simSvar } from './sjukfall-intygssvar.js';
 
 // Intygen som räknas till sjukfallet. Intyg till arbetsgivaren räknas inte, som i Rehabstöd.
 export const SJUKINTYG = new Set(['LISJP']);
@@ -80,39 +82,81 @@ export function efterStatus(db, rad, { kod, intyg }) {
 lakarintyg.EFTER_STATUS.push(efterStatus);
 
 // ---------------------------------------------------------------------------------------------------------------
-// Demons sjukskrivningar: intyg som läkaren på vårdcentralen och läkaren på kardiologen har signerat före demons start,
-// relativt till i dag, så att översikterna och fliken Sjukskrivning har något att visa. Påhittade och märkta som demodata. Läggs bara in i demons
-// mall (db.js mallen), en gång.
+// Demons sjukskrivningar: läkarintyg för sjukpenning som läkaren på vårdcentralen och läkaren på kardiologen har signerat
+// före demons start, relativt till i dag, så att översikterna och fliken Sjukskrivning har något att visa och en
+// sjukskrivning går att förlänga genom förnyelsen. Intygen läggs in i den simulerade intygsapplikationen och i journalen
+// med samma händelser som om de hade skrivits där (som intyg-seed.js), och sjukskrivningen som om statusuppdateringen hade
+// kommit. Allt är påhittat och märkt som demodata. Läggs bara in i demons mall (db.js mallen), en gång.
 // ---------------------------------------------------------------------------------------------------------------
 const DEMO = [
   // Lumbago-ischias som snart når dag 90 och är längre än rekommendationen, med motivering. Intyget går ut om 6 dagar.
-  { pid: 'p14', kod: 'M544', text: 'Lumbago-ischias', intyg: [[-88, -61, 100], [-60, -33, 100], [-32, 6, 50, 'Väntar på bedömning av ryggkirurg. Arbetet innebär tunga lyft som inte går att ordna bort.']] },
-  { pid: 'p14', kod: 'J069', text: 'Akut övre luftvägsinfektion, ospecificerad', intyg: [[-400, -380, 100]] },
-  // Utmattningssyndrom som snart når dag 180, med trappad grad.
-  { pid: 'p18', kod: 'F438', text: 'Utmattningssyndrom', intyg: [[-170, -111, 100], [-110, -51, 75], [-50, 10, 50]] },
-  // En patient med skyddade personuppgifter.
-  { pid: 'p03', kod: 'F432', text: 'Anpassningsstörning', intyg: [[-10, 11, 100]] },
+  { pid: 'p18', kod: 'M544', text: 'Lumbago-ischias', yrke: 'Lagerarbetare, tunga lyft och truckkörning.',
+    funk: 'Smärta i ländryggen med utstrålning i vänster ben och nedsatt rörlighet vid framåtböjning.', akt: 'Kan inte lyfta tunga saker eller sitta längre stunder.',
+    intyg: [[-88, -61, 100], [-60, -33, 100], [-32, 6, 50, 'Väntar på bedömning av ryggkirurg. Arbetet innebär tunga lyft som inte går att ordna bort.']] },
+  // Utmattningssyndrom hos en patient med skyddade personuppgifter, som snart når dag 180, med trappad grad.
+  { pid: 'p03', kod: 'F438', text: 'Utmattningssyndrom', yrke: 'Handläggare på ett försäkringsbolag.',
+    funk: 'Nedsatt koncentration, minne och psykisk uthållighet.', akt: 'Klarar inte att arbeta mer än några timmar i taget med uppgifter som kräver koncentration.',
+    intyg: [[-170, -111, 100], [-110, -51, 75], [-50, 10, 50]] },
   // Kardiologen: efter hjärtinfarkt och vid kärlkramp, för vårdenhetens översikt.
-  { pid: 'p04', kod: 'I214', text: 'Akut subendokardiell hjärtinfarkt', enhet: 'uso-kard', pers: 'lak-kard', intyg: [[-20, 9, 100]] },
-  { pid: 'p05', kod: 'I209', text: 'Angina pectoris, ospecificerad', enhet: 'uso-kard', pers: 'lak-kard', intyg: [[-12, 2, 100], [3, 16, 50]] },
+  { pid: 'p04', kod: 'I214', text: 'Akut subendokardiell hjärtinfarkt', enhet: 'uso-kard', pers: 'lak-kard', yrke: 'Snickare.',
+    funk: 'Nedsatt fysisk uthållighet efter hjärtinfarkten.', akt: 'Klarar inte tunga lyft eller fysiskt krävande arbete.', intyg: [[-20, 9, 100]] },
+  { pid: 'p05', kod: 'I209', text: 'Angina pectoris, ospecificerad', enhet: 'uso-kard', pers: 'lak-kard', yrke: 'Busschaufför.',
+    funk: 'Bröstsmärta vid ansträngning.', akt: 'Klarar inte arbete med fysisk ansträngning.', intyg: [[-12, 2, 100], [3, 16, 50]] },
 ];
+const NIVA_KOD = { 100: 'HELT_NEDSATT', 75: 'TRE_FJARDEDEL', 50: 'HALFTEN', 25: 'EN_FJARDEDEL' };
+
 // kalla anges bara av testerna, som lägger in samma sjukskrivningar vid en fast dag.
 export function seedaDemo(db, dag = idag(), { kalla = 'demo' } = {}) {
   sakra(db);
   if (db.query('SELECT count(*) AS n FROM sjukskrivningar WHERE kalla = ?').get(kalla).n) return;
-  const ins = db.query(`INSERT INTO sjukskrivningar (patient_id, enhet_id, intygs_id, typ, personal_id, personal_namn, signerad, status, diagnos_kod, diagnos_text,
-    sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, 'LISJP', ?, ?, ?, 'skickat', ?, ?, 'nuvarande_arbete', ?, ?, ?, ?)`);
+  const harSim = Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sim_intygsapplikation'").get());
+  const ins = db.query(`INSERT INTO sjukskrivningar (patient_id, enhet_id, intygs_id, lakarintyg_id, typ, personal_id, personal_namn, signerad, status, diagnos_kod, diagnos_text,
+    sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, ?, 'LISJP', ?, ?, ?, 'skickat', ?, ?, 'nuvarande_arbete', ?, ?, ?, ?)`);
   for (const d of DEMO) {
-    const lak = db.query('SELECT id, namn FROM personal WHERE id = ?').get(d.pers ?? 'lak-vc');
+    const lak = db.query('SELECT id, namn, hsa_id FROM personal WHERE id = ?').get(d.pers ?? 'lak-vc');
     const enhet = db.query('SELECT id FROM enheter WHERE id = ?').get(d.enhet ?? 'vc-tybble');
-    if (!lak || !enhet || !db.query('SELECT 1 FROM patienter WHERE id = ?').get(d.pid)) continue;
+    const p = db.query('SELECT id, personnummer FROM patienter WHERE id = ?').get(d.pid);
+    if (!lak || !enhet || !p) continue;
     d.intyg.forEach(([fran, till, grad, motivering], i) => {
       // Ett intyg som börjar i framtiden har signerats i dag.
       const start = addDagar(dag, fran);
-      const signerad = fran > 0 ? dag : start;
-      ins.run(d.pid, enhet.id, `${kalla}-${d.pid}-${d.kod}-${i + 1}`, lak.id, lak.namn, `${signerad}T09:00:00.000Z`, d.kod, d.text,
-        JSON.stringify([{ fran: start, till: addDagar(dag, till), grad }]), motivering ?? null, kalla, iso());
+      const slut = addDagar(dag, till);
+      const signeradDag = fran > 0 ? dag : start;
+      const signerad = `${signeradDag}T09:00:00.000Z`;
+      const intygsId = `${kalla}-${d.pid}-${i + 1}-${randomUUID().slice(0, 8)}`;
+      let lakarintygId = null;
+      if (harSim && p.personnummer) {
+        const version = IT.aktuell('LISJP', new Date(signerad))?.version ?? '2.0';
+        const svar = {
+          '1': { FYSISKUNDERSOKNING: signeradDag }, '28': ['NUVARANDE_ARBETE'], '29': d.yrke, '6': [{ kod: d.kod, text: d.text }], '35': d.funk, '17': d.akt,
+          '32': [{ kod: NIVA_KOD[grad], fran: start, till: slut }], ...(grad < 100 ? { '33': false } : {}), '39': 'STOR_SANNOLIKHET', ...(motivering ? { '37': motivering } : {}),
+        };
+        const ms = (x) => x.slice(0, 23);
+        const handelser = [{ kod: 'SKAPAT', tid: ms(signerad) }, { kod: 'SIGNAT', tid: ms(signerad) }, { kod: 'SKICKA', tid: ms(signerad) }];
+        const ref = `VK-INTYG-${kalla.toUpperCase()}-${randomUUID()}`;
+        db.query(`INSERT INTO sim_intygsapplikation (intygs_id, patient_id, enhet_id, typ, version, personnummer, personal_hsa, personal_namn, ref, status, skapad, signerad, signerad_av, skickad, svar, kallor, handelser)
+          VALUES (?, ?, ?, 'LISJP', ?, ?, ?, ?, ?, 'skickat', ?, ?, ?, ?, ?, '{}', ?)`)
+          .run(intygsId, p.id, enhet.id, version, p.personnummer, lak.hsa_id, lak.namn, ref, signerad, signerad, lak.hsa_id, signerad, JSON.stringify(svar), JSON.stringify(handelser));
+        lakarintygId = Number(db.query(`INSERT INTO lakarintyg (patient_id, enhet_id, typ, version, intygs_id, ref, skapad_av, skapad_tid, status, signerad_tid, skickad_tid, andrad_tid)
+          VALUES (?, ?, 'LISJP', ?, ?, ?, ?, ?, 'skickat', ?, ?, ?)`).run(p.id, enhet.id, version, intygsId, ref, lak.id, signerad, ms(signerad), ms(signerad), signerad).lastInsertRowid);
+        for (const h of handelser) db.query("INSERT INTO lakarintyg_handelser (intyg_id, patient_id, enhet_id, kod, tid, mottagen_tid, kalla) VALUES (?, ?, ?, ?, ?, ?, 'seed')").run(lakarintygId, p.id, enhet.id, h.kod, h.tid, h.tid);
+      }
+      ins.run(d.pid, enhet.id, intygsId, lakarintygId, lak.id, lak.namn, signerad, d.kod, d.text, JSON.stringify([{ fran: start, till: slut, grad }]), motivering ?? null, kalla, iso());
     });
+  }
+  // De signerade sjukintyg som redan finns i demon (intyg-seed.js) får sin sjukskrivning, som om statusuppdateringen
+  // hade kommit med svaren.
+  if (kalla === 'demo' && harSim) {
+    for (const r of db.query("SELECT s.*, l.id AS lid FROM sim_intygsapplikation s JOIN lakarintyg l ON l.intygs_id = s.intygs_id WHERE s.typ = 'LISJP' AND s.status IN ('signerat', 'skickat')").all()) {
+      if (db.query('SELECT 1 FROM sjukskrivningar WHERE intygs_id = ?').get(r.intygs_id)) continue;
+      const sv = simSvar(JSON.parse(r.svar || '{}'));
+      const perioder = perioderUrSimSvar(JSON.parse(r.svar || '{}'), dag);
+      if (!perioder.length) continue;
+      const pers = db.query('SELECT id, namn FROM personal WHERE hsa_id = ?').get(r.personal_hsa);
+      db.query(`INSERT INTO sjukskrivningar (patient_id, enhet_id, intygs_id, lakarintyg_id, typ, personal_id, personal_namn, signerad, status, diagnos_kod, diagnos_text,
+        sysselsattning, perioder, fmb_motivering, kalla, mottagen) VALUES (?, ?, ?, ?, 'LISJP', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'demo', ?)`)
+        .run(r.patient_id, r.enhet_id, r.intygs_id, r.lid, pers?.id ?? null, pers?.namn ?? r.personal_namn, r.signerad, r.status, sv.diagnosKod, sv.diagnosText, sv.sysselsattning, JSON.stringify(perioder), sv.motiveringFmb, iso());
+    }
   }
 }
 
@@ -238,7 +282,7 @@ export function bedom(tidigare, { diagnosKod, perioder, intygsId = null }, { dag
   let varning = null;
   if (over) {
     varning = `Den sammanlagda sjukskrivningen blir ${total} dagar med det här intyget${tidigareDagar ? ` (${tidigareDagar} dagar i tidigare intyg i sjukfallet)` : ''}. `
-      + `Socialstyrelsens försäkringsmedicinska beslutsstöd rekommenderar för ${beslutsstod.diagnosrubrik.toLowerCase()} som längst ${beslutsstod.rekommenderadMaxText} (${max} dagar). `
+      + `Socialstyrelsens försäkringsmedicinska beslutsstöd rekommenderar för ${IT.iMening(beslutsstod.diagnosrubrik)} som längst ${beslutsstod.rekommenderadMaxText} (${max} dagar). `
       + 'Skriv i intyget varför patienten behöver en längre sjukskrivning. Motiveringen följer med i intyget och i förlängningar.';
   }
   return {
@@ -293,6 +337,9 @@ function sjukfallUt(db, s, minEnhet) {
 
 export function forPatient(atk, p, dag = idag()) {
   atk.krav('las_intyg');
+  // Sjukskrivningen visar diagnoser och sjukfall och är för vårdpersonal som ser diagnoserna, inte för
+  // vårdadministratörens begränsade vy av intygen.
+  atk.krav('las_diagnoser');
   const db = atk.db;
   const minEnhet = vardenhetFor(db, atk.personal.enhet_id);
   const sjukfall = byggSjukfall(synligaIntyg(atk), { dag });
@@ -320,9 +367,9 @@ export function forPatient(atk, p, dag = idag()) {
 // Förlängning: ett klick skapar ett utkast med perioden som börjar dagen efter förra intyget och med det som inte har
 // ändrats. Utkastet skapas med CreateDraftCertificate och förifyllnaden i kontraktet, som annars.
 // ---------------------------------------------------------------------------------------------------------------
-// Det som följer med från förra intyget. Läkaren tar ställning till allt annat på nytt (som grunden för intyget,
-// funktionsnedsättning och aktivitetsbegränsning), som vid en förlängning i Webcert.
-export const FORLANGNING_FOLJER_MED = ['diagnos', 'sysselsättning', 'sjukskrivningsnivå', 'motiveringen till beslutsstödet'];
+// Vad som följer med när förra intyget förnyas. Vilka svar det är avgör intygstypernas överföring (intygstyper.js overfor):
+// svaren på frågor som inte har ändrats följer med, och det läkaren ska bedöma på nytt följer aldrig med.
+export const FORLANGNING_TEXT = 'Förra intyget förnyas. Svaren som inte har ändrats följer med, också motiveringen till beslutsstödet. Grad, period, underlag och prognos tar du ställning till på nytt, och systemet föreslår perioden.';
 
 function forslagForlangning(s, dag) {
   const senaste = s.intyg.find(i => i.id === s.senasteIntygId);
@@ -335,30 +382,30 @@ function forslagForlangning(s, dag) {
   return {
     franIntyg: senaste.id, fran, till, grad: sista.grad, dagar: langd,
     text: `Förlängningen börjar ${fran} och föreslås till ${till} (${langd} dagar, ${gradText(sista.grad)}, som förra perioden). Du ändrar perioden i intyget om det behövs.`,
-    foljerMed: FORLANGNING_FOLJER_MED,
+    foljerMed: FORLANGNING_TEXT,
   };
 }
 
 export async function forlang(atk, p, body = {}, dag = idag()) {
   atk.krav('skriv_intyg');
+  const db = atk.db;
   const sjukfall = byggSjukfall(synligaIntyg(atk), { dag });
   const senaste = sjukfall[0] ?? null;
   if (!senaste) throw new Fel(400, 'Patienten har ingen sjukskrivning att förlänga. Skriv ett nytt sjukintyg från fliken Intyg.', 'ogiltig');
   if (dagarMellan(senaste.slut, dag) - 1 > DAGAR_MELLAN) throw new Fel(400, `Förra sjukintyget gick ut ${senaste.slut}, mer än ${DAGAR_MELLAN} dagar sedan. Då är det ett nytt sjukfall: skriv ett nytt sjukintyg från fliken Intyg.`, 'ogiltig');
   const f = forslagForlangning(senaste, dag);
   const forra = senaste.intyg.find(i => i.id === f.franIntyg);
-  const niva = nivaForGrad(f.grad);
-  // Förifyllnaden i kontraktets form: diagnos, sysselsättning, perioden och motiveringen.
-  const diagnos = forra.diagnosKod ? { kod: fmb.normalisera(forra.diagnosKod), text: forra.diagnosText ?? forra.diagnosKod } : null;
-  const svar = rivSvar({ sysselsattning: forra.sysselsattning, fran: f.fran, till: f.till, nedsattning: niva, motiveringFmb: senaste.motivering ?? '' });
-  const r = await lakarintyg.skapa(atk, p, { typ: 'LISJP' }, dag, { svar, diagnos });
-  const forifyllt = [
-    diagnos ? `Diagnos ${medPunkt(diagnos.kod)} ${forra.diagnosText ?? ''}`.trim() : null,
-    forra.sysselsattning ? `Sysselsättning: ${sysselText(forra.sysselsattning).toLowerCase()}` : null,
-    `Period ${f.fran} till ${f.till}, ${NIVAER[niva].text.toLowerCase()}`,
-    senaste.motivering ? 'Motiveringen till beslutsstödet' : null,
-  ].filter(Boolean);
-  return { ...r, forifyllt, text: `Utkastet till förlängningen är skapat i intygsapplikationen. ${f.text}` };
+  // Förlängningen går genom intygens egna vägar, som prövar behörigheten och reglerna (provaRegler): när förra intyget
+  // finns i journalen på den egna vårdenheten förnyas det (lakarintyg.fornya), och svaren som får följa med följer med
+  // (intygstyper.overfor), också motiveringen i fråga 37. Grad och period tar läkaren ställning till på nytt, med
+  // systemets förslag i beslutsstödet. Annars skapas ett nytt sjukintyg med journalens förifyllnad (lakarintyg.skapa).
+  const rad = forra.lakarintygId ? db.query("SELECT id, status, enhet_id FROM lakarintyg WHERE id = ? AND patient_id = ? AND typ = 'LISJP'").get(forra.lakarintygId, p.id) : null;
+  const egen = rad && vardenhetFor(db, rad.enhet_id) === vardenhetFor(db, atk.personal.enhet_id) && ['signerat', 'skickat'].includes(rad.status);
+  const r = egen ? await lakarintyg.fornya(atk, p, rad.id) : await lakarintyg.skapa(atk, p, { typ: 'LISJP' }, dag);
+  return {
+    oppna: r.oppna, forslag: { fran: f.fran, till: f.till, grad: f.grad, dagar: f.dagar },
+    text: `Utkastet till förlängningen är skapat i intygsapplikationen. ${egen ? `${r.meddelande ?? ''} ` : ''}${f.text}`.replace(/\s+/g, ' ').trim(),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -367,13 +414,23 @@ export async function forlang(atk, p, body = {}, dag = idag()) {
 // ---------------------------------------------------------------------------------------------------------------
 export function forUtkast(atk, utkast, dag = idag()) {
   atk.krav('las_intyg');
+  // Beslutsstödet räknar på patientens sjukintyg och diagnoser och visas för den som signerar sjukintyget, inte i
+  // vårdadministratörens begränsade vy.
+  if (!kanRoll(atk.personal, 'skriv_intyg')) return { sjukintyg: SJUKINTYG.has(utkast.typ), begransad: true };
   const perioder = perioderUrSimSvar(utkast.svar ?? {});
   const sv = simSvar(utkast.svar ?? {});
-  const b = bedom(synligaIntyg(atk), { diagnosKod: sv.diagnosKod, perioder, intygsId: utkast.intygsId }, { dag });
+  const tidigare = synligaIntyg(atk);
+  const b = bedom(tidigare, { diagnosKod: sv.diagnosKod, perioder, intygsId: utkast.intygsId }, { dag });
+  // Förslaget till perioden när utkastet saknar en: från dagen efter förra intyget i ett sjukfall som pågår eller tog
+  // slut för högst 5 dagar sedan, lika lång och med samma nivå som förra perioden. Det visas bara och sparas först när
+  // läkaren fyller i det och sparar.
+  const senaste = !perioder.length ? byggSjukfall(tidigare.filter(i => i.intygsId !== utkast.intygsId), { dag })[0] ?? null : null;
+  const fp = senaste && dagarMellan(senaste.slut, dag) - 1 <= DAGAR_MELLAN ? forslagForlangning(senaste, dag) : null;
   return {
     ...b,
     sjukintyg: SJUKINTYG.has(utkast.typ),
     motiveringIIntyget: sv.motiveringFmb,
+    forslagPeriod: fp && SJUKINTYG.has(utkast.typ) && utkast.status === 'utkast' ? { kod: NIVAER[nivaForGrad(fp.grad)].kod, fran: fp.fran, till: fp.till, dagar: fp.dagar, text: `${fp.fran} till ${fp.till}, ${gradText(fp.grad)}, som förra perioden` } : null,
     kanMotivera: utkast.status === 'utkast' && kanRoll(atk.personal, 'skriv_intyg'),
     dolda: atk.doldaVal > 0 ? { kraverVal: true, text: 'Det finns intyg från andra vårdenheter. Gör ett aktivt val i journalen för att räkna in dem.' } : null,
   };

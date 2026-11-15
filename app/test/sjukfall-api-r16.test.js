@@ -17,13 +17,17 @@ describe('Stödet vid sjukskrivning i API:t', () => {
     db.query("INSERT INTO diagnoser (patient_id, enhet_id, kod, text, typ, datum) VALUES ('p11', 'vc-tybble', 'J06.9', 'Akut övre luftvägsinfektion', 'huvud', ?)").run(d);
     const s = await k.post('/api/patient/p11/intyg', { typ: 'LISJP' });
     const iid = s.data.oppna.split('/').pop();
-    await k.post(`/api/intygsapplikation/${iid}`, { sysselsattning: 'nuvarande_arbete', nedsattning: 'heltid', fran: addDagar(d, -10), till: addDagar(d, 3) });
-    // Beslutsstödet medan läkaren skriver: 14 dagar är inom Socialstyrelsens rekommendation för övre luftvägsinfektion.
-    const b = await k.get(`/api/intygsapplikation/${iid}/beslutsstod`);
+    const per = [{ kod: 'HELT_NEDSATT', fran: addDagar(d, -10), till: addDagar(d, 3) }];
+    // Beslutsstödet medan läkaren skriver, med perioden i formuläret innan den är sparad: 14 dagar är inom
+    // Socialstyrelsens rekommendation för övre luftvägsinfektion. Inget sparas av frågan.
+    const b = await k.get(`/api/intygsapplikation/${iid}/beslutsstod?perioder=${encodeURIComponent(JSON.stringify(per))}&diagnos=J06.9`);
     expect(b.status).toBe(200);
     expect(b.data).toMatchObject({ total: 14, over: false, sjukintyg: true, kanMotivera: true });
     expect(b.data.beslutsstod.rekommenderadMaxDagar).toBe(14);
-    expect((await k.post(`/api/intygsapplikation/${iid}/beslutsstod/motivering`, { motivering: 'Tungt arbete utomhus.' })).data.motivering).toBe('Tungt arbete utomhus.');
+    expect((await k.get(`/api/intygsapplikation/${iid}`)).data.svar['32']).toBeUndefined();
+    const svar = { '1': { FYSISKUNDERSOKNING: d }, '28': ['NUVARANDE_ARBETE'], '29': 'Brevbärare', '6': [{ kod: 'J069', text: 'Akut övre luftvägsinfektion' }], '35': 'Feber och hosta.', '17': 'Orkar inte gå.',
+      '32': per, '39': 'STOR_SANNOLIKHET', '37': 'Tungt arbete utomhus.' };
+    expect((await k.post(`/api/intygsapplikation/${iid}`, { svar })).status).toBe(200);
     expect((await k.post(`/api/intygsapplikation/${iid}/signera`)).data.status).toBe('signerat');
     const sj = await k.get('/api/patient/p11/sjukskrivning');
     expect(sj.status).toBe(200);
@@ -32,9 +36,13 @@ describe('Stödet vid sjukskrivning i API:t', () => {
     const f = await k.post('/api/patient/p11/sjukskrivning/forlang', {});
     expect(f.status).toBe(201);
     const nytt = f.data.oppna.split('/').pop();
+    // Med den föreslagna perioden blir sjukskrivningen 28 dagar: längre än rekommendationen, och motiveringen följde med i
+    // fråga 37. Texten lämnas inte ut genom beslutsstödet, bara att den finns.
     const b2 = await k.get(`/api/intygsapplikation/${nytt}/beslutsstod`);
-    // Med förlängningen blir sjukskrivningen 28 dagar: längre än rekommendationen, och motiveringen följde med.
-    expect(b2.data).toMatchObject({ total: 28, tidigareDagar: 14, over: true, motiveringIIntyget: 'Tungt arbete utomhus.' });
+    expect(b2.data.forslagPeriod).toMatchObject({ kod: 'HELT_NEDSATT', fran: addDagar(d, 4) });
+    const b3 = await k.get(`/api/intygsapplikation/${nytt}/beslutsstod?perioder=${encodeURIComponent(JSON.stringify([{ kod: 'HELT_NEDSATT', fran: b2.data.forslagPeriod.fran, till: b2.data.forslagPeriod.till }]))}`);
+    expect(b3.data).toMatchObject({ total: 28, tidigareDagar: 14, over: true, motiveringIIntyget: true });
+    expect(JSON.stringify(b3.data)).not.toContain('Tungt arbete utomhus');
     // Översikten: sjukfallet syns för läkaren, som har signerat det nuvarande intyget.
     const m = await k.get('/api/sjukskrivningar');
     expect(m.status).toBe(200);
