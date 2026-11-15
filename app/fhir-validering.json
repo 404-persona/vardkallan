@@ -1,7 +1,7 @@
 {
-  "tid": "2026-11-15T01:59:10.420Z",
+  "tid": "2026-11-15T12:51:05.755Z",
   "validator": "HL7 FHIR Validation tool 7.0.3",
-  "fhirKodHash": "da7f87708e59e4ed8d246cb8a06b1edb540aea7f22bf0a4abcddf1b95fbbed7b",
+  "fhirKodHash": "52bc5da7c82283861c29258830f3d5b4e20e572d89e8506b27cd6f35ffd1ff84",
   "kodfiler": [
     "arkiv.js",
     "atgarder.js",
@@ -29,9 +29,9 @@
     "tjanstekontrakt.js",
     "vitalparametrar.js"
   ],
-  "resurser": 6093,
+  "resurser": 6150,
   "fel": 0,
-  "varningar": 7482,
+  "varningar": 7550,
   "saknas": [],
   "perTyp": {
     "Patient": {
@@ -45,9 +45,9 @@
       "varningar": 31
     },
     "Practitioner": {
-      "resurser": 64,
+      "resurser": 75,
       "fel": 0,
-      "varningar": 64
+      "varningar": 75
     },
     "def": {
       "resurser": 32,
@@ -70,9 +70,9 @@
       "varningar": 230
     },
     "Observation": {
-      "resurser": 470,
+      "resurser": 498,
       "fel": 0,
-      "varningar": 516
+      "varningar": 548
     },
     "MedicationRequest": {
       "resurser": 135,
@@ -80,9 +80,9 @@
       "varningar": 281
     },
     "MedicationAdministration": {
-      "resurser": 41,
+      "resurser": 46,
       "fel": 0,
-      "varningar": 82
+      "varningar": 92
     },
     "List": {
       "resurser": 1,
@@ -105,9 +105,9 @@
       "varningar": 28
     },
     "Procedure": {
-      "resurser": 8,
+      "resurser": 10,
       "fel": 0,
-      "varningar": 16
+      "varningar": 20
     },
     "Composition": {
       "resurser": 225,
@@ -145,9 +145,9 @@
       "varningar": 1
     },
     "ChargeItem": {
-      "resurser": 337,
+      "resurser": 348,
       "fel": 0,
-      "varningar": 344
+      "varningar": 355
     },
     "Immunization": {
       "resurser": 16,
