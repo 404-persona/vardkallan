@@ -198,12 +198,6 @@ Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan 
 
 Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning och cirkulation, som systemet har fällt ut som förslag, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
 
-### Kontrasignera studentens anteckning
-
-Börjar i: Inkorgen med en students anteckning. Klickbudget: högst 2 steg. I demon gör Johan Ek flödet.
-
-Ett klick på anteckningen under Att kontrasignera i inkorgen och ett på Kontrasignera. Systemet har själv skickat anteckningen till handledaren när studenten signerade.
-
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
