@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-15T09:48:22.880Z",
+  "tid": "2026-11-15T11:42:13.840Z",
   "bas": "http://127.0.0.1:18162",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "bf66f3f5180a8ca574ac4a378faae19f454c70d7e61eb2124f3dced351f6f09a",
+  "gransnittHash": "75a8f7ed06db3a79a4e17a6c232ab264f2f36988f3977c321b8c7b3c4bea4556",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2750,12 +2750,22 @@
       "start": "Journalen för en sjukskriven patient på vårdcentralen",
       "budget": 7,
       "motivering": "Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Fyll i förslaget, där systemet har räknat sjukfallet och föreslår perioden från dagen efter förra intyget med samma längd och nivå. Förnyelsen har tagit med svaren som inte har ändrats, också motiveringen till beslutsstödet. Läkaren tar ställning på nytt till underlaget, arbetstidens förläggning och prognosen (högst tre klick, underlaget är ofta föreslaget ur vårdkontakten) och signerar.",
-      "klick": 0,
+      "klick": 6,
       "faltbyten": 0,
       "tangenter": 0,
-      "uppmatt": 0,
-      "inomBudget": false,
-      "steg": []
+      "uppmatt": 6,
+      "inomBudget": true,
+      "steg": [
+        "klick: Sjukskrivning",
+        "klick: Förläng sjukskrivningen",
+        "klick: Fyll i förslaget",
+        "klick: arbetstiden",
+        "klick: prognos",
+        "klick: Signera"
+      ],
+      "teckenSkrivna": 0,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
     },
     {
       "id": "skriv-sjukintyg",
@@ -3533,7 +3543,7 @@
     },
     {
       "namn": "Gränssnitt > Klickbudget > Förlänga en sjukskrivning inom budget",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Klickbudget > Skriva och signera ett läkarintyg för sjukpenning inom budget",
