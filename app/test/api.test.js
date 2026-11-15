@@ -549,7 +549,7 @@ describe('API', () => {
     }
     expect(svar).toBe(roller.length * 15 * vagar.length);
     // Runda 7, r6: över tusen anrop tar mer än fem sekunder när datorn har hög last, så testet får längre tid.
-    // Runda 16: med de nya rollerna är det 35 demopersoner och drygt 11 000 anrop, cirka 22 sekunder utan last. På de
+    // Runda 16: med de nya rollerna är det 35 demopersoner och cirka 7 600 anrop, cirka 22 sekunder utan last. På de
     // långsammare maskinerna i GitHub Actions med falsk klocka räckte inte 30 sekunder, så gränsen är två minuter.
   }, 120_000);
 
