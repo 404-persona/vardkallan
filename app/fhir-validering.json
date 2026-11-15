@@ -1,7 +1,7 @@
 {
-  "tid": "2026-11-15T12:51:05.755Z",
+  "tid": "2026-11-15T18:19:37.690Z",
   "validator": "HL7 FHIR Validation tool 7.0.3",
-  "fhirKodHash": "52bc5da7c82283861c29258830f3d5b4e20e572d89e8506b27cd6f35ffd1ff84",
+  "fhirKodHash": "3080568ee7f4ef63d8b860d2636351a0be1908dd6684463833f680a2ba0aab42",
   "kodfiler": [
     "arkiv.js",
     "atgarder.js",
@@ -29,9 +29,9 @@
     "tjanstekontrakt.js",
     "vitalparametrar.js"
   ],
-  "resurser": 6150,
+  "resurser": 6155,
   "fel": 0,
-  "varningar": 7550,
+  "varningar": 7555,
   "saknas": [],
   "perTyp": {
     "Patient": {
@@ -45,9 +45,9 @@
       "varningar": 31
     },
     "Practitioner": {
-      "resurser": 75,
+      "resurser": 76,
       "fel": 0,
-      "varningar": 75
+      "varningar": 76
     },
     "def": {
       "resurser": 32,
@@ -145,9 +145,9 @@
       "varningar": 1
     },
     "ChargeItem": {
-      "resurser": 348,
+      "resurser": 352,
       "fel": 0,
-      "varningar": 355
+      "varningar": 359
     },
     "Immunization": {
       "resurser": 16,
