@@ -520,6 +520,8 @@ export function byggSeed(bas = nu()) {
   require('./schema-runda14-r3.js').sakraR14r3(db);
   // Runda 16, r2: sjukskrivningarna ur de signerade sjukintygen (sjukfall.js). Inget läggs in i efterhand.
   require('./sjukfall.js').sakra(db);
+  // Runda 16: rehabkoordinatorns REKO-status per sjukfall (rehabkoordinator.js).
+  require('./rehabkoordinator.js').sakra(db);
   // Runda 16, r1: ett läkarintyg för sjukpenning i version 1 och ett ersatt intyg (TSTRK1007) för Mikael Svensson, så
   // att förnyelsen till version 2 och bytet till TS8071 går att pröva (intyg-seed.js).
   require('./intyg-seed.js').seeda(db);
@@ -695,6 +697,8 @@ export function migrera(db) {
   require('./schema-runda14-r3.js').sakraR14r3(db);
   // Runda 16, r2: sjukskrivningarna ur de signerade sjukintygen (sjukfall.js). Inget läggs in i efterhand.
   require('./sjukfall.js').sakra(db);
+  // Runda 16: rehabkoordinatorns REKO-status per sjukfall (rehabkoordinator.js).
+  require('./rehabkoordinator.js').sakra(db);
   // Runda 16, r2: tabellerna för makulerade vårdkontakter skapades först vid den första läsningen av översikten, och i en
   // sandlåda som har nått taket för databasen gick det inte. De skapas nu med de andra (vardkontakt-makulering.js).
   require('./vardkontakt-makulering.js').sakra(db);
@@ -748,6 +752,8 @@ export function mallen() {
     try { require('./undersokningar.js').seedaDemo(db); } catch (e) { console.error('Undersökningarna i demon kunde inte läggas in:', e.message); }
     // Runda 16, r2: demons sjukskrivningar för läkaren på vårdcentralen (sjukfall.js), i mallen som demons andra exempel.
     require('./sjukfall.js').seedaDemo(db);
+    // Runda 16: rehabkoordinatorn har kontaktat en av de sjukskrivna patienterna (rehabkoordinator.js).
+    require('./rehabkoordinator.js').seedaDemo(db);
     mall = { datum: d, byggd: nuMs, data: db.serialize() };
     db.close();
   }

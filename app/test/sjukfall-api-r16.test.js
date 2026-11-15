@@ -74,4 +74,32 @@ describe('Stödet vid sjukskrivning i API:t', () => {
     expect(e.data.regel).toContain('skyddade personuppgifter');
     expect(Array.isArray(e.data.grad)).toBe(true);
   }, 30_000);
+
+  test('Rehabkoordinatorn > API: koordinatorn söker fram sjukfallen, sätter REKO-status med samtycke, och läkaren ser statusen', async () => {
+    const k = klient(app);
+    await k.logga('rk-vc');
+    const tom = await k.get('/api/rehabkoordinator/sjukfall');
+    expect(tom.status).toBe(200);
+    expect(tom.data.sjukfall).toBeNull();
+    const d = await k.get('/api/rehabkoordinator/sjukfall?sok=1');
+    const s = d.data.sjukfall.find(x => x.patientId === 'p18');
+    expect(s.reko).toMatchObject({ kod: 'kontaktad', text: 'Kontaktad' });
+    expect(d.data.sjukfall.map(x => x.patientId)).not.toContain('p03');
+    expect((await k.get('/api/rehabkoordinator/sjukfall?sok=1&reko=kontaktad')).data.sjukfall.map(x => x.patientId)).toEqual(['p18']);
+    const utan = await k.post('/api/rehabkoordinator/patient/p18/reko', { start: s.start, status: 'aktiv' });
+    expect(utan.status).toBe(400);
+    const med = await k.post('/api/rehabkoordinator/patient/p18/reko', { start: s.start, status: 'aktiv', samtycke: true, samtyckeSatt: 'muntligt' });
+    expect(med.status).toBe(200);
+    expect(med.data.reko).toMatchObject({ kod: 'aktiv', samtycke: true });
+    expect((await k.get('/api/rehabkoordinator/patient/p18')).data.sjukfall[0].historik.map(h => h.kod)).toEqual(['aktiv', 'kontaktad']);
+    // Inget ur journalen och inga intyg för koordinatorn.
+    expect((await k.get('/api/patient/p18/sjukskrivning')).status).toBe(403);
+    expect((await k.get('/api/patient/p18')).status).toBe(403);
+    const lak = klient(app);
+    await lak.logga('lak-vc');
+    expect((await lak.get('/api/patient/p18/sjukskrivning')).data.pagaende[0].reko).toMatchObject({ kod: 'kontaktad' });
+    expect((await lak.get('/api/sjukskrivningar')).data.sjukfall.find(x => x.patientId === 'p18').reko.kod).toBe('kontaktad');
+    expect((await lak.post('/api/rehabkoordinator/patient/p18/reko', { start: s.start, status: 'avslutad' })).status).toBe(403);
+    expect((await lak.get('/api/rehabkoordinator/sjukfall?sok=1')).status).toBe(403);
+  }, 30_000);
 });

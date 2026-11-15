@@ -21,6 +21,15 @@ function intygLista(s) {
     ${i.motivering ? `<span class="under-text">Motivering till beslutsstödet: ${esc(i.motivering)}</span>` : ''}</li>`).join('')}</ul>`;
 }
 
+// Runda 16, rehabkoordinatorn: REKO-statusen som rehabkoordinatorn har satt på vårdenheten. Läkaren ser den men sätter
+// den inte, som i Rehabstöd.
+function rekoRad(r) {
+  if (!r) return '';
+  const vem = r.sattAv ? ` <span class="under-text">Satt av ${esc(r.sattAv)} ${esc(tidpunkt(r.tid))}.${r.samtycke ? ' Patienten har samtyckt till koordineringsinsatser.' : ''}</span>`
+    : ' <span class="under-text">Rehabkoordinatorn har inte satt någon status.</span>';
+  return `<p class="sjk-reko">REKO-status: <span class="tagg">${esc(r.text)}</span>${vem}</p>`;
+}
+
 function sjukfallKort(s, rubrik) {
   const k = s.rehabkedjan;
   const f = s.fmb;
@@ -29,6 +38,7 @@ function sjukfallKort(s, rubrik) {
     <p>${s.pagaende ? `Dag <strong>${esc(s.uppskattadDag)}</strong> i sjukfallet. ` : ''}${esc(s.dagar)} dagar med sjukskrivning, ${esc(s.start)} till ${esc(s.slut)}, ${esc(s.antalIntyg)} intyg.</p>
     ${s.pagaende ? `<p>Grad i dag: <strong>${esc(grad(s.aktuellGrad))}</strong>. Intyget går ut ${esc(s.slut)}${s.kvarDagar != null ? `, om ${esc(s.kvarDagar)} ${s.kvarDagar === 1 ? 'dag' : 'dagar'}` : ''}.${s.sysselsattning ? ` Sysselsättning: ${esc(s.sysselsattning.toLowerCase())}.` : ''}</p>` : ''}
     ${k ? `<p class="${k.nara ? 'ruta sjk-varning' : 'sjk-kedja'}">${esc(k.text)}</p>` : ''}
+    ${rekoRad(s.reko)}
     ${f ? `<p class="${f.over && !f.motiverat ? 'ruta sjk-varning' : 'under-text'}">${f.over
       ? `Sjukfallet är längre än Socialstyrelsens rekommendation för diagnosen (som längst ${esc(f.maxText)}).${f.motiverat ? ' Läkaren har motiverat varför i intyget.' : ' Ingen motivering finns i intygen.'}`
       : `Inom Socialstyrelsens rekommendation för diagnosen (som längst ${esc(f.maxText)}).`}</p>` : ''}

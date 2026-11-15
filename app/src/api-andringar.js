@@ -27,6 +27,8 @@ export const ANDRINGAR = [
       // Runda 16, r2: stödet vid sjukskrivning (docs/api-avvikelser.md).
       'Nya rutter i det interna API:t: patientens sjukfall med beslutsstöd och förslag till förlängning (GET /api/patient/:id/sjukskrivning), förlängning med ett klick (POST /api/patient/:id/sjukskrivning/forlang), läkarens pågående sjukfall (GET /api/sjukskrivningar), vårdenhetens sjukfall som antal (GET /api/sjukskrivningar/enhet) och Socialstyrelsens försäkringsmedicinska beslutsstöd för ett utkast med förslaget till perioden (GET /api/intygsapplikation/:id/beslutsstod)',
       'Statusuppdateringen för ett signerat sjukintyg har svaren 28, 32 och 37 (sysselsättning, sjukskrivningens perioder och motiveringen till beslutsstödet), och förlängningen förnyar förra intyget',
+      // Runda 16: rehabkoordinatorn (docs/api-avvikelser.md).
+      'Nytt yrke rehabkoordinator i personalkatalogen och sessionen. Nya rutter: vårdenhetens pågående sjukfall för rehabkoordinatorn med filter på REKO-status (GET /api/rehabkoordinator/sjukfall med parametrarna för sökningen och statusen), sjukfallen för en patient med REKO-historiken (GET /api/rehabkoordinator/patient/:id) och att sätta REKO-status (POST /api/rehabkoordinator/patient/:id/reko). Sjukfallen i GET /api/sjukskrivningar och GET /api/patient/:id/sjukskrivning har fältet reko',
     ],
   },
   // Runda 15: version 1.5. Varje del lägger sina rader i annat i ett eget block.

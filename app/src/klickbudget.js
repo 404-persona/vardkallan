@@ -625,6 +625,14 @@ FLODEN.push(
     motivering: 'Ett klick på fliken Sjukskrivning, ett på Förläng sjukskrivningen och ett på Fyll i förslaget, där systemet har räknat sjukfallet och föreslår perioden från dagen efter förra intyget med samma längd och nivå. Förnyelsen har tagit med svaren som inte har ändrats, också motiveringen till beslutsstödet. Läkaren tar ställning på nytt till underlaget, arbetstidens förläggning och prognosen (högst tre klick, underlaget är ofta föreslaget ur vårdkontakten) och signerar.',
   },
 );
+// Runda 16: rehabkoordinatorn sätter REKO-status med patientens samtycke. Flödet finns i test/flodessteg.cjs
+// (GOR['satt-reko-status']).
+FLODEN.push(
+  {
+    id: 'satt-reko-status', namn: 'Sätta REKO-status med patientens samtycke', roll: 'rk-vc', start: 'Rehabkoordinatorns sjukfall efter återställning', budget: 6,
+    motivering: 'Ett klick på Sök fyller tabellen med vårdenhetens pågående sjukfall, som i Rehabstöd. Statusen Aktiv väljs i listan (två klick). Lagen kräver patientens samtycke till koordineringsinsatser, så koordinatorn bekräftar samtycket och väljer muntligt eller skriftligt (två klick) och sparar. Statusen syns direkt för läkaren.',
+  },
+);
 // Runda 16, r1: ett läkarintyg för sjukpenning i version 2, och bytet från ett ersatt intyg (TSTRK1007) till TS8071.
 FLODEN.push(
   {

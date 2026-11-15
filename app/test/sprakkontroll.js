@@ -262,6 +262,8 @@ FRASER.push('/api/inloggning/rp-jwks', 'jwks_uri', 'alg none');
 // Runda 16, r2: ICF är WHO:s klassifikation av funktionstillstånd, som Socialstyrelsens försäkringsmedicinska
 // beslutsstöd (FMB) kodar funktionsnedsättningar och aktivitetsbegränsningar med.
 for (const f of ['ICF', 'FMB']) TILLATNA.add(f);
+// Runda 16: REKO-status är rehabkoordinatorns status per sjukfall i Ineras Rehabstöd.
+TILLATNA.add('REKO');
 FRASER.push('/api/patient/:id/sjukskrivning/forlang', '/api/intygsapplikation/:id/beslutsstod');
 // Runda 16, r1: intygen. Blanketternas beteckningar (FK, TS och TSTRK), Transportstyrelsens föreskrifter (TSFS),
 // körkortsbehörigheten DE och grupp III, och diagnoserna ADHD, ADD och DCD i TS8071.

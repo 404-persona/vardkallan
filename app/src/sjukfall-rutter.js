@@ -1,6 +1,7 @@
 // Runda 16, r2: API för stödet vid sjukskrivning (sjukfall.js). Behörigheten prövas i modulen och av behörighetsmotorn,
 // och varje anrop som rör en patient loggas på patienten (medPatient, eller per patient i läkarens översikt).
 import * as sjukfall from './sjukfall.js';
+import * as reko from './rehabkoordinator.js';
 
 export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Patientens sjukfall, beslutsstödet för det pågående och förslaget till förlängning.
@@ -12,6 +13,11 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
   // Läkarens pågående sjukfall och vårdenhetens översikt för verksamhetschefen.
   rutt('GET', '/api/sjukskrivningar', (c) => sjukfall.minaSjukfall(c.db, kravInloggad(c), (pid) => valFor(c.s, pid)));
   rutt('GET', '/api/sjukskrivningar/enhet', (c) => sjukfall.enhetensSjukfall(c.db, kravInloggad(c)));
+  // Runda 16, rehabkoordinatorn (rehabkoordinator.js): sjukfallstabellen, som är tom tills koordinatorn söker, en patients
+  // sjukfall med REKO-historiken, och att sätta REKO-status. Varje patient som visas loggas i modulen.
+  rutt('GET', '/api/rehabkoordinator/sjukfall', (c) => reko.lista(c.db, kravInloggad(c), { sok: c.url.searchParams.get('sok') === '1', reko: c.url.searchParams.get('reko') }));
+  rutt('GET', '/api/rehabkoordinator/patient/:id', (c, id) => reko.forPatient(c.db, kravInloggad(c), id));
+  rutt('POST', '/api/rehabkoordinator/patient/:id/reko', (c, id) => reko.satt(c.db, kravInloggad(c), id, c.body ?? {}));
 
   function valForIntyg(c, iid) {
     const r = typeof iid === 'string' && /^[0-9a-f-]{36}$/.test(iid) ? c.db.query('SELECT patient_id FROM sim_intygsapplikation WHERE intygs_id = ?').get(iid) : null;

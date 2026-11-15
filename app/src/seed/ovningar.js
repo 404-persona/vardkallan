@@ -273,3 +273,22 @@ OVNINGAR_V1.push(
     ], 'b', 'Inre sekretess gäller per vårdenhet. Varje läsning loggas, och patienten ser i Min journal vilka som har läst.'),
   );
 }
+// Runda 16: rehabkoordinatorn (rehabkoordinator.js). Samtycket till koordineringsinsatser, vad tabellen visar och vad
+// läkaren ser av REKO-statusen.
+OVNINGAR_V1.push(
+  o('reko-samtycke', ['rehabkoordinator'], 'Patienten vill ha hjälp att planera återgången i arbete, och du ska börja ge koordineringsinsatser. Vad gör du i systemet?', [
+    ['a', 'Du sätter REKO-status Aktiv. Samtycket behövs inte, eftersom läkaren redan har sjukskrivit patienten.'],
+    ['b', 'Du sätter REKO-status Aktiv, bekräftar att patienten har samtyckt till koordineringsinsatser och anger om samtycket var muntligt eller skriftligt.'],
+    ['c', 'Du ber läkaren sätta statusen.'],
+  ], 'b', 'Koordineringsinsatser ges bara om patienten samtycker (lagen (2019:1297) om koordineringsinsatser för sjukskrivna patienter 3 §). Samtycket gäller tills patienten avböjer eller insatserna avslutas.', '#/rehabkoordinator'),
+  o('reko-tabell', ['rehabkoordinator'], 'Du öppnar Sjukfall och tabellen är tom. Varför?', [
+    ['a', 'Det finns inga sjukskrivna patienter på vårdenheten.'],
+    ['b', 'Tabellen fylls först när du söker, gärna med ett filter på REKO-status. Varje patient som visas loggas, så du ser bara det du behöver.'],
+    ['c', 'Du behöver göra ett aktivt val för varje patient.'],
+  ], 'b', 'Som i Rehabstöd är tabellen tom tills du söker. Du ser sjukfallen på din egen vårdenhet, men inte patienter med skyddade personuppgifter.', '#/rehabkoordinator'),
+  o('reko-lakaren', ['rehabkoordinator', 'lakare'], 'Rehabkoordinatorn har satt REKO-status Kontaktad för en sjukskriven patient. Vem ser statusen?', [
+    ['a', 'Läkaren och rehabkoordinatorn på vårdenheten. Läkaren ser den i Mina sjukskrivningar och på fliken Sjukskrivning men ändrar den inte.'],
+    ['b', 'All personal i regionen.'],
+    ['c', 'Bara rehabkoordinatorn.'],
+  ], 'a', 'Statusen gäller sjukfallet på vårdenheten. Bara rehabkoordinatorn sätter den, och varje ändring finns kvar i historiken med vem och när.', '#/sjukskrivningar'),
+);

@@ -621,6 +621,16 @@ Systemet skickar varje anteckning som studenten signerar till handledaren. Antec
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/inkorg).
 
+### Övning 19
+
+Rehabkoordinatorn har satt REKO-status Kontaktad för en sjukskriven patient. Vem ser statusen?
+
+Rätt svar: Läkaren och rehabkoordinatorn på vårdenheten. Läkaren ser den i Mina sjukskrivningar och på fliken Sjukskrivning men ändrar den inte.
+
+Statusen gäller sjukfallet på vårdenheten. Bara rehabkoordinatorn sätter den, och varje ändring finns kvar i historiken med vem och när.
+
+Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar).
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -747,4 +757,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 18 övningar och få intyget.
+- Svara rätt på alla 19 övningar och få intyget.

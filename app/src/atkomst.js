@@ -804,3 +804,19 @@ export const LEGITIMATION_NAMN = {
   LK: 'läkare', SJ: 'sjuksköterska', BM: 'barnmorska', FT: 'fysioterapeut', SG: 'sjukgymnast', AP: 'apotekare', RC: 'receptarie',
   AT: 'arbetsterapeut', DT: 'dietist', LG: 'logoped', HK: 'hälso- och sjukvårdskurator', PS: 'psykolog', PT: 'psykoterapeut',
 };
+
+// Runda 16, rehabkoordinatorn (rehabkoordinator.js, beslut från Jonas 2026-11-15). Rollen följer lagen (2019:1297) om
+// koordineringsinsatser för sjukskrivna patienter och rollen Rehabkoordinator i Ineras Rehabstöd: ser de pågående
+// sjukfallen på sin egen vårdenhet och sätter REKO-status per sjukfall. Minsta åtkomst (patientdatalagen 4 kap. 2 §):
+// bara det Rehabstöd visar för rollen, ur sjukintygen på den egna vårdenheten. Ingen journal, inga intyg att skriva eller
+// signera, inga läkemedel, ingen nödåtkomst, inga aktiva val, inget samtycke till spärrade uppgifter och ingen visning av
+// skyddad identitet. Varje patient prövas med reko_lasa mot den egna vårdenheten, som i läkarens översikt. Läkaren ser
+// REKO-statusen genom sina sjukfall (las_intyg) men sätter den inte. Rollen är en funktion som en person med olika
+// yrkesbakgrund kan ha, och inget i den kräver legitimation, så den har inget krav i LEGITIMATION_FOR_ROLL.
+Object.assign(HANDLINGAR, {
+  sjukfall_reko: 'se vårdenhetens pågående sjukfall som rehabkoordinator',
+  reko_lasa: 'se sjukfallet för en patient på vårdenheten och dess REKO-status',
+  reko_satta: 'sätta REKO-status för ett sjukfall',
+});
+UTAN_PATIENT.add('sjukfall_reko');
+ROLLER.rehabkoordinator = ['sjukfall_reko', 'reko_lasa', 'reko_satta', 'utbildning'];

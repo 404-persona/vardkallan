@@ -1021,6 +1021,14 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - Nytt: `GET /api/sjukskrivningar/enhet` (handlingen `sjukfall_enhet`, verksamhetschefen) ger `{ vardenhet, totalt, totaltText, grad, langd, diagnoskapitel, rehabkedjan, overFmb, regel }` där varje fördelning är `[{ namn, antal, text }]` och `antal` är `null` när det är dolt.
 - CertificateStatusUpdateForCare: intyget har för ett Läkarintyg för sjukpenning svaren 28, 32 och 37 utöver diagnosen. Förlängningen går genom förnyelsen (`POST /api/intygsapplikation/:id/fornya`) eller `POST /api/patient/:id/intyg`, med journalens förifyllnad.
 
+## Version 1.6.0: rehabkoordinatorn (runda 16)
+
+- Nytt yrke `rehabkoordinator` med handlingarna `sjukfall_reko`, `reko_lasa` och `reko_satta`.
+- Nytt: `GET /api/rehabkoordinator/sjukfall[?sok=1&reko=<status>]` (handlingen `sjukfall_reko`) ger `{ vardenhet, statusar, filter, regel, samtycke, sjukfall }`. Utan `sok=1` är `sjukfall` `null` och inget loggas. Med `sok=1` är varje sjukfall `{ patientId, namn, personnummer, alder, kon, diagnos, sysselsattning, start, slut, dagar, uppskattadDag, aktuellGrad, pagaende, lakare, rehabkedjan, reko }`, och varje patient loggas med `reko_lasa`. En okänd status ger 400.
+- Nytt: `GET /api/rehabkoordinator/patient/:id` (handlingen `reko_lasa`) ger `{ statusar, samtycke, sjukfall }` med pågående och nyligen avslutade sjukfall på vårdenheten och `historik` per sjukfall, nyast först. 404 när patienten inte har något sjukfall som rollen får se.
+- Nytt: `POST /api/rehabkoordinator/patient/:id/reko` (handlingen `reko_satta`) med `{ start, status, samtycke, samtyckeSatt }` svarar `{ reko }`. `status` är `ingen`, `kontaktad`, `aktiv`, `uppfoljning`, `avslutad` eller `avbojt`. `aktiv` och `uppfoljning` kräver `samtycke: true` och `samtyckeSatt` `muntligt` eller `skriftligt` när samtycket inte redan gäller, annars 400. 404 när sjukfallet inte finns på vårdenheten, 403 för andra roller.
+- `reko` är `{ kod, text, tid, sattAv, samtycke, samtyckeSatt }` och finns också på sjukfallen i `GET /api/sjukskrivningar` och på de pågående sjukfallen i `GET /api/patient/:id/sjukskrivning`.
+
 ## Intygen i intygsapplikationen (runda 16, r1)
 
 - `GET /api/patient/:id/intyg`: varje intyg har också `version`, `blankett`, `ersatt` (text när intygstypen har ersatts), `sandning` (`samrad`, `utskrift`, `post` eller `vid_signering`), `relation` (`{ typ, text }` för ett förnyat eller bytt intyg), `kanFornyas` och `fornyasMed` (`{ kod, version, text }`). Varje intygstyp i `typer` har också `version`, `blankett`, `sandning` och `kanSignera`. Listan har bara de intygstyper som den inloggade får skapa eller signera, och ett ersatt intyg står med `mojlig: false` och vad som ersatte det.

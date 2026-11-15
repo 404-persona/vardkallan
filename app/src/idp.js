@@ -45,6 +45,9 @@ export const ANDAMAL = {
   arbetsterapeut: 'Vård och behandling', dietist: 'Vård och behandling', logoped: 'Vård och behandling', kurator: 'Vård och behandling',
   psykolog: 'Vård och behandling', barnmorska: 'Vård och behandling', lakarstudent: 'Vård och behandling', sjukskoterskestudent: 'Vård och behandling',
   barnmorskestudent: 'Vård och behandling',
+  // Runda 16: rehabkoordinatorn ger koordineringsinsatser, som är hälso- och sjukvård (rehabkoordinator.js). Rehabstöd
+  // kräver medarbetaruppdrag med ändamålet Vård och behandling och en särskild systemroll per vårdenhet.
+  rehabkoordinator: 'Vård och behandling',
 };
 
 // Utfärdarens nyckelpar skapas när servern startar. Den privata nyckeln lämnar aldrig modulen.

@@ -51,11 +51,14 @@ const VISAR = {
   'stud-lak': 'Läkarstudent under handledning av Sara Lindqvist: läser journalen på kardiologen och skriver anteckningar som handledaren kontrasignerar. Ordinerar inte och signerar inga intyg.',
   'stud-ssk': 'Sjuksköterskestudent under handledning av Johan Ek på avdelning 72: skriver omvårdnadsanteckningar som handledaren kontrasignerar. Ger inga läkemedel på egen hand.',
   'stud-bm': 'Barnmorskestudent under handledning av Sofia Ekdahl: läser graviditetsjournalen på förlossningen och skriver anteckningar som handledaren kontrasignerar.',
+  // Runda 16: rehabkoordinatorn.
+  'rk-vc': 'Rehabkoordinator på Vårdcentralen Tybble: söker fram vårdenhetens pågående sjukfall och sätter REKO-status, med patientens samtycke till koordineringsinsatser. Läser inte journalen och skriver inga intyg.',
 };
 // Runda 16, r3: demorollerna i grupper, så att sidan är enkel också med många roller. Gruppen följer yrket.
 const GRUPPER = [
   ['vard', 'Läkare, sjuksköterskor och barnmorskor', ['lakare', 'sjukskoterska', 'barnmorska', 'underskoterska', 'farmaceut']],
-  ['rehab', 'Rehabilitering, nutrition, psykologi och kurator', ['fysioterapeut', 'arbetsterapeut', 'dietist', 'logoped', 'psykolog', 'kurator']],
+  // Runda 16: rehabkoordinatorn hör till rehabiliteringen.
+  ['rehab', 'Rehabilitering, koordinering, nutrition, psykologi och kurator', ['fysioterapeut', 'arbetsterapeut', 'dietist', 'logoped', 'psykolog', 'kurator', 'rehabkoordinator']],
   ['student', 'Studenter under handledning', ['lakarstudent', 'sjukskoterskestudent', 'barnmorskestudent']],
   ['admin', 'Administration, ledning och kommunen', ['vardadministrator', 'verksamhetschef', 'ekonom', 'kommun']],
   ['drift', 'Logg, arkiv, uppföljning och systemförvaltning', ['logggranskare', 'arkivarie', 'uppfoljning', 'systemforvaltare']],

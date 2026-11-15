@@ -434,7 +434,16 @@ MODULER.push(m('sjukskrivning', 'journal', 'Sjukskrivning',
   { avsnitt: [], rutter: ['#/sjukskrivningar', '#/sjukskrivningar/enhet'], journal: ['sjukskrivning'], vyer: ['patient-sjukskrivning.js', 'sjukskrivningar.js'],
     kod: ['src/sjukfall.js', 'src/fmb.js', 'src/sjukfall-intygssvar.js', 'src/sjukfall-rutter.js', 'src/intygsapplikation-beslutsstod-simulerad.js', 'public/js/beslutsstod-fmb-ui.js'],
     api: ['/api/patient/:id/sjukskrivning', '/api/sjukskrivningar', '/api/intygsapplikation/:id/beslutsstod'],
-    simulerat: 'Intygen kommer från den simulerade intygsapplikationen och från demodata. Inget skickas till Försäkringskassan. Socialstyrelsens beslutsstöd är ett utdrag ur det öppna API:t (villkor CC0) och hämtas inte i drift. Rehabkoordinatorns status per sjukfall visas inte, eftersom demon saknar rollen rehabkoordinator.' }));
+    simulerat: 'Intygen kommer från den simulerade intygsapplikationen och från demodata. Inget skickas till Försäkringskassan. Socialstyrelsens beslutsstöd är ett utdrag ur det öppna API:t (villkor CC0) och hämtas inte i drift. Uppgifter till Försäkringskassan om behov av rehabilitering lämnas inte.' }));
+// Runda 16: rehabkoordinatorn, med REKO-status per sjukfall som läkaren ser (rehabkoordinator.js).
+{
+  const s = MODULER.find(x => x.id === 'sjukskrivning');
+  s.beskrivning += ' Rehabkoordinatorn söker fram vårdenhetens pågående sjukfall och sätter REKO-status för varje sjukfall, som i Rehabstöd, med patientens samtycke till koordineringsinsatser. Läkaren ser statusen i sin översikt och på fliken Sjukskrivning.';
+  s.rutter.push('#/rehabkoordinator');
+  s.vyer.push('rehabkoordinator.js');
+  s.kod.push('src/rehabkoordinator.js');
+  s.api.push('/api/rehabkoordinator/sjukfall', '/api/rehabkoordinator/patient/:id');
+}
 {
   const r = MODULER.find(x => x.id === 'remiss');
   r.beskrivning += ' E-remiss till och från vårdgivare utanför Vårdkällan med tjänstekontrakten för elektronisk remiss, där systemet fyller i remissen och statusen följer mottagarens besked och svar.';
@@ -510,6 +519,8 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
   l.kod.push('src/preventivmedel.js', 'public/js/preventivmedel-ui.js');
   l.api.push('/api/patient/:id/preventivmedel');
 }
+// Runda 16: rehabkoordinatorn är en funktion med en egen roll (rehabkoordinator.js).
+MODULER.find(x => x.id === 'behorighet').beskrivning += ' Rehabkoordinatorn är en funktion med en egen roll: ser vårdenhetens pågående sjukfall och sätter REKO-status, men läser inte journalen.';
 
 export function lasGransnitt({ rot = APP, text = null } = {}) {
   const las = (f) => text?.[f] ?? readFileSync(join(rot, f), 'utf8');

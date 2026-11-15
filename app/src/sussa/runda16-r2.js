@@ -9,6 +9,7 @@ import { FLODEN } from '../klickbudget.js';
 const SJ = 'Stödet vid sjukskrivning > Sjukfall > ';
 const API = 'Stödet vid sjukskrivning i API:t > Sjukfall > ';
 const FMB = 'Försäkringsmedicinskt beslutsstöd > FMB > ';
+const RK = 'Rehabkoordinatorn > Rehabkoordinatorn > ';
 const flode = (id) => klickbudgetTest(FLODEN.find(f => f.id === id));
 
 export const T16R2 = {
@@ -34,6 +35,12 @@ export const T16R2 = {
   fmbDiagnos: `${FMB}diagnosen ger diagnosrubriken, funktionsnedsättningar, aktivitetsbegränsningar och typfall ur Socialstyrelsens data`,
   fmbTid: `${FMB}den längsta rekommenderade tiden är den längsta i typfallen, omräknad till dagar som i Webcert`,
   fmbUtdrag: `${FMB}utdraget ur det öppna API:t tar med alla giltiga typfall och gör HTML till vanlig text utan tankstreck`,
+  // Runda 16: rehabkoordinatorn (app/test/rehabkoordinator-r16.test.js).
+  rkRoll: `${RK}rollen har minsta åtkomst: sjukfallen och REKO-status, ingen journal, inga intyg, inga läkemedel, ingen nödåtkomst och inga andra vårdenheter`,
+  rkSok: `${RK}tabellen är tom tills koordinatorn söker, och sökningen visar och loggar bara det Rehabstöd visar för rollen`,
+  rkSamtycke: `${RK}koordineringsinsatser ges bara med patientens samtycke (lagen (2019:1297) 3 §): Aktiv och Uppföljning kräver ett bekräftat samtycke`,
+  rkLakare: `${RK}läkaren ser REKO-statusen i sin översikt och på fliken Sjukskrivning men kan inte sätta den, och andra roller når inte listan`,
+  rkApi: 'Stödet vid sjukskrivning i API:t > Rehabkoordinatorn > API: koordinatorn söker fram sjukfallen, sätter REKO-status med samtycke, och läkaren ser statusen',
 };
 const T = T16R2;
 export const TESTER_R16R2 = Object.values(T);
@@ -59,9 +66,9 @@ const TILLAGG = {
     anmarkning: `${FMB_ANM} Bedömningen enligt MDR finns i docs/mdr-bedomning.md.`,
   },
   '3.4.1.3': {
-    tester: [T.mina, T.enhet, T.kedjan, T.demo, T.apiEnhet, T.smaAntal, T.signerare],
+    tester: [T.mina, T.enhet, T.kedjan, T.demo, T.apiEnhet, T.smaAntal, T.signerare, T.rkRoll, T.rkSok, T.rkSamtycke, T.rkLakare, T.rkApi],
     losning: ' Runda 16: sjukskrivningarna bevakas på individnivå (läkarens pågående sjukfall med intyg som snart går ut, gränser i rehabiliteringskedjan och sjukfall som är längre än rekommendationen) och på enhetsnivå (vårdenhetens sjukfall som antal för verksamhetschefen).',
-    anmarkning: ' Systemet räknar bevakningarna ur intygen själv, och ingen behöver lägga upp en påminnelse om dag 90, 180 eller 365. Rehabkoordinatorns status per sjukfall är inte med, eftersom demon saknar rollen.',
+    anmarkning: ' Systemet räknar bevakningarna ur intygen själv, och ingen behöver lägga upp en påminnelse om dag 90, 180 eller 365. Rehabkoordinatorn ser vårdenhetens pågående sjukfall och sätter REKO-status per sjukfall, med patientens samtycke till koordineringsinsatser, och läkaren ser statusen.',
   },
   '3.4.1.8': {
     tester: [T.mina, T.demo, T.forlang],

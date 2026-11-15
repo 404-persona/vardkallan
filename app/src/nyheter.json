@@ -133,6 +133,26 @@
           "var": "#/sjukskrivningar/enhet",
           "rubrik": "Sjukskrivningar på vårdenheten",
           "text": "Du ser vårdenhetens pågående sjukfall som antal per grad, längd, diagnoskapitel och gräns i rehabiliteringskedjan, utan patientuppgifter. Små antal döljs, så att ingen patient pekas ut."
+        },
+        {
+          "id": "rehabkoordinator-1-6-0",
+          "roller": [
+            "rehabkoordinator"
+          ],
+          "omfattning": "stor",
+          "var": "#/rehabkoordinator",
+          "rubrik": "Rehabkoordinatorn har en egen roll",
+          "text": "Under Sjukfall söker du fram vårdenhetens pågående sjukfall och sätter REKO-status för varje sjukfall, som i Rehabstöd. Aktiv och Uppföljning kräver att patienten har samtyckt till koordineringsinsatser, och du anger om samtycket var muntligt eller skriftligt. Du ser inte journalen."
+        },
+        {
+          "id": "reko-status-lakare-1-6-0",
+          "roller": [
+            "lakare"
+          ],
+          "omfattning": "liten",
+          "var": "#/sjukskrivningar",
+          "rubrik": "REKO-status från rehabkoordinatorn",
+          "text": "I Mina sjukskrivningar och på fliken Sjukskrivning ser du den REKO-status som rehabkoordinatorn har satt, till exempel att patienten har kontaktats eller får koordineringsinsatser."
         }
       ]
     },

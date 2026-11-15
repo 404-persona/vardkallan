@@ -32,6 +32,8 @@ export const YRKEN = {
   lakarstudent: 'Läkarstudent',
   sjukskoterskestudent: 'Sjuksköterskestudent',
   barnmorskestudent: 'Barnmorskestudent',
+  // Runda 16: rehabkoordinatorn, en funktion för koordineringsinsatser vid sjukskrivning (rehabkoordinator.js).
+  rehabkoordinator: 'Rehabkoordinator',
 };
 
 export const PERSONAL = [
@@ -146,4 +148,7 @@ export const PERSONAL = [
   { id: 'stud-lak', namn: 'Leo Andersson', yrke: 'lakarstudent', titel: 'Läkarstudent, termin 9', enhet: 'uso-kard', demo: true, r16: true },
   { id: 'stud-ssk', namn: 'Wilma Karlsson', yrke: 'sjukskoterskestudent', titel: 'Sjuksköterskestudent, termin 5', enhet: 'uso-kard-72', demo: true, r16: true },
   { id: 'stud-bm', namn: 'Alice Persson', yrke: 'barnmorskestudent', titel: 'Barnmorskestudent', enhet: 'uso-kk-forl', demo: true, r16: true },
+  // Runda 16: rehabkoordinatorn på vårdcentralen (rehabkoordinator.js). Hon är arbetsterapeut i grunden, men rollen är en
+  // funktion och får bara det som koordineringen kräver. Sist, så att de andras HSA-id inte ändras.
+  { id: 'rk-vc', namn: 'Johanna Ståhl', yrke: 'rehabkoordinator', titel: 'Rehabkoordinator', enhet: 'vc-tybble', demo: true, r16: true },
 ];

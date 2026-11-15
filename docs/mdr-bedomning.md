@@ -28,6 +28,7 @@ En modul är en medicinteknisk produkt när steg 1, 3, 4 och 5 ger ja och steg 2
 | Tillväxtkurvor och avvikelser | `src/tillvaxt.js`, `src/tillvaxt-r11.js` | Ja | IIa |
 | Förslag till uppmärksamhetsinformation | `src/uppmarksamhet-regler.js` | Nej | Ej tillämpligt |
 | Sjukfall och Socialstyrelsens försäkringsmedicinska beslutsstöd | `src/sjukfall.js`, `src/fmb.js` | Nej | Ej tillämpligt |
+| Rehabkoordinatorns sjukfall och REKO-status | `src/rehabkoordinator.js` | Nej | Ej tillämpligt |
 
 ## Journalkärnan
 
@@ -172,6 +173,18 @@ Avsett ändamål: Föra ihop sjukintygen till sjukfall, räkna sjukskrivningens 
 - Steg 5: Nej
 
 Slutsats: inte en medicinteknisk produkt. Modulen räknar dagar i intygen och jämför dem med Socialstyrelsens rekommendation, som visas som den är. Ändamålet är underlaget för bedömningen av arbetsförmåga och behovet av sjukskrivning, inte diagnos, förebyggande, övervakning, prognos eller behandling av sjukdom enligt artikel 2.1. Steg 5 ger nej.
+
+## Rehabkoordinatorns sjukfall och REKO-status
+
+Avsett ändamål: Visa vårdenhetens pågående sjukfall för rehabkoordinatorn och låta koordinatorn sätta en status per sjukfall med patientens samtycke till koordineringsinsatser.
+
+- Steg 1: Ja
+- Steg 2: Nej
+- Steg 3: Nej
+- Steg 4: Ja
+- Steg 5: Nej
+
+Slutsats: inte en medicinteknisk produkt. Modulen visar uppgifter ur sjukintygen som de är och sparar en administrativ status som koordinatorn sätter. Den räknar inte fram ny medicinsk information, och ändamålet är samordningen av insatserna, inte diagnos eller behandling. Steg 3 och steg 5 ger nej.
 
 ## Vad bedömningen betyder för arkitekturen
 

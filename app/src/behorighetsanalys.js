@@ -183,6 +183,14 @@ Object.assign(ANALYS, {
     inte: ["graviditet", "ordinera", "ge_lakemedel", "forskriva_preventivmedel", "nodatkomst"],
   },
 });
+// Runda 16: rehabkoordinatorn (rehabkoordinator.js).
+ANALYS.rehabkoordinator = {
+  namn: "Rehabkoordinator",
+  behov: "Ger koordineringsinsatser till sjukskrivna patienter enligt lagen (2019:1297) om koordineringsinsatser för sjukskrivna patienter: personligt stöd, intern samordning och samverkan med andra aktörer. Behöver, som rollen i Ineras Rehabstöd, se vårdenhetens pågående sjukfall (namn, personnummer, ålder, kön, diagnos och sysselsättning i det nuvarande intyget, datum, längd, grad och läkare) och sätta REKO-status per sjukfall.",
+  risker: "Översikten visar många patienter på en gång, och diagnoserna är känsliga. Koordineringsinsatser utan patientens samtycke strider mot lagen (3 §).",
+  atgarder: "Tabellen är tom tills koordinatorn söker, och varje patient som visas loggas. Bara sjukintygen på den egna vårdenheten räknas, varje patient prövas med vårdrelation mot vårdenheten, och patienter med skyddade personuppgifter visas inte. Läser inte journalen, läkemedelslistan eller intygen, skriver och signerar inga intyg och har ingen nödåtkomst, inga aktiva val och inget samtycke till spärrade uppgifter. Statusarna Aktiv och Uppföljning kräver att koordinatorn bekräftar patientens samtycke, och historiken ändras aldrig.",
+  inte: ["las_journal", "las_lakemedel", "las_intyg", "skriv_intyg", "utkast_intyg", "nodatkomst", "andra_enheter", "samtycke_sparr", "visa_identitet", "sok"],
+};
 
 export function markdown() {
   const ut = ['# Behovs- och riskanalys per roll', '', ...INLEDNING.flatMap(s => [s, '']).slice(0, -1)];

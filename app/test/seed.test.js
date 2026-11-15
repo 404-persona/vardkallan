@@ -142,6 +142,8 @@ describe('Seed', () => {
       ['stud-lak', 'Leo Andersson', 'lakarstudent', 'uso-kard'],
       ['stud-ssk', 'Wilma Karlsson', 'sjukskoterskestudent', 'uso-kard-72'],
       ['stud-bm', 'Alice Persson', 'barnmorskestudent', 'uso-kk-forl'],
+      // Runda 16: rehabkoordinatorn.
+      ['rk-vc', 'Johanna Ståhl', 'rehabkoordinator', 'vc-tybble'],
     ]);
   });
 

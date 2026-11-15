@@ -122,6 +122,11 @@ export const ROLLER = {
     'Som barnmorskestudent läser du journalen och graviditetsjournalen för patienterna på din handledares vårdenhet och skriver barnmorske- och omvårdnadsanteckningar. Det du signerar går till handledaren för kontrasignering. Du för inte graviditetsjournalen själv, och åtkomsten gäller bara under handledningen.',
     ['se din handledare och handledningens tid under Handledning', 'läsa graviditetsjournalen', 'skriva och signera en anteckning som handledaren kontrasignerar'],
   ),
+  // Runda 16: rehabkoordinatorn.
+  rehabkoordinator: R(
+    'Som rehabkoordinator ger du koordineringsinsatser till sjukskrivna patienter: personligt stöd, samordning inom vården och samverkan med arbetsgivaren, Försäkringskassan och andra. Under Sjukfall söker du fram vårdenhetens pågående sjukfall och sätter REKO-status för varje sjukfall, som i Rehabstöd. Insatserna ges bara om patienten samtycker, så statusarna Aktiv och Uppföljning kräver att du bekräftar samtycket. Du läser inte journalen och skriver inga intyg.',
+    ['söka fram vårdenhetens pågående sjukfall och filtrera på REKO-status', 'sätta REKO-status och bekräfta patientens samtycke till koordineringsinsatser', 'veta vad läkaren ser av statusen och vad du inte ser av journalen'],
+  ),
   [INVANARE]: R(
     'Som invånare loggar du in i Min journal med en simulerad e-legitimation. Där läser du din journal, ser vilka vårdenheter som har läst den, bokar och bokar om tider, lämnar egna mätningar, skriver till vården och begär loggutdrag eller spärr.',
     ['läsa din journal och se vem som har läst den', 'boka om en tid', 'lämna en egen mätning och skriva till vården', 'begära ett loggutdrag eller en spärr'],

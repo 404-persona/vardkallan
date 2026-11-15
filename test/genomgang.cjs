@@ -211,6 +211,8 @@ MENY.sjukskoterska.splice(MENY.sjukskoterska.indexOf('Intensivvård') + 1, 0, 'B
 // menyn (efter Läkemedelsansvar för verksamhetschefen, som inte har Remisser). Före kopiorna av läkarnas menyer nedan.
 for (const k of ['klinisk', 'psykiatri', 'bvc']) MENY[k].splice(MENY[k].indexOf('Remisser') + 1, 0, 'Sjukskrivningar');
 MENY.verksamhetschef.splice(MENY.verksamhetschef.indexOf('Läkemedelsansvar') + 1, 0, 'Sjukskrivningar på vårdenheten');
+// Runda 16: rehabkoordinatorn har Sjukfall och läser inte journalen.
+MENY.rehabkoordinator = ['Sjukfall', 'Utbildning', 'Migreringsavstämning', 'Kravspårbarhet', 'Moduler', 'Öppet API', 'Svarstider'];
 MENY.beredning = [...MENY.farmaceut];
 MENY.beredning.splice(MENY.beredning.indexOf('Inkorg') + 1, 0, 'Beredning');
 MENY.onkologi = [...MENY.klinisk];
@@ -279,9 +281,10 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       // Runda 11: anestesiläkaren Martin Ödman i Karlskoga.
       // Runda 16, r3: arbetsterapeuten, dietisten, logopeden, kuratorn, psykologen, barnmorskan på vårdcentralen och de
       // tre studenterna, i fem grupper efter yrket.
-      if (n !== 34) throw new Error(`${n} roller`);
+      // Runda 16: rehabkoordinatorn på vårdcentralen, i gruppen för rehabilitering.
+      if (n !== 35) throw new Error(`${n} roller`);
       const grupper = await page.locator('#rollista .rollgrupp h3').allTextContents();
-      if (JSON.stringify(grupper) !== JSON.stringify(['Läkare, sjuksköterskor och barnmorskor', 'Rehabilitering, nutrition, psykologi och kurator', 'Studenter under handledning', 'Administration, ledning och kommunen', 'Logg, arkiv, uppföljning och systemförvaltning'])) throw new Error(`grupperna är ${JSON.stringify(grupper)}`);
+      if (JSON.stringify(grupper) !== JSON.stringify(['Läkare, sjuksköterskor och barnmorskor', 'Rehabilitering, koordinering, nutrition, psykologi och kurator', 'Studenter under handledning', 'Administration, ledning och kommunen', 'Logg, arkiv, uppföljning och systemförvaltning'])) throw new Error(`grupperna är ${JSON.stringify(grupper)}`);
       await forvanta(page, '.demorad', 'Demo med påhittade patienter och testpersonnummer från Skatteverket. Inte för vård av riktiga patienter.');
       await forvanta(page, '.sidfot', 'Vårdkällan är ett fristående demoprojekt med öppen källkod (EUPL 1.2). Det är inte en tjänst från Region Örebro län.');
       await forvanta(page, '#roll-lak-akut-visar', 'Nödåtkomst');
@@ -2787,6 +2790,38 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       });
       await allaVyer(page, namn, MENY[meny]);
     }
+    // Runda 16: rehabkoordinatorn söker fram vårdenhetens sjukfall, ser den skyddade patienten inte, och sätter REKO-status
+    // först när patientens samtycke är bekräftat. Läkaren ser statusen.
+    await s('Johanna Ståhl söker fram vårdenhetens sjukfall och sätter REKO-status Aktiv med patientens samtycke', async () => {
+      await loggaIn(page, 'rk-vc');
+      await page.waitForURL(/#\/rehabkoordinator$/);
+      await forvanta(page, 'main h1', 'Sjukfall på vårdenheten');
+      await forvanta(page, '.sjk-rk-lista', 'Tabellen fylls när du söker');
+      await page.click('[data-sok] button');
+      const rad = page.locator('.sjk-rk[data-pid="p18"]');
+      await rad.waitFor({ state: 'visible' });
+      await forvanta(page, '.sjk-rk[data-pid="p18"]', 'Marek Zieliński');
+      await saknas(page, 'Malin Engberg');
+      await saknas(page, 'Skyddad identitet');
+      await rad.locator('select[name="status"]').selectOption('aktiv');
+      await rad.locator('button', { hasText: 'Spara REKO-status' }).click();
+      await forvanta(page, '.notis', 'samtycker');
+      await rad.locator('input[name="samtycke"]').check();
+      await rad.locator('input[name="satt"][value="muntligt"]').check();
+      await bild(page, '99-rehabkoordinator');
+      await rad.locator('button', { hasText: 'Spara REKO-status' }).click();
+      await forvanta(page, '.notis', 'REKO-statusen är sparad');
+      await forvanta(page, '.sjk-rk[data-pid="p18"]', 'Patienten har samtyckt muntligt');
+      await page.waitForLoadState('networkidle');
+    });
+    await allaVyer(page, 'Johanna Ståhl', MENY.rehabkoordinator);
+    await s('Läkaren ser rehabkoordinatorns REKO-status på fliken Sjukskrivning', async () => {
+      await loggaIn(page, 'lak-vc');
+      await gaTill(page, '#/patient/p18/sjukskrivning');
+      await forvanta(page, '.sjk-reko', 'Aktiv');
+      await forvanta(page, '.sjk-reko', 'Patienten har samtyckt till koordineringsinsatser');
+      await page.waitForLoadState('networkidle');
+    });
     await s('Hanna Lilja ställer frågorna om våld i inskrivningssamtalet, och svaren visas bara efter ett eget val', async () => {
       await loggaIn(page, 'ssk-vc');
       await page.evaluate(() => fetch('/api/demo/obstetrik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));

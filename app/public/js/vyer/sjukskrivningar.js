@@ -14,6 +14,8 @@ function rad(s) {
     s.gaarUtSnart ? `<span class="tagg tagg-utkast">Går ut om ${esc(s.kvarDagar)} ${s.kvarDagar === 1 ? 'dag' : 'dagar'}</span>` : '',
     s.rehabkedjan?.nara ? `<span class="tagg tagg-utkast">Dag ${esc(s.rehabkedjan.nastaGrans)} om ${esc(s.rehabkedjan.kvar)} ${s.rehabkedjan.kvar === 1 ? 'dag' : 'dagar'}</span>` : '',
     s.fmb?.over ? `<span class="tagg tagg-utkast">Längre än rekommendationen${s.fmb.motiverat ? ', motiverat' : ''}</span>` : '',
+    // Runda 16, rehabkoordinatorn: REKO-statusen, när rehabkoordinatorn har satt en.
+    s.reko && s.reko.kod !== 'ingen' ? `<span class="tagg">REKO-status: ${esc(s.reko.text)}</span>` : '',
   ].filter(Boolean).join(' ');
   return `<li class="sjk-rad"><a href="#/patient/${encodeURIComponent(s.patientId)}/sjukskrivning"><strong>${esc(s.namn)}</strong></a> <span class="under-text">${esc(s.personnummer)}, ${esc(s.alder)} år</span>
     <span class="under-text">${esc(s.diagnos ? `${s.diagnos.kod} ${s.diagnos.text ?? ''}` : '')}</span>

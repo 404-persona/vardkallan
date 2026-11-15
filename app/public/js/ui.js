@@ -98,6 +98,8 @@ Object.assign(HANDLING, { forskriva_forbrukning: 'Förskrev eller ändrade förb
 export const YRKE = { lakare: 'Läkare', sjukskoterska: 'Sjuksköterska', underskoterska: 'Undersköterska', vardadministrator: 'Vårdadministratör', logggranskare: 'Logggranskare', arkivarie: 'Arkivarie', uppfoljning: 'Analytiker (uppföljning)', kommun: 'Kommunens personal (simulerad)', farmaceut: 'Farmaceut', verksamhetschef: 'Verksamhetschef', ekonom: 'Ekonom', systemforvaltare: 'Systemförvaltare' };
 // Runda 16, r3: de nya yrkesrollerna och studenterna.
 Object.assign(YRKE, { fysioterapeut: 'Fysioterapeut', arbetsterapeut: 'Arbetsterapeut', dietist: 'Dietist', logoped: 'Logoped', kurator: 'Hälso- och sjukvårdskurator', psykolog: 'Psykolog', barnmorska: 'Barnmorska', lakarstudent: 'Läkarstudent', sjukskoterskestudent: 'Sjuksköterskestudent', barnmorskestudent: 'Barnmorskestudent' });
+// Runda 16: rehabkoordinatorn.
+YRKE.rehabkoordinator = 'Rehabkoordinator';
 // Runda 16, r3: barnmorskan prövas som sjuksköterskan där en regel gäller läkare eller sjuksköterska (somYrke i atkomst.js).
 export const somYrke = (yrke) => (yrke === 'barnmorska' ? 'sjukskoterska' : yrke);
 

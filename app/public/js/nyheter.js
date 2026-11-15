@@ -10,6 +10,8 @@ const ROLLTEXT = {
   // Runda 16, r3.
   fysioterapeut: 'fysioterapeut', arbetsterapeut: 'arbetsterapeut', dietist: 'dietist', logoped: 'logoped', kurator: 'kurator', psykolog: 'psykolog',
   barnmorska: 'barnmorska', lakarstudent: 'läkarstudent', sjukskoterskestudent: 'sjuksköterskestudent', barnmorskestudent: 'barnmorskestudent',
+  // Runda 16.
+  rehabkoordinator: 'rehabkoordinator',
 };
 export const rollText = (roll) => ROLLTEXT[roll] ?? 'användare';
 export const datumText = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });

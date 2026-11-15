@@ -28,6 +28,8 @@ import { loggaRad } from './logg.js';
 import * as lakarintyg from './lakarintyg.js';
 import * as fmb from './fmb.js';
 import { lasSvar, NIVAER, nivaForGrad, SYSSELSATTNINGAR, perioderUrSimSvar, simSvar } from './sjukfall-intygssvar.js';
+// Runda 16, rehabkoordinatorn: läkaren ser REKO-statusen som rehabkoordinatorn har satt på vårdenheten (rehabkoordinator.js).
+import { rekoFor } from './rehabkoordinator.js';
 
 // Intygen som räknas till sjukfallet. Intyg till arbetsgivaren räknas inte, som i Rehabstöd.
 export const SJUKINTYG = new Set(['LISJP']);
@@ -353,7 +355,8 @@ export function forPatient(atk, p, dag = idag()) {
   const forlangbart = senaste && dagarMellan(senaste.slut, dag) - 1 <= DAGAR_MELLAN ? senaste : null;
   const beslutsstod = aktuellt?.diagnos ? fmb.forDiagnos(aktuellt.diagnos.kod) : null;
   return {
-    pagaende: pagaende.map(s => sjukfallUt(db, s, minEnhet)),
+    // Runda 16, rehabkoordinatorn: REKO-statusen på läkarens vårdenhet för det pågående sjukfallet.
+    pagaende: pagaende.map(s => ({ ...sjukfallUt(db, s, minEnhet), reko: rekoFor(db, atk.patientId, minEnhet, s.start, s.slut) })),
     tidigare: tidigare.map(s => sjukfallUt(db, s, minEnhet)),
     beslutsstod,
     forlangning: kanSkriva && forlangbart ? forslagForlangning(forlangbart, dag) : null,
@@ -492,6 +495,8 @@ export function minaSjukfall(db, personal, val = () => ({}), dag = idag()) {
       aktuellGrad: s.aktuellGrad, grader: s.grader, antalIntyg: s.antalIntyg,
       rehabkedjan: s.rehabkedjan, fmb: s.fmb,
       gaarUtSnart: s.kvarDagar != null && s.kvarDagar <= 7,
+      // Runda 16, rehabkoordinatorn: REKO-statusen på vårdenheten.
+      reko: rekoFor(db, pid, minEnhet, s.start, s.slut),
     });
     loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, patient_id: pid, handling: 'las_intyg', resurs: 'sjukfall:oversikt', grund: pr.grund, resultat: 'tillaten' });
   }

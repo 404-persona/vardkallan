@@ -1992,6 +1992,15 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .sjk-avsnittslista li { padding: 2px 0; }
 .sjk-forlang { border-left: 4px solid var(--kalla); }
 .sjk-rad { display: flex; flex-direction: column; gap: 2px; }
+/* Runda 16: rehabkoordinatorns sjukfall och REKO-status. */
+.sjk-rk { padding: 12px 16px; margin: 0 0 10px; }
+.sjk-rk p { margin: 0 0 6px; }
+.sjk-rk-form, .sjk-rk-filter { display: flex; flex-wrap: wrap; gap: 0 12px; align-items: flex-end; }
+.sjk-rk-form .falt, .sjk-rk-filter .falt { flex: 0 1 18rem; }
+.sjk-rk-form .kryssgrupp { flex: 1 1 100%; }
+.sjk-rk-form .knapprad, .sjk-rk-filter .knapprad { margin-bottom: 12px; }
+.sjk-rk-historik ul { margin: 6px 0 0; }
+.sjk-reko { margin: 6px 0; }
 .sjk-markeringar { display: flex; flex-wrap: wrap; gap: 4px; }
 .sjk-fordelningar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); gap: 12px; }
 .sjk-fordelningar .ruta { min-width: 0; }

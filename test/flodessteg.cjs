@@ -1403,6 +1403,23 @@ function skapa(BAS) {
     await m.klicka(page.locator('[data-atgard="signera"]'), 'Signera');
     await synlig(page, '.notis', 'Journalen har fått statusen');
   };
+  // Runda 16: rehabkoordinatorn sätter REKO-status Aktiv för patienten med lumbago-ischias, med samtycket.
+  startI['Rehabkoordinatorns sjukfall efter återställning'] = async (page) => {
+    await gaTill(page, '#/rehabkoordinator');
+    await page.evaluate(() => fetch('/api/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()));
+    await gaTill(page, '#/rehabkoordinator');
+    await page.waitForSelector('[data-sok] button');
+  };
+  GOR['satt-reko-status'] = async (m, page) => {
+    await m.klicka(page.locator('[data-sok] button', { hasText: 'Sök' }), 'Sök');
+    const rad = page.locator('.sjk-rk[data-pid="p18"]');
+    await rad.waitFor({ state: 'visible' });
+    await m.valj(rad.locator('select[name="status"]'), 'aktiv', 'REKO-status Aktiv');
+    await m.klicka(rad.locator('input[name="samtycke"]'), 'patienten har samtyckt');
+    await m.klicka(rad.locator('input[name="satt"][value="muntligt"]'), 'muntligt');
+    await m.klicka(rad.locator('button', { hasText: 'Spara REKO-status' }), 'Spara REKO-status');
+    await synlig(page, '.notis', 'REKO-statusen är sparad');
+  };
   // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.
   GOR['las-mellanarkiv'] = async (m, page) => {
     await m.klicka(page.locator('.flikar a', { hasText: 'Journal' }).first(), 'fliken Journal');

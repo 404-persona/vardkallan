@@ -69,7 +69,7 @@ const FILER = [
   '/js/vyer/nationella-tjanster.js',
   '/js/vyer/flyttar.js',
   '/js/vyer/handledning.js', '/js/preventivmedel-ui.js',
-  '/js/vyer/patient-sjukskrivning.js', '/js/vyer/sjukskrivningar.js', '/js/beslutsstod-fmb-ui.js',
+  '/js/vyer/patient-sjukskrivning.js', '/js/vyer/sjukskrivningar.js', '/js/vyer/rehabkoordinator.js', '/js/beslutsstod-fmb-ui.js',
 ];
 // Runda 16, r3: listan har handledningen av studenter (vyer/handledning.js) och barnmorskans förskrivning av preventivmedel (preventivmedel-ui.js).
 // Runda 16, r2: listan har sjukskrivningen på patienten, översikterna och beslutsstödet i intygsapplikationen.

@@ -110,6 +110,8 @@ import * as flerfaktorVy from './vyer/flerfaktor.js';
 import * as intygsapplikation from './vyer/intygsapplikation.js';
 // Runda 16, r2: läkarens och vårdenhetens översikt över sjukskrivningar.
 import * as sjukskrivningarVy from './vyer/sjukskrivningar.js';
+// Runda 16: rehabkoordinatorns sjukfall och REKO-status.
+import * as rehabkoordinatorVy from './vyer/rehabkoordinator.js';
 import { andraFaktorn } from './flerfaktor-ui.js';
 // Runda 12, r3 (Sussa KD1.1.4.10): arbete över flera skärmar.
 import * as flera from './flera-fonster.js';
@@ -129,7 +131,8 @@ export const arLogggranskare = () => S.session?.personal?.yrke === 'logggranskar
 // Arkivarien och uppföljningsrollen läser inte journalen och har ingen arbetslista (Sussa 5.4.2 och 6.3.1).
 // Runda 6, r6: verksamhetschefen läser inte heller journalen.
 // Runda 7, r3 och r4: ekonomen och systemförvaltaren läser inte heller journalen.
-export const utanJournal = () => ['logggranskare', 'arkivarie', 'uppfoljning', 'kommun', 'verksamhetschef', 'ekonom', 'systemforvaltare'].includes(S.session?.personal?.yrke);
+// Runda 16: rehabkoordinatorn läser inte journalen och har ingen arbetslista eller inkorg.
+export const utanJournal = () => ['logggranskare', 'arkivarie', 'uppfoljning', 'kommun', 'verksamhetschef', 'ekonom', 'systemforvaltare', 'rehabkoordinator'].includes(S.session?.personal?.yrke);
 export const minVardenhet = () => S.session?.enhet?.vardenhet?.id ?? null;
 export const pa = (...h) => h.some(far);
 // Runda 11, r6: vårdenheterna som utför beställda undersökningar i demon (röntgenkliniken). Servern prövar det själv.
@@ -358,6 +361,9 @@ RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0,
 MENY.splice(MENY.findIndex(m => m[0] === '#/remisser') + 1, 0,
   ['#/sjukskrivningar', 'Sjukskrivningar', 'kalender', () => far('sjukfall_mina')],
   ['#/sjukskrivningar/enhet', 'Sjukskrivningar på vårdenheten', 'krav', () => far('sjukfall_enhet')]);
+// Runda 16: rehabkoordinatorns sjukfall med REKO-status (rehabkoordinator.js), som också är rollens startsida.
+RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0, [/^#\/rehabkoordinator$/, rehabkoordinatorVy, () => far('sjukfall_reko')]);
+MENY.splice(MENY.findIndex(m => m[0] === '#/sjukskrivningar') + 1, 0, ['#/rehabkoordinator', 'Sjukfall', 'kalender', () => far('sjukfall_reko')]);
 
 // Invånarens adresser i Min journal, och de offentliga sidorna. Personalens vyer finns inte här.
 const RUTTER_MIN = [
@@ -404,7 +410,7 @@ export const vardenhetAv = (id) => enhetMap.get(id)?.vardenhet ?? id;
 export const enhetLista = () => [...enhetMap.values()];
 
 // Vårdadministratören börjar på dagens arbete, där systemet har ordnat det som ska göras i dag.
-export const hem = () => (arInvanare() ? '#/min' : arLogggranskare() ? '#/logg' : far('registrera_arkivbeslut') ? '#/arkiv' : far('datauttag') ? '#/datauttag' : far('samverkan') ? '#/samverkan' : far('lakemedelsansvar') ? '#/lakemedelsansvar' : far('faktureringsunderlag') ? '#/ekonomi' : far('konfigurera') ? '#/regler' : far('boka') ? '#/idag' : '#/arbetslista');
+export const hem = () => (arInvanare() ? '#/min' : arLogggranskare() ? '#/logg' : far('registrera_arkivbeslut') ? '#/arkiv' : far('datauttag') ? '#/datauttag' : far('samverkan') ? '#/samverkan' : far('lakemedelsansvar') ? '#/lakemedelsansvar' : far('faktureringsunderlag') ? '#/ekonomi' : far('konfigurera') ? '#/regler' : far('boka') ? '#/idag' : far('sjukfall_reko') ? '#/rehabkoordinator' : '#/arbetslista');
 
 // Logotypen: en droppe över en våg, en källa.
 export const logotyp = (storlek = 30) => `<svg class="logotyp" width="${storlek}" height="${storlek}" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M16 5.2c-3.3 4.7-6.1 8.1-6.1 11.6a6.1 6.1 0 0 0 12.2 0c0-3.5-2.8-6.9-6.1-11.6z" fill="#fff"/><path d="M7.5 26.2c2.8-1.7 5.7-1.7 8.5 0s5.7 1.7 8.5 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;

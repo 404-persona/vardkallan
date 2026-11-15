@@ -86,6 +86,8 @@ export const STARTPUNKT = {
   'Journalen för patienten på vårdcentralen': { hash: '#/patient/p11', klar: '.patientband h1' },
   // Runda 16, r2: demons sjukskrivna patient på vårdcentralen.
   'Journalen för en sjukskriven patient på vårdcentralen': { hash: '#/patient/p18', klar: '.patientband h1' },
+  // Runda 16: rehabkoordinatorns sjukfall, efter återställning så att statusen är den i demon.
+  'Rehabkoordinatorns sjukfall efter återställning': { hash: '#/rehabkoordinator', klar: '[data-sok] button', forbered: 'aterstall' },
   // Runda 14, r4: arkivariens sida för e-arkiv, gallring och mellanarkiv.
   'E-arkiv och gallring': { hash: '#/arkiv', klar: '#ar-form' },
 };
@@ -770,6 +772,12 @@ UPPGIFTER.push({
   id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', roll: 'lak-vc', start: 'Journalen för en sjukskriven patient på vårdcentralen',
   text: 'Marek Zieliński är sjukskriven för ryggen och behöver vara sjukskriven en tid till. Förläng sjukskrivningen och signera intyget.',
   kontroll: { notis: 'Journalen har fått statusen' },
+});
+// Runda 16: rehabkoordinatorn sätter REKO-status med patientens samtycke.
+UPPGIFTER.push({
+  id: 'satt-reko-status', namn: 'Sätta REKO-status med patientens samtycke', roll: 'rk-vc', start: 'Rehabkoordinatorns sjukfall efter återställning',
+  text: 'Marek Zieliński har sagt ja till att få hjälp med att planera återgången i arbete. Han samtyckte muntligt i telefon. Markera att koordineringsinsatserna har börjat.',
+  kontroll: { notis: 'REKO-statusen är sparad' },
 });
 // Runda 16, r1: ett läkarintyg för sjukpenning i version 2, och bytet från ett ersatt intyg till TS8071.
 STARTPUNKT['Journalen för Mikael Svensson på vårdcentralen'] = { hash: '#/patient/p14', klar: '.patientband h1' };
