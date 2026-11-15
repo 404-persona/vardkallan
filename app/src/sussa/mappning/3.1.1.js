@@ -37,7 +37,7 @@ const SAMMANSLAGNING = [
 SAMMANSLAGNING.push(
   'Makulering av vårdkontakt på fel patient > vårdadministratören flyttar kontakten med dess uppgifter till rätt patient, och fel patient har bara makuleringen kvar',
   'Makulering av vårdkontakt på fel patient > motivering krävs, och ett okänt nummer eller samma patient ger samma svar',
-  'Makulering av vårdkontakt på fel patient > utan dokumentation makuleras kontakten, och en makulerad kontakt ger ingen vårdrelation',
+  'Makulering av vårdkontakt på fel patient > en planerad kontakt makuleras utan rätt patient och ger ingen vårdrelation, och en genomförd flyttas alltid till rätt patient',
   'Makulering av vårdkontakt på fel patient > spärr: uppgifterna som flyttas till en patient som har spärrat vårdenheten syns inte för andra vårdenheter',
   'Makulering av vårdkontakt på fel patient > skyddade personuppgifter hos rätt patient röjs inte, och fel roll, fel vårdenhet och fel slags kontakt nekas',
   // Säkerhetsgranskningen av andra omgången.
