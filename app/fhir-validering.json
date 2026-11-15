@@ -1,7 +1,7 @@
 {
-  "tid": "2026-11-13T09:59:27.505Z",
+  "tid": "2026-11-15T01:59:10.420Z",
   "validator": "HL7 FHIR Validation tool 7.0.3",
-  "fhirKodHash": "3222b506ad0c4b86897dcd2d36a3e39dbe0d7eabcdb840a643cada27b1d0726e",
+  "fhirKodHash": "da7f87708e59e4ed8d246cb8a06b1edb540aea7f22bf0a4abcddf1b95fbbed7b",
   "kodfiler": [
     "arkiv.js",
     "atgarder.js",
@@ -17,6 +17,7 @@
     "medicinteknik.js",
     "mellanarkiv.js",
     "migreringsimport.js",
+    "omvardnadsprocess.js",
     "oppet-api.js",
     "patientnara.js",
     "prenumeration.js",
@@ -28,9 +29,9 @@
     "tjanstekontrakt.js",
     "vitalparametrar.js"
   ],
-  "resurser": 6054,
+  "resurser": 6093,
   "fel": 0,
-  "varningar": 7442,
+  "varningar": 7482,
   "saknas": [],
   "perTyp": {
     "Patient": {
@@ -49,9 +50,9 @@
       "varningar": 64
     },
     "def": {
-      "resurser": 27,
+      "resurser": 32,
       "fel": 0,
-      "varningar": 35
+      "varningar": 42
     },
     "Encounter": {
       "resurser": 219,
@@ -69,19 +70,19 @@
       "varningar": 230
     },
     "Observation": {
-      "resurser": 482,
+      "resurser": 470,
       "fel": 0,
-      "varningar": 530
+      "varningar": 516
     },
     "MedicationRequest": {
-      "resurser": 133,
+      "resurser": 135,
       "fel": 0,
-      "varningar": 277
+      "varningar": 281
     },
     "MedicationAdministration": {
-      "resurser": 43,
+      "resurser": 41,
       "fel": 0,
-      "varningar": 86
+      "varningar": 82
     },
     "List": {
       "resurser": 1,
@@ -104,14 +105,14 @@
       "varningar": 28
     },
     "Procedure": {
-      "resurser": 9,
+      "resurser": 8,
       "fel": 0,
-      "varningar": 18
+      "varningar": 16
     },
     "Composition": {
-      "resurser": 213,
+      "resurser": 225,
       "fel": 0,
-      "varningar": 213
+      "varningar": 225
     },
     "Schedule": {
       "resurser": 7,
@@ -119,9 +120,9 @@
       "varningar": 7
     },
     "Slot": {
-      "resurser": 3205,
+      "resurser": 3248,
       "fel": 0,
-      "varningar": 3205
+      "varningar": 3248
     },
     "Appointment": {
       "resurser": 26,
@@ -144,9 +145,9 @@
       "varningar": 1
     },
     "ChargeItem": {
-      "resurser": 347,
+      "resurser": 337,
       "fel": 0,
-      "varningar": 354
+      "varningar": 344
     },
     "Immunization": {
       "resurser": 16,
@@ -182,6 +183,11 @@
       "resurser": 1,
       "fel": 0,
       "varningar": 1
+    },
+    "Consent": {
+      "resurser": 2,
+      "fel": 0,
+      "varningar": 4
     },
     "Subscription": {
       "resurser": 1,
