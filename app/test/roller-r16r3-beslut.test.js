@@ -148,6 +148,16 @@ describe('Runda 16, r3, beslut C: kuratorn och SIP', () => {
     }
     const nekade = s.db.query(`SELECT count(*) AS n FROM atkomstlogg WHERE personal_id = 'kur-vc' AND resultat = 'nekad' AND resurs LIKE 'samordning:${vard.data.id}:%'`).get().n;
     expect(nekade).toBeGreaterThanOrEqual(5);
+    // En planering som kuratorn inte får se (från en spärrad vårdenhet) ger alltid 404, oavsett typ, och en synlig av annan
+    // typ än SIP ger 403.
+    const dold = Number(s.db.query("INSERT INTO samordningar (patient_id, typ, enhet_id, skapad, skapad_av) VALUES ('p06', 'lpt7a', 'uso-psyk', ?, 'lak-psyk')").run(new Date().toISOString()).lastInsertRowid);
+    const doldSip = Number(s.db.query("INSERT INTO samordningar (patient_id, typ, enhet_id, skapad, skapad_av) VALUES ('p06', 'sip', 'uso-psyk', ?, 'lak-psyk')").run(new Date().toISOString()).lastInsertRowid);
+    s.db.query("INSERT INTO sparrar (patient_id, enhet_id, registrerad) VALUES ('p06', 'uso-psyk', ?)").run(new Date().toISOString());
+    const svarDold = await k.post(`/api/samordning/${dold}/avsluta`, {});
+    const svarDoldSip = await k.post(`/api/samordning/${doldSip}/avsluta`, {});
+    expect([svarDold.status, svarDoldSip.status]).toEqual([404, 404]);
+    expect(svarDold.data).toEqual(svarDoldSip.data);
+    expect((await k.post(`/api/samordning/${vard.data.id}/avsluta`, {})).status).toBe(403);
     // Kuratorns egen SIP går att ändra och avsluta.
     const sip = await k.post('/api/patient/p06/samordning', { typ: 'sip', samtycke: true, insatser: [{ text: 'Samtalsstöd', huvudman: 'region' }] });
     expect((await k.post(`/api/samordning/${sip.data.id}/plan`, { samtycke: true, insatser: [{ text: 'Samtalsstöd varannan vecka', huvudman: 'region' }] })).status).toBe(200);
