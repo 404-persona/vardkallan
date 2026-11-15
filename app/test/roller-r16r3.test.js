@@ -96,7 +96,9 @@ describe('Runda 16, r3: legitimationen vid inloggning genom en extern tjänst', 
       return fel(() => provaMotMasterdata(db, k, a, { iat: 1 }));
     };
     expect(prov('bm-uso', ['SJ'])?.message).toContain('barnmorska');
-    expect(prov('bm-uso', ['BM'])).toBeNull();
+    expect(prov('bm-uso', ['BM', 'SJ'])).toBeNull();
+    // Beslut 2026-11-15: barnmorskans roll kräver båda (roller-r16r3-beslut.test.js).
+    expect(prov('bm-uso', ['BM'])?.status).toBe(403);
     expect(prov('ssk-kard', ['BM'])?.message).toContain('sjuksköterska');
     expect(prov('kur-vc', ['PS'])?.message).toContain('hälso- och sjukvårdskurator');
     expect(prov('kur-vc', ['HK'])).toBeNull();

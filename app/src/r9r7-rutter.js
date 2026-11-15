@@ -50,7 +50,7 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
     const a = journal.hamtaAnteckningRad(c.db, id);
     // Samma prövning som när anteckningen öppnas (utkast, behörighet, spärr, inre sekretess och undantag från visning).
     // Utan åtkomst är svaret detsamma som för en anteckning som inte finns. Det nekade försöket loggas av motorn.
-    return medPatient(c, a.patient_id, journal.lasHandling(a.kategori), (atk) => {
+    return medPatient(c, a.patient_id, journal.lasHandling(a), (atk) => {
       try { journal.hamtaAnteckning(atk, a); } catch (e) {
         if (e instanceof Fel && [403, 404].includes(e.status)) throw new Fel(404, 'Anteckningen finns inte.', 'saknas');
         throw e;

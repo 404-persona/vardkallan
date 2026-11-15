@@ -805,6 +805,21 @@ export const LEGITIMATION_NAMN = {
   AT: 'arbetsterapeut', DT: 'dietist', LG: 'logoped', HK: 'hälso- och sjukvårdskurator', PS: 'psykolog', PT: 'psykoterapeut',
 };
 
+// Runda 16, r3, Jonas beslut 2026-11-15.
+// A: barnmorskans roll har sjuksköterskans handlingar, också de generella direktiven, och kräver därför både
+// barnmorskans och sjuksköterskans legitimation vid inloggning genom en extern tjänst. En roll här kräver alla koderna i
+// listan, i stället för en av dem som i LEGITIMATION_FOR_ROLL (inloggningstjanster.js provaMotMasterdata).
+export const LEGITIMATION_ALLA = { barnmorska: ['BM', 'SJ'] };
+// Koderna som den simulerade inloggningstjänsten ger en person med rollen (ovningstjanst-oidc.js).
+export const legitimationerFor = (yrke) => (Object.hasOwn(LEGITIMATION_ALLA, yrke ?? '') ? [...LEGITIMATION_ALLA[yrke]]
+  : Object.hasOwn(LEGITIMATION_FOR_ROLL, yrke ?? '') ? [LEGITIMATION_FOR_ROLL[yrke][0]] : []);
+// B: kuratorns och psykologens anteckningar läses med las_journal och inte med las_omvardnad, så att undersköterskan,
+// som bara har las_omvardnad, inte läser dem (journal.js lasHandling). Alla andra som läser omvårdnadens anteckningar
+// har också las_journal.
+// C: kuratorn upprättar samordnade individuella planer (SIP) med samma handling som läkaren och sjuksköterskan.
+// Inskrivningsmeddelandet och planen vid tvångsvård upprättas fortfarande av läkare och sjuksköterskor (samordnad.js).
+ROLLER.kurator.push('samordna');
+
 // Runda 16, rehabkoordinatorn (rehabkoordinator.js, beslut från Jonas 2026-11-15). Rollen följer lagen (2019:1297) om
 // koordineringsinsatser för sjukskrivna patienter och rollen Rehabkoordinator i Ineras Rehabstöd: ser de pågående
 // sjukfallen på sin egen vårdenhet och sätter REKO-status per sjukfall. Minsta åtkomst (patientdatalagen 4 kap. 2 §):

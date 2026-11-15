@@ -104,7 +104,7 @@ function egnaAnteckningar(atk) {
   const a = egenAtkomst(atk);
   const rader = atk.db.query("SELECT * FROM anteckningar WHERE patient_id = ? AND status = 'signerad' ORDER BY signerad_tid DESC, id DESC").all(atk.patientId)
     .filter(r => !atk.db.query('SELECT 1 FROM anteckningar WHERE ersatter_id = ?').get(r.id));
-  return filtreraVisning(a, a.filtrera(rader, r => journal().lasHandling(r.kategori)), 'anteckning').filter(r => egen(atk, r.enhet_id));
+  return filtreraVisning(a, a.filtrera(rader, r => journal().lasHandling(r)), 'anteckning').filter(r => egen(atk, r.enhet_id));
 }
 function egnaPlaner(atk) {
   if (!kanRoll(atk.personal, 'las_vardplan')) return [];

@@ -30,6 +30,23 @@ export const T = {
   forskriv: `${B}barnmorskan förskriver preventivmedel, och systemet fyller i orsak, dosering och uppföljning`,
   inteAnnat: `${B}barnmorskan förskriver inget annat läkemedel och ordinerar inte, och sjuksköterskan förskriver inte preventivmedel`,
 };
+// Jonas beslut 2026-11-15 (roller-r16r3-beslut.test.js).
+const BA = 'Runda 16, r3, beslut A: barnmorskans legitimation > ';
+const BB = 'Runda 16, r3, beslut B: kuratorns och psykologens anteckningar > ';
+const BC = 'Runda 16, r3, beslut C: kuratorn och SIP > ';
+Object.assign(T, {
+  bmBada: `${BA}barnmorskans roll kräver både barnmorskans och sjuksköterskans legitimation, och bara den ena nekas med en förklaring`,
+  bmOvning: `${BA}den simulerade inloggningstjänsten ger demobarnmorskorna både barnmorskans och sjuksköterskans legitimation`,
+  uskLaserInte: `${BB}undersköterskan läser inte psykologens anteckning, men läkaren, sjuksköterskan och psykologen gör det`,
+  uskOveralt: `${BB}undersköterskan ser inte anteckningen i journalen, sökningen, översikten, FHIR eller utskriften, och läkaren gör det`,
+  egnaMallar: `${BB}kuratorn och psykologen skriver bara med sina egna mallar, så att ingen av deras anteckningar läses av undersköterskan`,
+  kuratorSip: `${BC}kuratorn upprättar en samordnad individuell plan med samma handling som läkaren och sjuksköterskan, men inget inskrivningsmeddelande`,
+  kuratorAndra: `${BC}kuratorn ändrar, upprättar och avslutar bara samordnade individuella planer, aldrig en annan samordnad planering, och nekandet loggas`,
+  prenNy: 'Runda 16, r3, beslut B: prenumerationer på kuratorns och psykologens anteckningar > undersköterskan får inget meddelande om att en psykologanteckning har skapats eller raderats, men läkaren får det, och en vanlig omvårdnadsanteckning syns som förut',
+  prenAldre: 'Runda 16, r3, beslut B: prenumerationer på kuratorns och psykologens anteckningar > ett raderingsmeddelande utan typen, från en äldre sandlåda, prövas med den striktare handlingen',
+  bilder: 'Runda 16, r3, beslut B: bilder och media till kuratorns och psykologens anteckningar > en bild som kuratorn eller psykologen har laddat upp, eller som hör till deras anteckning, läses inte av undersköterskan',
+});
+export const TESTER_BESLUT = [T.bmBada, T.bmOvning, T.uskLaserInte, T.uskOveralt, T.egnaMallar, T.kuratorSip, T.kuratorAndra, T.bilder, T.prenNy, T.prenAldre];
 export const TESTER_ROLLER = [T.roller, T.barnmorska, T.studentRoller, T.skotare, T.demo, T.aldre, T.ovningar];
 export const TESTER_STUDENT = [T.signera, T.aldrig, T.tid, T.registrera, T.bmStudent, T.utanHandledning];
 
@@ -39,7 +56,7 @@ const ROLLER_LOSNING = 'Sedan runda 16 har varje yrke en egen roll med minsta å
 // postens text om systemets expertroll.
 const POSTER = {
   '3.1.3.5': {
-    tester: [T.mallar, T.sekretess, T.signera],
+    tester: [T.mallar, T.sekretess, T.signera, T.egnaMallar],
     losning: ' Sedan runda 16 har psykologen, logopeden och barnmorskan egna mallar, och arbetsterapeuten, dietisten och kuratorn skriver med sina mallar i egna roller. En student skriver med yrkets mallar under handledning.',
   },
   '3.1.11.3': {
@@ -51,13 +68,21 @@ const POSTER = {
     losning: ' Sedan runda 16 är barnmorskan en egen roll med egen legitimation. Hon gör allt som förut på mödrahälsovården och förlossningen och förskriver preventivmedel på barnmorskemottagningen, där systemet bara visar de läkemedel som förskrivningsrätten omfattar.',
   },
   '5.2.1.6': {
-    tester: [T.koder, T.utanLeg, T.tid, T.utanHandledning],
+    tester: [T.koder, T.utanLeg, T.tid, T.utanHandledning, T.bmBada, T.bmOvning],
     anmarkning: ' Sedan runda 16 kräver inloggningen genom en extern tjänst legitimationen för varje roll ur Ineras kodverk för legitimerad yrkesgrupp, och en students åtkomst prövas mot handledningen vid varje anrop.',
   },
   '5.2.1.8': {
     tester: [...TESTER_ROLLER, T.koder, T.utanLeg, T.registrera],
     losning: ` ${ROLLER_LOSNING}`,
     expertErsatt: 'Rollen följer yrket i katalogen och legitimationen i biljetten, och en students åtkomst följer handledningen och handledarens vårdenhet, så att ingen behöver lägga upp eller ta bort behörighet för hand. Handledaren registrerar handledningen med ett klick, och systemet föreslår tiden.',
+  },
+  '5.2.1.7': {
+    tester: [T.sekretess, T.uskLaserInte, T.uskOveralt, T.bilder, T.prenNy, T.prenAldre],
+    anmarkning: ' Sedan runda 16 läser undersköterskan inte kuratorns och psykologens anteckningar, varken i journalen, sökningen, översikten, FHIR eller utskriften (minsta åtkomst, patientdatalagen 4 kap. 2 §).',
+  },
+  '4.3.1.2': {
+    tester: [T.kuratorSip, T.kuratorAndra],
+    losning: ' Sedan runda 16 upprättar också hälso- och sjukvårdskuratorn samordnade individuella planer, med samma behörighet som läkaren och sjuksköterskan.',
   },
   '12.1.1.7': {
     tester: [T.mallar],

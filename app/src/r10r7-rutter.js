@@ -125,14 +125,14 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor, medMi
   rutt('GET', '/api/anteckning/:id/docx', (c, id) => {
     kravInloggad(c);
     const a = journal.hamtaAnteckningRad(c.db, id);
-    return medPatient(c, a.patient_id, journal.lasHandling(a.kategori), (atk, p) => {
+    return medPatient(c, a.patient_id, journal.lasHandling(a), (atk, p) => {
       let ut;
       try { ut = journal.hamtaAnteckning(atk, a); } catch (e) {
         if (e instanceof Fel && [403, 404].includes(e.status)) throw new Fel(404, 'Anteckningen finns inte.', 'saknas');
         throw e;
       }
       const visad = valFor(c.s, p.id).visa_identitet;
-      atk.logga(journal.lasHandling(a.kategori), atk.grund(), `anteckning:${a.id}:docx`, 'tillaten', 'Journaltexten togs ut som Word-dokument');
+      atk.logga(journal.lasHandling(a), atk.grund(), `anteckning:${a.id}:docx`, 'tillaten', 'Journaltexten togs ut som Word-dokument');
       return fil(kontorsstod.anteckningDocx(ut, { namn: visningsnamn(p, visad), personnummer: visningsPnr(p, visad) }), kontorsstod.DOCX_TYP, `anteckning-${a.id}.docx`);
     });
   });

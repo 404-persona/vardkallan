@@ -700,7 +700,7 @@ export function consent(db, s, nu = new Date()) {
 MAPPA.Consent = consent;
 
 function handlingFor(typ, rad, personal) {
-  if (typ === 'Composition') return lasHandling(rad?.kategori ?? 'lakare');
+  if (typ === 'Composition') return lasHandling(rad ?? 'lakare');
   if (typ === 'ServiceRequest' && !kanRoll(personal, 'las_remiss')) return 'las_remiss_status';
   return HANDLING[typ];
 }
@@ -895,7 +895,7 @@ function hanteraUtanSparrsvar(ctx) {
   let rader = patientRader(db, typ, pid).filter(r => finnsSomResurs(typ, r));
   if (typ === 'Composition') {
     rader = rader.filter(a => a.status === 'signerad' || a.forfattare_id === personal.id);
-    rader = atk.filtrera(rader, a => lasHandling(a.kategori));
+    rader = atk.filtrera(rader, a => lasHandling(a));
   } else if (typ === 'ServiceRequest') {
     const min = vardenhet(db, personal);
     const egna = rader.filter(r => r.fran_enhet_id === min || r.till_enhet_id === min);

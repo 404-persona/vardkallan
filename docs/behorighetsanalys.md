@@ -34,9 +34,9 @@ Handlingar i koden (74): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_
 
 Behov: Omvårdnad, mätvärden och provtagning. Behöver se läkemedel, mätvärden, överkänslighet och omvårdnadsanteckningar.
 
-Risker: Tillgång till känsliga läkaranteckningar och diagnoser som inte behövs för uppgiften.
+Risker: Tillgång till känsliga läkaranteckningar, diagnoser och kuratorns och psykologens anteckningar, som inte behövs för uppgiften.
 
-Så begränsas risken: Läser inga läkaranteckningar och inga diagnoser. Ger läkemedel bara med en giltig delegering i dag. Ingen nödåtkomst.
+Så begränsas risken: Läser inga läkaranteckningar, inga diagnoser och sedan runda 16 inte kuratorns och psykologens anteckningar, som läses med las_journal. Ger läkemedel bara med en giltig delegering i dag. Ingen nödåtkomst.
 
 Får inte: `las_journal`, `las_diagnoser`, `ordinera`, `nodatkomst`, `skriv_journal`.
 
@@ -224,7 +224,7 @@ Handlingar i koden (34): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_
 
 ## Hälso- och sjukvårdskurator (kurator)
 
-Behov: Arbetar med patientens sociala förhållanden, krisstöd och samtal. Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.
+Behov: Arbetar med patientens sociala förhållanden, krisstöd och samtal, och upprättar samordnade individuella planer (SIP). Behöver läsa journalen och diagnoserna, skriva kuratorsanteckningar, se om patienten vårdas med tvång och ta emot och besvara remisser.
 
 Risker: Kuratorns anteckningar är ofta känsliga, och läsning utan behov är en risk för integriteten. Läkemedel och mätvärden behövs inte i arbetet.
 
@@ -232,7 +232,7 @@ Så begränsas risken: Läser inte läkemedelslistan och mätvärdena, ordinerar
 
 Får inte: `las_lakemedel`, `las_matvarden`, `ordinera`, `ge_lakemedel`, `nodatkomst`.
 
-Handlingar i koden (31): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `las_tvangsvard`.
+Handlingar i koden (32): `las_oversikt`, `las_journal`, `las_omvardnad`, `skriv_omvardnad`, `las_diagnoser`, `las_remiss`, `remittera`, `mottag_remiss`, `bedom_remiss`, `svara_remiss`, `kvittera_svar`, `las_admin`, `sok`, `andra_enheter`, `samtycke_sparr`, `visa_identitet`, `skriv_ut`, `las_vardplan`, `vardplan_atgard`, `bevaka`, `bevaka_enhet`, `las_tidbok`, `statistik`, `utbildning`, `las_planering`, `utfora_uppgift`, `planera`, `fordela_remiss`, `remisskonferens`, `meddelande_invanare`, `las_tvangsvard`, `samordna`.
 
 ## Barnmorska (barnmorska)
 
@@ -240,7 +240,7 @@ Behov: För graviditetsjournalen och förlossningsjournalen, ger läkemedel och 
 
 Risker: Läkemedel som förskrivs utanför förskrivningsrätten, och läsning utan behov.
 
-Så begränsas risken: Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.
+Så begränsas risken: Kräver vid inloggning genom en extern tjänst både barnmorskans och sjuksköterskans legitimation, eftersom rollen har sjuksköterskans handlingar. Har inte handlingen ordinera. Förskrivningen gäller bara de preventivmedel som föreskrifterna räknar upp, systemet visar bara dem, och en allvarlig varning stoppar förskrivningen och hänvisar till läkaren. Gör inte barnhälsovårdens uppgifter.
 
 Får inte: `ordinera`, `vaccinera`, `skriv_journal`, `skriv_intyg`.
 

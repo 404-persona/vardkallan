@@ -367,7 +367,7 @@ function forraSvaren(atk, kod) {
     WHERE a.patient_id = ? AND a.status = 'signerad' AND f.kod = ? ORDER BY a.signerad_tid DESC, a.id DESC`).all(atk.patientId, kod)
     .filter(a => !atk.db.query('SELECT 1 FROM anteckningar WHERE ersatter_id = ?').get(a.id));
   const egen = egenAtkomst(atk);
-  const a = require('./undantag.js').filtreraVisning(egen, egen.filtrera(rader, r => j.lasHandling(r.kategori)), 'anteckning').find(r => egenVardenhet(atk, r.enhet_id));
+  const a = require('./undantag.js').filtreraVisning(egen, egen.filtrera(rader, r => j.lasHandling(r)), 'anteckning').find(r => egenVardenhet(atk, r.enhet_id));
   return a ? { svar: formularFor(atk.db, a.id).svar, tid: a.signerad_tid } : null;
 }
 const datumText = (t) => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm', day: 'numeric', month: 'long' });
@@ -599,9 +599,9 @@ export function fhirHantera(ctx, delar, bundle) {
   if (id) {
     if (!/^\d{1,9}$/.test(id) || !formularFor(db, Number(id))) throw new Fel(404, 'Resursen finns inte.', 'saknas');
     const a = j.hamtaAnteckningRad(db, id);
-    const atk = new Atkomst(db, personal, a.patient_id, ctx.valFor(a.patient_id), j.lasHandling(a.kategori));
+    const atk = new Atkomst(db, personal, a.patient_id, ctx.valFor(a.patient_id), j.lasHandling(a));
     const ut = j.hamtaAnteckning(atk, a);
-    atk.logga(j.lasHandling(a.kategori), atk.grund(), `fhir/QuestionnaireResponse/${id}`);
+    atk.logga(j.lasHandling(a), atk.grund(), `fhir/QuestionnaireResponse/${id}`);
     return { status: 200, body: fhirSvar(db, ut) };
   }
   const pid = (url.searchParams.get('patient') ?? url.searchParams.get('subject') ?? '').replace(/^Patient\//, '');

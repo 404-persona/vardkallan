@@ -23,7 +23,7 @@ export function hamtaPost(db, typ, id) {
   if (typ === 'anteckning') {
     const a = db.query('SELECT * FROM anteckningar WHERE id = ?').get(Number(id));
     if (!a) throw new Fel(404, 'Anteckningen finns inte.', 'saknas');
-    return { typ, id: a.id, rad: a, patientId: a.patient_id, enhetId: a.enhet_id, handling: journal.lasHandling(a.kategori), signeradAv: a.signerad_av, signerad: a.status === 'signerad', aktuell: !db.query('SELECT 1 FROM anteckningar WHERE ersatter_id = ?').get(a.id), rubrik: a.typ };
+    return { typ, id: a.id, rad: a, patientId: a.patient_id, enhetId: a.enhet_id, handling: journal.lasHandling(a), signeradAv: a.signerad_av, signerad: a.status === 'signerad', aktuell: !db.query('SELECT 1 FROM anteckningar WHERE ersatter_id = ?').get(a.id), rubrik: a.typ };
   }
   if (typ === 'matvarde') {
     const m = db.query('SELECT * FROM matvarden WHERE id = ?').get(Number(id));

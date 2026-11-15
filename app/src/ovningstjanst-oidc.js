@@ -61,7 +61,7 @@ export const VARIANTER = [
 ];
 // Runda 16, r3: den första koden för varje roll i atkomst.js. Studenterna, undersköterskan och skötaren har ingen
 // legitimation.
-import { LEGITIMATION_FOR_ROLL } from './atkomst.js';
+import { LEGITIMATION_FOR_ROLL, legitimationerFor } from './atkomst.js';
 const LEGITIMATION = Object.fromEntries(Object.entries(LEGITIMATION_FOR_ROLL).map(([r, k]) => [r, k[0]]));
 
 // Begäranden och koder. En begäran hör till sessionen som startade den, och en kod används en gång.
@@ -105,6 +105,8 @@ export function begaran(s, db, id) {
 }
 
 // Attributen för personen ur masterdata, med den valda varianten.
+// Runda 16, r3: exporteras för testerna som attributFor.
+export const attributFor = (db, p, variant) => pastaende(db, p, variant);
 function pastaende(db, p, variant) {
   const u = uppdragFor(db, p);
   if (!u) throw new Fel(400, 'Personen har inget medarbetaruppdrag i katalogen.', 'ogiltig');
@@ -114,7 +116,8 @@ function pastaende(db, p, variant) {
     employeeHsaId: p.hsa_id, given_name: fornamn, family_name: rest.join(' ') || fornamn, name: p.namn,
     commissionHsaId: u.commissionHsaId, commissionName: `${p.titel ?? 'Medarbetare'}, ${u.healthCareUnitName}`, commissionPurpose: u.commissionPurpose,
     healthCareUnitHsaId: u.healthCareUnitHsaId, healthCareUnitName: u.healthCareUnitName, healthCareProviderHsaId: u.healthCareProviderHsaId, healthCareProviderName: vg?.namn ?? null,
-    ...(LEGITIMATION[p.yrke] ? { healthcareProfessionalLicense: [LEGITIMATION[p.yrke]] } : {}),
+    // Runda 16, r3: barnmorskan har både barnmorskans och sjuksköterskans kod (legitimationerFor i atkomst.js).
+    ...(legitimationerFor(p.yrke).length ? { healthcareProfessionalLicense: legitimationerFor(p.yrke) } : {}),
   };
   if (variant === 'annan_vardenhet') {
     const annan = db.query("SELECT hsa_id, namn FROM enheter WHERE typ = 'vardenhet' AND hsa_id <> ? ORDER BY id LIMIT 1").get(u.healthCareUnitHsaId);

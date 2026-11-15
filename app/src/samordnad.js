@@ -243,6 +243,12 @@ export function skapa(atk, body = {}) {
   const pers = atk.personal;
   const typ = body.typ;
   const t = iso();
+  // Runda 16, r3 (beslut 2026-11-15): kuratorn upprättar samordnade individuella planer. Inskrivningsmeddelandet och planen
+  // vid tvångsvård upprättas av läkare och sjuksköterskor på den vårdande enheten.
+  if (pers.yrke === 'kurator' && typ !== 'sip') {
+    atk.logga('samordna', 'nekad', `samordning:${['spu', 'lpt7a'].includes(typ) ? typ : 'okand'}`, 'nekad');
+    throw new Fel(403, 'Som kurator upprättar du samordnade individuella planer. Inskrivningsmeddelandet och planen vid tvångsvård upprättas av läkare och sjuksköterskor.', 'nekad');
+  }
   if (typ === 'spu') {
     const f = spuForslag(atk);
     const vt = db.query('SELECT * FROM vardtillfallen WHERE patient_id = ? AND utskriven IS NULL').get(atk.patientId);
@@ -287,6 +293,12 @@ export function andra(atk, s, atgard, body = {}) {
   const db = atk.db;
   const pers = atk.personal;
   if (!synliga(atk).some(x => x.id === s.id)) throw new Fel(404, 'Den samordnade planeringen finns inte.', 'saknas');
+  // Runda 16, r3 (säkerhetsgranskningen): kuratorn ändrar bara samordnade individuella planer, som när de upprättas.
+  // Prövas efter synligheten, så att en planering som kuratorn inte får se alltid ger samma 404.
+  if (atk.personal.yrke === 'kurator' && s.typ !== 'sip') {
+    atk.logga('samordna', 'nekad', `samordning:${s.id}:${['beraknad', 'utskrivningsklar', 'fast-vardkontakt', 'kallelse', 'plan', 'avsluta'].includes(atgard) ? atgard : 'okand'}`, 'nekad');
+    throw new Fel(403, 'Som kurator ändrar du bara samordnade individuella planer. Inskrivningsmeddelandet och planen vid tvångsvård ändras av läkare och sjuksköterskor.', 'nekad');
+  }
   const l = lage(db, s);
   const min = vardenhetFor(db, pers.enhet_id);
   const agare = min === vardenhetFor(db, s.enhet_id);
