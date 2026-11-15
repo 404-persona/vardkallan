@@ -521,6 +521,9 @@ export function byggSeed(bas = nu()) {
   // Runda 16, r1: ett läkarintyg för sjukpenning i version 1 och ett ersatt intyg (TSTRK1007) för Mikael Svensson, så
   // att förnyelsen till version 2 och bytet till TS8071 går att pröva (intyg-seed.js).
   require('./intyg-seed.js').seeda(db);
+  // Runda 16, r1: tabellerna för makulering och flytt av vårdkontakter skapas när sandlådan skapas, inte först när de
+  // används, så att en sandlåda som har nått taket för databasen fortfarande kan läsa översikten (missbruk-r13.test.js).
+  require('./vardkontakt-makulering.js').sakra(db);
   // Runda 14, r4: mellanarkivet med de äldre uppgifter ur VAS som fördes dit vid migreringen (mellanarkiv.js).
   require('./mellanarkiv.js').seeda(db);
   // Runda 14, r5: incidentregistret (servicenivaer.js). Inget läggs in i efterhand.
