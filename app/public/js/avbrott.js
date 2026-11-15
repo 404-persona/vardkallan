@@ -597,12 +597,16 @@ export async function fornyaNu() {
     if (e.status && e.status !== 401) console.warn('Läskopian kunde inte förnyas:', e.message);
   }
 }
-// nu: direkt, annars högst en gång i minuten.
+// nu: direkt, annars högst en gång i minuten. Sammanslagningen av runda 15: efter en skrivning förnyas läskopian högst en
+// gång på fem sekunder, med en förnyelse sist som tar med allt som har sparats, så att många skrivningar i följd (till
+// exempel utkast som sparas av sig självt) inte hämtar en hel läskopia för varje skrivning och tar sandlådans tidsbudget.
+const FORNYA_MINST_MS = 5000;
 export function fornya({ nu = false } = {}) {
   if (avbrott.aktivt || avbrott.simulerat || !S.session?.inloggad) return;
   if (!nu && Date.now() - senastFornyad < 60_000) return;
   clearTimeout(fornyaTimer);
-  fornyaTimer = setTimeout(() => fornyaNu(), nu ? 300 : 0);
+  const vanta = nu ? Math.max(300, senastFornyad + FORNYA_MINST_MS - Date.now()) : 0;
+  fornyaTimer = setTimeout(() => fornyaNu(), vanta);
 }
 
 // Vid utloggning och vid byte av person. Med personalId (vid utloggning) raderas också personens reservkopia, och

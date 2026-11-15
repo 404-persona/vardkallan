@@ -439,6 +439,35 @@ const undersok = (page, kod, nyckelB64) => page.evaluate(async ({ kod, nyckelB64
     console.log(`    läskopian förnyades av sig själv: ${forsta} och ${andra}`);
   });
 
+  // Sammanslagningen av runda 15: varje skrivning hämtade en hel läskopia, så att många skrivningar i följd (stavning,
+  // utkast som sparas av sig självt) tog sandlådans tidsbudget och gav 429 i genomgången. Nu förnyas läskopian högst en
+  // gång på fem sekunder efter skrivningar, och den sista förnyelsen tar med det som sparades sist.
+  const skCtx = await ny();
+  const sk = await skCtx.newPage();
+  bevaka(sk, 'skrivningar');
+  await test('många skrivningar i följd hämtar läskopian högst en gång på fem sekunder, och den förnyas efter den sista', async () => {
+    felSida = sk;
+    await loggaIn(sk, 'lak-kard');
+    const forsta = await vantaPaKopia(sk);
+    await sk.waitForLoadState('networkidle');
+    await sk.waitForTimeout(1000);
+    let hamtningar = 0;
+    sk.on('request', (r) => { if (r.method() === 'GET' && new URL(r.url()).pathname === '/api/lasekopia') hamtningar++; });
+    await sk.evaluate(async () => {
+      const { api } = await import('/js/ui.js');
+      for (let i = 0; i < 8; i++) {
+        await api('/api/stavning', { metod: 'POST', data: { text: `Patienten mår bra ${i}`, sprak: 'sv' }, tyst: true });
+        await new Promise((ok) => setTimeout(ok, 500));
+      }
+    });
+    const andra = await vantaPaKopia(sk, forsta);
+    await sk.waitForTimeout(6000);
+    anta(andra > forsta, 'läskopian förnyades inte efter skrivningarna');
+    anta(hamtningar >= 1 && hamtningar <= 3, `läskopian hämtades ${hamtningar} gånger för 8 skrivningar på fyra sekunder`);
+    console.log(`    8 skrivningar gav ${hamtningar} hämtningar av läskopian`);
+  });
+  await skCtx.close();
+
   await test('läsläget visar hur gammal läkemedelsinformationen är per patient och varnar efter 10 minuter', async () => {
     felSida = lm;
     await lm.click('[data-a="avbrott"]');
