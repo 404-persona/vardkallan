@@ -1,0 +1,18 @@
+{
+  "domän": "riv.masterdata.organisationalresources.licensetopractice",
+  "källa": "https://bitbucket.org/rivta-domains/riv.masterdata.organisationalresources.licensetopractice",
+  "tagg": "Infrastructure.directory.licensetopractice_1.1",
+  "commit": "17c1407d8e780033cc81bea2bd5f4dd124399717",
+  "arkiv": "https://bitbucket.org/rivta-domains/riv.masterdata.organisationalresources.licensetopractice/get/17c1407d8e780033cc81bea2bd5f4dd124399717.tar.gz",
+  "arkivSha256": "91fff305e3471cf41b34ba8681cf080284d5a9fc0043cb1487800b59c2804217",
+  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "hämtat": "2026-11-17",
+  "filer": {
+    "schemas/core_components/infrastructure_directory_licensetopractice_1.1.xsd": "de9ea1efc228d04604b387c4e3e34ac7dc92e4f882097236931cb1ce4cb0c34e",
+    "schemas/core_components/itintegration_registry_1.0.xsd": "5827002c9a3bae74863f6add21f9c5d8efad15167c807de91ec1453656cf771c",
+    "schemas/interactions/GetHospPersonForIvoInteraction/GetHospPersonForIvoInteraction_1.0_RIVTABP21.wsdl": "1850c57a0bce33e2d1a970f7ab8039e66febca873f0138b77cf52cc6fbfaba44",
+    "schemas/interactions/GetHospPersonForIvoInteraction/GetHospPersonForIvoResponder_1.0.xsd": "6667ff454751b9b56440543ab3068b7d99cefb4d8888fab04364615918dec84f",
+    "schemas/interactions/GetHospPersonForPublicHealthCareInteraction/GetHospPersonForPublicHealthCareInteraction_1.1_RIVTABP21.wsdl": "f8840dcffc99188d4f5bcc5494a000f206a391f13ab6229b7dcaaca3d00bd1fc",
+    "schemas/interactions/GetHospPersonForPublicHealthCareInteraction/GetHospPersonForPublicHealthCareResponder_1.1.xsd": "2ff15fbfa39216d5e08fe51553283a38e1f3ea8a3e4d01d45c05eddf3b4b80dd"
+  }
+}

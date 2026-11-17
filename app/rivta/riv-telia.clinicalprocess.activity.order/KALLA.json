@@ -1,0 +1,17 @@
+{
+  "domän": "riv-telia.clinicalprocess.activity.order",
+  "källa": "https://bitbucket.org/rivta-domains/riv-telia.clinicalprocess.activity.order",
+  "tagg": "clinicalprocess_activity_order_1.0",
+  "commit": "d20bc9f205eab02aa04822d4c584d6f8eee90826",
+  "arkiv": "https://bitbucket.org/rivta-domains/riv-telia.clinicalprocess.activity.order/get/d20bc9f205eab02aa04822d4c584d6f8eee90826.tar.gz",
+  "arkivSha256": "5ee68de0df81bdd8a1fcac9ebfb89e97d78b965ed43ef4949a4f04a727c73abc",
+  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "hämtat": "2026-11-17",
+  "filer": {
+    "schemas/core_components/clinicalprocess_activity_order_1.0.xsd": "31f6a583a3ec8a861795a1b6ebb8773b4ef18b1bce83df0150bb312129695faf",
+    "schemas/core_components/clinicalprocess_activity_order_enum_1.0.xsd": "7436cfac5bf17d7eda8eb25322e43eb09ab5b1b7c644d85d376fbe1f4b7ed356",
+    "schemas/core_components/itintegration_registry_1.0.xsd": "5827002c9a3bae74863f6add21f9c5d8efad15167c807de91ec1453656cf771c",
+    "schemas/interactions/ProcessActivityOrderInteraction/ProcessActivityOrderInteraction_1.0_RIVTABP21.wsdl": "a5f17b7e1cd23347c256e54afef2fe135c068df771da84d580769b6cf9a7dba0",
+    "schemas/interactions/ProcessActivityOrderInteraction/ProcessActivityOrderResponder_1.0.xsd": "3734f193c20b288af3aebea08061d8af29152066cf964985a05bd0aa0adb58ee"
+  }
+}

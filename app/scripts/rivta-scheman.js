@@ -40,6 +40,13 @@ DOMANER.push(
   ['riv-application.infrastructure.eservicesupply.patientportal', '2.0', '444af395016bd6c97d1b6ca26014c5890359f0e7'],
   ['riv.druglogistics.dosedispensing', 'TD_DRUGLOGISTICS_DOSEDISPENSING_1_1_0', 'ff5de62545f2bee995c5361272027758b504de91'],
 );
+// 2026-11-17: två domäner som finns i tjänsteplattformen under andra namn än på Bitbucket (svar från Inera i ärende
+// CS0384328). Tjänsteplattformen har major 1 av båda, så de senaste fastställda versionerna med major 1 pinnas:
+// infrastructure:directory:licensetopractice 1.1 (Socialstyrelsens HOSP-register) och clinicalprocess:activity:order 1.0.
+DOMANER.push(
+  ['riv.masterdata.organisationalresources.licensetopractice', 'Infrastructure.directory.licensetopractice_1.1', '17c1407d8e780033cc81bea2bd5f4dd124399717'],
+  ['riv-telia.clinicalprocess.activity.order', 'clinicalprocess_activity_order_1.0', 'd20bc9f205eab02aa04822d4c584d6f8eee90826'],
+);
 // Runda 14, r3: --doman <namn> hämtar bara den domänen (kan anges flera gånger), så att de andra domänerna står kvar.
 const VALDA = process.argv.flatMap((a, i, l) => (a === '--doman' && l[i + 1] ? [l[i + 1]] : []));
 
