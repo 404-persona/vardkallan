@@ -2,6 +2,34 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.7.0",
+      "datum": "2026-11-17",
+      "nyheter": [
+        {
+          "id": "hosp-forskrivning-1-7-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska",
+            "barnmorska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Förskrivningsrätten kommer ur Socialstyrelsens register",
+          "text": "Systemet hämtar din legitimation och förskrivningsrätt ur Socialstyrelsens register (HOSP) när du loggar in och innan du förskriver. Förskrivningen erbjuder bara det som förskrivningsrätten omfattar, och om något inte går säger systemet varför, till exempel att förskrivningsrätten saknas eller är begränsad. I demon är registret simulerat."
+        },
+        {
+          "id": "hosp-systemforvaltare-1-7-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/nationella-tjanster",
+          "rubrik": "Personalens legitimation ur HOSP",
+          "text": "Under Nationella tjänster ser du personalens legitimation och förskrivningsrätt ur Socialstyrelsens register (HOSP): vem som saknar giltig legitimation för sin roll, vilka uppgifter som är gamla för att tjänsten inte svarar, och knappar för att hämta om uppgifterna. När personalkatalogen ger någon en roll som kräver legitimation hämtar systemet uppgifterna själv och säger i rapporten om legitimationen saknas eller är återkallad."
+        }
+      ]
+    },
+    {
       "version": "1.6.0",
       "datum": "2026-11-15",
       "nyheter": [
@@ -175,28 +203,6 @@
           "var": "#/sjukskrivningar",
           "rubrik": "REKO-status från rehabkoordinatorn",
           "text": "I Mina sjukskrivningar och på fliken Sjukskrivning ser du den REKO-status som rehabkoordinatorn har satt, till exempel att patienten har kontaktats eller får koordineringsinsatser."
-        },
-        {
-          "id": "hosp-forskrivning-1-6-0",
-          "roller": [
-            "lakare",
-            "sjukskoterska",
-            "barnmorska"
-          ],
-          "omfattning": "liten",
-          "var": null,
-          "rubrik": "Förskrivningsrätten kommer ur Socialstyrelsens register",
-          "text": "Systemet hämtar din legitimation och förskrivningsrätt ur Socialstyrelsens register (HOSP) när du loggar in och innan du förskriver. Förskrivningen erbjuder bara det som förskrivningsrätten omfattar, och om något inte går säger systemet varför, till exempel att förskrivningsrätten saknas eller är begränsad. I demon är registret simulerat."
-        },
-        {
-          "id": "hosp-systemforvaltare-1-6-0",
-          "roller": [
-            "systemforvaltare"
-          ],
-          "omfattning": "liten",
-          "var": "#/nationella-tjanster",
-          "rubrik": "Personalens legitimation ur HOSP",
-          "text": "Under Nationella tjänster ser du personalens legitimation och förskrivningsrätt ur Socialstyrelsens register (HOSP): vem som saknar giltig legitimation för sin roll, vilka uppgifter som är gamla för att tjänsten inte svarar, och knappar för att hämta om uppgifterna. När personalkatalogen ger någon en roll som kräver legitimation hämtar systemet uppgifterna själv och säger i rapporten om legitimationen saknas eller är återkallad."
         }
       ]
     },

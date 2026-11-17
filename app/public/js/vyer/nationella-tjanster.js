@@ -40,7 +40,7 @@ function engagemangsindex(e) {
 // HOSP: personalens legitimation och förskrivningsrätt ur Socialstyrelsens register. Systemet hämtar själv; här ser
 // systemförvaltaren vem som saknar giltig legitimation, vilka uppgifter som är gamla för att tjänsten inte svarar, och
 // kan hämta om dem. Bara systemförvaltaren och personen själv ser uppgifterna.
-const HOSP_STATUS = { ok: 'Giltig', saknas: 'Saknas', aterkallad: 'Återkallad', okand: 'Inte hämtad', ej_i_hosp: 'Finns inte i HOSP' };
+const HOSP_STATUS = { ok: 'Giltig', saknas: 'Saknas', aterkallad: 'Återkallad', okand: 'Kunde inte hämtas', ej_i_hosp: 'Finns inte i HOSP' };
 function hospSektion(h) {
   const problem = h.avvikelser > 0 || h.personal.some(p => p.status === 'okand' || (p.gammal && p.fel));
   return `<section class="lm-sektion" aria-labelledby="nt-hosp-r" id="nt-hosp">
