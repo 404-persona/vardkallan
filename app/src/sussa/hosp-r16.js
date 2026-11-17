@@ -29,27 +29,28 @@ const TILLAGG = {
   '5.2.1.8': {
     tester: [T.aterkallad, T.roll, T.synlighet, T.narkotika, T.forbrukning],
     losning: 'Legitimationen och förskrivningsrätten för personalen hämtas ur Socialstyrelsens register (HOSP) i stället för att administreras: en saknad eller återkallad legitimation tar bort rollens handlingar och stoppar inloggningen, och förskrivningsrätten och behörighetsbegränsningarna styr förskrivningen.',
-    expert: 'Ingen behöver lägga in eller ta bort förskrivningsrätt för hand: systemet läser den ur registret, förklarar varför något inte går och visar systemförvaltaren vem som saknar giltig legitimation.',
+    ersatt: 'Vårdrelationen räknas ut ur inskrivning, listning och remiss, och legitimationen och förskrivningsrätten hämtas ur Socialstyrelsens register, så ingen administratör behöver lägga upp eller ta bort åtkomst för hand. Systemet förklarar varför något inte går och visar systemförvaltaren vem som saknar giltig legitimation.',
     anmarkning: `${INTE_ANSLUTET} Behörighetsbegränsningar som systemet inte kan tolka (allt utom narkotika) stoppar förskrivningen helt och hänvisar till systemförvaltningen.`,
   },
   '3.5.4.2': {
     tester: [T.forbrukning],
     losning: 'Förskrivningsrätten för förbrukningsartiklar kommer ur Socialstyrelsens register (HOSP) och inte ur yrket: en sjuksköterska utan förskrivningsrätt i registret förskriver inte.',
-    expert: 'Saknas förskrivningsrätten säger systemet det och hänvisar till en kollega med förskrivningsrätt.',
+    ersatt: 'Systemet prövar förskrivningsrätten i Socialstyrelsens register, fyller i mängd, uttag, anvisning, giltighet och uppföljning och stoppar en dubbelförskrivning med förslag om förnyelse. Det kräver en orsak när en artikel sätts ut eller in igen och säger varför förskrivningen inte går när förskrivningsrätten saknas.',
     anmarkning: 'Förskrivningsrätten hämtas ur den simulerade HOSP-tjänsten.',
   },
   '3.5.4.4': {
     tester: [T.forbrukning],
     losning: 'Bara den som har förskrivningsrätt enligt Socialstyrelsens register (HOSP) får förslagen och kan förskriva.',
-    expert: 'Systemet prövar förskrivningsrätten själv innan något erbjuds.',
+    expert: 'Förskrivningsrätten prövar systemet själv i Socialstyrelsens register innan något erbjuds.',
     anmarkning: 'Förskrivningsrätten hämtas ur den simulerade HOSP-tjänsten.',
   },
 };
 
+// expert är en till två meningar (test/sussa.test.js): ersatt ersätter texten, annars läggs expert till.
 const fog = (a, b) => [a, b].filter(Boolean).join(' ');
 export const medHosp = (poster) => poster.map(x => {
   const t = TILLAGG[x.id];
   if (!t) return x;
   const tidigare = x.tester ?? [];
-  return { ...x, tester: [...tidigare, ...t.tester.filter(n => !tidigare.includes(n))], losning: fog(x.losning, t.losning), expert: fog(x.expert, t.expert), anmarkning: fog(x.anmarkning, t.anmarkning) };
+  return { ...x, tester: [...tidigare, ...t.tester.filter(n => !tidigare.includes(n))], losning: fog(x.losning, t.losning), expert: t.ersatt ?? fog(x.expert, t.expert), anmarkning: fog(x.anmarkning, t.anmarkning) };
 });
