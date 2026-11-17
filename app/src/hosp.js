@@ -14,10 +14,10 @@
 //   - Förskrivningsrätten och behörighetsbegränsningarna styr vad förskrivningen erbjuder (forskrivning), i stället för
 //     fasta regler per yrke, och förklarar varför något inte går. Alla förskrivningsflöden anropar samma funktion.
 //
-// Regeln för hämtningen (REGEL): uppgifterna hämtas när någon får en roll som kräver legitimation, vid inloggning och före
-// en förskrivning när de är äldre än ett dygn, och när systemförvaltaren hämtar om dem. Svarar tjänsten inte gäller de
-// senast hämtade uppgifterna, och systemet försöker igen tidigast efter fem minuter. Har uppgifterna aldrig kunnat
-// hämtas stoppas förskrivningen (en kontroll som inte kan avgöras släpper aldrig igenom), men inloggningen prövas som
+// Regeln för hämtningen (REGEL): uppgifterna hämtas när någon får en roll som kräver legitimation, vid inloggning, före
+// en förskrivning och när systemförvaltaren öppnar listan, om de är äldre än ett dygn, och när systemförvaltaren hämtar
+// om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna, och systemet försöker igen tidigast efter fem
+// minuter. Har uppgifterna aldrig kunnat hämtas stoppas förskrivningen (en kontroll som inte kan avgöras släpper aldrig igenom), men inloggningen prövas som
 // förut mot legitimationen i HSA-katalogen, så att ett avbrott i en nationell tjänst inte stänger ute all personal.
 //
 // Bara det som behövs sparas (hosp_uppgifter): legitimationerna med förskrivningsrätt, specialistbevis och begränsningar,
@@ -36,7 +36,7 @@ export const HOSP = kontrakt('riv.masterdata.organisationalresources.licensetopr
 const PNR_OID = '1.2.752.129.2.1.3.1';
 export const DYGN_MS = 24 * 3600_000;
 const NYTT_FORSOK_MS = 5 * 60_000;
-export const REGEL = 'Uppgifterna ur Socialstyrelsens register (HOSP) hämtas när någon får en roll som kräver legitimation, vid inloggning och före en förskrivning när de är äldre än ett dygn, och när systemförvaltaren hämtar om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna.';
+export const REGEL = 'Uppgifterna ur Socialstyrelsens register (HOSP) hämtas när någon får en roll som kräver legitimation, vid inloggning, före en förskrivning och när systemförvaltaren öppnar listan, om de är äldre än ett dygn, och när systemförvaltaren hämtar om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna.';
 export const SIMULERAT = 'HOSP-tjänsten är simulerad i demon och svarar med påhittade uppgifter. Inget lämnar demon.';
 const REGISTRET = 'Socialstyrelsens register (HOSP)';
 
@@ -344,7 +344,8 @@ export function lista(db, personal, nu = new Date(), { logga = true } = {}) {
   const rader = db.query("SELECT p.*, e.namn AS enhet_namn FROM personal p LEFT JOIN enheter e ON e.id = p.enhet_id WHERE p.aktiv = 1 AND p.yrke <> 'systemkonto' ORDER BY p.namn").all()
     .filter(p => kravFor(p.yrke))
     .map(p => {
-      const b = bedom(db, p, nu);
+      // Systemet hämtar själv det som saknas eller är äldre än ett dygn, så att listan visar läget nu.
+      const b = aktuell(db, p, nu);
       return { id: p.id, namn: p.namn, yrke: YRKEN[p.yrke] ?? p.yrke, enhet: p.enhet_namn ?? null, status: b.status, text: b.text, hamtad: b.hamtad ?? null, fel: b.fel ?? null,
         gammal: Boolean(b.gammal), legitimationer: (b.legitimationer ?? []).map(legUt) };
     });
@@ -355,7 +356,7 @@ export function lista(db, personal, nu = new Date(), { logga = true } = {}) {
   const delar = [];
   if (avvikelser) delar.push(`${avvikelser} ${avvikelser === 1 ? 'person saknar' : 'personer saknar'} giltig legitimation för sin roll och kan inte arbeta i den.`);
   if (gamla) delar.push(`Tjänsten svarar inte, så de senast hämtade uppgifterna gäller för ${gamla} ${gamla === 1 ? 'person' : 'personer'}.`);
-  if (ejHamtade) delar.push(`För ${ejHamtade} ${ejHamtade === 1 ? 'person' : 'personer'} är uppgifterna inte hämtade${rader.some(r => r.status === 'okand' && r.fel) ? ', och tjänsten svarar inte eller personnumret saknas' : ''}. De hämtas vid nästa inloggning.`);
+  if (ejHamtade) delar.push(`För ${ejHamtade} ${ejHamtade === 1 ? 'person' : 'personer'} har uppgifterna inte kunnat hämtas, eftersom tjänsten inte svarar eller personnumret saknas i HSA-katalogen. Systemet försöker igen av sig självt.`);
   return { regel: REGEL, simulerat: SIMULERAT, personal: rader, avvikelser, text: delar.length ? delar.join(' ') : 'Alla som har en roll som kräver legitimation har giltig legitimation enligt registret.' };
 }
 

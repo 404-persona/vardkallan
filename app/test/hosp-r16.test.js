@@ -276,7 +276,9 @@ describe('HOSP, legitimation och förskrivningsrätt', () => {
       await k.logga('sysf');
       const l = await k.get('/api/hosp');
       expect(l.status).toBe(200);
-      expect(l.data.personal.find(x => x.id === 'lak-kk')).toMatchObject({ namn: 'Johanna Rehn', status: 'okand' });
+      // Listan hämtar själv det som saknas, så att systemförvaltaren ser läget nu.
+      expect(l.data.personal.find(x => x.id === 'lak-kk')).toMatchObject({ namn: 'Johanna Rehn', status: 'aterkallad' });
+      expect(l.data.text).toContain('1 person saknar giltig legitimation');
       const om = await k.post('/api/hosp/hamta', { personalId: 'lak-kk' });
       expect(om.data.personal.find(x => x.id === 'lak-kk')).toMatchObject({ status: 'aterkallad' });
       expect((await k.post('/api/hosp/hamta', { personalId: 'finns-inte' })).status).toBe(404);
