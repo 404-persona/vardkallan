@@ -441,7 +441,10 @@ function ordinationsForm(plats, ctx, tidigare = null, { muntlig = false } = {}) 
     timer = setTimeout(async () => {
       try {
         const lista = await api(`/api/lakemedel/katalog?q=${encodeURIComponent(v)}`);
-        traffar.innerHTML = lista.length ? lista.slice(0, 8).map(l => `<li><button type="button" data-lm="${esc(l.id)}" data-namn="${esc(`${l.namn} ${l.styrka} ${l.form}`)}"><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)} <span class="dampad">${esc(l.substans)}, ATC ${esc(l.atc)}</span></button></li>`).join('') : '<li class="tom liten">Inget läkemedel i katalogen matchar.</li>';
+        // HOSP: ett läkemedel som den inloggade inte får förskriva enligt Socialstyrelsens register går inte att välja, och
+        // servern säger varför (ejForskrivning).
+        traffar.innerHTML = lista.length ? lista.slice(0, 8).map(l => (l.ejForskrivning ? `<li class="lm-ej-valbar" data-ej-forskrivning><span><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)}</span><span class="under-text">${esc(l.ejForskrivning)}</span></li>`
+          : `<li><button type="button" data-lm="${esc(l.id)}" data-namn="${esc(`${l.namn} ${l.styrka} ${l.form}`)}"><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)} <span class="dampad">${esc(l.substans)}, ATC ${esc(l.atc)}</span></button></li>`)).join('') : '<li class="tom liten">Inget läkemedel i katalogen matchar.</li>';
       } catch (e) { felNotis(e); }
     }, 180);
   });

@@ -171,6 +171,9 @@ import { registreraRutter as r16r2Rutter } from './sjukfall-rutter.js';
 import { registreraRutter as r15r5Rutter } from './r15r5-rutter.js';
 import { mallarForPerson as yrkesMallar } from './mallar-yrken.js';
 // Runda 15, r2: köerna till samtyckestjänsten och engagemangsindex, som systemet skickar själv.
+// HOSP: legitimationen och förskrivningsrätten ur Socialstyrelsens register (hosp.js och hosp-rutter.js).
+import * as hosp from './hosp.js';
+import { registreraRutter as hospRutter } from './hosp-rutter.js';
 import { registreraRutter as r15r2Rutter, efterTid as r15r2EfterTid, inkorg as r15r2Inkorg, schemalagg as r15r2Schemalagg, efterHandling as r15r2EfterHandling } from './r15r2-rutter.js';
 // Runda 14, r5: incidentregistret, servicenivårapporten och incidentrapporten till beställaren (servicenivaer-rutter.js).
 import { registreraRutter as r14r5Rutter } from './servicenivaer-rutter.js';
@@ -1420,6 +1423,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   }
   // Runda 14, r1: samma fortsättning för en inloggning genom beställarens inloggningstjänst (inloggningstjanster.js).
   function loggaInMedUppdrag(c, p, uppdrag, { demo = false } = {}) {
+    // HOSP: uppgifterna ur Socialstyrelsens register hämtas enligt regeln, och den som saknar giltig legitimation för
+    // rollen loggas inte in (hosp.js vidInloggning). Gäller alla inloggningar, med biljett och genom en extern tjänst.
+    // Ett nekande loggas i säkerhetsloggen som andra misslyckade inloggningar.
+    hosp.vidInloggning(c.db, p);
     // Runda 15, r1 (beslut från Jonas): en inloggning med tillitsnivå 3 eller högre, ur en signerad biljett från en tjänst
     // med pinnad nyckel eller det simulerade SITHS-kortet, är redan flerfaktor. Den ger åtkomst direkt, också när
     // personen har en faktor och när vårdgivaren kräver flerfaktor, och räknas som en färsk bekräftelse.
@@ -1870,7 +1877,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('GET', '/api/mallar', (c) => yrkesMallar(c.db, c.personal, [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)]));
 
   rutt('GET', '/api/patient/:id/lakemedel', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_lakemedel', (atk) => lakemedel.lista(atk)); });
-  rutt('GET', '/api/lakemedel/katalog', (c) => { kravInloggad(c); return lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? ''); });
+  // HOSP: läkemedel som den inloggade inte får förskriva enligt Socialstyrelsens register får ejForskrivning med förklaringen.
+  rutt('GET', '/api/lakemedel/katalog', (c) => { const p = kravInloggad(c); return hosp.markeraKatalog(c.db, p, lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? '')); });
   rutt('POST', '/api/patient/:id/lakemedel/kontroll', (c, id) => { kravInloggad(c); return medPatient(c, id, 'ordinera', (atk) => lakemedel.kontroll(atk, c.body)); });
   rutt('POST', '/api/patient/:id/lakemedel', (c, id) => {
     kravInloggad(c);
@@ -2628,6 +2636,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   r16r3Rutter({ rutt, kravInloggad, medPatient });
   // Runda 15, r2.
   r15r2Rutter({ rutt, kravInloggad, medPatient, valFor });
+  // HOSP: systemförvaltarens lista och personens egna uppgifter.
+  hospRutter({ rutt, kravInloggad });
   // Runda 13, r1 (r13r1-rutter.js).
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.

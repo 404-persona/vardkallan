@@ -35,8 +35,11 @@ Koden ligger i `app/src/rivta/` och används av alla kontrakt.
 | GetEmployeeIncludingProtectedPerson | 4.0 | riv.infrastructure.directory.employee | konsument | i processen och genom den lokala tjänsteplattformen |
 | LookupResidentForFullProfile | 1.2 | riv.population.residentmaster | konsument | i processen och genom den lokala tjänsteplattformen |
 | Update | 1.0 | riv.itintegration.engagementindex | konsument | i processen |
+| GetHospPersonForPublicHealthCare | 1.1 | riv.masterdata.organisationalresources.licensetopractice | konsument | i processen och genom den lokala tjänsteplattformen |
 
 Status för alla: byggt och validerat mot tjänstekontraktet, testat lokalt, inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). Där Vårdkällan är konsument är den andra parten simulerad (`app/src/rivta/nationella.js` och `register.js`), med påhittade HSA-id och demons påhittade uppgifter. De simulerade tjänsterna har en egen kopia av spärrar, samtycken, personalkatalogen och folkbokföringen i sandlådan, tagen första gången de används, så att skillnader mellan Vårdkällan och tjänsten syns.
+
+Två domäner som saknades på bitbucket.org/rivta-domains finns där under andra namn, enligt ett svar från Inera 2026-11-17: HOSP-kontrakten i riv.masterdata.organisationalresources.licensetopractice (namnrymden urn:riv:infrastructure:directory:licensetopractice) och ProcessActivityOrder i riv-telia.clinicalprocess.activity.order. Båda är pinnade under `app/rivta/` med KALLA.json. Grunden läser domäner med en leverantörs namn efter riv- som de andra.
 
 K10 anger PU-tjänsten som LookupResidentsForProfile i masterdata:citizen:citizen. Den domänen finns på bitbucket.org/rivta-domains (riv.masterdata.citizen.citizen, taggarna 2.0 och 2.1_RC1, Apache 2.0 från Inera AB), men hittades inte när kontrakten hämtades i runda 14, så PU-tjänstens LookupResidentForFullProfile i riv.population.residentmaster är byggd i stället. Att bygga LookupResidentsForProfile 2.0 som K10 anger är kvar att göra.
 
@@ -95,7 +98,7 @@ Intygens statusuppdateringar och e-remissens meddelanden adresseras till den vå
 | CertificateStatusUpdateForCare | 3.2 | producent, adresserad till vårdenheten | `lakarintyg.js` | `test/lakarintyg-r14.test.js` |
 | ListCertificatesForCareWithQA | 3.3 | konsument (avstämning) | `lakarintyg.js` | `test/lakarintyg-r14.test.js` |
 
-Fliken Intyg i journalen skapar utkastet med patienten, läkaren, vårdenheten och diagnosen (förifyllnad i fråga 6) och öppnar det i den simulerade intygsapplikationen (`intygsapplikation-simulerad.js`), som Webcert i integrerat läge. Intygsapplikationen meddelar varje händelse med CertificateStatusUpdateForCare, och journalen stämmer själv av med ListCertificatesForCareWithQA, så att en händelse som aldrig kom fram ändå syns. Webcert och Intygstjänsten gick inte att köra lokalt, eftersom de byggs med beroenden från Ineras artefaktförråd. Intygsapplikationen är därför simulerad, med samma kontrakt, kuvert och validering som en riktig och med Webcerts regler för skyddade personuppgifter och avlidna. Frågor och svar från mottagaren hanteras inte.
+Fliken Intyg i journalen skapar utkastet med patienten, läkaren, vårdenheten och diagnosen (förifyllnad i fråga 6) och öppnar det i den simulerade intygsapplikationen (`intygsapplikation-simulerad.js`), som Webcert i integrerat läge. Intygsapplikationen meddelar varje händelse med CertificateStatusUpdateForCare, och journalen stämmer själv av med ListCertificatesForCareWithQA, så att en händelse som aldrig kom fram ändå syns. Webcert och Intygstjänsten gick inte att köra lokalt, eftersom de byggs med beroenden från Ineras artefaktförråd. Ineras artefaktförråd (Nexus) nås bara genom driftleverantörens VPN, och Webcert ingår inte i Ineras Öppna testmiljö (svar från Inera 2026-11-17), så det finns ingen väg att köra eller anropa en riktig Webcert från demon. Intygsapplikationen är därför simulerad, med samma kontrakt, kuvert och validering som en riktig och med Webcerts regler för skyddade personuppgifter och avlidna. Frågor och svar från mottagaren hanteras inte.
 
 ### E-remiss (riv.clinicalprocess.activity.request 2.3)
 
@@ -184,3 +187,24 @@ Engagemangsindex uppdateras av sig självt (`app/src/engagemangsindex.js`) efter
 Sidan Nationella tjänster (`#/nationella-tjanster`) visar köerna till samtyckestjänsten och engagemangsindex: hur mycket som väntar, det som inte har kommit fram med tider och fel, och de senaste omgångarna, utan patientuppgifter. Systemförvaltaren kan skicka det som väntar direkt, stämma av hela engagemangsindex och i demon simulera att de nationella tjänsterna inte svarar. Det som inte har kommit fram efter tre försök eller 15 minuter står också i API:ts inkorg för systemförvaltaren.
 
 Status: byggt och validerat mot tjänstekontrakten och testat lokalt mot simulerade tjänster, inte anslutet till den nationella tjänsteplattformen.
+
+## Legitimation och förskrivningsrätt ur HOSP (runda 16)
+
+| Kontrakt | Version | Vårdkällans roll | Byggt i | Testat i |
+| --- | --- | --- | --- | --- |
+| GetHospPersonForPublicHealthCare | 1.1 | konsument | `hosp.js` | `test/hosp-r16.test.js` |
+
+Socialstyrelsens register över legitimerad hälso- och sjukvårdspersonal (HOSP) är master för legitimationen, förskrivningsrätten, specialistkompetensen och behörighetsbegränsningarna. Vårdkällan frågar registret med personens personnummer, som i verkligheten kommer från HSA-katalogen. Logiska adressen är i verkligheten Socialstyrelsens organisationsnummer; den simulerade tjänsten har demons påhittade adress för nationella tjänster. Ur svaret sparas bara legitimationerna, inte personnumret, namnet eller folkbokföringen, och uppgifterna visas bara för systemförvaltaren och för personen själv.
+
+- När personalkatalogen ger någon en roll som kräver legitimation hämtar systemet uppgifterna, och rapporten från inläsningen säger på vanlig svenska om legitimationen saknas eller är återkallad.
+- Saknas legitimationen, eller är den återkallad, tar behörighetsmotorn bort rollens handlingar utom övningarna, och inloggningen stoppas med en förklaring.
+- Förskrivningsrätten styr ordinationen och förskrivningen av läkemedel (också dosändringar och läkarens muntliga ordinationer), förbrukningsartiklar och barnmorskans preventivmedel, i stället för fasta regler per yrke. En begränsning som gäller narkotiska läkemedel gör att de inte går att välja i katalogen, med förklaringen. En begränsning som systemet inte kan tolka stoppar förskrivningen.
+- Regeln för hämtningen: när någon får en roll som kräver legitimation, vid inloggning och före en förskrivning när uppgifterna är äldre än ett dygn, och när systemförvaltaren hämtar om dem (sidan Nationella tjänster). Svarar tjänsten inte gäller de senast hämtade uppgifterna, och det syns för systemförvaltaren. Har uppgifterna aldrig kunnat hämtas stoppas förskrivningen, men inloggningen prövas som förut mot legitimationen i HSA-katalogen.
+- Kodverket för legitimerat yrke i version 1.1 har inte hälso- och sjukvårdskurator (legitimationsyrke sedan 2019), så kuratorns legitimation prövas bara mot HSA-katalogen.
+
+Den simulerade HOSP-tjänsten (`hosp.js` och `seed/hosp.js`) har en post för varje person i demons personalkatalog vars yrke har en legitimation, och tre avvikelser: en läkare vars förskrivningsrätt inte omfattar narkotiska läkemedel, en sjuksköterska utan förskrivningsrätt och en läkare vars legitimation är återkallad. Alla uppgifter är påhittade, och personnumren är Skatteverkets testpersonnummer. GetHospPersonForIvo 1.0 är pinnat men inte byggt, eftersom det är kontraktet för Inspektionen för vård och omsorg.
+
+## ProcessActivityOrder (pinnat, inte byggt)
+
+ProcessActivityOrder 1.0 i riv-telia.clinicalprocess.activity.order (taggen clinicalprocess_activity_order_1.0) är kontraktet för att beställa en aktivitet, till exempel egenmätning av blodtryck eller vikt, av en plattform där patienten gör mätningen. Kontraktet är pinnat, och grunden läser det och validerar mot dess schema, men ingen konsument är byggd. Vårdkällans egen patientportal (Min journal) tar redan emot hemmätningar, som vårdenheten ber om och följer upp i journalen, så en extern plattform för egenmätning tillför inget i demon.
+

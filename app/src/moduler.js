@@ -326,6 +326,14 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   v.rutter.push('#/flyttar');
   v.vyer.push('flyttar.js');
 }
+// HOSP: legitimationen och förskrivningsrätten ur Socialstyrelsens register hör till de nationella tjänsterna, med
+// systemförvaltarens lista i vyn Nationella tjänster (hosp.js).
+{
+  const n = MODULER.find(x => x.id === 'nationella');
+  n.beskrivning += ' Legitimationen, förskrivningsrätten och behörighetsbegränsningarna hämtas ur Socialstyrelsens register (HOSP) med GetHospPersonForPublicHealthCare: en återkallad eller saknad legitimation tar bort rollens handlingar, och förskrivningsrätten styr vad förskrivningen erbjuder.';
+  n.kod.push('src/hosp.js', 'src/hosp-rutter.js', 'src/seed/hosp.js');
+  n.api.push('/api/hosp', '/api/hosp/hamta', '/api/hosp/mig');
+}
 // Runda 12, r1: journalens mallar, sökord och mätvärdestyper hör till systemförvaltningen (journalstruktur.js).
 {
   const s = MODULER.find(x => x.id === 'systemforvaltning');

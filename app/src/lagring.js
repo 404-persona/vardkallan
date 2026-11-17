@@ -75,7 +75,10 @@ const SYSTEM = new Set(['omorganisationer', 'omorganisation_flyttar', 'lagringsm
   // Runda 14, r1: de betrodda inloggningstjänsterna hör till förvaltningen av inloggningen (inloggningstjanster.js).
   'inloggningstjanst_andringar',
   // Runda 15, r2: omgångarna till engagemangsindex och deras läge, utan patientuppgifter (engagemangsindex.js).
-  'ei_omgangar', 'ei_status']);
+  'ei_omgangar', 'ei_status',
+  // HOSP: den simulerade HOSP-tjänstens kopia av registret, utan patientuppgifter (hosp.js). De hämtade uppgifterna
+  // (hosp_uppgifter) följer personen genom personal_id.
+  'rivta_sim_hosp']);
 // Tabeller vars koppling inte går att se på kolumnnamnen.
 const UTTRYCKLIGA = {
   dubblettforslag: { typ: 'patient', kolumner: ['fran_patient_id', 'till_patient_id'] },

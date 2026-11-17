@@ -8,6 +8,8 @@ export const knapp = () => '<button type="button" class="knapp" data-preventivme
 export async function forskriv(ctx, b) {
   let f;
   try { f = await api(`/api/patient/${encodeURIComponent(ctx.id)}/preventivmedel`); } catch (e) { felNotis(e); return; }
+  // HOSP: utan förskrivningsrätt som barnmorska i Socialstyrelsens register säger servern varför.
+  if (f.kan === false) { notis(f.varfor, 'info'); return; }
   if (!f.lakemedel.length) { notis('Katalogen har inget preventivmedel som barnmorskan får förskriva.', 'info'); return; }
   const svar = await dialog(`<form><h2 id="dlg-rubrik">Förskriv preventivmedel</h2>
     <p>${esc(f.varfor)}</p>

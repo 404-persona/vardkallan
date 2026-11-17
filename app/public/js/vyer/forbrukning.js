@@ -40,6 +40,7 @@ export async function visa(plats, pid, forhand = null) {
     ${tabell(d.utgangna, 'Utgångna', 'fb-utgangna')}
     ${tabell(d.utsatta, 'Utsatta', 'fb-utsatta')}
     ${kan ? '<div class="knapprad"><button type="button" class="knapp liten sekundar" data-fb-ny>Ny förskrivning</button><button type="button" class="knapp liten text" data-fb-extern>Registrera förskrivning från annan förskrivare</button></div>' : ''}
+    ${/* HOSP: varför den inloggade inte kan förskriva, till exempel att förskrivningsrätten saknas i registret. */ !kan && d.kan?.varfor ? `<p class="dampad liten" data-fb-varfor>${esc(d.kan.varfor)}</p>` : ''}
     ${d.dolda?.sparrade ? '<p class="dampad liten">Det finns spärrade uppgifter. Förskrivningar från spärrade vårdenheter visas inte.</p>' : ''}
     <p class="dampad liten">${esc(d.demoregler)}</p></section>`;
   koppla(plats, pid, d);

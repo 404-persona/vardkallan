@@ -485,6 +485,19 @@ Webcert (https://github.com/sklintyg/webcert, GPL-3.0) är läst vid commit 9410
 
 Domänen för e-recept (riv.se.apotekensservice.or) är inte hämtad: dess filer saknar licensuppgift, och den har bara kontrakt för att hämta ordinationer, inte för att skicka eller makulera e-recept.
 
+## HOSP och ProcessActivityOrder i RIVTA (2026-11-17)
+
+Två domäner som inte hittades i runda 14 finns på https://bitbucket.org/rivta-domains under andra namn, enligt ett svar från Inera 2026-11-17. De är pinnade med samma skript (`app/scripts/rivta-scheman.js`) och KALLA.json, vid den senaste fastställda versionen med den major som tjänsteplattformen har.
+
+| Domän | Tagg | Commit |
+| --- | --- | --- |
+| riv.masterdata.organisationalresources.licensetopractice | Infrastructure.directory.licensetopractice_1.1 | 17c1407d8e78 |
+| riv-telia.clinicalprocess.activity.order | clinicalprocess_activity_order_1.0 | d20bc9f205ea |
+
+Licens: Apache License 2.0 enligt huvudet i varje schemafil, där Socialstyrelsen (licensetopractice) och Inera (activity.order) licensierar filerna. Filerna är oförändrade och läses som data av valideringen. De omfattas inte av Vårdkällans licens EUPL 1.2. Kodverket för legitimerat yrke i licensetopractice 1.1 har 22 koder och saknar hälso- och sjukvårdskurator.
+
+Klassningen av narkotiska läkemedel efter ATC i `app/src/hosp.js` är en förenkling i demon. Läkemedelsverkets förteckningar över narkotika gäller substanser, inte ATC-grupper.
+
 ## Runda 14, r1: Ineras attributspecifikation för IdP och Keycloak (2026-11-12)
 
 Attributnamnen för inloggningen genom beställarens inloggningstjänst (`app/src/inloggningstjanster.js`) är kontrollerade mot Ineras sidor 3.3 SAD - IdP - Attributlista Medarbetare - Bas (sida 6044651764, sidversion 1, 2026-09-21) och 3.3 SAD - IdP - Medarbetare Bas OIDC-Profil (sida 6044651944, sidversion 1, 2026-09-21), lästa genom Confluence-API:t på inera.atlassian.net 2026-11-12. OIDC-namnen är `employeeHsaId`, `commissionHsaId`, `commissionPurpose`, `healthCareUnitHsaId`, `healthCareProviderHsaId`, `healthcareProfessionalLicense` (flervärt), `given_name` och `family_name`, och tillitsnivån är `acr` med värdena `http://id.sambi.se/loa/loa2` till `loa4`. OIDC-profilen anger att `aud` innehåller både klientens id och IdP:ns id, att klienten autentiserar sig med `client_secret_basic`, `client_secret_jwt`, `client_secret_post` eller `private_key_jwt` (rekommenderas), och att id-biljetten gäller i fem minuter. Inga filer från Inera ingår i repot.

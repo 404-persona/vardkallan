@@ -170,6 +170,8 @@ for (const w of ['DRG', 'NordDRG']) TILLATNA.add(w);
 // Runda 7, r5: rapporteringen till myndigheter och register och tjänstekontrakten i K10, med kontraktens namn.
 for (const w of ['PAR', 'MFR', 'VIV', 'SKR', 'MVO', 'BB', 'SOSNYK', 'FV', 'RAS', 'MRA', 'SGLT2', 'PADL', 'PU', 'TGP', 'RIV', 'TA', 'RIV-TA', 'LT', 'YK', 'TV', 'KR', 'NKRR']) TILLATNA.add(w);
 for (const k of KONTRAKT) TILLATNA.add(k.kontrakt);
+// HOSP: Socialstyrelsens register över legitimerad hälso- och sjukvårdspersonal, och kontraktets namn.
+for (const w of ['HOSP', 'HOSP-tjänsten', 'HOSP-kontraktet', 'GetHospPersonForPublicHealthCare']) TILLATNA.add(w);
 // Runda 7, r6: barnhälsovården, vaccinerna och registret (BHVQ), och FHIR-resursen för vaccinationer.
 for (const w of ['BVC', 'BHV', 'BHVQ', 'BHVQ-SIM', 'BCG', 'EPDS', 'MPR', 'HPV', 'SD', 'Immunization', 'Snomed', 'K11', 'NKRR', 'IGO', 'CC', 'BY-NC-SA']) TILLATNA.add(w);
 // Runda 7, r2: tillgänglighetsredogörelsen hänvisar till standarderna EN 301 549, WCAG 2.1 nivå AA och ISO 9241.

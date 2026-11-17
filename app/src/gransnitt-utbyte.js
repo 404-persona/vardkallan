@@ -95,7 +95,9 @@ export const GRANSSNITT = [
     riktning: 'Vårdkällan som producent och konsument mot tjänsteplattformen',
     // Runda 14, sammanslagningen: r2:s rutter för PU-tjänsten och spärrtjänsten hör till samma gränssnitt.
     prefix: ['/rivta', '/api/rivta', '/api/patient/:id/folkbokforing', '/api/patient/:id/sparr/sparrtjansten'], katalog: 'src/rivta', hanvisning: 'docs/rivta.md',
-    text: 'Den gemensamma grunden för RIVTA och kontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA och PU-tjänsten beskrivs i docs/rivta.md, med scheman, versioner och hur kontrakten valideras och prövas mot tjänsteplattformen.',
+    // HOSP: legitimationen ur Socialstyrelsens register (hosp.js), som konsument av GetHospPersonForPublicHealthCare.
+    kod: ['src/hosp.js', 'src/hosp-rutter.js'],
+    text: 'Den gemensamma grunden för RIVTA och kontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA, HOSP och PU-tjänsten beskrivs i docs/rivta.md, med scheman, versioner och hur kontrakten valideras och prövas mot tjänsteplattformen.',
     behorighet: 'Se docs/rivta.md och docs/sakerhetsarkitektur.md.',
   }),
   g('intyg', 'Intyg, e-remiss och processkontrakt', {

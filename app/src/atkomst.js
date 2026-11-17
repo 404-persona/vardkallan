@@ -274,8 +274,8 @@ ROLLER.sjukskoterska.push('las_operation', 'operation_planera', 'operation_regis
 ROLLER.underskoterska.push('las_operation');
 
 // Runda 9, r1: förbrukningsartiklar (forbrukning.js, Sussa 3.5.4). Läkaren och sjuksköterskan förskriver artiklar för
-// egenkontroll, tillförsel av läkemedel och stomi. I demon har alla sjuksköterskor förskrivningsrätt för förbrukningsartiklar, vilket är en
-// demoregel: i verkligheten krävs förskrivningsrätt, till exempel som diabetes- eller stomisjuksköterska.
+// egenkontroll, tillförsel av läkemedel och stomi. HOSP: rollen ger bara möjligheten. Förskrivningsrätten kommer ur
+// Socialstyrelsens register (hosp.js forskrivning), så en sjuksköterska utan förskrivningsrätt där förskriver inte.
 Object.assign(HANDLINGAR, { forskriva_forbrukning: 'förskriva förbrukningsartiklar' });
 ROLLER.lakare.push('forskriva_forbrukning');
 ROLLER.sjukskoterska.push('forskriva_forbrukning');
@@ -433,6 +433,26 @@ export function aktivaSparrar(db, patientId) {
 
 const svar = (tillaten, grund, krav = null, skal = '', sparrade = false) => ({ tillaten, grund, krav, spärrade: sparrade, skal });
 
+// HOSP (hosp.js): legitimationen ur Socialstyrelsens register. Saknar personen giltig legitimation för rollen enligt de
+// hämtade uppgifterna (för samma yrke) tas alla rollens handlingar bort utom övningarna, från den dag då legitimationen
+// återkallades. Uppgifterna slås upp i databasen vid varje prövning. Om tabellen finns i databasen sparas per databas,
+// och hosp.js markerar den när den skapas.
+const hospTabell = new WeakMap();
+export const markeraHospTabell = (db) => { hospTabell.set(db, true); };
+function utanLegitimation(db, personal, nu) {
+  const yrke = personal.yrke ?? '';
+  if (!Object.hasOwn(LEGITIMATION_FOR_ROLL, yrke) && !Object.hasOwn(LEGITIMATION_ALLA, yrke)) return null;
+  let finns = hospTabell.get(db);
+  if (finns === undefined) {
+    finns = Boolean(db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'hosp_uppgifter'").get());
+    hospTabell.set(db, finns);
+  }
+  if (!finns) return null;
+  const r = db.query('SELECT yrke, sparr_fran, sparr_text FROM hosp_uppgifter WHERE personal_id = ?').get(personal.id);
+  if (!r?.sparr_fran || r.yrke !== personal.yrke) return null;
+  return r.sparr_fran <= nu.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' }).replaceAll('-', '') ? r.sparr_text : null;
+}
+
 // prova(db, { personal, patient, handling, resurs, val })
 //   personal: rad ur personal (id, yrke, enhet_id)
 //   patient:  patient-id eller rad ur patienter
@@ -449,6 +469,8 @@ export function prova(db, { personal, patient, handling, resurs = null, val = {}
   }
   // Runda 16, r3: en student har åtkomst bara under en pågående handledning på vårdenheten. Övningarna gör studenten ändå.
   if (Object.hasOwn(STUDENTER, personal.yrke ?? '') && handling !== 'utbildning' && !aktivHandledning(db, personal, nu)) return svar(false, 'nekad', null, UTAN_HANDLEDNING);
+  // HOSP: utan giltig legitimation för rollen finns inga handlingar utom övningarna.
+  if (handling !== 'utbildning') { const t = utanLegitimation(db, personal, nu); if (t) return svar(false, 'nekad', null, t); }
   // Runda 10, r1: ett systemkonto prövas mot sina vårdenheter och informationsmängder, aldrig med vårdrelation.
   if (personal.yrke === 'systemkonto') return provaSystemkonto(db, personal, patient, handling, resurs);
   if (handling === 'las_logg') return svar(true, 'logggranskning');

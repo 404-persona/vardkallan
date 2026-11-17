@@ -109,6 +109,8 @@ export function andra(atk, o, inp = {}) {
   if (!ny || ny.atc !== lm.atc || formgrupp(ny.form) !== formgrupp(lm.form)) {
     throw new Fel(400, `En dosändring behåller substansen och formen (${lm.substans}, ${lm.form}). Byt till ett annat läkemedel genom att sätta ut och ordinera det nya.`, 'ogiltig', { falt: ['lakemedelId'] });
   }
+  // HOSP: en dosändring är en ny ordination av läkemedlet och kräver förskrivningsrätt för det (hosp.js).
+  require('./hosp.js').kravForskrivning(db, atk.personal, { typ: 'lakemedel', lm: ny });
   const fran = inp.fran ?? idag();
   if (!giltigtDatum(fran) || fran < idag() || fran > addDagar(idag(), FRAN_SENAST_DAGAR) || (o.slut && fran > o.slut)) {
     throw new Fel(400, `Ange från vilket datum den nya doseringen gäller: i dag eller senare${o.slut ? `, och senast när ordinationen slutar (${o.slut})` : ', och inom ett år'}.`, 'ogiltig', { falt: ['fran'] });

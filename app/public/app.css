@@ -441,6 +441,9 @@ legend { font-weight: 600; font-size: var(--f-s); padding: 0; margin-bottom: 6px
 .lm-traffar button { display: block; width: 100%; text-align: left; font: inherit; font-size: var(--f-s); background: none; border: 0; border-bottom: 1px solid var(--linje); padding: 7px 10px; cursor: pointer; }
 .lm-traffar li:last-child button { border-bottom: 0; }
 .lm-traffar button:hover { background: var(--kalla-ljus); }
+/* HOSP: ett läkemedel som den inloggade inte får förskriva enligt registret visas med förklaringen men går inte att välja. */
+.lm-traffar .lm-ej-valbar { display: block; font-size: var(--f-s); border-bottom: 1px solid var(--linje); padding: 7px 10px; }
+.lm-traffar li.lm-ej-valbar:last-child { border-bottom: 0; }
 .varningslista { border: 1px solid var(--larm-kant); background: var(--larm-bg); border-radius: var(--r); padding: 10px 14px; margin: 10px 0; }
 .varningslista h4 { display: flex; gap: 8px; align-items: center; color: var(--larm); margin-bottom: 6px; }
 .varningslista ul { margin: 0 0 10px; padding-left: 18px; }

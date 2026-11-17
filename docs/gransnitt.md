@@ -130,7 +130,7 @@ Koden: `app/src/tjanstekontrakt.js`, `app/src/rapportering-rutter.js`.
 
 ## RIVTA-kontrakt mot tjänsteplattformen
 
-Den gemensamma grunden för RIVTA och kontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA och PU-tjänsten beskrivs i docs/rivta.md, med scheman, versioner och hur kontrakten valideras och prövas mot tjänsteplattformen.
+Den gemensamma grunden för RIVTA och kontrakten för journalen, NPÖ, sammanhållen journalföring, spärr, samtycke, HSA, HOSP och PU-tjänsten beskrivs i docs/rivta.md, med scheman, versioner och hur kontrakten valideras och prövas mot tjänsteplattformen.
 
 Standard: RIVTA (SOAP och tjänstekontraktens scheman).
 
@@ -138,7 +138,7 @@ Riktning: Vårdkällan som producent och konsument mot tjänsteplattformen.
 
 Behörighet och loggning: Se docs/rivta.md och docs/sakerhetsarkitektur.md.
 
-Koden: `app/src/rivta/`.
+Koden: `app/src/hosp.js`, `app/src/hosp-rutter.js`, `app/src/rivta/`.
 
 Dokumentation: `docs/rivta.md`.
 

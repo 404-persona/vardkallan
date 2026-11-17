@@ -2365,6 +2365,21 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '#nt-ei [data-status]', 'Engagemangsindex har allt som ska finnas där');
       await page.waitForLoadState('networkidle');
     });
+    // HOSP: personalens legitimation och förskrivningsrätt ur Socialstyrelsens register. Systemförvaltaren ser vem som
+    // saknar giltig legitimation och hämtar om uppgifterna för en person.
+    await s('Tomas Lindh ser legitimationen ur HOSP och att en läkares legitimation är återkallad', async () => {
+      await gaTill(page, '#/nationella-tjanster');
+      await forvanta(page, '#nt-hosp', 'Legitimation och förskrivningsrätt (HOSP)');
+      await page.click('[data-hosp-hamta="lak-kk"]');
+      await forvanta(page, '.notis', 'Uppgifterna är hämtade om');
+      await forvanta(page, '[data-hosp-rad="lak-kk"]', 'Återkallad');
+      await forvanta(page, '[data-hosp-rad="lak-ane-ort"]', 'Gustav Fernlund');
+      await page.click('[data-hosp-hamta="lak-ane-ort"]');
+      await forvanta(page, '[data-hosp-rad="lak-ane-ort"]', 'omfattar inte narkotiska läkemedel');
+      await forvanta(page, '#nt-hosp [data-status]', 'saknar giltig legitimation');
+      await bild(page, '103i-hosp');
+      await page.waitForLoadState('networkidle');
+    });
     await allaVyer(page, 'Tomas Lindh', MENY.systemforvaltare);
     // Fyra ögon på riktigt: Nora Ekholm loggar in i samma sandlåda och godkänner sammanslagningen som Tomas Lindh förberedde.
     await s('Nora Ekholm godkänner sammanslagningen som Tomas Lindh förberedde, men inte sina egna förslag', async () => {

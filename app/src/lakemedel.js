@@ -379,6 +379,13 @@ export function spara(atk, inp, { handling = 'ordinera', ordineradAv = null, nll
   // om vårdgivaren har valt det (konfiguration.js, lakemedel.orsak_frivillig_utan_nll).
   const utanNll = typeof inp?.lakemedelId === 'string' && stod.UTAN_NLL.has(stod.produkttyp(db, inp.lakemedelId).typ);
   const o = validera(db, inp, { frivilligOrsak: utanNll && require('./konfiguration.js').varde(db, 'lakemedel.orsak_frivillig_utan_nll') });
+  // HOSP: förskrivningsrätten och behörighetsbegränsningarna i Socialstyrelsens register, för den som ordinerar eller
+  // förskriver (läkaren också när sjuksköterskan registrerar en muntlig ordination). En ordination enligt generellt
+  // direktiv vilar på direktivet, och sjuksköterskans legitimation prövas av behörighetsmotorn.
+  if (handling !== 'ordinera_direktiv') {
+    const forskrivare = ordineradAv ? db.query('SELECT * FROM personal WHERE id = ?').get(ordineradAv) : atk.personal;
+    require('./hosp.js').kravForskrivning(db, forskrivare, { typ: handling === 'forskriva_preventivmedel' ? 'preventivmedel' : 'lakemedel', lm: o.lm });
+  }
   const u = underlag(atk);
   const v = varningar(db, atk.patientId, o.lm, u.aktiva, { ...u, ordination: o });
   const skickas = skickaNll && !stod.UTAN_NLL.has(stod.produkttyp(db, o.lm.id).typ);

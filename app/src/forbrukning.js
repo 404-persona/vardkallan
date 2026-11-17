@@ -17,7 +17,7 @@ import { Fel, iso, idag, addDagar, giltigtDatum } from './db.js';
 import { kanRoll, vardenhetFor } from './atkomst.js';
 import * as lakemedel from './lakemedel.js';
 
-export const DEMOREGLER_FORBRUKNING = 'Artiklarna och varunumren är påhittade demoposter, och mängderna och mallarna är demoregler. I demon har alla sjuksköterskor förskrivningsrätt för förbrukningsartiklar. NLL är simulerad.';
+export const DEMOREGLER_FORBRUKNING = 'Artiklarna och varunumren är påhittade demoposter, och mängderna och mallarna är demoregler. Förskrivningsrätten kommer ur den simulerade HOSP-tjänsten, där alla sjuksköterskor utom en har förskrivningsrätt. NLL är simulerad.';
 const DAGAR_PER_UTTAG = 90;
 export const GRUPPER = { egenkontroll: 'Egenkontroll av medicinering', tillforsel: 'Tillförsel av läkemedel', stomi: 'Stomi' };
 
@@ -158,6 +158,9 @@ export function kanForskriva(atk) {
   if (!kanRoll(atk.personal, 'forskriva_forbrukning')) return { kan: false, varfor: null };
   const r = atk.prova('forskriva_forbrukning');
   if (!r.tillaten || r.grund === 'nodatkomst') return { kan: false, varfor: 'Du har ingen vårdrelation till patienten på din vårdenhet. Med nödåtkomst går det bara att läsa.' };
+  // HOSP: förskrivningsrätten kommer ur Socialstyrelsens register, inte ur yrket (hosp.js).
+  const h = require('./hosp.js').forskrivning(atk.db, atk.personal, { typ: 'forbrukning' });
+  if (!h.kan) return { kan: false, varfor: h.varfor };
   return { kan: true, varfor: null };
 }
 function kravForskriva(atk, resurs = null, beskrivning = null) {
@@ -166,6 +169,12 @@ function kravForskriva(atk, resurs = null, beskrivning = null) {
   if (r.grund === 'nodatkomst' || rr.grund === 'nodatkomst' || rr.grund === 'aktivt_val') {
     atk.logga('forskriva_forbrukning', 'nekad', beskrivning, 'nekad');
     throw new Fel(403, 'Det här kräver vårdrelation till patienten på din vårdenhet. Nödåtkomst ger bara läsning.', 'nekad');
+  }
+  // HOSP: samma regel som i kanForskriva.
+  const h = require('./hosp.js').forskrivning(atk.db, atk.personal, { typ: 'forbrukning' });
+  if (!h.kan) {
+    atk.logga('forskriva_forbrukning', 'nekad', beskrivning, 'nekad');
+    throw new Fel(403, h.varfor, 'nekad', { hosp: true });
   }
 }
 

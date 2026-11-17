@@ -202,6 +202,8 @@ export function synkronisera(db, del, adapter = kalla(del), nu = new Date()) {
   const v = validera(del, h.poster);
   rapport.fel = v.fel.map(f => f.text);
   if (v.fel.length) return spara(db, rapport);
+  // HOSP: personerna som fick en ny roll i personalkatalogen (nedan).
+  const nyRoll = [];
   db.exec('BEGIN');
   try {
     if (del === 'organisation') {
@@ -222,6 +224,8 @@ export function synkronisera(db, del, adapter = kalla(del), nu = new Date()) {
         const f = fore.get(p.id);
         if (!f) { db.query('INSERT INTO personal VALUES (?, ?, ?, ?, ?, ?, 0, ?)').run(p.id, rad.namn, rad.yrke, rad.titel, rad.enhet_id, rad.hsa_id, rad.aktiv); rapport.nya.push(p.id); }
         else if (!lika(f, rad, Object.keys(rad))) { db.query('UPDATE personal SET namn = ?, yrke = ?, titel = ?, enhet_id = ?, hsa_id = ?, aktiv = ? WHERE id = ?').run(rad.namn, rad.yrke, rad.titel, rad.enhet_id, rad.hsa_id, rad.aktiv, p.id); rapport.andrade.push(p.id); }
+        // HOSP: en ny person, en ny roll eller en person som blir aktiv igen får sina uppgifter ur Socialstyrelsens register.
+        if (!f || f.yrke !== rad.yrke || (!f.aktiv && rad.aktiv)) nyRoll.push(p.id);
         else rapport.oforandrade++;
       }
       // Personal som inte finns i källan blir inaktiv. Den raderas aldrig, eftersom journalen och loggen pekar på den.
@@ -294,6 +298,12 @@ export function synkronisera(db, del, adapter = kalla(del), nu = new Date()) {
     }
     db.exec('COMMIT');
   } catch (e) { db.exec('ROLLBACK'); throw e; }
+  // HOSP: efter inläsningen hämtar systemet legitimationen för dem som fick en roll som kräver den, och rapporten säger
+  // på vanlig svenska vilka som saknar giltig legitimation eller vars uppgifter inte gick att hämta (hosp.js).
+  if (nyRoll.length) {
+    const l = require('./hosp.js').efterNyRoll(db, nyRoll, nu);
+    if (l.length) rapport.legitimation = l;
+  }
   return spara(db, rapport);
 }
 

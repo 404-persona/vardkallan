@@ -37,8 +37,47 @@ function engagemangsindex(e) {
   </section>`;
 }
 
+// HOSP: personalens legitimation och förskrivningsrätt ur Socialstyrelsens register. Systemet hämtar själv; här ser
+// systemförvaltaren vem som saknar giltig legitimation, vilka uppgifter som är gamla för att tjänsten inte svarar, och
+// kan hämta om dem. Bara systemförvaltaren och personen själv ser uppgifterna.
+const HOSP_STATUS = { ok: 'Giltig', saknas: 'Saknas', aterkallad: 'Återkallad', okand: 'Inte hämtad', ej_i_hosp: 'Finns inte i HOSP' };
+function hospSektion(h) {
+  const problem = h.avvikelser > 0 || h.personal.some(p => p.status === 'okand' || (p.gammal && p.fel));
+  return `<section class="lm-sektion" aria-labelledby="nt-hosp-r" id="nt-hosp">
+    <h2 id="nt-hosp-r">Legitimation och förskrivningsrätt (HOSP)</h2>
+    ${status(problem, h.text)}
+    <p class="liten dampad">${esc(h.regel)}</p>
+    <div class="tabellrulle"><table class="tabell"><caption class="sr">Personal med en roll som kräver legitimation</caption>
+      <thead><tr><th scope="col">Person</th><th scope="col">Roll</th><th scope="col">Legitimation</th><th scope="col">Hämtad</th><th scope="col"><span class="sr">Åtgärd</span></th></tr></thead>
+      <tbody>${h.personal.map(p => `<tr data-hosp-rad="${esc(p.id)}"><td>${esc(p.namn)}<span class="under-text">${esc(p.enhet ?? '')}</span></td><td>${esc(p.yrke)}</td>
+        <td><strong>${esc(HOSP_STATUS[p.status] ?? p.status)}</strong><span class="under-text">${esc(p.text)}${p.gammal && p.fel ? ` De senast hämtade uppgifterna gäller. ${esc(p.fel)}` : ''}</span></td>
+        <td>${p.hamtad ? esc(tidpunkt(p.hamtad)) : 'Inte än'}</td>
+        <td>${p.status === 'ej_i_hosp' ? '' : `<button type="button" class="knapp liten sekundar" data-hosp-hamta="${esc(p.id)}" aria-label="Hämta om uppgifterna för ${esc(p.namn)}">Hämta om</button>`}</td></tr>`).join('')}</tbody></table></div>
+    <div class="knapprad"><button type="button" class="knapp sekundar" data-hosp-alla>Hämta om alla</button></div>
+    <p class="demoregel">${esc(h.simulerat)}</p>
+  </section>`;
+}
+async function visaHosp(main) {
+  const plats = main.querySelector('#nt-hosp-plats');
+  if (!plats) return;
+  const rita = (h) => {
+    plats.innerHTML = hospSektion(h);
+    plats.querySelector('[data-hosp-alla]').addEventListener('click', async (e) => {
+      try { const r = await medKnapp(e.currentTarget, () => api('/api/hosp/hamta', { metod: 'POST', data: {} })); rita(r); notis('Uppgifterna är hämtade om.'); } catch { /* felet visas som notis */ }
+    });
+    for (const b of plats.querySelectorAll('[data-hosp-hamta]')) {
+      b.addEventListener('click', async (e) => {
+        try { const r = await medKnapp(e.currentTarget, () => api('/api/hosp/hamta', { metod: 'POST', data: { personalId: b.dataset.hospHamta } })); rita(r); notis('Uppgifterna är hämtade om.'); } catch { /* felet visas som notis */ }
+      });
+    }
+  };
+  try { rita(await api('/api/hosp')); } catch { plats.innerHTML = ''; }
+}
+
 export async function visa(main) {
-  main.innerHTML = vyRubrik('Nationella tjänster', 'Systemet skickar själv till samtyckestjänsten och engagemangsindex, och försöker igen när en tjänst inte svarar. Här ser du läget och det som inte har kommit fram.') + '<div id="nt"><p class="tom">Hämtar.</p></div>';
+  main.innerHTML = vyRubrik('Nationella tjänster', 'Systemet skickar själv till samtyckestjänsten och engagemangsindex, och försöker igen när en tjänst inte svarar. Här ser du läget och det som inte har kommit fram.') + '<div id="nt"><p class="tom">Hämtar.</p></div><div id="nt-hosp-plats"></div>';
+  // HOSP: sektionen för legitimationen hämtas för sig.
+  visaHosp(main);
   const rita = (d) => {
     const el = main.querySelector('#nt');
     if (!el) return;

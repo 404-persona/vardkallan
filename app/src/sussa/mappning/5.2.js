@@ -155,4 +155,6 @@ function medR15r1(poster) {
 }
 
 const R15_FORE = medR14r5(R14_FORE);
-export default medR16r3(medR15r1(R15_FORE));
+// HOSP: legitimationen ur Socialstyrelsens register (hosp-r16.js).
+import { medHosp } from '../hosp-r16.js';
+export default medHosp(medR16r3(medR15r1(R15_FORE)));

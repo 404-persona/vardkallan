@@ -36,8 +36,9 @@ const cache = new Map();
 export function kontrakt(doman, namn, version) {
   const k = `${doman}|${namn}|${version}`;
   if (cache.has(k)) return cache.get(k);
-  // Runda 14, r3: domäner för tillämpningar heter riv-application (till exempel 1177:s patientportal).
-  if (!/^riv(-application)?(\.[a-z]+)+$/.test(doman) || !/^[A-Z][A-Za-z]+$/.test(namn) || !/^\d+\.\d+$/.test(version)) throw new SchemaFel(`Okänt tjänstekontrakt ${doman} ${namn} ${version}.`);
+  // Runda 14, r3: domäner för tillämpningar heter riv-application (till exempel 1177:s patientportal). Runda 16, HOSP:
+  // några domäner har en leverantörs namn efter riv- (riv-telia.clinicalprocess.activity.order).
+  if (!/^riv(-[a-z]+)?(\.[a-z]+)+$/.test(doman) || !/^[A-Z][A-Za-z]+$/.test(namn) || !/^\d+\.\d+$/.test(version)) throw new SchemaFel(`Okänt tjänstekontrakt ${doman} ${namn} ${version}.`);
   // Runda 14, r3: äldre domäner (Infektionsverktyget och dosdispenseringen) finns bara i RIVTA Basic Profile 2.0, där den
   // logiska adressen står i WS-Addressing (wsa:To) i stället för i LogicalAddress. Profilen står i def.profil.
   const allaFiler = filerI(join(RIVTA_ROT, doman, 'schemas'));

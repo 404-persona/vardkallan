@@ -14,7 +14,9 @@ const T = {
 };
 const DEMO = 'Artiklarna och varunumren är påhittade demoposter, och mängderna, mallarna är demoregler. I demon har alla sjuksköterskor förskrivningsrätt för förbrukningsartiklar, som i verkligheten bara diabetes- och stomisjuksköterskor och andra med särskild behörighet har. NLL är simulerad.';
 
-export default [
+// HOSP: förskrivningsrätten ur Socialstyrelsens register (hosp-r16.js).
+import { medHosp } from '../hosp-r16.js';
+export default medHosp([
   { id: '3.5.4.1', kategori: 'system', egna: [], avsedd: 'uppfyllt_demo',
     tester: [T.presentation, T.livscykel, T.behorighet],
     losning: 'Förbrukningsartiklarna visas i läkemedelsfliken i egna tabeller för giltiga, utgångna och utsatta förskrivningar, med artikel, mängd, uttag, giltighet, NLL-status, uppföljning och vem som förskrev, och historik per förskrivning.',
@@ -37,4 +39,4 @@ export default [
     anmarkning: DEMO },
   { id: '3.5.4.5', kategori: 'nationell', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: 'Makulering av förskrivning med kvarvarande uttag kräver anslutning till e-hälsomyndighetens tjänster och är inte byggd.' },
-];
+]);

@@ -36,9 +36,12 @@ const lakemedelUt = (k) => ({ id: k.id, namn: k.namn, substans: k.substans, styr
 // uppföljningen. Bara för den som har förskrivningsrätten.
 export function forslag(atk) {
   atk.krav('forskriva_preventivmedel');
+  // HOSP: förskrivningsrätten som barnmorska ur Socialstyrelsens register. Utan den visas inga preventivmedel, och
+  // systemet säger varför (hosp.js).
+  const h = require('./hosp.js').forskrivning(atk.db, atk.personal, { typ: 'preventivmedel' });
   return {
-    lakemedel: katalog(atk.db).map(lakemedelUt), ordinationsorsak: ORSAK, uppfoljningsdatum: addDagar(idag(), UPPFOLJNING_DAGAR),
-    varfor: 'Som barnmorska förskriver du hormonella preventivmedel, akut-p-piller, p-ring och hormonspiral. Andra läkemedel ordineras av en läkare.',
+    kan: h.kan, lakemedel: h.kan ? katalog(atk.db).map(lakemedelUt) : [], ordinationsorsak: ORSAK, uppfoljningsdatum: addDagar(idag(), UPPFOLJNING_DAGAR),
+    varfor: h.kan ? 'Som barnmorska förskriver du hormonella preventivmedel, akut-p-piller, p-ring och hormonspiral. Andra läkemedel ordineras av en läkare.' : h.varfor,
     kalla: KALLA,
   };
 }
