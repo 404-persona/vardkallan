@@ -30,7 +30,7 @@ export const filmFil = (id) => `docs/filmer/${id}.webm`;
 // Sökvägen räknas ur import.meta.url, så att registret fungerar både i Bun (servern) och i Node (inspelningsskriptet).
 export const MANIFEST = fileURLToPath(new URL('./instruktionsfilmer-manifest.json', import.meta.url));
 export const manifest = () => JSON.parse(readFileSync(MANIFEST, 'utf8'));
-export const RELEASER = 'https://github.com/SpankulatorX/vardkallan/releases/download';
+export const RELEASER = 'https://github.com/404-persona/vardkallan/releases/download';
 // Adressen till en film i releasen för den version som förteckningen gäller.
 export const filmUrl = (id, version = manifest().version) => `${RELEASER}/v${version}/${id}.webm`;
 // Största tillåtna storlek för en film, i byte.

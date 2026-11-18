@@ -1,6 +1,6 @@
 # Vårdkällan
 
-[![Tester och FHIR-validering](https://github.com/SpankulatorX/vardkallan/actions/workflows/test.yml/badge.svg)](https://github.com/SpankulatorX/vardkallan/actions/workflows/test.yml)
+[![Tester och FHIR-validering](https://github.com/404-persona/vardkallan/actions/workflows/test.yml/badge.svg)](https://github.com/404-persona/vardkallan/actions/workflows/test.yml)
 
 Hela vården i ett öppet system.
 

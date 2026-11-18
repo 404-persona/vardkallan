@@ -6,7 +6,7 @@ import { begransningarHtml } from '../kanda-begransningar.js';
 import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT } from '../synpunkt-regler.js';
 
 export const namn = 'om';
-const GITHUB = 'https://github.com/SpankulatorX/vardkallan';
+const GITHUB = 'https://github.com/404-persona/vardkallan';
 
 export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
   let inteVarden = '';

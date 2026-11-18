@@ -54,7 +54,7 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Patienten bokar om sin tid i Min journal och ser direkt den nya tiden.
 
-Flöde: Patienten bokar om sin tid i Min journal, klickbudget 3. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/egen-ombokning.webm)
+Flöde: Patienten bokar om sin tid i Min journal, klickbudget 3. [Se filmen](https://github.com/404-persona/vardkallan/releases/download/v1.5.0/egen-ombokning.webm)
 
 ## Uppdrag i testinbjudan
 

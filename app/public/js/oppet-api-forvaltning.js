@@ -21,7 +21,7 @@ export function utvecklare() {
       <li><a href="/fhir/metadata">CapabilityStatement</a>: alla resurstyper, sökningar och skrivningar.</li>
       <li><a href="/fhir/.well-known/smart-configuration">SMART-konfigurationen</a>: adresserna för inloggning och åtkomstbiljett.</li>
       <li><a href="/tillampningar/blodtryck/index.html">Blodtryck över tid</a>: en liten exempeltillämpning med öppen källkod som visar hela flödet.</li>
-      <li><a href="https://github.com/SpankulatorX/vardkallan">Källkoden på GitHub</a> under EUPL 1.2, där innovationer också kan delas.</li>
+      <li><a href="https://github.com/404-persona/vardkallan">Källkoden på GitHub</a> under EUPL 1.2, där innovationer också kan delas.</li>
     </ul>
     <p>Testdata och sandlåda: varje besökare i demon får en egen sandlåda med påhittade patienter och Skatteverkets testpersonnummer. Allt som görs där stannar i sandlådan och försvinner efter åtta timmar, så en tillämpning kan prövas fritt. Systemförvaltaren registrerar tillämpningen nedan, och den syns sedan under Tillämpningar i journalen för de roller som får använda den.</p>`;
 }

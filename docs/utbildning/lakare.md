@@ -429,25 +429,25 @@ Filmerna visar ett arbetsflöde från början till slut med textade steg på sve
 
 Läkaren skriver en daganteckning i patientens översikt och signerar den. Systemet fyller i vårdkontakt, enhet och tid.
 
-Flöde: Skriva och signera en daganteckning, klickbudget 5. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/daganteckning.webm)
+Flöde: Skriva och signera en daganteckning, klickbudget 5. [Se filmen](https://github.com/404-persona/vardkallan/releases/download/v1.5.0/daganteckning.webm)
 
 ### Ordinera ett läkemedel
 
 Läkaren ordinerar ett läkemedel. Systemet föreslår dos och kontrollerar mot överkänslighet och andra läkemedel innan ordinationen sparas.
 
-Flöde: Ordinera ett läkemedel utan varning, klickbudget 7. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/ordinera.webm)
+Flöde: Ordinera ett läkemedel utan varning, klickbudget 7. [Se filmen](https://github.com/404-persona/vardkallan/releases/download/v1.5.0/ordinera.webm)
 
 ### Skicka en remiss
 
 Distriktsläkaren skickar en remiss. Systemet föreslår mottagare och fyller i patientens uppgifter.
 
-Flöde: Skicka remiss, klickbudget 7. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/remiss.webm)
+Flöde: Skicka remiss, klickbudget 7. [Se filmen](https://github.com/404-persona/vardkallan/releases/download/v1.5.0/remiss.webm)
 
 ### Nödåtkomst
 
 Läkaren på akutmottagningen öppnar journalen för en patient utan vårdrelation. Systemet kräver syfte, loggar åtkomsten och häver aldrig en spärr.
 
-Flöde: Nödåtkomst, klickbudget 8. [Se filmen](https://github.com/SpankulatorX/vardkallan/releases/download/v1.5.0/nodatkomst.webm)
+Flöde: Nödåtkomst, klickbudget 8. [Se filmen](https://github.com/404-persona/vardkallan/releases/download/v1.5.0/nodatkomst.webm)
 
 ## Övningar
 

@@ -61,7 +61,7 @@ Rutinerna i driften av systemet finns i systemet själv: ändringar av regler, p
 
 ## Utvecklarforum
 
-Ett utvecklarforum är en öppen plats där utvecklare ställer frågor, visar vad de har byggt och diskuterar förslag innan de blir ärenden. Forumet finns sedan 2026-11-14 som GitHub Discussions i repot (https://github.com/SpankulatorX/vardkallan/discussions) och fungerar så här:
+Ett utvecklarforum är en öppen plats där utvecklare ställer frågor, visar vad de har byggt och diskuterar förslag innan de blir ärenden. Forumet finns sedan 2026-11-14 som GitHub Discussions i repot (https://github.com/404-persona/vardkallan/discussions) och fungerar så här:
 
 - Det har några få kategorier: frågor om API:t, driften och tillämpningar, idéer och förslag, det du har byggt, och övrigt. Ett fel rapporteras som ett ärende.
 - Förvaltaren svarar när det går, flyttar en fråga som visar sig vara ett fel till ett ärende och länkar svaren till dokumentationen, så att samma fråga inte behöver ställas två gånger.

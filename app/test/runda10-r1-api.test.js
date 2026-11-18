@@ -214,7 +214,7 @@ describe('Innovationsramverket', () => {
     }
     const o = (await k.get('/api/oppet-api/forvaltning')).data;
     expect(o.licenser).toContain('EUPL-1.2');
-    expect(o.tillampningar.find(x => x.id === 'blodtryck')).toMatchObject({ kallkod: 'https://github.com/SpankulatorX/vardkallan', licens: 'EUPL-1.2' });
+    expect(o.tillampningar.find(x => x.id === 'blodtryck')).toMatchObject({ kallkod: 'https://github.com/404-persona/vardkallan', licens: 'EUPL-1.2' });
     expect(o.tillampningar.find(x => x.id === 'vatska-i-plattan').kallkod).toBe('https://github.com/exempel/vatska');
   });
 });

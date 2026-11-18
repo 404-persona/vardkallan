@@ -98,7 +98,7 @@ describe('Utbildningsmaterial', () => {
     for (const [, md] of material.filer()) {
       for (const m of md.matchAll(/\]\(([^)]*\.webm)\)/g)) {
         // Runda 15: länken går till filmen i releasen för den version som förteckningen gäller.
-        const t = m[1].match(/^https:\/\/github\.com\/SpankulatorX\/vardkallan\/releases\/download\/v\d+\.\d+\.\d+\/([a-z0-9-]+)\.webm$/);
+        const t = m[1].match(/^https:\/\/github\.com\/404-persona\/vardkallan\/releases\/download\/v\d+\.\d+\.\d+\/([a-z0-9-]+)\.webm$/);
         expect(t, m[1]).not.toBeNull();
         expect(id.has(t[1]), m[1]).toBe(true);
         expect(FLODEN.some(f => f.id === FILMER.find(x => x.id === t[1]).flode), m[1]).toBe(true);

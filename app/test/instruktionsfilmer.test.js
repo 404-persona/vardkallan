@@ -35,7 +35,7 @@ describe('Instruktionsfilmer', () => {
       expect(f.sha256, id).toMatch(/^[0-9a-f]{64}$/);
       expect(f.byte, id).toBeLessThanOrEqual(MAX_BYTE);
       expect(f.byte, id).toBeGreaterThan(20_000);
-      expect(filmUrl(id)).toBe(`https://github.com/SpankulatorX/vardkallan/releases/download/v${m.version}/${id}.webm`);
+      expect(filmUrl(id)).toBe(`https://github.com/404-persona/vardkallan/releases/download/v${m.version}/${id}.webm`);
     }
     // Förteckningen gäller en version som inte är nyare än systemet.
     const [a, b, c] = m.version.split('.').map(Number);
