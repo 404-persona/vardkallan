@@ -3448,3 +3448,8 @@ när servern stängs, säkerhetskopiorna, provåterläsningen, nya miljöer och 
 tabell som bara finns i ögonblicksbilden, och `koppla` (från `migrera` och `nySessionsDb`) lägger tillbaka den i en egen
 databas. Uttaget per huvudman skriver in filinnehållet ur den äldre databasen. I driften är den äldre databasen en egen fil
 på en billigare volym, och bilden behövs inte.
+
+Klassningen för uttaget per huvudman prövas nu på alla tabeller som någon modul skapar, också de som skapas först när
+de används (`test/lagring-klassning-r18.test.js` läser alla CREATE TABLE i `src/`). Rapporterna till myndigheter
+(`myndighetsrapporter`) följer den som skickade dem, och kvalitetsregistrets återkoppling (`registeraterkoppling`) hör
+till systemet. Synpunkterna och användartestets svar ligger i egna databaser utanför sandlådan och prövas inte.

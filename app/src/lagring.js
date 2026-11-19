@@ -82,7 +82,10 @@ const SYSTEM = new Set(['omorganisationer', 'omorganisation_flyttar', 'lagringsm
   'ei_omgangar', 'ei_status',
   // HOSP: den simulerade HOSP-tjänstens kopia av registret, utan patientuppgifter (hosp.js). De hämtade uppgifterna
   // (hosp_uppgifter) följer personen genom personal_id.
-  'rivta_sim_hosp']);
+  'rivta_sim_hosp',
+  // Runda 18, r3 (från r2:s rapport): kvalitetsregistrets återkoppling till vårdgivaren som helhet, med antal per
+  // vårdenhet och inga patientuppgifter. Den följer inte med i ett uttag (hellre saknas än läcker till en annan huvudman).
+  'registeraterkoppling']);
 // Tabeller vars koppling inte går att se på kolumnnamnen.
 const UTTRYCKLIGA = {
   dubblettforslag: { typ: 'patient', kolumner: ['fran_patient_id', 'till_patient_id'] },
@@ -103,6 +106,9 @@ const UTTRYCKLIGA = {
   // Runda 15, r4: personens egna fraser och ordning på sökorden följer personen, aldrig en patient (egna-fraser.js).
   egna_fraser: { typ: 'via', kolumn: 'personal_id', tabell: 'personal' },
   egen_sokordsordning: { typ: 'via', kolumn: 'personal_id', tabell: 'personal' },
+  // Runda 18, r3 (från r2:s rapport): rapporterna till myndigheter och register skapas först när den första skickas och
+  // var därför oklassade på sidan Lagring. En rapport följer den som skickade den, som stickproven.
+  myndighetsrapporter: { typ: 'via', kolumn: 'av', tabell: 'personal' },
 };
 
 // Vad den som lägger till en tabell gör när den inte går att knyta till en huvudman, på sidan Lagring. Testet av
