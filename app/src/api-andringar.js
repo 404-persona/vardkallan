@@ -17,7 +17,7 @@ export const ANDRINGAR = [
     text: 'Första passet för den som testar Vårdkällan.',
     resurser: [], skrivning: [], annat: [
       // Runda 18, r1: första passet i testinbjudan (docs/api-avvikelser.md).
-      'Första passet i testinbjudan i det interna API:t: POST /api/testare/starta tar emot pass och matning, nya rutter för frågan om mätning, mätningen, SUS efter passet och vidare till nästa uppdrag under /api/testare/pass/, sammanfattningen GET /api/testare/pass/sammanfattning utan sandlåda, passen i testledarens svar och exporterna csv-pass och csv-sus (docs/api-avvikelser.md)',
+      'Första passet i testinbjudan i det interna API:t: POST /api/testare/starta tar emot fälten "pass" och "matning", nya rutter för frågan om mätning, mätningen, SUS efter passet och vidare till nästa uppdrag under /api/testare/pass/, sammanfattningen GET /api/testare/pass/sammanfattning utan sandlåda, passen i testledarens svar och exporterna csv-pass och csv-sus (docs/api-avvikelser.md)',
     ],
   },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.

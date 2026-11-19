@@ -42,16 +42,16 @@ export const PASS_STEG = {
   vardadministrator: [
     { id: 'meny', text: 'Välj Dagens arbete i menyn.', mal: meny('#/idag', 'Dagens arbete') },
     { id: 'boka', hash: '#/idag', text: 'Välj Boka besök.', mal: [{ sel: '#idag [data-atgard="r8_fri"]' }] },
-    { id: 'sok', text: 'Skriv Helene Lund och tryck Enter.', mal: [{ sel: 'dialog[open] #r8-sok' }], gor: { skriv: 'Helene Lund', tangent: 'Enter' } },
-    { id: 'tid', text: 'Systemet har valt ett återbesök hos läkaren som hon har träffat förut och föreslår de lämpligaste tiderna. Välj den första tiden. Kallelsen skickas av sig själv.', mal: [{ sel: 'dialog[open] .forslag-knapp' }] },
+    { id: 'sok', text: 'Skriv Helene Lund och tryck Enter.', mal: [{ sel: 'dialog:modal #r8-sok' }], gor: { skriv: 'Helene Lund', tangent: 'Enter' } },
+    { id: 'tid', text: 'Systemet har valt ett återbesök hos läkaren som hon har träffat förut och föreslår de lämpligaste tiderna. Välj den första tiden. Kallelsen skickas av sig själv.', mal: [{ sel: 'dialog:modal .forslag-knapp' }] },
   ],
   fysioterapeut: [
     { id: 'meny', text: 'Välj Arbetslistan i menyn och leta upp Sara Sandmark.', mal: meny('#/arbetslista', 'Arbetslistan') },
     { id: 'patient', text: 'Klicka på Sara Sandmark för att öppna hennes journal.', mal: [{ sel: 'a.patientlank', innehaller: 'Sara Sandmark' }] },
     { id: 'flik', hash: '#/patient/sus06', text: 'Välj fliken Remisser.', mal: [{ sel: '.flikar a', innehaller: 'Remisser' }] },
     { id: 'svara', hash: '#/patient/sus06', text: 'Välj Svara vid remissen från vårdcentralen.', mal: [{ sel: '[data-remiss-atgard="svara"]' }] },
-    { id: 'text', text: 'Skriv svaret: Tack för remissen. Vi har träffat Sara och gett henne rätt behandling.', mal: [{ sel: 'dialog[open] textarea' }], klar: 'varde', gor: { skriv: 'Tack för remissen. Vi har träffat Sara och gett henne rätt behandling.' } },
-    { id: 'skicka', text: 'Välj Skicka svaret.', mal: [{ sel: 'dialog[open] [data-varde="ok"]' }] },
+    { id: 'text', text: 'Skriv svaret: Tack för remissen. Vi har träffat Sara och gett henne rätt behandling.', mal: [{ sel: 'dialog:modal textarea' }], klar: 'varde', gor: { skriv: 'Tack för remissen. Vi har träffat Sara och gett henne rätt behandling.' } },
+    { id: 'skicka', text: 'Välj Skicka svaret.', mal: [{ sel: 'dialog:modal [data-varde="ok"]' }] },
   ],
   barnmorska: [
     { id: 'meny', text: 'Välj Förlossning i menyn.', mal: meny('#/forlossning', 'Förlossning') },
@@ -61,9 +61,9 @@ export const PASS_STEG = {
   systemforvaltare: [
     { id: 'meny', text: 'Välj Regler och parametrar i menyn.', mal: meny('#/regler', 'Regler och parametrar') },
     { id: 'andra', hash: '#/regler', text: 'Välj Ändra vid Påminnelse före en bokad tid.', mal: [{ sel: 'tr[data-nyckel="tidbok.paminnelse_timmar"] [data-andra]' }] },
-    { id: 'varde', text: 'Skriv det nya värdet 72 timmar.', mal: [{ sel: 'dialog[open] #sf-varde' }], klar: 'andrat', gor: { skriv: '72' } },
-    { id: 'motivering', text: 'Skriv varför, till exempel att patienterna hinner boka om en dag tidigare.', mal: [{ sel: 'dialog[open] #sf-motivering' }], klar: 'varde', gor: { skriv: 'Patienterna hinner boka om en dag tidigare.' } },
-    { id: 'skicka', text: 'Systemet visar vad ändringen gör. Välj Skicka för godkännande.', mal: [{ sel: 'dialog[open] [data-varde="ok"]' }] },
+    { id: 'varde', text: 'Skriv det nya värdet 72 timmar.', mal: [{ sel: 'dialog:modal #sf-varde' }], klar: 'andrat', gor: { skriv: '72' } },
+    { id: 'motivering', text: 'Skriv varför, till exempel att patienterna hinner boka om en dag tidigare.', mal: [{ sel: 'dialog:modal #sf-motivering' }], klar: 'varde', gor: { skriv: 'Patienterna hinner boka om en dag tidigare.' } },
+    { id: 'skicka', text: 'Systemet visar vad ändringen gör. Välj Skicka för godkännande.', mal: [{ sel: 'dialog:modal [data-varde="ok"]' }] },
   ],
   patient: [
     { id: 'meny', text: 'Gå till Min journal.', mal: [{ sel: '.min-flikar a', innehaller: 'Översikt' }, { sel: 'a[href="#/min"]' }] },

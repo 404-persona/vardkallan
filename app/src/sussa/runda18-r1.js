@@ -28,6 +28,7 @@ export const T18R1IB = {
   besok: `${IB}ett besök via en inbjudan sparar bara kanalen, och en okänd kod eller kanal ger samma svar utan att något sparas`,
   pass: `${IB}ett genomfört pass räknas på besöket utan koppling till mätningen, svaren eller synpunkterna`,
   testledare: `${IB}testledaren ser bara antal per kanal och hur många som genomförde ett pass, och inbjudningarna gallras som synpunkterna`,
+  takUtanSession: `${IB}taken per minut, timme och dygn räknas per adressgrupp i databasen också utan session, och det totala taket tar bort de äldsta i stället för att låsa ute någon`,
   text: `${IB}inbjudningstexten är neutral och delningslänkarna går till tjänsternas egna delningssidor med länken till testinbjudans startsida`,
 };
 
@@ -59,7 +60,7 @@ const POSTER = {
   },
   '8.4.1.2': {
     tester: [T.forst, T.nej, T.prova, T.avbrutet, T.inga, T.sus, T.export, T.gallring, T.vidare, G.samtycke, G.annanVag, G.inga, ...Object.values(T18R1IB), G.bjudIn],
-    expert: 'Systemet räknar poängen för varje mätning och omvandlar dem till Sussas utvärderingspoäng, så att testledaren inte behöver kunna formlerna, och formulären sparar inga patientuppgifter. I testinbjudan bockar systemet av uppdragen själv, prövar svaret på frågeuppdragen mot Sussas rätta svar och fyller i vy, roll, uppdrag, version och webbläsare i varje synpunkt, så att testaren bara svarar på det som bara testaren vet. I första passet pekar systemet själv ut nästa steg, mäter var testaren fastnar utan att testaren behöver rapportera något och räknar SUS-poängen på servern.',
+    expert: 'Systemet räknar poängen för varje mätning och omvandlar dem till Sussas utvärderingspoäng, så att testledaren inte behöver kunna formlerna, och formulären sparar inga patientuppgifter. I testinbjudan bockar systemet av uppdragen själv, prövar svaret på frågeuppdragen mot Sussas rätta svar och fyller i vy, roll, uppdrag, version och webbläsare i varje synpunkt, så att testaren bara svarar på det som bara testaren vet, och i första passet pekar systemet själv ut nästa steg och mäter var testaren fastnar utan att testaren behöver rapportera något.',
     anmarkning: `SUS och expertgranskning är underlag för riktiga användartester: inga testpersoner har fyllt i formulären än, och ingen användbarhetsexpert har granskat systemet. Runda 13 (r1): testinbjudan samlar jämförelser och synpunkter från personal i vården i en egen databas, utan namn och utan riktiga personnummer, och testledaren läser dem per uppdrag och journalsystem med en läskod som skapas på servern. ${MATT} Testarna väljer själva att vara med, så urvalet är inte representativt, och svaren är självskattade. Kartläggningen av användarna bygger på Sussas testfall, inte på egna intervjuer eller observationer. Skisser och prototyper i flera alternativ görs inte.`,
   },
   '8.4.1.3': {

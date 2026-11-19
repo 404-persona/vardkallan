@@ -132,7 +132,7 @@ const hashGaller = (h) => { const x = (location.hash || '#/').split('?')[0]; ret
 function synlig(el) {
   if (!el?.isConnected || !el.getClientRects().length) return false;
   if (getComputedStyle(el).visibility === 'hidden' || el.closest('[inert], [hidden]')) return false;
-  const modal = [...document.querySelectorAll('dialog[open]')].filter(d => d.matches(':modal')).at(-1);
+  const modal = [...document.querySelectorAll('dialog:modal')].at(-1);
   return !modal || modal.contains(el);
 }
 function hitta(m) {
@@ -184,7 +184,7 @@ function berakna() {
 // Det som panelen visar: stegets text och nummer, eller vad testaren kan göra när inget steg syns.
 export function stegInfo() {
   if (!nu) {
-    const modal = [...document.querySelectorAll('dialog[open]')].some(d => d.matches(':modal'));
+    const modal = Boolean(document.querySelector('dialog:modal'));
     return { id: '', nr: null, antal: steg.length, text: modal ? 'Stäng rutan som är öppen, så visar vägledningen nästa steg.' : 'Gå till startsidan med menyn, så visar vägledningen nästa steg.' };
   }
   return { id: nu.id, nr: nu.index + 1, antal: steg.length, text: nu.text };
@@ -203,7 +203,7 @@ function doljRam() { ram?.remove(); etikett?.remove(); }
 function placera() {
   if (!lyssnar || !nu || !vagledningPa() || !nu.el.isConnected) { doljRam(); return; }
   if (!ram) skapaRam();
-  const hem = nu.el.closest('dialog[open]') ?? document.body;
+  const hem = nu.el.closest('dialog:modal') ?? document.body;
   if (ram.parentElement !== hem) { hem.append(ram, etikett); }
   const r = nu.el.getBoundingClientRect();
   const m = 4;
@@ -230,7 +230,7 @@ function friYta(r) {
 function synligGor(el) {
   const lugnt = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   el.scrollIntoView({ block: 'nearest' });
-  if (el.closest('dialog[open]')) return;
+  if (el.closest('dialog:modal')) return;
   const r = el.getBoundingClientRect();
   const { topp, nere } = friYta(r);
   if (r.top >= topp + 8 && r.bottom <= nere - 8) return;

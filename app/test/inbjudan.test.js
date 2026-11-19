@@ -95,6 +95,34 @@ describe('Inbjudan', () => {
     expect(ib.sammanstall(db).koder).toBe(0);
   });
 
+  test(T.takUtanSession, async () => {
+    const t = testserver({ synpunktFil: ':memory:' });
+    try {
+      // Varje anrop utan kaka från samma adress: taket per minut gäller ändå, eftersom det räknas per adressgrupp i databasen.
+      const svar = [];
+      for (let i = 0; i <= ib.TAK_INBJUDAN.perMinut; i++) svar.push((await klient(t).post('/api/inbjudan', {})).status);
+      expect(svar.slice(0, ib.TAK_INBJUDAN.perMinut)).toEqual(Array(ib.TAK_INBJUDAN.perMinut).fill(201));
+      expect(svar.at(-1)).toBe(429);
+      // Taket i timmen och per dygn räknas också per adressgrupp, utan session.
+      const db = sp.oppna(':memory:');
+      const nu = new Date('2026-11-19T10:00:00Z');
+      for (let i = 0; i < ib.TAK_INBJUDAN.perTimme; i++) ib.skapa(db, { nu: new Date(nu.getTime() + i * 61_000), adress: '10.9.9.9' });
+      expect(() => ib.skapa(db, { nu: new Date(nu.getTime() + 20 * 61_000), adress: '10.9.9.9' })).toThrow(/i timmen/);
+      // En annan adress påverkas inte.
+      expect(ib.skapa(db, { nu, adress: '10.8.8.8' }).kod).toMatch(KOD);
+      // Det totala taket låser inte ute någon: de äldsta inbjudningarna tas bort.
+      const db2 = sp.oppna(':memory:');
+      const tak = { ...ib.TAK_INBJUDAN, totalt: 3 };
+      const koder = [];
+      for (let i = 0; i < 5; i++) koder.push(ib.skapa(db2, { nu, adress: `10.7.7.${i}`, tak }).kod);
+      expect(db2.query('SELECT kod FROM inbjudningar ORDER BY id').all().map(r => r.kod)).toEqual(koder.slice(2));
+      // Besöken: taket per adress och dygn, och det totala taket tar bort de äldsta.
+      const takB = { ...ib.TAK_BESOK, totalt: 2 };
+      for (let i = 0; i < 4; i++) expect(ib.besok(db2, { kod: koder[4], kanal: 'x' }, { nu, adress: `10.6.6.${i}`, tak: takB }).besok).toMatch(/^B-/);
+      expect(db2.query('SELECT count(*) AS n FROM inbjudan_besok').get().n).toBe(2);
+    } finally { t.stopp(); }
+  });
+
   test(T.text, () => {
     const origin = 'https://vardkallan.example';
     const kod = 'I-ABCDEF';

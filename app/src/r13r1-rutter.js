@@ -77,7 +77,7 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
   });
   // Tillägg 2026-11-19: en inbjudan och ett besök via en inbjudan. Ingen kräver en sandlåda, och inget av dem tar emot
   // eller sparar något om testaren eller besökaren.
-  rutt('POST', '/api/inbjudan', (c) => [201, ib.skapa(db, { session: c.s ?? {}, adress: c.ip })]);
+  rutt('POST', '/api/inbjudan', (c) => [201, ib.skapa(db, { session: c.s ?? null, adress: c.ip })]);
   rutt('POST', '/api/inbjudan/besok', (c) => ib.besok(db, c.body, { adress: c.ip }));
   // Runda 18, r1: med pass: true börjar uppdragen med första passet. Raden för en mätning skapas med serverns sammanhang.
   const passRad = (c) => (u) => fp.skapaRad(db, { ...sammanhang(c), ...u });

@@ -7,29 +7,50 @@
 //   inbjudan_besok   ett besök via en kod: kanalen, tiden och om besökaren gjorde klart ett första pass. Besöket har ett
 //                    eget slumpat id som sandlådan minns, så att ett genomfört pass kan räknas utan att koden eller
 //                    besöket kopplas till mätningen, svaren eller synpunkterna.
-import { provaTak, nyttNummer, skapareFor } from './synpunkter.js';
+import { Fel } from './db.js';
+import { nyttNummer, skapareFor } from './synpunkter.js';
 import { KANALER, KOD, BESOK } from '../public/js/inbjudan-regler.js';
 
-// Taken. En inbjudan skapas per session (sandlåda) högst så här ofta, och besöken har ett tak per adress och dygn.
-export const TAK_INBJUDAN = { perMinut: 3, perTimme: 10, perAdress: 30, totalt: 50000 };
-export const TAK_BESOK = { perMinut: 1e9, perTimme: 1e9, perAdress: 200, totalt: 500000 };
+// Taken räknas på servern per skapare, alltså adressgruppen som HMAC (som för synpunkterna), ur raderna i databasen. De
+// gäller därför också när anropet kommer utan sessionskaka, som en ny tom session varje gång. Finns en session gäller
+// dess tak dessutom. Det totala taket låser aldrig ute någon: när det är nått tas de äldsta raderna bort.
+export const TAK_INBJUDAN = { perMinut: 3, perTimme: 10, perAdress: 20, totalt: 50000 };
+export const TAK_BESOK = { perMinut: 30, perTimme: 100, perAdress: 200, totalt: 500000 };
+const DAG = 86400_000;
+const fel429 = (text) => new Fel(429, text, 'for_manga');
+function provaTakPerSkapare(db, tabell, { skapare, nu, tak, session = null, nyckel, namn }) {
+  const ms = nu.getTime();
+  const antal = (fonster) => db.query(`SELECT count(*) AS n FROM ${tabell} WHERE skapare = ? AND tid > ?`).get(skapare, new Date(ms - fonster).toISOString()).n;
+  if (antal(60_000) >= tak.perMinut) throw fel429(`Högst ${tak.perMinut} ${namn} på en minut. Vänta en stund och försök igen.`);
+  if (antal(3600_000) >= tak.perTimme) throw fel429(`Högst ${tak.perTimme} ${namn} i timmen från samma adress. Vänta en stund och försök igen.`);
+  if (antal(DAG) >= tak.perAdress) throw fel429(`Det har kommit väldigt många ${namn} från din adress i dag. Försök igen i morgon.`);
+  if (session) {
+    const tider = (session[nyckel] ?? []).filter(x => x > ms - 3600_000);
+    session[nyckel] = tider;
+    if (tider.filter(x => x > ms - 60_000).length >= tak.perMinut) throw fel429(`Högst ${tak.perMinut} ${namn} på en minut. Vänta en stund och försök igen.`);
+    if (tider.length >= tak.perTimme) throw fel429(`Högst ${tak.perTimme} ${namn} i timmen från samma webbläsare. Vänta en stund och försök igen.`);
+    tider.push(ms);
+  }
+  const totalt = db.query(`SELECT count(*) AS n FROM ${tabell}`).get().n;
+  if (totalt >= tak.totalt) db.query(`DELETE FROM ${tabell} WHERE id IN (SELECT id FROM ${tabell} ORDER BY id LIMIT ?)`).run(totalt - tak.totalt + 1);
+}
 
-export function skapa(db, { nu = new Date(), session = {}, adress = 'okänd', tak = TAK_INBJUDAN } = {}) {
+export function skapa(db, { nu = new Date(), session = null, adress = 'okänd', tak = TAK_INBJUDAN } = {}) {
   const skapare = skapareFor(adress);
-  provaTak(db, 'inbjudningar', { session, skapare, nu, tak, nyckel: 'inbjudanTider' });
+  provaTakPerSkapare(db, 'inbjudningar', { skapare, nu, tak, session, nyckel: 'inbjudanTider', namn: 'inbjudningar' });
   const kod = nyttNummer(db, 'I', 'inbjudningar', 'kod');
   db.query('INSERT INTO inbjudningar (kod, tid, skapare) VALUES (?, ?, ?)').run(kod, nu.toISOString(), skapare);
   return { kod };
 }
 
 // Ett besök via en inbjudan. En okänd kod eller kanal ger samma svar och sparar inget, så att svaret inte röjer vilka
-// koder som finns. Taket per adress gäller också här.
+// koder som finns. Taken per adressgrupp gäller också här.
 export function besok(db, body = {}, { nu = new Date(), adress = 'okänd', tak = TAK_BESOK } = {}) {
   const { kod, kanal } = body ?? {};
   if (typeof kod !== 'string' || !KOD.test(kod) || typeof kanal !== 'string' || !KANALER.some(([k]) => k === kanal)) return { besok: null };
   if (!db.query('SELECT 1 FROM inbjudningar WHERE kod = ?').get(kod)) return { besok: null };
   const skapare = skapareFor(adress);
-  provaTak(db, 'inbjudan_besok', { session: {}, skapare, nu, tak, nyckel: 'besokTider' });
+  provaTakPerSkapare(db, 'inbjudan_besok', { skapare, nu, tak, namn: 'besök' });
   const id = nyttNummer(db, 'B', 'inbjudan_besok', 'besok');
   db.query('INSERT INTO inbjudan_besok (besok, kod, kanal, tid, pass, skapare) VALUES (?, ?, ?, ?, 0, ?)').run(id, kod, kanal, nu.toISOString(), skapare);
   return { besok: id };
