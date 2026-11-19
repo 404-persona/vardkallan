@@ -75,7 +75,11 @@ const FILER = [
   '/js/handlingssok.js', '/js/vyer/ordlista.js',
   '/js/levande-listor.js', '/js/osparad-text.js', '/js/listsok.js',
   '/js/uppdrag-steg/hjalp.js', '/js/uppdrag-steg/lakare-sjukhus.js', '/js/uppdrag-steg/lakare-primarvard.js', '/js/ny-version.js',
+  '/js/uppdrag-steg/sjukskoterska.js', '/js/uppdrag-steg/underskoterska.js', '/js/uppdrag-steg/barnmorska.js',
+  '/js/uppdrag-steg/vardadministrator.js', '/js/uppdrag-steg/fysioterapeut.js', '/js/uppdrag-steg/systemforvaltare.js', '/js/uppdrag-steg/patient.js',
 ];
+// Runda 19, r2 och r3: listan har stegen för sjuksköterskan, undersköterskan och barnmorskan (r2) och för
+// vårdadministratören, fysioterapeuten, systemförvaltaren och patienten (r3).
 // Runda 19, r1: listan har vägledningens steg för uppdragen, en fil per testroll i js/uppdrag-steg/ och hjälparna, och
 // omladdningen när en ny version finns (ny-version.js).
 // Varje ny stegfil läggs till här (testet Läskopia > service workern cachar alla statiska filer jämför).

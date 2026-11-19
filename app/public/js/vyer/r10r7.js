@@ -10,7 +10,8 @@ async function visaMeddelanden(main, [id]) {
   main.innerHTML = vyRubrik('Meddelanden', 'Meddelanden från patienter, vårdnadshavare och ombud till vårdenheten. Systemet har skickat varje meddelande till den yrkesroll som ska läsa det.')
     + '<div id="md-lista"><p class="tom">Hämtar.</p></div><div id="md-trad"></div>';
   const l = await api('/api/meddelanden');
-  const rad = (t) => `<tr${String(t.id) === id ? ' aria-current="true"' : ''}><th scope="row"><a href="#/meddelanden/${t.id}" data-md-trad="${t.id}">${esc(t.patient.namn)}</a><span class="under-text">${esc(t.patient.personnummer)}</span></th>
+  // Runda 19, r2: data-md-typ (trådens typ, till exempel fraga) så att vägledningen i testinbjudan kan peka på rätt tråd.
+  const rad = (t) => `<tr${String(t.id) === id ? ' aria-current="true"' : ''}><th scope="row"><a href="#/meddelanden/${t.id}" data-md-trad="${t.id}" data-md-typ="${esc(t.typ ?? '')}">${esc(t.patient.namn)}</a><span class="under-text">${esc(t.patient.personnummer)}</span></th>
     <td>${esc(t.typText)}</td><td>${esc(t.yrkesrollText)}${t.tillDig ? ' <span class="tagg tagg-pagaende">Till dig</span>' : ''}</td><td>${esc(t.statusText)}</td><td>${esc(tidpunkt(t.senast))}</td></tr>`;
   main.querySelector('#md-lista').innerHTML = l.tradar.length ? `<div class="tabellrulle"><table class="tabell" id="md-tabell"><caption class="sr">Meddelanden till vårdenheten</caption>
     <thead><tr><th scope="col">Patient</th><th scope="col">Det gäller</th><th scope="col">Till</th><th scope="col">Status</th><th scope="col">Senast</th></tr></thead>
