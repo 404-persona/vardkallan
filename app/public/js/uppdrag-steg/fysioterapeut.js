@@ -1,7 +1,7 @@
 // Runda 19, r3: vägledningen i fysioterapeutens uppdrag i testinbjudan (testrollen fysioterapeut, demorollen fys-kard,
 // Jenny Holmberg). Stegen har samma form som första passet (forsta-pass-steg.js) och pekar på element som redan finns
 // i vyerna. Uppdragen följer Sussas testfall för paramedicinare med Sussas testdata på avdelning 72.
-import { meny } from './hjalp.js';
+import { meny, svar } from './hjalp.js';
 
 const arbetslistan = (namn, varfor = '') => ({ id: 'meny', text: `Välj Arbetslistan i menyn och leta upp ${namn}${varfor}.`, mal: meny('#/arbetslista', 'Arbetslistan') });
 // Avdelningens planering nås från arbetslistan, eftersom fysioterapeuten inte har den i menyn.
@@ -19,7 +19,7 @@ export default {
   ],
   '7.1': [
     planeringen('Välj Avdelningens planering i arbetslistan. Där står dagens händelser på avdelningen i tidsordning.'),
-    { id: 'svar', hash: '#/avdelning', text: 'Läs vilka händelser som står vid klockan 11 och skriv dem i svarsfältet i panelen. Välj sedan Svara.', mal: [{ sel: '#tp-svar' }, { sel: '#testare [data-tp="vaxla"]', text: 'Läs vilka händelser som står vid klockan 11. Öppna panelen med uppdraget och skriv dem i svarsfältet.' }], gor: { skriv: 'provtagning och sjukgymnastik', tangent: 'Enter' } },
+    svar({ hash: '#/avdelning', nar: { sel: 'tr[data-klocka^="11"]' }, text: 'Läs vilka händelser som står vid klockan 11 och skriv dem i svarsfältet i panelen. Välj sedan Svara.', svar: 'provtagning och sjukgymnastik' }),
   ],
   '2.3': [
     { id: 'meny', text: 'Välj Remisser i menyn.', mal: meny('#/remisser', 'Remisser') },

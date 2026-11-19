@@ -28,7 +28,7 @@ export default {
   ],
   recept: [
     { id: 'flik', text: 'Välj Meddelanden.', mal: flik('meddelanden', 'Meddelanden') },
-    { id: 'typ', hash: '#/min', text: 'Välj Förnya ett recept i listan Det gäller.', mal: [{ sel: '#min-nytt #mn-typ' }], gor: { skriv: 'Förnya', tangent: 'Enter' } },
+    { id: 'typ', hash: '#/min', text: 'Välj Förnya ett recept i listan Det gäller.', mal: [{ sel: '#min-nytt #mn-typ' }], gor: { skriv: 'Förnya ett recept' } },
     { id: 'text', hash: '#/min', text: 'Systemet visar dina läkemedel och skickar begäran till den som ordinerade det du väljer. Skriv en kort rad, till exempel att tabletterna snart är slut.', mal: [{ sel: nytt('recept', '#mn-text') }], klar: 'varde', gor: { skriv: 'Tabletterna tar slut om en vecka.' } },
     { id: 'skicka', hash: '#/min', text: 'Välj Skicka.', mal: [{ sel: nytt('recept', '[type=submit]') }] },
   ],
