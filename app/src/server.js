@@ -2679,6 +2679,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     return tillganglighet([...(resultat?.tester ?? []), ...lasKlientresultat(klientresultat).tester]);
   });
 
+  // Runda 18, r5: listorna som gränssnittet uppdaterar av sig självt.
+  const LEVANDE_LISTOR = new Set(['/api/arbetslista', '/api/inkorg', '/api/vantrum', '/api/avdelning/planering']);
   // Endpoints som inte behöver en sandlåda.
   const UTAN_SESSION = new Set(['/api/health', '/api/krav', '/api/krav/sussa', '/api/krav/version', '/api/drift', '/api/lasekopia/krypterad-logg', '/api/tillganglighet']);
   // Runda 9, r5: autentiseringstjänstens nycklar och konfiguration.
@@ -2725,6 +2727,12 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (traff === 'metod') throw new Fel(405, 'Metoden stöds inte.', 'ogiltig');
     // Runda 15, r3: reservservern kan bara läsas. Inloggningen, ett aktivt val och loggen från läsläget görs som vanligt.
     if (reserv && metod !== 'GET' && metod !== 'HEAD' && !reservserverMod.tillatenSkrivning(url.pathname)) throw reservserverMod.skrivningNekad(reserv);
+    // Runda 18, r5: listorna som uppdaterar sig själva (arbetslistan, inkorgen, väntrummet och avdelningens planering)
+    // frågar i bakgrunden. En sandlåda som vilar väcks inte av en sådan fråga, utan svaret är 204 tills användaren gör
+    // något själv.
+    if (req.method === 'GET' && req.headers.get('x-vk-bakgrund') === '1' && LEVANDE_LISTOR.has(url.pathname) && sessioner.get(kakSid(req) ?? '')?.vilar) {
+      return new Response(null, { status: 204, headers: { 'X-Vk-Vilar': '1', 'Cache-Control': 'no-store' } });
+    }
     let sess = hamtaSession(req);
     // Runda 13, r2: sandlådans tidsbudget, som följer sandlådan också när den har vilat.
     if (sess) kravBudget(c, sess.s);

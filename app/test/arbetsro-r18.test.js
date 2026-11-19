@@ -75,3 +75,38 @@ describe('Två som arbetar med samma patient', () => {
     expect(s.db.query('SELECT count(*) AS n FROM matvarden WHERE patient_id = ?').get(pid).n - fore).toBe(12);
   });
 });
+
+describe('Listor som uppdaterar sig själva', () => {
+  test('en fråga i bakgrunden väcker inte en vilande sandlåda och räknas inte som aktivitet, och en vanlig fråga läser in den', async () => {
+    const { mkdtempSync, rmSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(import.meta.dir, '..', '.testtmp-r18-'));
+    const v = testserver({ vilaKatalog: join(dir, 'vila'), maxIMinnet: 5, maxSandlador: 50 });
+    try {
+      const k = klient(v);
+      await k.logga('lak-kard');
+      const s = sandlada(v, k);
+      const fore = s.anvand;
+      const bg = { 'X-Vk-Bakgrund': '1' };
+      expect((await k.get('/api/arbetslista', bg)).status).toBe(200);
+      expect(s.anvand).toBe(fore);
+      expect(v.vila(s)).toBeTruthy();
+      expect(s.vilar).toBe(true);
+      for (const vag of ['/api/arbetslista', '/api/inkorg', '/api/vantrum', '/api/avdelning/planering']) {
+        const r = await k.get(vag, bg);
+        expect(r.status).toBe(204);
+        expect(r.headers.get('x-vk-vilar')).toBe('1');
+      }
+      expect(s.vilar).toBe(true);
+      // Andra adresser och vanliga anrop läser in sandlådan som förut.
+      expect((await k.get('/api/arbetslista')).status).toBe(200);
+      expect(s.vilar).toBe(false);
+    } finally { v.stopp(); rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  test('samma behörighet som listan: utan inloggning ger frågan i bakgrunden 401 och ingen lista', async () => {
+    const k = klient(app);
+    const r = await k.get('/api/arbetslista', { 'X-Vk-Bakgrund': '1' });
+    expect(r.status).toBe(401);
+  });
+});

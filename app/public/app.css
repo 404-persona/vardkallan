@@ -2074,3 +2074,11 @@ a.hs-traff:hover, a.hs-traff:focus-visible { border-color: var(--kalla); backgro
   .hs-fot span { display: none; }
 }
 @media print { .hs-knapp { display: none !important; } }
+
+/* Runda 18, r5: osparad text i fliken, ett byte av patient som märks och listor som uppdaterar sig själva. */
+.osparad-rad { background: var(--obs-bg); border-bottom: 1px solid var(--obs-kant); padding: 6px 20px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.osparad-rad p { margin: 0; }
+.osparad-rad ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.patientband.patientbyte { box-shadow: 0 0 0 4px var(--fokus); }
+@media (prefers-reduced-motion: no-preference) { .patientband.patientbyte { transition: box-shadow 300ms ease-out; } }
+@media (max-width: 640px) { .osparad-rad { padding: 6px 16px; } }

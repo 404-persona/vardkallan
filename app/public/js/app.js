@@ -122,6 +122,10 @@ import * as testprotokoll from './vyer/testprotokoll.js';
 // Runda 18, r2: sökrutan Vad vill du göra? i sidhuvudet och ordlistan Jag letar efter.
 import * as handlingssok from './handlingssok.js';
 import * as ordlistaVy from './vyer/ordlista.js';
+// Runda 18, r5: listor som uppdaterar sig själva.
+import * as levandeListor from './levande-listor.js';
+// Runda 18, r5: osparad text följer med när vyn byts, och ett byte av patient märks.
+import * as osparadText from './osparad-text.js';
 
 // Globalt tillstånd.
 export const S = { session: null, inkorg: null, svarstid: null };
@@ -655,7 +659,8 @@ async function visaVy(vy, main, param, q, nr) {
   // Vid första laddningen ligger fokus kvar i början av sidan, så att länken till innehållet nås först.
   // En vy kan peka ut ett fält med data-fokus (sökfältet), annars får rubriken fokus.
   if (forstaVisning) forstaVisning = false;
-  else if (!sammaPatient) {
+  // Runda 18, r5: en tyst omritning (levande-listor.js) flyttar varken fokus eller rullning.
+  else if (!sammaPatient && !tystOmritning.pagar) {
     const mal = main.querySelector('[data-fokus]') ?? main.querySelector('h1');
     (mal ?? main).focus({ preventScroll: false });
     window.scrollTo(0, 0);
@@ -675,6 +680,18 @@ async function visaVy(vy, main, param, q, nr) {
   } else flera.stoppa();
   // Runda 13, r1: panelen med uppdragen frågar om något uppdrag har blivit gjort.
   testinbjudan.efterVy();
+  // Runda 18, r5.
+  levandeListor.efterVy();
+  osparadText.efterVy();
+}
+
+// Runda 18, r5: vyn ritas om utan att fokus eller rullning flyttas, när en lista har fått något nytt.
+export const tystOmritning = { pagar: false };
+export async function ritaTyst() {
+  const y = window.scrollY;
+  tystOmritning.pagar = true;
+  try { await rita(); } finally { tystOmritning.pagar = false; }
+  window.scrollTo(0, y);
 }
 
 // Demoknappen Simulera avbrott visas för den som är inloggad, och inte under ett avbrott.
