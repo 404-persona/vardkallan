@@ -29,6 +29,8 @@ COPY rivta ./rivta
 COPY scripts/testinbjudan.js ./scripts/testinbjudan.js
 COPY --from=test /app/test-resultat.json ./test-resultat.json
 COPY klickbudget.json klienttest-resultat.json sussa-testfall.json lasttest.json fhir-validering.json ./
+# Runda 18, r5: svarstiderna i webbläsaren (test/svarstider-klient.cjs), som sidan Svarstider visar.
+COPY svarstider-klient.json ./
 ENV NODE_ENV=production PORT=8080
 RUN mkdir -p /data && chown bun:bun /data
 USER bun

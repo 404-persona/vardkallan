@@ -142,3 +142,25 @@ describe('Listor utan överflöd', () => {
     expect(mallar.filter(m => m.lokal && m.lokal.enhet && !/Kardiolog/.test(m.lokal.enhet))).toEqual([]);
   });
 });
+
+describe('Svarstider i webbläsaren', () => {
+  test('mätningen räknas bara när den gäller gränssnittet som körs, och sidan Svarstider får den utan inloggning', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { webblasarSvarstider } = await import('../src/arbetsro-rutter.js');
+    const { gransnittHash, PUBLIC } = await import('../src/klientresultat.js');
+    const dir = mkdtempSync(join(import.meta.dir, '..', '.testtmp-r18-'));
+    try {
+      const fil = join(dir, 'svarstider-klient.json');
+      expect(webblasarSvarstider(fil).finns).toBe(false);
+      const lage = { antal: 100, p95Aterkoppling: 40, andelAterkoppling: 1, p95Resultat: 300, andelResultat: 0.99 };
+      writeFileSync(fil, JSON.stringify({ tid: '2026-11-19T12:00:00Z', webblasare: 'Chromium', gransnittHash: gransnittHash(PUBLIC), mal: { aterkopplingMs: 100 }, lagen: { vanlig: lage, strypt: lage } }));
+      expect(webblasarSvarstider(fil)).toMatchObject({ finns: true, aktuell: true, lagen: { vanlig: { p95Resultat: 300 } } });
+      writeFileSync(fil, JSON.stringify({ gransnittHash: 'annan', lagen: {} }));
+      expect(webblasarSvarstider(fil).aktuell).toBe(false);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+    const r = await klient(app).get('/api/drift/webblasare');
+    expect(r.status).toBe(200);
+    expect(typeof r.data.finns).toBe('boolean');
+  });
+});

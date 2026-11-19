@@ -82,7 +82,9 @@ async function bestallForm(plats, ctx) {
   const valda = new Set();
   const us = f.undersokning;
   const arUnd = (id) => Boolean(f.analyser.find(a => a.id === id)?.undersokning);
-  const lakareVal = f.paUppdrag ? `<div class="falt"><label for="pr-lakare">På uppdrag av</label><select id="pr-lakare" name="lakareId">${f.lakare.map(l => `<option value="${esc(l.id)}"${l.forvald ? ' selected' : ''}>${esc(l.namn)}</option>`).join('')}</select>
+  // Runda 18, r5: med en enda läkare på vårdenheten väljer systemet läkaren och säger vem det är, utan en lista.
+  const lakareVal = f.paUppdrag && f.lakare.length === 1 ? `<div class="falt"><p>På uppdrag av <strong>${esc(f.lakare[0].namn)}</strong>, den enda läkaren på vårdenheten.</p><input type="hidden" name="lakareId" value="${esc(f.lakare[0].id)}">
+    <p class="hjalp">Läkaren blir ansvarig för beställningen, får svaren och signerar beställningen i inkorgen.</p></div>` : f.paUppdrag ? `<div class="falt"><label for="pr-lakare">På uppdrag av</label><select id="pr-lakare" name="lakareId">${f.lakare.map(l => `<option value="${esc(l.id)}"${l.forvald ? ' selected' : ''}>${esc(l.namn)}</option>`).join('')}</select>
     <p class="hjalp">Läkaren blir ansvarig för beställningen, får svaren och signerar beställningen i inkorgen.</p></div>` : '';
   const paketKort = (p) => `<li class="pr-paket"><div class="pr-paket-text"><strong>${esc(p.namn)}</strong>
       <span class="under-text">${p.analyser.length ? esc(p.analyser.map(a => a.namn).join(', ')) : 'Allt i paketet är redan taget eller beställt'}${p.analyser.length ? `, till ${esc([...new Set(p.analyser.map(a => a.lab.kort))].join(' och '))}` : ''}.</span>

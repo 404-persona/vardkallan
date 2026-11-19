@@ -31,9 +31,12 @@ export async function visa(main) {
       ${sen ? `<div><dt>Ditt senaste anrop</dt><dd>${tal(sen.server, 1)} ms på servern, ${tal(sen.totalt, 0)} ms hela vägen</dd></div>` : ''}
     </dl>
     <p class="dampad liten">Mätningen gäller demons server, de senaste 1 000 anropen per adress för servern och 200 för din sandlåda. Den säger inget om ett produktionssystem med tusentals användare.</p>
+    <div id="dr-webblasare"></div>
     ${tabell(d.sandlada, d.mal.p95Ms, 'Din sandlåda', 'dr-s')}
     ${tabell(d.server, d.mal.p95Ms, 'Hela servern', 'dr-h')}
     <div id="arkitektur"></div>`;
+  // Runda 18, r5: svarstiderna i webbläsaren, vanligt och med processorn strypt fyra gånger.
+  api('/api/drift/webblasare', { tyst: true }).then((w) => { main.querySelector('#dr-webblasare').innerHTML = webblasare(w); }).catch(() => {});
   // Runda 9, r6: systemuppbyggnaden i fem perspektiv, modulerna med tillverkare och totalkostnaden (Sussa 2.1.1.1).
   api('/api/arkitektur', { tyst: true }).then((a) => { main.querySelector('#arkitektur').innerHTML = arkitektur(a); }).catch(() => {});
 }
@@ -51,4 +54,17 @@ function arkitektur(a) {
     <h3>Totalkostnad</h3>
     ${k ? `<p>Ungefär ${tal(k.krPerAnvandareOchManad, 2)} kronor per anställd och månad, med ${tal(k.matning.mbPerSandlada, 1)} megabyte minne per inloggad i den här servern, ${k.samtidigaPerServer} samtidiga och ${k.anstalldaPerServer} anställda per server och ${tal(k.krPerServerOchManad, 0)} kronor per server och månad.</p>` : '<p class="tom">Ingen mätning ännu.</p>'}
     <p class="dampad liten">Antaganden: ${esc(a.antaganden.text)} Det är en modell, inte en offert.</p></section>`;
+}
+
+// Runda 18, r5: tiden från klick till synlig återkoppling och till färdigt resultat i klickbudgetens flöden.
+function webblasare(w) {
+  if (!w?.finns) return `<section aria-labelledby="dr-w"><h2 id="dr-w">I webbläsaren</h2>${tom(w?.text ?? 'Svarstiderna i webbläsaren är inte mätta än. De mäts när gränssnittstesterna körs.')}</section>`;
+  const pr = (x) => `${tal(Math.round((x ?? 0) * 100), 0)} %`;
+  const rad = (namn, l, resMal) => `<tr><th scope="row">${esc(namn)}</th><td class="tal">${l.antal}</td><td class="tal">${l.p95Aterkoppling} ms</td><td class="tal">${pr(l.andelAterkoppling)}</td><td class="tal">${l.p95Resultat} ms</td><td class="tal">${pr(l.andelResultat)} inom ${resMal} ms</td></tr>`;
+  const m = w.mal;
+  return `<section aria-labelledby="dr-w"><h2 id="dr-w">I webbläsaren</h2>
+    <p>Tiden från att användaren klickar till att något syns, och till att resultatet är färdigt, för varje steg i klickbudgetens flöden. Målen: synlig återkoppling inom ${m.aterkopplingMs} ms och resultat inom ${m.resultatMs} ms på en vanlig dator och inom ${m.resultatStryptMs} ms med processorn strypt ${m.strypning} gånger, som en äldre dator, för ${pr(m.andel)} av stegen.</p>
+    <div class="tabellrulle"><table class="tabell siffertabell"><thead><tr><th scope="col">Dator</th><th scope="col" class="tal">Steg</th><th scope="col" class="tal">Återkoppling p95</th><th scope="col" class="tal">Inom ${m.aterkopplingMs} ms</th><th scope="col" class="tal">Resultat p95</th><th scope="col" class="tal">Inom målet</th></tr></thead>
+    <tbody>${rad('Vanlig', w.lagen.vanlig, m.resultatMs)}${rad(`Strypt ${m.strypning} gånger`, w.lagen.strypt, m.resultatStryptMs)}</tbody></table></div>
+    <p class="dampad liten">Mätt ${esc(tidpunkt(w.tid))} i ${esc(w.webblasare)} mot demons server.${w.aktuell ? '' : ' Mätningen gäller en tidigare version av gränssnittet och görs om när gränssnittstesterna körs.'}</p></section>`;
 }

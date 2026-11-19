@@ -197,7 +197,7 @@ import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
 import { registreraRutter as r18r2Rutter, UTAN_SESSION as R18R2_UTAN_SESSION } from './handlingssok-rutter.js';
 // Runda 18, r5: två som arbetar med samma patient (samtidighet.js).
 import * as samtidighet from './samtidighet.js';
-import { registreraRutter as r18r5Rutter } from './arbetsro-rutter.js';
+import { registreraRutter as r18r5Rutter, UTAN_SESSION as R18R5_UTAN_SESSION } from './arbetsro-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -2699,6 +2699,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   for (const v of R14R1_UTAN_SESSION) UTAN_SESSION.add(v);
   // Runda 18, r2: ordlistan Jag letar efter är öppen utan inloggning.
   for (const v of R18R2_UTAN_SESSION) UTAN_SESSION.add(v);
+  // Runda 18, r5: svarstiderna i webbläsaren på sidan Svarstider.
+  for (const v of R18R5_UTAN_SESSION) UTAN_SESSION.add(v);
 
   async function api(req, server, url, c) {
     if (url.pathname === '/api/health') return json({ ok: true, sandladar: sessioner.size, version: APPVERSION, gransnitt: gransnittVersion(),
