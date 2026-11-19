@@ -368,6 +368,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Johan Ek, sjuksköterska på avdelning 72, som motsvarar Sussas medicinavdelning.
 
+Första passet: Registrera mätvärden (Sussas testfall 4.2). Sara Sandmark har kommit till avdelningen. Registrera längd 165 cm, vikt 75 kg, blodtryck 140/90 och puls 83. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 7 steg.
+
 1. Överblicka dagens arbete för din arbetsplats (Sussas testfall 7.1).
    Ta fram dagens arbete på avdelningen.
    Meddela vilka händelser som äger rum klockan 11.

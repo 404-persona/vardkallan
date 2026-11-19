@@ -109,6 +109,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Tomas Lindh, systemförvaltare. Sussas testfall har inga uppdrag för systemförvaltare, så uppdragen här är förvaltningens vanliga arbetsflöden. Ingen ändring gäller innan en andra systemförvaltare har godkänt den.
 
+Första passet: Ändra en demoregel. Mottagningen vill att påminnelsen före en bokad tid skickas 72 timmar före i stället för 48. Föreslå ändringen. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot klickbudgeten på 3 steg.
+
 1. Godkänn en ändring.
    Den andra systemförvaltaren har föreslagit en ändrad regel. Granska den och godkänn eller avslå den.
 2. Föreslå en ändrad regel.
