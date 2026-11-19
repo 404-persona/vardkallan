@@ -290,7 +290,7 @@ export function forskrivning(db, p, { typ = 'lakemedel', lm = null, nu = new Dat
   const begr = (l) => l.begransningar.filter(x => x.typ === '003' && aktiv(x, dag));
   if (legs.some(l => !begr(l).length)) return { kan: true, varfor: null, begransning: null };
   const alla = legs.flatMap(begr);
-  const okanda = alla.filter(x => !/narkoti/i.test(x.text ?? ''));
+  const okanda = alla.filter(x => !arBegransningTillNarkotika(x.text));
   if (okanda.length) {
     return nej(`Din förskrivningsrätt är begränsad enligt ${REGISTRET}: ${okanda.map(x => x.text ?? 'beslutet har ingen text').join(' ')} Systemet kan inte avgöra vad begränsningen omfattar, så förskrivningen stoppas. Be en kollega förskriva, och kontakta systemförvaltningen.`);
   }
@@ -300,6 +300,13 @@ export function forskrivning(db, p, { typ = 'lakemedel', lm = null, nu = new Dat
   }
   return { kan: true, varfor: null, begransning: { narkotika: true, text } };
 }
+
+// Version 1.7.1: en begränsning räknas som en begränsning till narkotika bara när texten, med stora och små bokstäver,
+// mellanrum och avslutande punkt utjämnade, är en av de kända formuleringarna. All annan text är en begränsning som
+// systemet inte kan tolka, och då stoppas förskrivningen.
+export const NARKOTIKA_BEGRANSNINGAR = ['förskrivningsrätten omfattar inte narkotiska läkemedel'];
+const normalisera = (t) => t.toLowerCase().replace(/\s+/g, ' ').trim().replace(/\.$/, '').trim();
+export const arBegransningTillNarkotika = (text) => typeof text === 'string' && NARKOTIKA_BEGRANSNINGAR.includes(normalisera(text));
 
 // Samma regel som ett fel, för flödena som sparar.
 export function kravForskrivning(db, p, opts = {}) {
