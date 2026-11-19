@@ -13,6 +13,8 @@ const KATALOG = fileURLToPath(new URL('../public/js/uppdrag-steg/', import.meta.
 // Rollerna vars steg skrivs i en annan del av runda 19 (r2 och r3). Deras filer kommer in vid sammanslagningen, och då
 // ska listan vara tom: testet fallerar för en roll som står här men redan har en fil.
 const I_ANNAN_DEL = new Set(['sjukskoterska', 'underskoterska', 'barnmorska', 'vardadministrator', 'fysioterapeut', 'systemforvaltare', 'patient']);
+// Runda 19, r3: stegen för r3:s fyra testroller finns.
+for (const r of ['vardadministrator', 'fysioterapeut', 'systemforvaltare', 'patient']) I_ANNAN_DEL.delete(r);
 
 const NYCKLAR = new Set(['id', 'text', 'mal', 'hash', 'klar', 'gor', 'nar']);
 const MAL_NYCKLAR = new Set(['sel', 'innehaller', 'text', 'rad']);
