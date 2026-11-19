@@ -195,6 +195,8 @@ import { registreraRutter as r15r4Rutter } from './r15r4-rutter.js';
 import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
 // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (handlingssok-rutter.js).
 import { registreraRutter as r18r2Rutter, UTAN_SESSION as R18R2_UTAN_SESSION } from './handlingssok-rutter.js';
+// Runda 18, r5: två som arbetar med samma patient (samtidighet.js).
+import * as samtidighet from './samtidighet.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -1908,12 +1910,15 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const o = lakemedel.hamtaRad(c.db, id);
     return medPatient(c, o.patient_id, 'ordinera', (atk) => fn(atk, o));
   };
-  rutt('POST', '/api/ordination/:id/utsatt', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.utsatt(atk, o, c.body)));
+  // Runda 18, r5 (samtidighet.js): en ordination som någon annan har satt ut eller ändrat sedan dialogen öppnades ger ett
+  // besked om vem som ändrade vad, efter behörigheten.
+  const medAndrad = (fn) => (atk, o) => { atk.krav('ordinera', { resurs: { enhet_id: o.enhet_id, gemensam: true } }); return fn(atk, o); };
+  rutt('POST', '/api/ordination/:id/utsatt', (c, id) => medOrdination(c, id, medAndrad((atk, o) => { samtidighet.provaUtsatt(c.db, o); return lakemedel.utsatt(atk, o, c.body); })));
   rutt('POST', '/api/ordination/:id/nll-avstam', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.avstam(atk, o)));
   rutt('GET', '/api/ordination/:id/utsattning', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.utsattningskontroll(atk, o)));
   // Runda 8, r4: dosändring i en pågående ordination, med ny dosering från ett datum (dosandring.js).
   rutt('GET', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, (atk, o) => dosandring.underlag(atk, o)));
-  rutt('POST', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, (atk, o) => dosandring.andra(atk, o, c.body)));
+  rutt('POST', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, medAndrad((atk, o) => { samtidighet.provaOrdination(c.db, o, c.body.forvantat); return dosandring.andra(atk, o, c.body); })));
 
   // Läkemedelsprocessen (Sussa 3.5): administrering, vidimering, läkemedelsgenomgång, fördefinierade ordinationer,
   // planerad vårdhändelse och vätskebalans. Behörigheten prövas i administrering.js och vidimering.js, och varje
