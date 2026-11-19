@@ -166,11 +166,11 @@ export const planerFlik = {
       ${v ? `<section aria-labelledby="pl-vp"><div class="sektion-huvud"><h2 id="pl-vp">Vårdplaner</h2></div>
         ${v.forslag.map(f => `<div class="ruta ruta-info liten" data-skriv><p>Systemet föreslår <strong>${esc(f.rubrik)}</strong>. ${esc(f.varfor)}</p><button type="button" class="knapp liten" data-vp-mall="${esc(f.mall)}">Sätt upp vårdplanen</button></div>`).join('')}
         ${v.kan.skapa ? `<div class="knapprad" data-skriv><button type="button" class="knapp liten sekundar" data-vp-ny>Ny individuell vårdplan</button></div>` : ''}
-        ${v.planer.length ? v.planer.map(planHtml).join('') : tom('Inga vårdplaner som du kan se.')}<p class="demoregel">${esc(v.demoregler)}</p></section>` : ''}
+        ${v.planer.length ? v.planer.map(planHtml).join('') : tom('Inga vårdplaner som du kan se. En vårdplan hamnar här när en läkare eller sjuksköterska upprättar den.')}<p class="demoregel">${esc(v.demoregler)}</p></section>` : ''}
       ${s ? `<section aria-labelledby="pl-sam"><div class="sektion-huvud"><h2 id="pl-sam">Samordnad planering</h2></div>
         ${s.forslag.spu ? `<div class="ruta ruta-info liten" data-skriv><p>${esc(s.forslag.spu.varfor.join(' '))} ${esc(s.forslag.spu.forklaring)}</p><button type="button" class="knapp liten" data-sam-spu>Skicka inskrivningsmeddelande</button><p class="demoregel">${esc(s.forslag.spu.demoregel)}</p></div>` : ''}
         ${s.kan.skapa ? `<div class="knapprad" data-skriv><button type="button" class="knapp liten sekundar" data-sam-sip="sip">Ny samordnad individuell plan</button>${S.session?.r3?.tvangsvardsenhet ? '<button type="button" class="knapp liten sekundar" data-sam-sip="lpt7a">Samordnad vårdplan vid öppen tvångsvård</button>' : ''}</div>` : ''}
-        ${s.samordningar.length ? s.samordningar.map(x => samordningHtml(x)).join('') : tom('Ingen samordnad planering som du kan se.')}</section>` : ''}
+        ${s.samordningar.length ? s.samordningar.map(x => samordningHtml(x)).join('') : tom('Ingen samordnad planering som du kan se. En planering hamnar här när en läkare, sjuksköterska eller kurator startar den.')}</section>` : ''}
       ${arenden.length ? `<section aria-labelledby="pl-ha"><div class="sektion-huvud"><h2 id="pl-ha">Hälsoärenden</h2></div>
         ${(o.r3?.halsoarendeForslag ?? []).map((f, i) => `<div class="ruta ruta-info liten" data-skriv><p>${esc(f.text)}</p><button type="button" class="knapp liten" data-ha-forslag="${i}">${f.typ === 'avsluta' ? 'Avsluta ärendet' : 'Slå ihop'}</button></div>`).join('')}
         <ul class="enkel-lista">${arenden.map(h => `<li><strong>${esc(h.rubrik)}</strong> <span class="dampad">${esc(h.status === 'avslutat' ? 'Avslutat' : 'Aktivt')}, ${h.kontakter.length} vårdkontakter</span>
@@ -310,7 +310,7 @@ export function inkorgSektioner(d, sektion, rad) {
     esc([...x.frister.map(f => `${f.rubrik} senast ${tidpunkt(f.senast)} (${f.paragraf})`), ...x.uppgifter.map(u => `${u.text} (${u.paragraf})`)].join('. ')), x.frister.some(f => f.status === 'passerad') ? 'ik-larm' : ''));
   const vp = (d.vardplanerUppfoljning ?? []).map(x => rad(pat(x.patientId, 'planer'), `${esc(x.rubrik)}, ${esc(pnamn(x.patient))}`, `Vårdplanen skulle ha följts upp ${esc(x.uppfoljning)}.`));
   const sam = (d.samordning ?? []).map(x => rad(pat(x.patientId, 'planer'), `${esc(x.typText)}, ${esc(pnamn(x.patient))}`, esc([...x.uppgifter.map(u => `${u.text} (${u.paragraf})`), x.frist ? `${x.frist.rubrik} senast ${datum(x.frist.senast)} (${x.frist.paragraf})` : null].filter(Boolean).join(' '))));
-  return `${tv.length || S.session?.r3?.tvangsvardsenhet ? sektion('tv', 'Tvångsvård', tv, 'Inga frister eller uppgifter i tvångsvården.', 'Frister som är nära eller har passerat och det som lagen kräver, för patienterna på din vårdenhet.') : ''}
+  return `${tv.length || S.session?.r3?.tvangsvardsenhet ? sektion('tv', 'Tvångsvård', tv, 'Inga frister eller uppgifter i tvångsvården. En frist hamnar här när ett beslut om tvångsvård registreras.', 'Frister som är nära eller har passerat och det som lagen kräver, för patienterna på din vårdenhet.') : ''}
     ${vp.length ? sektion('vp', 'Vårdplaner att följa upp', vp, '', 'Vårdplaner på din vårdenhet vars uppföljningsdatum har passerat.') : ''}
     ${sam.length ? sektion('sam', 'Samordnad planering', sam, '', 'Det som din vårdenhet ska göra i en samordnad planering vid utskrivning eller en samordnad individuell plan.') : ''}`;
 }

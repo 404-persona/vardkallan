@@ -32,13 +32,13 @@ export async function visa(el, ctx) {
         <tbody>${p.rader.map(r => `<tr><th scope="row">${esc(r.text)}<span class="under-text">${esc(r.sjukdomar)}</span></th><td>${esc(r.programText)}</td><td>${esc(r.nar ?? '')}${r.ges ? `<span class="under-text">${esc(r.ges)}</span>` : ''}</td>
           <td><span class="tagg">${esc(STATUS[r.status] ?? r.status)}</span>${r.varfor ? `<span class="under-text">${esc(r.varfor)}</span>` : ''}${r.skal ? `<span class="under-text">${esc(r.skal)}</span>` : ''}${r.given ? `<span class="under-text">Senast ${esc(datum(r.given))}</span>` : ''}</td>
           <td>${r.status === 'nu' && d.kan.vaccinera ? `<button type="button" class="knapp liten" data-vp-ge="${esc(r.id)}" data-namn="${esc(r.text)}">Ge dosen</button>` : ''}${d.kan.vaccinera ? ` <button type="button" class="knapp liten sekundar" data-vp-tidigare="${esc(r.id)}" data-namn="${esc(r.text)}">Given någon annanstans</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`
-        : '<p class="tom">Inga doser i programmen gäller för patienten nu.</p>'}
+        : '<p class="tom">Inga doser i programmen gäller för patienten nu. En dos visas här när patienten blir aktuell för den.</p>'}
       <p class="demoregel">${esc(p.demoregel)} Källa: ${esc(p.kallor.program)}.</p>
     </section>
     <section aria-labelledby="vp-givna"><h3 id="vp-givna">Registrerade vaccinationer</h3>
       ${d.vaccinationer.length ? `<ul class="enkel-lista">${d.vaccinationer.map(v => `<li><strong>${esc(v.text)}</strong> ${esc(datum(v.tid))} <span class="dampad">${esc(v.program ?? '')}</span>
         <span class="under-text">${v.kalla ? `Given av ${esc(v.kalla.text ?? v.kalla.typText)}, registrerad på ${esc(v.vardenhet?.namn ?? '')}` : `${esc(v.vardenhet?.namn ?? '')}${v.givetAv ? `, ${esc(v.givetAv)}` : ''}${v.batch ? `, batch ${esc(v.batch)}` : ''}`}</span>
-        ${v.rapport ? `<span class="under-text">${esc(v.rapport.statusText)}, kvittens ${esc(v.rapport.kvittens)}</span>` : ''}</li>`).join('')}</ul>` : '<p class="tom">Inga vaccinationer registrerade.</p>'}
+        ${v.rapport ? `<span class="under-text">${esc(v.rapport.statusText)}, kvittens ${esc(v.rapport.kvittens)}</span>` : ''}</li>`).join('')}</ul>` : '<p class="tom">Inga vaccinationer registrerade. En vaccination hamnar här när den registreras.</p>'}
     </section>`;
   el.addEventListener('click', async (e) => {
     const ge = e.target.closest('[data-vp-ge]');

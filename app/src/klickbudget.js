@@ -679,3 +679,22 @@ FLODEN.push(
     motivering: 'Sussa bör-krav B2 och 7.1.2.1. Ett klick på Kostnader per vårdenhet i menyn. Systemet har räknat kostnaderna ur det som har hänt och visar de vårdenheter verksamhetschefen ansvarar för, som diagram och tabell. Budgeten har plats för att öppna tabellen.',
   },
 );
+
+// Runda 18, r2: tre vanliga handlingar via sökrutan Vad vill du göra?. Ett klick på knappen i sidhuvudet, där fältet får
+// fokus, egna ord och Enter, som väljer det första förslaget. Handlingen öppnas för den öppna patienten med formuläret
+// öppet och det som går att fylla i redan ifyllt. Sökrutan gör inget befintligt flöde dyrare, eftersom den bara är en
+// knapp i sidhuvudet.
+FLODEN.push(
+  {
+    id: 'sokrutan-remiss', namn: 'Skicka remiss via Vad vill du göra?', roll: 'lak-vc', start: 'Patientens översikt', budget: 7,
+    motivering: 'Ett klick på Vad vill du göra?, där fältet får fokus, orden skriv remiss och Enter, som öppnar remissformuläret för den öppna patienten. Sedan som i snabbvalet: två klick för mottagaren, ett fältbyte vardera för frågeställning och anamnes och ett klick för att skicka. Prioritet och sista svarsdatum är förvalda. Samma budget som från översikten, för den som inte vet var snabbvalet finns.',
+  },
+  {
+    id: 'sokrutan-blodtryck', namn: 'Registrera blodtryck via Vad vill du göra?', roll: 'ssk-kard', start: 'Patientens översikt', budget: 3,
+    motivering: 'Ett klick på Vad vill du göra?, ordet blodtryck och Enter, som öppnar mätvärdena för den öppna patienten med Blodtryck förvalt och fokus i värdefältet, och ett klick för att registrera. Samma budget som från översikten.',
+  },
+  {
+    id: 'sokrutan-ge-dos', namn: 'Ge en dos via Vad vill du göra?', roll: 'ssk-kard', start: 'Arbetslistan efter inloggning', budget: 4,
+    motivering: 'Ett klick på Vad vill du göra?, orden ge dos och Enter, som öppnar Läkemedel att ge, ett klick på Ge för dosen och ett klick som bekräftar hur identiteten kontrollerades. Ett steg mer än från menyn, för den som inte vet att listan heter Läkemedel att ge.',
+  },
+);

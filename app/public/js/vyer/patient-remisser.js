@@ -33,7 +33,7 @@ export async function visa(el, ctx) {
       <span class="under-text">Sparat ${esc(x.andrad.slice(0, 10))}${x.bilagor.length ? `, ${x.bilagor.length} ${x.bilagor.length === 1 ? 'bilaga' : 'bilagor'}` : ''}. Utkastet syns bara för dig.</span>
       <span class="knapprad tat"><button type="button" class="knapp liten sekundar" data-utkast="${x.id}">Fortsätt</button><button type="button" class="knapp liten text" data-utkast-bort="${x.id}">Ta bort</button></span></li>`).join('')}</ul></section>` : ''}
     <div id="remissform-plats"></div>
-    <div id="p-remisser">${lista.length ? lista.map(r => remissKort(r)).join('') : '<p class="tom">Patienten har inga remisser som du kan se.</p>'}</div>
+    <div id="p-remisser">${lista.length ? lista.map(r => remissKort(r)).join('') : '<p class="tom">Patienten har inga remisser som du kan se. En remiss hamnar här när den skickas eller tas emot.</p>'}</div>
     ${(d.mellanarkiv ?? []).length ? mellanarkivRemisser(d.mellanarkiv, ctx) : ''}`;
   kopplaAtgarder(el.querySelector('#p-remisser'), (id) => lista.find(r => String(r.id) === String(id)), () => ctx.ladda());
   el.querySelector('[data-ny]')?.addEventListener('click', (e) => {

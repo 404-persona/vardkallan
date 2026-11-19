@@ -23,7 +23,7 @@ export function sektionHtml(t) {
   const vantar = t.vantelista.map(p => `<li><strong>Väntar på tid:</strong> ${esc(p.orsak)}<span class="under-text">${esc(p.tidstypText)} hos ${esc(p.yrkesrollText)}, ${esc(dagar(p.vantatDagar))}${p.grans ? `, ${esc(dagar(p.grans.dagarKvar))} kvar till gränsen` : ''}</span>${p.styrLakemedel ? `<span class="under-text">${esc(p.styrLakemedel)}</span>` : ''}
     ${far('boka') ? `<span class="knapprad tat" data-skriv><button type="button" class="knapp liten" data-tider="boka" data-id="${p.id}">Boka tid</button></span>` : ''}</li>`).join('');
   return `<section class="ov-sektion ov-tider" aria-labelledby="ov-tider"><div class="sektion-huvud"><h2 id="ov-tider">Bokade tider</h2>${far('bevaka') ? '<button type="button" class="knapp text liten" data-tider="bevakning" data-skriv>Lägg bevakning</button>' : ''}${far('las_tidbok') ? '<a class="sektion-lank" href="#/tidbok">Tidbok</a>' : ''}</div>
-    ${t.kommande.length || vantar ? `<ul class="enkel-lista">${t.kommande.map(rad).join('')}${vantar}</ul>` : '<p class="tom liten">Inga bokade tider.</p>'}
+    ${t.kommande.length || vantar ? `<ul class="enkel-lista">${t.kommande.map(rad).join('')}${vantar}</ul>` : '<p class="tom liten">Inga bokade tider. En tid hamnar här när den bokas.</p>'}
     ${t.dolda?.kraverVal ? `<p class="dampad liten">${t.dolda.kraverVal} ${t.dolda.kraverVal === 1 ? 'tid' : 'tider'} på andra vårdenheter visas efter ett aktivt val.</p>` : ''}</section>`;
 }
 

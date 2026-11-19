@@ -10,5 +10,5 @@ export async function visa(main) {
   main.querySelector('#sl').innerHTML = l.forfattare.length ? `<p>${esc(l.vardenhet)}</p><div class="tabellrulle"><table class="tabell">
     <thead><tr><th scope="col">Författare</th><th scope="col" class="tal">Osignerade</th><th scope="col">Typer</th><th scope="col" class="tal">Äldsta, dagar</th></tr></thead>
     <tbody>${l.forfattare.map(f => `<tr><th scope="row">${esc(f.namn)}<span class="under-text">${esc(f.titel ?? '')}</span></th><td class="tal">${f.antal}</td><td>${esc(Object.entries(f.typer).map(([t, n]) => `${t} ${n}`).join(', '))}</td><td class="tal">${f.aldstaDagar}</td></tr>`).join('')}</tbody></table></div>
-    <p class="under-text">${esc(l.anmarkning)}</p>` : tom('Inga osignerade anteckningar på vårdenheten.');
+    <p class="under-text">${esc(l.anmarkning)}</p>` : tom('Inga osignerade anteckningar på vårdenheten. En anteckning hamnar här när den har sparats utan signering.');
 }

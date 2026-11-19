@@ -198,6 +198,11 @@ import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
 // Runda 18, r4: sandlådans livslängd på ett ställe, och textgranskningen av de publika sidorna.
 import { SANDLADA_TIMMAR } from './sandlada-livslangd.js';
 import * as textgranskning from './textgranskning.js';
+// Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (handlingssok-rutter.js).
+import { registreraRutter as r18r2Rutter, UTAN_SESSION as R18R2_UTAN_SESSION } from './handlingssok-rutter.js';
+// Runda 18, r5: två som arbetar med samma patient (samtidighet.js).
+import * as samtidighet from './samtidighet.js';
+import { registreraRutter as r18r5Rutter, UTAN_SESSION as R18R5_UTAN_SESSION } from './arbetsro-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -1926,12 +1931,15 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const o = lakemedel.hamtaRad(c.db, id);
     return medPatient(c, o.patient_id, 'ordinera', (atk) => fn(atk, o));
   };
-  rutt('POST', '/api/ordination/:id/utsatt', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.utsatt(atk, o, c.body)));
+  // Runda 18, r5 (samtidighet.js): en ordination som någon annan har satt ut eller ändrat sedan dialogen öppnades ger ett
+  // besked om vem som ändrade vad, efter behörigheten.
+  const medAndrad = (fn) => (atk, o) => { atk.krav('ordinera', { resurs: { enhet_id: o.enhet_id, gemensam: true } }); return fn(atk, o); };
+  rutt('POST', '/api/ordination/:id/utsatt', (c, id) => medOrdination(c, id, medAndrad((atk, o) => { samtidighet.provaUtsatt(c.db, o); return lakemedel.utsatt(atk, o, c.body); })));
   rutt('POST', '/api/ordination/:id/nll-avstam', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.avstam(atk, o)));
   rutt('GET', '/api/ordination/:id/utsattning', (c, id) => medOrdination(c, id, (atk, o) => lakemedel.utsattningskontroll(atk, o)));
   // Runda 8, r4: dosändring i en pågående ordination, med ny dosering från ett datum (dosandring.js).
   rutt('GET', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, (atk, o) => dosandring.underlag(atk, o)));
-  rutt('POST', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, (atk, o) => dosandring.andra(atk, o, c.body)));
+  rutt('POST', '/api/ordination/:id/dosandring', (c, id) => medOrdination(c, id, medAndrad((atk, o) => { samtidighet.provaOrdination(c.db, o, c.body.forvantat); return dosandring.andra(atk, o, c.body); })));
 
   // Läkemedelsprocessen (Sussa 3.5): administrering, vidimering, läkemedelsgenomgång, fördefinierade ordinationer,
   // planerad vårdhändelse och vätskebalans. Behörigheten prövas i administrering.js och vidimering.js, och varje
@@ -2664,6 +2672,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // HOSP: systemförvaltarens lista och personens egna uppgifter.
   hospRutter({ rutt, kravInloggad });
   // Runda 13, r1 (r13r1-rutter.js).
+  // Runda 18, r2 (handlingssok-rutter.js).
+  r18r2Rutter({ rutt, kravInloggad, sessionUt, valFor });
+  // Runda 18, r5 (arbetsro-rutter.js): de senast använda mallarna, ur samma lista som GET /api/mallar.
+  r18r5Rutter({ rutt, kravInloggad, mallar: (c) => [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)] });
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.
   // Runda 13, r2 (säkerhetsgranskningen av runda 12, fynd 3): efter inläsningen av en kopia loggas sessionen ut, så att
@@ -2695,6 +2707,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     return tillganglighet([...(resultat?.tester ?? []), ...lasKlientresultat(klientresultat).tester]);
   });
 
+  // Runda 18, r5: listorna som gränssnittet uppdaterar av sig självt.
+  const LEVANDE_LISTOR = new Set(['/api/arbetslista', '/api/inkorg', '/api/vantrum', '/api/avdelning/planering']);
   // Endpoints som inte behöver en sandlåda.
   const UTAN_SESSION = new Set(['/api/health', '/api/krav', '/api/krav/sussa', '/api/krav/version', '/api/drift', '/api/lasekopia/krypterad-logg', '/api/tillganglighet']);
   // Runda 9, r5: autentiseringstjänstens nycklar och konfiguration.
@@ -2708,6 +2722,10 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   for (const v of ['/api/testare', '/api/testare/roller', '/api/synpunkter/om']) UTAN_SESSION.add(v);
   // Runda 14, r1: Vårdkällans publika nyckel och övningstjänstens metadata och nycklar.
   for (const v of R14R1_UTAN_SESSION) UTAN_SESSION.add(v);
+  // Runda 18, r2: ordlistan Jag letar efter är öppen utan inloggning.
+  for (const v of R18R2_UTAN_SESSION) UTAN_SESSION.add(v);
+  // Runda 18, r5: svarstiderna i webbläsaren på sidan Svarstider.
+  for (const v of R18R5_UTAN_SESSION) UTAN_SESSION.add(v);
 
   async function api(req, server, url, c) {
     if (url.pathname === '/api/health') return json({ ok: true, sandladar: sessioner.size, version: APPVERSION, gransnitt: gransnittVersion(),
@@ -2739,6 +2757,12 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     if (traff === 'metod') throw new Fel(405, 'Metoden stöds inte.', 'ogiltig');
     // Runda 15, r3: reservservern kan bara läsas. Inloggningen, ett aktivt val och loggen från läsläget görs som vanligt.
     if (reserv && metod !== 'GET' && metod !== 'HEAD' && !reservserverMod.tillatenSkrivning(url.pathname)) throw reservserverMod.skrivningNekad(reserv);
+    // Runda 18, r5: listorna som uppdaterar sig själva (arbetslistan, inkorgen, väntrummet och avdelningens planering)
+    // frågar i bakgrunden. En sandlåda som vilar väcks inte av en sådan fråga, utan svaret är 204 tills användaren gör
+    // något själv.
+    if (req.method === 'GET' && req.headers.get('x-vk-bakgrund') === '1' && LEVANDE_LISTOR.has(url.pathname) && sessioner.get(kakSid(req) ?? '')?.vilar) {
+      return new Response(null, { status: 204, headers: { 'X-Vk-Vilar': '1', 'Cache-Control': 'no-store' } });
+    }
     let sess = hamtaSession(req);
     // Runda 13, r2: sandlådans tidsbudget, som följer sandlådan också när den har vilat.
     if (sess) kravBudget(c, sess.s);

@@ -165,7 +165,7 @@ function provHtml(p) {
         ${x.resultat ? `<p class="dampad" data-prov-resultat>${esc(x.resultat)}</p>` : ''}</div>
       ${x.status === 'pagar' ? `<button type="button" class="knapp" data-prov-kontrollera="${x.id}">Kontrollera provet</button>`
         : x.status !== 'godkant' ? `<button type="button" class="knapp sekundar" data-prov-starta="${x.id}">Starta provet</button>` : ''}
-    </li>`).join('')}</ul>` : '<p class="tom">Det finns inga praktiska prov för din yrkesroll på vårdenheten.</p>';
+    </li>`).join('')}</ul>` : '<p class="tom">Det finns inga praktiska prov för din yrkesroll på vårdenheten. Ett prov hamnar här när en utbildare på vårdenheten skapar det.</p>';
   const kvar = p.utbildare ? p.provtyper.filter(t => !p.uppfoljning.some(u => u.typ === t.typ)) : [];
   const utb = p.utbildare ? `<h3>Skapa och följ upp prov</h3>
     <p>Du har behörigheten utbildare på vårdenheten. Välj ett prov. Systemet vet vilka yrkesroller det gäller och kontrollerar resultatet själv.</p>

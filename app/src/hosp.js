@@ -361,7 +361,7 @@ export function lista(db, personal, nu = new Date(), { logga = true } = {}) {
   const ejHamtade = rader.filter(r => r.status === 'okand').length;
   const gamla = rader.filter(r => r.gammal && r.fel).length;
   const delar = [];
-  if (avvikelser) delar.push(`${avvikelser} ${avvikelser === 1 ? 'person saknar' : 'personer saknar'} giltig legitimation för sin roll och kan inte arbeta i den.`);
+  if (avvikelser) delar.push(`${avvikelser} ${avvikelser === 1 ? 'person saknar' : 'personer saknar'} giltig legitimation för sin roll och kan inte arbeta i den. Se orsaken i listan nedan.`);
   if (gamla) delar.push(`Tjänsten svarar inte, så de senast hämtade uppgifterna gäller för ${gamla} ${gamla === 1 ? 'person' : 'personer'}.`);
   if (ejHamtade) delar.push(`För ${ejHamtade} ${ejHamtade === 1 ? 'person' : 'personer'} har uppgifterna inte kunnat hämtas, eftersom tjänsten inte svarar eller personnumret saknas i HSA-katalogen. Systemet försöker igen av sig självt.`);
   return { regel: REGEL, simulerat: SIMULERAT, personal: rader, avvikelser, text: delar.length ? delar.join(' ') : 'Alla som har en roll som kräver legitimation har giltig legitimation enligt registret.' };

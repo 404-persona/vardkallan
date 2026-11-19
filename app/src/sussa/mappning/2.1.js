@@ -1,11 +1,13 @@
 // Sussa 2.1 Systemuppbyggnad Kärnsystem: hur Vårdkällan möter posterna i avsnittet.
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST } from '../../krav.js';
+// Runda 18, r2: sökrutan Vad vill du göra? (sussa/runda18-r2.js).
+import { medR18r2 } from '../runda18-r2.js';
 
 const { A, KR } = TEST;
 const SU = 'Systemuppbyggnad > ';
 
-export default [
+export default medR18r2([
   // Runda 9, r6: förteckningen över moduler med tillverkare, de fem perspektiven, lastmätningen och totalkostnaden
   // (arkitektur.js och app/test/runda9-r6-arkitektur.test.js).
   {
@@ -23,4 +25,4 @@ export default [
     expert: 'Hela systemet har ett gränssnitt och samma regler för behörighet och loggning överallt, så användaren behöver inte veta vilken modul en uppgift ligger i. Förteckningen och kostnaden räknas fram av systemet självt, så de kan inte bli inaktuella.',
     anmarkning: 'Lastmätningen görs mot demons server i testmiljön, inte mot ett produktionssystem med verklig last. Totalkostnaden är en modell: priset för en server, andelen samtidigt inloggade och driftens timmar är antaganden som står i svaret. Beskrivningen är kortare än de 50 sidor kravet tillåter.',
   },
-];
+]);

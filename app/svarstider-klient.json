@@ -1,0 +1,133 @@
+{
+  "tid": "2026-11-19T15:29:12.161Z",
+  "bas": "http://127.0.0.1:18282",
+  "webblasare": "Chromium 147.0.7727.15",
+  "gransnittHash": "ea3aeca33e325b0867bc39b4bb6fcdd47699d3de584716a28d031a6544dd9387",
+  "mal": {
+    "aterkopplingMs": 100,
+    "resultatMs": 500,
+    "resultatStryptMs": 1000,
+    "andel": 0.95,
+    "strypning": 4
+  },
+  "lagen": {
+    "vanlig": {
+      "antal": 368,
+      "p50Aterkoppling": 1,
+      "p95Aterkoppling": 3,
+      "p50Resultat": 44,
+      "p95Resultat": 153,
+      "andelAterkoppling": 1,
+      "andelResultat": 1,
+      "langsammaste": [
+        {
+          "flode": "Skriva ut läkemedelslistan vid utskrivning",
+          "steg": "Skriv ut i dialogen",
+          "aterkoppling": 4,
+          "resultat": 423
+        },
+        {
+          "flode": "Sätta ut ett läkemedel",
+          "steg": "Sätt ut",
+          "aterkoppling": 0,
+          "resultat": 383
+        },
+        {
+          "flode": "Läsa in loggen från reservservern",
+          "steg": "Läs in",
+          "aterkoppling": 1,
+          "resultat": 295
+        },
+        {
+          "flode": "Diktera och signera en daganteckning",
+          "steg": "Diktera",
+          "aterkoppling": 1,
+          "resultat": 246
+        },
+        {
+          "flode": "Välja yrkesroll och starta första uppdraget",
+          "steg": "Läkare på sjukhus",
+          "aterkoppling": 1,
+          "resultat": 223
+        },
+        {
+          "flode": "Ordinera ett läkemedel utan varning",
+          "steg": "Kontrollera och spara",
+          "aterkoppling": 1,
+          "resultat": 220
+        },
+        {
+          "flode": "Boka provtagning före läkarbesök",
+          "steg": "Boka tid vid återbesöket",
+          "aterkoppling": 0,
+          "resultat": 208
+        },
+        {
+          "flode": "Ordinera från en mall med flera ordinationer",
+          "steg": "Ordinera",
+          "aterkoppling": 1,
+          "resultat": 184
+        }
+      ]
+    },
+    "strypt": {
+      "antal": 368,
+      "p50Aterkoppling": 2,
+      "p95Aterkoppling": 9,
+      "p50Resultat": 64,
+      "p95Resultat": 228,
+      "andelAterkoppling": 1,
+      "andelResultat": 1,
+      "langsammaste": [
+        {
+          "flode": "Ordinera ett läkemedel utan varning",
+          "steg": "Kontrollera och spara",
+          "aterkoppling": 2,
+          "resultat": 695
+        },
+        {
+          "flode": "Avvisa en remiss och sätta ut läkemedlet",
+          "steg": "Spara bedömningen",
+          "aterkoppling": 3,
+          "resultat": 407
+        },
+        {
+          "flode": "Sätta ut Waran med plan",
+          "steg": "Jag har en plan",
+          "aterkoppling": 2,
+          "resultat": 364
+        },
+        {
+          "flode": "Läsa in loggen från reservservern",
+          "steg": "Läs in",
+          "aterkoppling": 2,
+          "resultat": 325
+        },
+        {
+          "flode": "Öppna patient från arbetslistan",
+          "steg": "patientens namn i arbetslistan",
+          "aterkoppling": 3,
+          "resultat": 289
+        },
+        {
+          "flode": "Sätta upp en standardvårdplan",
+          "steg": "Upprätta vårdplanen",
+          "aterkoppling": 42,
+          "resultat": 289
+        },
+        {
+          "flode": "Ordinera från en mall med flera ordinationer",
+          "steg": "Ordinera",
+          "aterkoppling": 2,
+          "resultat": 289
+        },
+        {
+          "flode": "Välja yrkesroll och starta första uppdraget",
+          "steg": "Läkare på sjukhus",
+          "aterkoppling": 3,
+          "resultat": 288
+        }
+      ]
+    }
+  }
+}

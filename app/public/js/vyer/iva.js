@@ -14,7 +14,7 @@ const VARDEN = [['blodtryck', 'Blodtryck', 'mmHg'], ['puls', 'Puls', '/min'], ['
 const sv = (v, d = 1) => (v == null ? '' : tal(v, d));
 
 function analysHtml(a) {
-  if (!a.length) return '<p class="tom liten">Inga larm eller förslag just nu.</p>';
+  if (!a.length) return '<p class="tom liten">Inga larm eller förslag just nu. De visas här när ett värde eller en trend kräver åtgärd.</p>';
   return `<ul class="iva-analys">${a.map(x => `<li class="ruta ${NIVA[x.niva][0]} liten">${x.niva === 'larm' ? ikon.larm : ikon.info}<div><strong>${esc(NIVA[x.niva][1])}:</strong> ${esc(x.text)}${x.gora ? ` <span class="under-text">${esc(x.gora)}</span>` : ''}</div></li>`).join('')}</ul>`;
 }
 function vardeRuta(v, typ) {
@@ -107,7 +107,7 @@ export async function rendera(el, pid, ctx = {}, ladda = () => rendera(el, pid, 
     <section class="ov-sektion" aria-labelledby="iva-varden"><div class="sektion-huvud"><h2 id="iva-varden">Senaste värdena</h2></div>
       <dl class="iva-varden">${VARDEN.map(([typ, n, e]) => `<div><dt>${esc(n)} <span class="enhet">${esc(e)}</span></dt><dd>${vardeRuta(d.varden[typ], typ)}</dd></div>`).join('')}</dl>
       ${d.utrustning?.vantar.utrustning ? `<p class="ruta ruta-info liten">${ikon.info}<span>${d.utrustning.vantar.utrustning} värden från monitorn väntar på godkännande. <a href="#/patient/${encodeURIComponent(pid)}/matvarden">Granska och godkänn</a>.</span></p>` : ''}
-      <div class="kurvor iva-kurvor">${d.kurvor.map(k => `<article class="kurvkort" aria-labelledby="iva-k-${esc(k.typ)}"><header><h3 id="iva-k-${esc(k.typ)}">${esc(k.namn)}</h3></header>${kurva(k)}</article>`).join('') || '<p class="tom liten">Inga värden de senaste timmarna.</p>'}</div>
+      <div class="kurvor iva-kurvor">${d.kurvor.map(k => `<article class="kurvkort" aria-labelledby="iva-k-${esc(k.typ)}"><header><h3 id="iva-k-${esc(k.typ)}">${esc(k.namn)}</h3></header>${kurva(k)}</article>`).join('') || '<p class="tom liten">Inga värden de senaste timmarna. Kurvorna visas här när utrustningen eller personalen registrerar värden.</p>'}</div>
       <p class="under-text">De senaste ${esc(d.timmar)} timmarna. Ihåliga punkter är värden från monitorn som inte är godkända.</p>
     </section>
     <section class="ov-sektion" aria-labelledby="iva-lm"><div class="sektion-huvud"><h2 id="iva-lm">Infusioner, bolusar och vätskor</h2></div>
@@ -115,7 +115,7 @@ export async function rendera(el, pid, ctx = {}, ladda = () => rendera(el, pid, 
           <span class="under-text">Ordinerat ${esc(sv(i.intervall.min, 3))} till ${esc(sv(i.intervall.max, 3))} ${esc(i.dosEnhet)}.${i.senastAndrad ? ` Ändrad ${esc(tidpunkt(i.senastAndrad.tid))} av ${esc(i.senastAndrad.av ?? '')}.` : ''}${i.pump?.senaste ? ` Pumpen: ${esc(i.pump.senaste.text)}.` : ' Ingen pump kopplad.'}</span></div>
         ${i.titrering ? `<p class="${i.titrering.niva === 'larm' ? 'text-larm' : 'under-text'}">${esc(i.titrering.text)}</p>` : ''}
         ${kanTitrera && i.titrering?.forslag != null ? `<p class="knapprad"><button type="button" class="knapp liten" data-titrera="${esc(i.ordinationId)}">Ändra till ${esc(sv(i.titrering.forslag, 3))} ${esc(i.dosEnhet)}</button></p>` : ''}
-      </li>`).join('')}</ul>` : '<p class="tom liten">Inga kontinuerliga infusioner.</p>'}
+      </li>`).join('')}</ul>` : '<p class="tom liten">Inga kontinuerliga infusioner. En infusion hamnar här när den ordineras som kontinuerlig.</p>'}
       ${inf && inf.protokoll.length ? `<form class="mt-koppla" id="iva-ny-inf" novalidate aria-labelledby="iva-ny-inf-r"><h3 id="iva-ny-inf-r">Ny kontinuerlig infusion</h3><p class="hjalp">${esc(inf.text)}</p>
         <div class="falt-rad"><div class="falt"><label for="iva-protokoll">Protokoll</label><select id="iva-protokoll" name="protokoll">${inf.protokoll.map(x => `<option value="${esc(x.id)}">${esc(x.namn)}${x.startMlH != null ? `, start ${esc(sv(x.startMlH))} ml/h` : ''}</option>`).join('')}</select></div>
         <div class="falt"><label for="iva-orsak">Ordinationsorsak</label><input id="iva-orsak" name="ordinationsorsak" autocomplete="off"></div>
@@ -155,7 +155,7 @@ export async function rendera(el, pid, ctx = {}, ladda = () => rendera(el, pid, 
 function anestesiHtml(an) {
   const f = an.forslag;
   return `<section class="ov-sektion" aria-labelledby="iva-an"><div class="sektion-huvud"><h2 id="iva-an">Anestesibedömning</h2></div>
-    ${an.bedomningar.length ? `<ul class="iva-handelser">${an.bedomningar.map(b => `<li><strong>${esc(b.asaText)}</strong> ${esc(b.ingrepp)}, ${esc(b.anestesiformText)}. <span class="under-text">${esc(tidpunkt(b.tid))}, ${esc(b.av ?? '')}${b.fasta ? `. ${esc(b.fasta.text)}` : ''}</span></li>`).join('')}</ul>` : '<p class="tom liten">Ingen anestesibedömning är gjord.</p>'}
+    ${an.bedomningar.length ? `<ul class="iva-handelser">${an.bedomningar.map(b => `<li><strong>${esc(b.asaText)}</strong> ${esc(b.ingrepp)}, ${esc(b.anestesiformText)}. <span class="under-text">${esc(tidpunkt(b.tid))}, ${esc(b.av ?? '')}${b.fasta ? `. ${esc(b.fasta.text)}` : ''}</span></li>`).join('')}</ul>` : '<p class="tom liten">Ingen anestesibedömning är gjord. Bedömningen hamnar här när anestesiläkaren har gjort den.</p>'}
     ${f ? `<form class="mt-koppla" id="iva-anestesi" novalidate aria-labelledby="iva-an-ny"><h3 id="iva-an-ny">Ny anestesibedömning</h3><p class="hjalp">${esc(f.text)}</p>
       <dl class="pt-uppf">
         <div><dt>Läkemedel</dt><dd>${f.lakemedel.length ? f.lakemedel.map(l => `${esc(l.text)}${l.observation ? ` <strong>${esc(l.observation)}</strong>` : ''}`).join('<br>') : 'Inga aktuella'}</dd></div>

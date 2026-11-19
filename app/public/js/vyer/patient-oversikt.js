@@ -83,7 +83,7 @@ export async function visa(el, ctx) {
       <p class="dampad liten">Alla utom de markerade är kvitterade av Nationella läkemedelslistan.</p>` : tomRad('Inga aktuella läkemedel.')), `<a class="sektion-lank" href="${ctx.href('lakemedel')}">Läkemedelslistan</a>`));
   });
   if (d.diagnoser) som('diagnoser', () => {
-    delar.push(sektion('dia', 'Diagnoser', d.diagnoser.length ? `<ul class="enkel-lista">${d.diagnoser.map(x => `<li><span class="kod">${esc(x.kod)}</span> ${esc(x.text)}${x.typ === 'huvud' ? ' <span class="dampad">(huvuddiagnos)</span>' : ''}<span class="under-text">${esc(datum(x.datum))}, ${esc(x.vardenhet.namn)}</span>${migreradEtikett(x)}</li>`).join('')}</ul>` : tomRad('Inga diagnoser som du kan se.'),
+    delar.push(sektion('dia', 'Diagnoser', d.diagnoser.length ? `<ul class="enkel-lista">${d.diagnoser.map(x => `<li><span class="kod">${esc(x.kod)}</span> ${esc(x.text)}${x.typ === 'huvud' ? ' <span class="dampad">(huvuddiagnos)</span>' : ''}<span class="under-text">${esc(datum(x.datum))}, ${esc(x.vardenhet.namn)}</span>${migreradEtikett(x)}</li>`).join('')}</ul>` : tomRad('Inga diagnoser som du kan se. En diagnos hamnar här när en läkare sätter den.'),
       // Runda 13, r3 (E1-36): läkaren sätter en diagnos med ICD-10-SE direkt i rutan Diagnoser.
       far('registrera_diagnos') ? '<button type="button" class="knapp liten sekundar" data-satt-diagnos>Sätt diagnos</button>' : ''));
   });
@@ -218,7 +218,7 @@ function levnadsvanorHtml(d, ctx) {
   const s = d.levnadsvanor.senaste;
   const rek = (d.folkhalsa ?? []).map(f => `<p class="ruta ruta-info liten">${ikon.info}<span>${esc(f.text)}</span></p>`).join('');
   const text = s ? `<p><a href="${ctx.href('journal', s.anteckningId)}">${esc(s.text)}</a></p><p class="under-text">Dokumenterat ${esc(datum(s.tid))}, ${esc(s.enhet?.namn ?? '')}</p>`
-    : tomRad('Alkohol, fysisk aktivitet och matvanor är inte dokumenterade.');
+    : tomRad('Alkohol, fysisk aktivitet och matvanor är inte dokumenterade. De visas här när någon har dokumenterat dem i journalen.');
   const knapp = pa('skriv_omvardnad') ? `<p class="knapprad tat"><a class="knapp liten sekundar" href="${ctx.href('journal', 'levnadsvanor')}" data-levnadsvanor-ny>${ikon.penna}<span>${s ? 'Uppdatera levnadsvanor' : 'Dokumentera levnadsvanor'}</span></a></p>` : '';
   return rek + text + knapp;
 }
@@ -227,7 +227,7 @@ function levnadsvanorHtml(d, ctx) {
 function tobakHtml(t, ctx) {
   const s = t.senaste;
   const text = s ? `<p><a href="${ctx.href('journal', s.anteckningId)}">${esc(s.text)}</a></p><p class="under-text">Dokumenterat ${esc(datum(s.tid))}, ${esc(s.enhet?.namn ?? '')}</p>`
-    : tomRad('Tobaksvanorna är inte dokumenterade.');
+    : tomRad('Tobaksvanorna är inte dokumenterade. De visas här när någon har dokumenterat dem i journalen.');
   const knapp = pa('skriv_omvardnad') ? `<p class="knapprad tat" data-skriv><a class="knapp liten sekundar" href="${ctx.href('journal', 'tobak')}" data-tobak-ny>${ikon.penna}<span>${s ? 'Uppdatera tobaksvanor' : 'Dokumentera tobaksvanor'}</span></a></p>` : '';
   return text + knapp;
 }

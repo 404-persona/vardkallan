@@ -75,7 +75,7 @@ export async function visa(main) {
     </section>
     ${gallringsregler.length ? reglerLista(gallringsregler) : ''}
     <section aria-labelledby="ar-lista"><h2 id="ar-lista">Beslut</h2>
-      ${beslut.length ? `<ul class="arkiv-lista">${beslut.map(beslutKort).join('')}</ul>` : '<p class="tom">Inga beslut är registrerade.</p>'}
+      ${beslut.length ? `<ul class="arkiv-lista">${beslut.map(beslutKort).join('')}</ul>` : '<p class="tom">Inga beslut är registrerade. Ett beslut hamnar här när du registrerar det.</p>'}
     </section>
   </div>`;
 

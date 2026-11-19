@@ -33,7 +33,7 @@ export function utrustningHtml(d) {
         <span class="under-text">Kopplad ${esc(tidpunkt(k.start))} av ${esc(k.kopplad.av ?? '')}${k.armbandKontrollerat ? ', armbandet kontrollerat' : ''}. ${esc(k.arbetsplats)}.${k.ordination ? ` Ger ${esc(k.ordination.text)}.` : ''}</span></div>
       ${v.kanKoppla ? `<div class="knapprad">${k.utrustning?.simulerad ? `<button type="button" class="knapp liten sekundar" data-mt-simulera="${esc(k.id)}">Hämta värden nu</button>` : ''}<button type="button" class="knapp liten sekundar" data-mt-avsluta="${esc(k.id)}">Koppla från</button></div>` : ''}
       ${k.utrustning?.typ === 'pump' ? pumpHtml(v.pumpar.find(p => p.koppling.id === k.id) ?? { senaste: null, okvitterade: [] }) : ''}
-    </li>`).join('')}</ul>` : '<p class="tom liten">Ingen utrustning är kopplad till patienten.</p>'}
+    </li>`).join('')}</ul>` : '<p class="tom liten">Ingen utrustning är kopplad till patienten. Utrustningen visas här när en läkare, sjuksköterska eller undersköterska kopplar den.</p>'}
     ${v.kanKoppla ? `<form class="mt-koppla" id="mt-koppla" novalidate aria-labelledby="mt-koppla-rubrik">
       <h4 id="mt-koppla-rubrik">Koppla utrustning</h4>
       <p class="hjalp">Skanna streckkoden på utrustningen, eller välj den nedan. Skanna gärna armbandet också, så kontrollerar systemet att det är rätt patient.</p>

@@ -118,8 +118,8 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
     el.querySelector('#st-lista').innerHTML = `${x.sus.length ? `<div class="tabellrulle"><table class="tabell st-svar"><thead><tr><th scope="col">Deltagare</th><th scope="col">Testfall</th><th scope="col">Användargrupp</th><th scope="col" class="tal">SUS</th><th scope="col">Sparat</th></tr></thead><tbody>
         ${x.sus.map(s => `<tr><td>${esc(s.kod)}</td><td>${esc(s.testfall)}</td><td>${esc(s.grupp)}</td><td class="tal">${tal(s.poang, 1)}</td><td>${esc(tidpunkt(s.tid))}</td></tr>`).join('')}
       </tbody></table></div>
-      <p class="liten">Medelvärde SUS ${tal(m, 1)} av 100 från ${x.sus.length} ${x.sus.length === 1 ? 'svar' : 'svar'}, vilket ger ${utvarderingspoang('tillfredsstallelse', m)} utvärderingspoäng av 10 (godkänt är 70).</p>` : '<p class="tom liten">Inga SUS-svar är sparade i den här webbläsaren.</p>'}
-      ${e ? `<p class="liten">Senaste expertgranskningen (${esc(e.kod)}, ${esc(tidpunkt(e.tid))}): summa ${e.summa} av 70, vilket ger ${e.utvarderingspoang} utvärderingspoäng av 10.</p>` : '<p class="tom liten">Ingen expertgranskning är sparad.</p>'}
+      <p class="liten">Medelvärde SUS ${tal(m, 1)} av 100 från ${x.sus.length} ${x.sus.length === 1 ? 'svar' : 'svar'}, vilket ger ${utvarderingspoang('tillfredsstallelse', m)} utvärderingspoäng av 10 (godkänt är 70).</p>` : '<p class="tom liten">Inga SUS-svar är sparade i den här webbläsaren. Svaren hamnar här när någon fyller i formuläret i den här webbläsaren.</p>'}
+      ${e ? `<p class="liten">Senaste expertgranskningen (${esc(e.kod)}, ${esc(tidpunkt(e.tid))}): summa ${e.summa} av 70, vilket ger ${e.utvarderingspoang} utvärderingspoäng av 10.</p>` : '<p class="tom liten">Ingen expertgranskning är sparad. Granskningen hamnar här när den har sparats.</p>'}
       ${x.sus.length || x.expert.length ? '<div class="knapprad"><button type="button" class="knapp liten" data-st="ladda">Ladda ner som fil</button><button type="button" class="knapp liten sekundar" data-st="radera">Radera alla svar</button></div>' : ''}`;
   };
   ritaLista();

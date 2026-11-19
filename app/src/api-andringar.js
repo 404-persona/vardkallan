@@ -22,6 +22,10 @@ export const ANDRINGAR = [
       'GET /api/krav/version har fältet fakta med talen som de publika sidorna nämner, räknade ur koden: Sussas testfall och poster, sandlådans livslängd i timmar, testrollerna, uppdragen, modulerna och gallringen av synpunkter',
       'GET /api/textgranskning säger vilka texter på #/testa, #/om, #/krav och #/moduler som ska granskas i versionen och har uppdragens texter för testrollerna',
       'GET /api/moduler har namnet för varje rutt, också för en offentlig sida som inte har en rad i menyn',
+      // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (docs/api-avvikelser.md).
+      'Nya rutter i det interna API:t för sökrutan Vad vill du göra?, som ger de handlingar som den inloggade får och vilken roll som gör det som saknas, och för ordlistan Jag letar efter, som är öppen utan inloggning (docs/api-avvikelser.md)',
+      // Runda 18, r5: lärdomar från vårdpersonalens erfarenheter (docs/api-avvikelser.md).
+      'En dosändring och en utsättning av en ordination som någon annan har ändrat eller satt ut svarar 409 med vem som ändrade vad och det som gäller nu, och dosändringen tar emot det som visades när dialogen öppnades. Nya rutter för de senast använda mallarna och för svarstiderna i webbläsaren, och listorna som uppdateras i bakgrunden svarar 204 när sandlådan vilar',
     ],
   },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.

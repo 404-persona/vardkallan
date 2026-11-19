@@ -549,6 +549,17 @@ MODULER.find(x => x.id === 'behorighet').beskrivning += ' Rehabkoordinatorn är 
   mod('krav').api.push('/api/textgranskning');
   mod('anteckningar').beskrivning += ' Varje yrke skriver med sina egna mallar, också psykologen, logopeden, barnmorskan, arbetsterapeuten, kuratorn och dietisten.';
 }
+// Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter hör till hjälpen.
+{
+  const u = MODULER.find(x => x.id === 'utbildning');
+  u.rutter.push('#/ordlista');
+  u.vyer.push('ordlista.js');
+  u.avsnitt.push('8.4');
+  u.kod.push('src/handlingssok.js', 'src/handlingssok-rutter.js', 'public/js/handlingssok.js');
+  u.api.push('/api/handlingar/sok', '/api/handlingar/ordlista');
+  u.beskrivning += ' Sökrutan Vad vill du göra? i sidhuvudet tar emot egna ord och visar de handlingar som rollen får, för den öppna patienten när en journal är öppen, och ordlistan Jag letar efter kopplar ord från andra journalsystem till Vårdkällans namn.';
+  u.nas = 'Knappen Vad vill du göra? i sidhuvudet och kortkommandot Ctrl K.';
+}
 
 export function lasGransnitt({ rot = APP, text = null } = {}) {
   const las = (f) => text?.[f] ?? readFileSync(join(rot, f), 'utf8');

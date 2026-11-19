@@ -119,6 +119,15 @@ import * as flera from './flera-fonster.js';
 import * as demoFull from './demo-full.js';
 // Runda 14, r4 (Sussa 11.2.1.7): testprotokollet med spårbarhet till kraven.
 import * as testprotokoll from './vyer/testprotokoll.js';
+// Runda 18, r2: sökrutan Vad vill du göra? i sidhuvudet och ordlistan Jag letar efter.
+import * as handlingssok from './handlingssok.js';
+import * as ordlistaVy from './vyer/ordlista.js';
+// Runda 18, r5: listor som uppdaterar sig själva.
+import * as levandeListor from './levande-listor.js';
+// Runda 18, r5: osparad text följer med när vyn byts, och ett byte av patient märks.
+import * as osparadText from './osparad-text.js';
+// Runda 18, r5: sökfält bredvid listor med många val.
+import './listsok.js';
 
 // Globalt tillstånd.
 export const S = { session: null, inkorg: null, svarstid: null };
@@ -314,7 +323,8 @@ const RUTTER = [
   [/^#\/vantrum$/, vantrum, () => far('vantrum')],
   [/^#\/logg$/, logg, () => far('las_logg')],
   [/^#\/logg\/patient\/([\w-]+)$/, logg.patient, () => far('las_logg')],
-  [/^#\/arkiv$/, arkiv, () => far('registrera_arkivbeslut')],
+  // Runda 18, r2: verksamhetschefen godkänner gallring här (arkiv.js visaGodkannande), som menyn redan visar.
+  [/^#\/arkiv$/, arkiv, () => pa('registrera_arkivbeslut', 'godkanna_gallring')],
   [/^#\/datauttag$/, datauttag, () => far('datauttag')],
   // Runda 6, r3.
   [/^#\/tvangsvard$/, bevakningVy, () => Boolean(S.session?.r3?.tvangsvardsenhet)],
@@ -368,6 +378,11 @@ MENY.splice(MENY.findIndex(m => m[0] === '#/remisser') + 1, 0,
 // Runda 16: rehabkoordinatorns sjukfall med REKO-status (rehabkoordinator.js), som också är rollens startsida.
 RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0, [/^#\/rehabkoordinator$/, rehabkoordinatorVy, () => far('sjukfall_reko')]);
 MENY.splice(MENY.findIndex(m => m[0] === '#/sjukskrivningar') + 1, 0, ['#/rehabkoordinator', 'Sjukfall', 'kalender', () => far('sjukfall_reko')]);
+
+// Runda 18, r2: ordlistan Jag letar efter, öppen utan inloggning som kravsidan.
+RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/tillganglighet$/)) + 1, 0,
+  [/^#\/ordlista$/, ordlistaVy, () => true, true],
+);
 
 // Invånarens adresser i Min journal, och de offentliga sidorna. Personalens vyer finns inte här.
 const RUTTER_MIN = [
@@ -546,6 +561,7 @@ function ritaRam(route) {
   ram.innerHTML = `<header class="topp"><div class="topp-inre">
       <a class="varumarke" href="${hem()}">${logotyp()}<span><span class="namn">Vårdkällan</span><span class="under">Hela vården i ett öppet system</span></span></a>
       <button type="button" class="menyknapp" data-a="meny" aria-expanded="false" aria-controls="meny">${ikon.meny}<span>Meny</span></button>
+      ${/* Runda 18, r2: sökrutan Vad vill du göra?. */ handlingssok.knappHtml()}
       <div class="inloggad" aria-label="Inloggad person">
         <span class="kort-ikon" aria-hidden="true">${ikon.kort}</span>
         <span class="vem"><strong>${esc(p.namn)}</strong><span>${esc(p.titel)}, ${esc(e.namn)}</span></span>
@@ -649,7 +665,8 @@ async function visaVy(vy, main, param, q, nr) {
   // Vid första laddningen ligger fokus kvar i början av sidan, så att länken till innehållet nås först.
   // En vy kan peka ut ett fält med data-fokus (sökfältet), annars får rubriken fokus.
   if (forstaVisning) forstaVisning = false;
-  else if (!sammaPatient) {
+  // Runda 18, r5: en tyst omritning (levande-listor.js) flyttar varken fokus eller rullning.
+  else if (!sammaPatient && !tystOmritning.pagar) {
     const mal = main.querySelector('[data-fokus]') ?? main.querySelector('h1');
     (mal ?? main).focus({ preventScroll: false });
     window.scrollTo(0, 0);
@@ -669,6 +686,23 @@ async function visaVy(vy, main, param, q, nr) {
   } else flera.stoppa();
   // Runda 13, r1: panelen med uppdragen frågar om något uppdrag har blivit gjort.
   testinbjudan.efterVy();
+  // Runda 18, r5.
+  levandeListor.efterVy();
+  osparadText.efterVy();
+}
+
+// Runda 18, r5: vyn ritas om utan att fokus eller rullning flyttas, när en lista har fått något nytt.
+export const tystOmritning = { pagar: false };
+export async function ritaTyst() {
+  const y = window.scrollY;
+  // Fokus följer med till samma element efter omritningen, till exempel en länk i menyn.
+  const a = document.activeElement;
+  const sel = a && a !== document.body ? (a.id ? `#${CSS.escape(a.id)}` : a.getAttribute('href') ? `${a.tagName.toLowerCase()}[href="${CSS.escape(a.getAttribute('href'))}"]` : null) : null;
+  const iMeny = Boolean(a?.closest?.('#meny'));
+  tystOmritning.pagar = true;
+  try { await rita(); } finally { tystOmritning.pagar = false; }
+  window.scrollTo(0, y);
+  if (sel && document.activeElement !== a) (document.querySelector(iMeny ? `#meny ${sel}` : sel))?.focus({ preventScroll: true });
 }
 
 // Demoknappen Simulera avbrott visas för den som är inloggad, och inte under ett avbrott.
@@ -799,10 +833,12 @@ export async function aterstallDemo(knapp = null) {
   const s = await medKnapp(knapp, () => api('/api/reset', { metod: 'POST', data: {} }));
   const { ok, ...sess } = s;
   S.session = sess;
-  notis('Demon är återställd. Alla ändringar är borta och patienterna är som från början.');
   ramNyckel = null;
   await uppdateraInkorg();
-  rita();
+  // Runda 18, r5: beskedet kommer när vyn visar den återställda demon. Förut kom det före omritningen, och den som
+  // klickade direkt efter beskedet kunde träffa en vy som just byttes ut, så att klicket inte gjorde något.
+  await rita();
+  notis('Demon är återställd. Alla ändringar är borta och patienterna är som från början.');
 }
 
 document.addEventListener('click', async (e) => {

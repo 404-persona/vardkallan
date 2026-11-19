@@ -5,6 +5,7 @@
 import { medR14r5 } from '../runda14-r5.js';
 // Runda 15, r3: mellanarkivet för läkemedel, FHIR, läskopian och reservservern (sussa/runda15-r3.js).
 import { medR15r3 } from '../runda15-r3.js';
+import { medR18r2 } from '../runda18-r2.js';
 
 const R14_FORE = [
   { id: 'KD1.2.1.1', kategori: 'leverantor', egna: [], tester: [], avsedd: 'planerat',
@@ -18,4 +19,5 @@ const R14_FORE = [
   { id: 'KD1.2.1.5', kategori: 'leverantor', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: "Gäller leverantörens åtagande, drift eller process och inte systemets funktion." },
 ];
-export default medR15r3(medR14r5(R14_FORE));
+// Runda 18, r5: lärdomar från vårdpersonalens erfarenheter (sussa/runda18-r2.js).
+export default medR18r2(medR15r3(medR14r5(R14_FORE)));

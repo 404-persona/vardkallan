@@ -1610,6 +1610,40 @@ function skapa(BAS) {
     await m.klicka(page.locator('dialog[open] [data-varde="ok"]'), 'Förskriv');
     await synlig(page, '.notis', 'är förskrivet');
   };
+  // Runda 18, r2: tre vanliga handlingar via sökrutan Vad vill du göra? (SOKRUTAN nedan).
+  const viaSokrutan = async (m, page, ord) => {
+    await m.klicka(page.locator(SOKRUTAN.knapp), 'Vad vill du göra?');
+    await page.waitForSelector(`${SOKRUTAN.dialog}[open] ${SOKRUTAN.traff}`);
+    await m.skriv(page.locator(SOKRUTAN.falt), ord, 'egna ord i sökrutan');
+    await page.waitForLoadState('networkidle');
+    await m.tangent('Enter', 'första förslaget');
+  };
+  GOR['sokrutan-remiss'] = async (m, page) => {
+    await viaSokrutan(m, page, 'skriv remiss');
+    await page.waitForSelector('#remissform');
+    await m.valj(page.locator('select[name="tillEnhetId"]'), 'uso-kard', 'mottagare Kardiologiska kliniken');
+    await m.skriv(page.locator('textarea[name="fragestallning"]'), 'Bedömning inför elkonvertering.', 'frågeställning');
+    await m.skriv(page.locator('textarea[name="anamnes"]'), 'Förmaksflimmer sedan 2014. Waran, INR 2,4.', 'anamnes');
+    await m.klicka(page.locator('#remissform [type="submit"]'), 'Skicka remissen');
+    await synlig(page, '.notis', 'Remissen är skickad');
+  };
+  GOR['sokrutan-blodtryck'] = async (m, page) => {
+    await viaSokrutan(m, page, 'blodtryck');
+    await page.waitForSelector('#mv-form');
+    await page.waitForFunction(() => document.activeElement?.id === 'mv-varde');
+    await m.valj(page.locator('#mv-typ'), 'blodtryck', 'mätvärdet Blodtryck');
+    await m.skriv(page.locator('#mv-varde'), '128/82', 'värdet');
+    await m.klicka(page.locator('#mv-form [type="submit"]'), 'Registrera');
+    await synlig(page, '.notis', 'Blodtryck 128/82');
+  };
+  GOR['sokrutan-ge-dos'] = async (m, page) => {
+    await viaSokrutan(m, page, 'ge dos');
+    await page.waitForSelector('.adm-patient');
+    const gunnar = page.locator('.adm-patient', { hasText: 'Gunnar Åkesson' });
+    await m.klicka(gunnar.locator('.adm-vb', { hasText: 'Alvedon' }).locator('[data-adm="ge"]').first(), 'Ge för Alvedon vid behov');
+    await idDialog(page, (l) => m.klicka(l, 'Identiteten är kontrollerad'));
+    await synlig(page, '.notis', 'Alvedon är given');
+  };
   return { synlig, gaTill, loggaIn, startI, GOR };
 }
 
@@ -1631,5 +1665,9 @@ function sarPng(bredd = 64, hojd = 48) {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), del('IHDR', ihdr), del('IDAT', zlib.deflateSync(ra)), del('IEND', Buffer.alloc(0))]);
 }
 
+// Runda 18, r2: sökrutan Vad vill du göra?, så att r1:s vägledning och testerna pekar på samma element. knapp öppnar
+// rutan i sidhuvudet (eller Ctrl K), falt är fältet för egna ord, traff ett förslag och dialog rutan.
+const SOKRUTAN = { knapp: '[data-a="vad-vill-du"]', dialog: '#hs-dialog', falt: '#hs-falt', traff: 'a.hs-traff', ordlista: '#/ordlista' };
+
 // Runda 13, r3: idDialog.
-module.exports = { Matare, skapa, raknaISidan, sarPng, idDialog };
+module.exports = { Matare, skapa, raknaISidan, sarPng, idDialog, SOKRUTAN };

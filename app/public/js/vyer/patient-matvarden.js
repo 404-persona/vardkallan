@@ -128,14 +128,17 @@ function skalaHtml(sk) {
     ${sk.skala === 2 && sk.kanBesluta ? '<p class="knapprad"><button type="button" class="knapp liten sekundar" data-skala="1">Använd skala 1 igen</button></p>' : ''}</div>`;
 }
 
+// Runda 18, r5: nu i den lokala tiden, i formen som ett fält för datum och tid vill ha.
+const nuLokal = () => { const d = new Date(); d.setSeconds(0, 0); return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16); };
+
 // Runda 10, r4: urvalet i listan efter mätvärde, hur värdet kom in och period. Kurvorna och NEWS2 visar alla värden.
 const PERIODER = [['', 'Hela tiden'], ['1', 'Senaste dygnet'], ['7', 'Senaste veckan'], ['30', 'Senaste 30 dagarna']];
 function urvalHtml(u) {
   if (!u) return '';
   const val = (namn, id, lista, vald, etikett) => `<div class="falt smal"><label for="${id}">${etikett}</label><select id="${id}" name="${namn}">${lista.map(([v, t]) => `<option value="${esc(v)}"${String(vald ?? '') === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></div>`;
   return `<form class="falt-rad mv-urval" id="mv-urval" aria-label="Urval av mätvärden">
-    ${val('typ', 'mv-u-typ', [['', 'Alla mätvärden'], ...u.typer.map(t => [t.id, t.text])], u.typ, 'Mätvärde')}
-    ${val('inmatning', 'mv-u-inm', [['', 'Alla sätt'], ...u.inmatningar.map(t => [t.id, t.text])], u.inmatning, 'Inmatning')}
+    ${/* Runda 18, r5: ett urval med bara ett alternativ visas inte, eftersom det inte väljer något. */ u.typer.length > 1 || u.typ ? val('typ', 'mv-u-typ', [['', 'Alla mätvärden'], ...u.typer.map(t => [t.id, t.text])], u.typ, 'Mätvärde') : ''}
+    ${u.inmatningar.length > 1 || u.inmatning ? val('inmatning', 'mv-u-inm', [['', 'Alla sätt'], ...u.inmatningar.map(t => [t.id, t.text])], u.inmatning, 'Inmatning') : ''}
     ${val('dagar', 'mv-u-dagar', PERIODER, u.dagar, 'Period')}
     <p class="under-text" aria-live="polite">${u.antal} av ${u.totalt} värden.</p></form>`;
 }
@@ -242,7 +245,8 @@ export async function visa(el, ctx) {
     const v = lasVarde(form, typ);
     if (v == null) { const f = form.querySelector('#mv-varde, [name="acvpu"], [data-gcs] select'); f?.setAttribute('aria-invalid', 'true'); f?.focus(); return; }
     const data = { typ, varde: v, ...nyKontaktData(kontakt) };
-    if (form.tid.value) data.tid = new Date(form.tid.value).toISOString();
+    // Runda 18, r5: står tiden kvar som systemet fyllde i gäller nu, när värdet sparas.
+    if (form.tid.value && form.tid.value !== form.tid.dataset.nu) data.tid = new Date(form.tid.value).toISOString();
     try {
       const m = await medKnapp(form.querySelector('[type=submit]'), () => api(`/api/patient/${encodeURIComponent(ctx.id)}/matvarden`, { metod: 'POST', data, ko: true }), form);
       if (m.koad) {
@@ -294,7 +298,7 @@ function registrering() {
     <div class="falt-rad">
       <div class="falt"><label for="mv-typ">Mätvärde</label><select id="mv-typ" name="typ">${typer().map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select></div>
       <div id="mv-varde-plats" class="mv-varde-plats"></div>
-      <div class="falt"><label for="mv-tid">Tidpunkt</label><input id="mv-tid" name="tid" type="datetime-local" aria-describedby="mv-tid-h"><span class="hjalp" id="mv-tid-h">Tomt betyder nu. Högst 30 dagar bakåt.</span></div>
+      <div class="falt"><label for="mv-tid">Tidpunkt</label><input id="mv-tid" name="tid" type="datetime-local" value="${esc(nuLokal())}" data-nu="${esc(nuLokal())}" aria-describedby="mv-tid-h"><span class="hjalp" id="mv-tid-h">Förifyllt med nu. Ändra bara om värdet togs tidigare, högst 30 dagar bakåt.</span></div>
       <div class="falt knappfalt"><button type="submit" class="knapp">Registrera</button></div>
     </div>
     <p class="form-fel" role="alert" hidden></p>

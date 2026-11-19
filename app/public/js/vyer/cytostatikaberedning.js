@@ -29,10 +29,10 @@ export async function visa(main, _p, _q, ctx = {}) {
   if (!el) return;
   const ladda = () => visa(main, _p, _q, ctx);
   el.innerHTML = `<section class="ov-sektion" aria-labelledby="bd-att"><div class="sektion-huvud"><h2 id="bd-att">Att bereda</h2><p class="under-text">${esc(a.text)}</p></div>
-      ${a.attBereda.length ? a.attBereda.map(dag => `<h3>${esc(datum(dag.datum))} <span class="under-text">${dag.kapacitet.bokade} av ${dag.kapacitet.platser} kurer</span></h3><ul class="bd-lista">${dag.doser.map(dosKort).join('')}</ul>`).join('') : '<p class="tom">Inga godkända kurer väntar på beredning.</p>'}
+      ${a.attBereda.length ? a.attBereda.map(dag => `<h3>${esc(datum(dag.datum))} <span class="under-text">${dag.kapacitet.bokade} av ${dag.kapacitet.platser} kurer</span></h3><ul class="bd-lista">${dag.doser.map(dosKort).join('')}</ul>`).join('') : '<p class="tom">Inga godkända kurer väntar på beredning. En kur hamnar här när läkaren har godkänt den.</p>'}
     </section>
     <section class="ov-sektion" aria-labelledby="bd-klara"><div class="sektion-huvud"><h2 id="bd-klara">Beredda i dag</h2></div>
-      ${a.bereddaIdag.length ? `<ul class="enkel-lista">${a.bereddaIdag.map(x => `<li>${esc(x.lakemedel)} ${esc(sv(x.dos, 0))} mg, ${esc(x.patient.namn)}, ${esc(x.vardenhet)}. Signerad ${esc(tidpunkt(x.beredning.tid))} av ${esc(x.beredning.av)}, batch ${esc(x.beredning.batcher.map(b => b.batch).join(' och '))}.</li>`).join('')}</ul>` : '<p class="tom">Inget är berett i dag.</p>'}
+      ${a.bereddaIdag.length ? `<ul class="enkel-lista">${a.bereddaIdag.map(x => `<li>${esc(x.lakemedel)} ${esc(sv(x.dos, 0))} mg, ${esc(x.patient.namn)}, ${esc(x.vardenhet)}. Signerad ${esc(tidpunkt(x.beredning.tid))} av ${esc(x.beredning.av)}, batch ${esc(x.beredning.batcher.map(b => b.batch).join(' och '))}.</li>`).join('')}</ul>` : '<p class="tom">Inget är berett i dag. En beredning hamnar här när den är klar.</p>'}
     </section>
     <section class="ov-sektion" aria-labelledby="bd-lager"><div class="sektion-huvud"><h2 id="bd-lager">Lager</h2></div>
       ${l.varor.map(v => `<h3>${esc(v.namn)} <span class="under-text">${esc(sv(v.kvar))} ${esc(v.enhet)} kvar</span></h3>

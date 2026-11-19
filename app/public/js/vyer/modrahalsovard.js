@@ -26,7 +26,7 @@ export async function visa(main, _p, _q, ctx = {}) {
         <td>${esc(g.vecka ?? 'Förlöst')}</td><td>${esc(datum(g.bpd))}</td>
         <td><span class="tagg${g.risk.niva === 'normal' ? ' tagg-ok' : ' tagg-utkast'}">${esc(g.risk.namn)}</span></td>
         <td>${g.nasta ? `${esc(g.nasta.typ)}<span class="under-text">vecka ${g.nasta.vecka}, ${esc(datum(g.nasta.datum))}</span>` : ''}</td>
-        <td>${g.varningar.length ? `<span class="text-larm">${esc(g.varningar.join(' '))}</span>` : ''}${g.attGora.length ? `<span class="under-text">${esc(g.attGora.join(' '))}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="tom">Inga graviditeter.</p>'}
+        <td>${g.varningar.length ? `<span class="text-larm">${esc(g.varningar.join(' '))}</span>` : ''}${g.attGora.length ? `<span class="under-text">${esc(g.attGora.join(' '))}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<p class="tom">Inga graviditeter. En graviditet hamnar här när en graviditetsjournal läggs upp i patientens journal.</p>'}
     </section>
     ${r ? registretHtml(r) : ''}${uppfoljningHtml(u)}
     <p class="dampad liten">${esc(d.demoregel)}</p>`;

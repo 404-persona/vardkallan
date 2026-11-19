@@ -37,7 +37,7 @@ export async function visa(el, ctx) {
     ${d.donationer.map(u => utredning(u, d)).join('')}
     ${d.vilja.length ? `<section aria-labelledby="dn-vilja"><h3 id="dn-vilja">Inställning till donation</h3><ul class="enkel-lista">${d.vilja.map(v => `<li><strong>${esc(v.text)}</strong>${v.undantag ? `, utom ${esc(v.undantag)}` : ''}<span class="under-text">${esc(v.kalla)}, ${esc(tidpunkt(v.tid))}</span></li>`).join('')}</ul></section>` : ''}
     <section aria-labelledby="dn-transpl"><h3 id="dn-transpl">Transplantationer</h3>
-      ${d.transplantationer.length ? `<ul class="enkel-lista">${d.transplantationer.map(t => `<li><strong>${esc(t.organ)}</strong>, ${esc(datum(t.datum))}${t.centrum ? `, ${esc(t.centrum)}` : ''}<span class="under-text">Bidiagnos ${esc(t.diagnos?.kod ?? '')} ${esc(t.diagnos?.text ?? '')}. Registrerad av ${esc(t.registreradAv ?? '')}.</span></li>`).join('')}</ul>` : '<p class="tom">Inga registrerade transplantationer.</p>'}
+      ${d.transplantationer.length ? `<ul class="enkel-lista">${d.transplantationer.map(t => `<li><strong>${esc(t.organ)}</strong>, ${esc(datum(t.datum))}${t.centrum ? `, ${esc(t.centrum)}` : ''}<span class="under-text">Bidiagnos ${esc(t.diagnos?.kod ?? '')} ${esc(t.diagnos?.text ?? '')}. Registrerad av ${esc(t.registreradAv ?? '')}.</span></li>`).join('')}</ul>` : '<p class="tom">Inga registrerade transplantationer. En transplantation hamnar här när den registreras.</p>'}
       ${d.kanRegistreraTransplantation ? '<p class="knapprad"><button type="button" class="knapp liten sekundar" data-dn-transpl>Registrera transplantation</button></p>' : ''}
     </section>
     <p class="under-text">${esc(d.demoregel)}</p>`;

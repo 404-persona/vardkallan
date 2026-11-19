@@ -198,6 +198,18 @@ Börjar i: Patientens översikt. Klickbudget: högst 4 steg. I demon gör Johan 
 
 Ett klick för att öppna en ny anteckning, där Omvårdnadsanteckning är förvald, ett fältbyte till Andning och cirkulation, som systemet har fällt ut som förslag, ett klick på syremättnaden i underlaget och ett klick för att signera. Systemet skriver värdet med tid, och sjuksköterskan skriver bara sin egen bedömning.
 
+### Registrera blodtryck via Vad vill du göra?
+
+Börjar i: Patientens översikt. Klickbudget: högst 3 steg. I demon gör Johan Ek flödet.
+
+Ett klick på Vad vill du göra?, ordet blodtryck och Enter, som öppnar mätvärdena för den öppna patienten med Blodtryck förvalt och fokus i värdefältet, och ett klick för att registrera. Samma budget som från översikten.
+
+### Ge en dos via Vad vill du göra?
+
+Börjar i: Arbetslistan efter inloggning. Klickbudget: högst 4 steg. I demon gör Johan Ek flödet.
+
+Ett klick på Vad vill du göra?, orden ge dos och Enter, som öppnar Läkemedel att ge, ett klick på Ge för dosen och ett klick som bekräftar hur identiteten kontrollerades. Ett steg mer än från menyn, för den som inte vet att listan heter Läkemedel att ge.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.

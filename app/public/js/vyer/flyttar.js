@@ -45,9 +45,9 @@ export async function visa(main) {
     const lista = (rader, tom) => (rader.length ? `<ul class="enkel-lista">${rader.map(kortHtml).join('')}</ul>` : `<p class="tom liten">${esc(tom)}</p>`);
     el.innerHTML = `<p class="liten dampad">${esc(d.text)} Kontrollera numret mot underlaget, till exempel remissen eller id-handlingen, innan du godkänner. Rätt patient får då den vårdrelation som kontakten hade gett om den hade registrerats rätt från början.</p>
       <section class="lm-sektion" aria-labelledby="fl-godkanna"><h2 id="fl-godkanna">Att godkänna <span class="antal${d.attGodkanna.length ? ' antal-aktiv' : ''}">${d.attGodkanna.length}</span></h2>
-        ${lista(d.attGodkanna, 'Inga flyttar väntar på ditt godkännande.')}</section>
+        ${lista(d.attGodkanna, 'Inga flyttar väntar på ditt godkännande. En flytt hamnar här när någon föreslår att en uppgift flyttas till rätt patient.')}</section>
       <section class="lm-sektion" aria-labelledby="fl-mina"><h2 id="fl-mina">Mina förslag som väntar</h2>
-        ${lista(d.mina, 'Du har inga förslag som väntar.')}</section>
+        ${lista(d.mina, 'Du har inga förslag som väntar. Ett förslag hamnar här när du föreslår en flytt från journalen.')}</section>
       ${d.beslutade.length ? `<section class="lm-sektion" aria-labelledby="fl-beslutade"><h2 id="fl-beslutade">Beslutade</h2>${lista(d.beslutade, '')}</section>` : ''}`;
   };
   let knapparFor = () => '';

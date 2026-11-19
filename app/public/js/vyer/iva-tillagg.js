@@ -71,7 +71,7 @@ function reglerHtml(t) {
   return `<section class="ov-sektion" aria-labelledby="iva-regler"><div class="sektion-huvud"><h2 id="iva-regler">Patientens egna gränser</h2>
       <p class="under-text">Avdelningens gränser gäller när patienten inte har en egen. En egen gräns som är mildare än avdelningens tystar aldrig larmet: systemet visar då en observation med motiveringen.</p></div>
     ${aktiva.length ? `<ul class="enkel-lista">${aktiva.map(r => `<li><span><strong>${esc(r.text)}</strong><span class="under-text">${r.ersatter ? 'Ersätter avdelningens gräns. ' : ''}${esc(r.motivering)}. ${esc(r.av ?? '')}, ${esc(tidpunkt(r.skapad))}.</span></span>
-      ${t.kan.regler ? `<button type="button" class="knapp liten sekundar" data-iva-avsluta-regel="${esc(r.id)}">Avsluta</button>` : ''}</li>`).join('')}</ul>` : '<p class="tom liten">Inga egna gränser. Avdelningens gränser gäller.</p>'}
+      ${t.kan.regler ? `<button type="button" class="knapp liten sekundar" data-iva-avsluta-regel="${esc(r.id)}">Avsluta</button>` : ''}</li>`).join('')}</ul>` : '<p class="tom liten">Inga egna gränser. Avdelningens gränser gäller tills egna gränser läggs in av läkaren.</p>'}
     ${t.kan.regler ? `<details><summary>Ny egen gräns</summary><form id="iva-regel" class="mt-koppla" novalidate>
       <div class="falt-rad">
         <div class="falt"><label for="iva-r-param">Parameter</label><select id="iva-r-param" name="parameter">${t.parametrar.map(p => `<option value="${esc(p.id)}">${esc(p.namn)}</option>`).join('')}</select></div>

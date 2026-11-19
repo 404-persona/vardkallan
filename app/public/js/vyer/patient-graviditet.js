@@ -184,7 +184,7 @@ export async function visa(el, ctx) {
     ${d.moder ? '<p class="ruta ruta-info liten">Patienten är ett barn som föddes på förlossningen. BB-journalen finns under fliken Nyfödd.</p>' : ''}
     ${d.dolda?.kraverVal && !pagaende ? `<p class="ruta ruta-info liten">${ikon.info}<span>Graviditetsjournalen finns på en annan vårdenhet, till exempel mödrahälsovården. Den visas efter ett aktivt val.</span></p>` : ''}
     ${!pagaende && !d.dolda?.kraverVal && far('graviditet') ? registreraHtml() : ''}
-    ${senaste ? graviditetHtml(senaste, ctx.id) : (!far('graviditet') ? '<p class="tom">Ingen graviditetsjournal.</p>' : '')}
+    ${senaste ? graviditetHtml(senaste, ctx.id) : (!far('graviditet') ? '<p class="tom">Ingen graviditetsjournal. Journalen visas här när en läkare eller barnmorska lägger upp den.</p>' : '')}
     ${tidigare.length ? `<details><summary>Tidigare graviditeter (${tidigare.length})</summary>${tidigare.map(g => graviditetHtml(g, ctx.id)).join('')}</details>` : ''}
 `;
   // Systemets varningar och råd efter en registrering står kvar tills de stängs.

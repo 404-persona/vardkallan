@@ -91,11 +91,11 @@ export async function visa(el, ctx) {
       ${d.kroppsstallen.filter(s => d.bilder.filter(b => b.kroppsstalle === s && b.bild).length > 1).map(s => `<button type="button" class="knapp liten sekundar" data-jamfor="${esc(s)}">Jämför bilder av ${esc(s)} över tid</button>`).join(' ')}
       <div id="bm-jamforelse" aria-live="polite"></div>
       <ul class="bm-galleri">${synliga.map(kort).join('')}</ul>${synliga.length ? '' : '<p class="tom">Inga bilder i urvalet.</p>'}`
-        : '<p class="tom">Inga bilder eller filmer som du kan se.</p>'}
+        : '<p class="tom">Inga bilder eller filmer som du kan se. En bild hamnar här när den tas eller laddas upp.</p>'}
     </section>
     <section aria-labelledby="bm-studier-rubrik"><h3 id="bm-studier-rubrik">Multimediaarkivet <span class="antal">${d.studier.length}</span></h3>
       <p class="hjalp">${esc(d.simulerat.arkiv)} Arkivet nås genom DICOMweb, så att en extern visare kan anslutas.</p>
-      ${d.studier.length ? `<ul class="bm-studier">${d.studier.map(studieRad).join('')}</ul>` : '<p class="tom">Inga undersökningar i arkivet som du kan se.</p>'}
+      ${d.studier.length ? `<ul class="bm-studier">${d.studier.map(studieRad).join('')}</ul>` : '<p class="tom">Inga undersökningar i arkivet som du kan se. En undersökning hamnar här när den är gjord och arkiverad.</p>'}
     </section></div>`;
 
   const ladda = () => ctx.ladda();

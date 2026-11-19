@@ -14,7 +14,7 @@ async function visaMeddelanden(main, [id]) {
     <td>${esc(t.typText)}</td><td>${esc(t.yrkesrollText)}${t.tillDig ? ' <span class="tagg tagg-pagaende">Till dig</span>' : ''}</td><td>${esc(t.statusText)}</td><td>${esc(tidpunkt(t.senast))}</td></tr>`;
   main.querySelector('#md-lista').innerHTML = l.tradar.length ? `<div class="tabellrulle"><table class="tabell" id="md-tabell"><caption class="sr">Meddelanden till vårdenheten</caption>
     <thead><tr><th scope="col">Patient</th><th scope="col">Det gäller</th><th scope="col">Till</th><th scope="col">Status</th><th scope="col">Senast</th></tr></thead>
-    <tbody>${l.tradar.map(rad).join('')}</tbody></table></div><p class="hjalp">${esc(l.demoregler)}</p>` : tom('Inga meddelanden till vårdenheten.');
+    <tbody>${l.tradar.map(rad).join('')}</tbody></table></div><p class="hjalp">${esc(l.demoregler)}</p>` : tom('Inga meddelanden till vårdenheten. Ett meddelande hamnar här när en invånare skriver till vårdenheten i Min journal.');
   if (id) await visaTrad(main, id);
 }
 
@@ -63,7 +63,7 @@ async function visaBegaran(main) {
   const el = main.querySelector('#bg-lista');
   el.innerHTML = l.begaran.length ? `<ul class="enkel-lista">${l.begaran.map(b => `<li class="ov-sektion"><p><strong>${esc(b.typText)}</strong>${b.vardenhet ? `, ${esc(b.vardenhet)}` : ''}. ${esc(b.patient.namn)} <span class="under-text">${esc(b.patient.personnummer)}, ${esc(tidpunkt(b.skapad))}</span></p>
     ${b.meddelande ? `<p class="kallelse-text">${esc(b.meddelande)}</p>` : ''}<p class="hjalp">${esc(b.forklaring)}</p>
-    <div class="knapprad"><button type="button" class="knapp" data-bg="${b.id}">${esc(b.atgard)}</button></div></li>`).join('')}</ul>` : tom('Inga begäranden väntar.');
+    <div class="knapprad"><button type="button" class="knapp" data-bg="${b.id}">${esc(b.atgard)}</button></div></li>`).join('')}</ul>` : tom('Inga begäranden väntar. En begäran hamnar här när en invånare begär spärr eller loggutdrag i Min journal.');
   el.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-bg]');
     if (!b) return;
@@ -92,7 +92,7 @@ async function visaKassa(main) {
       <div id="kassa-avslut-form"></div>
     </section>
     <section class="ov-sektion" aria-labelledby="kassa-avslut-rubrik"><div class="sektion-huvud"><h2 id="kassa-avslut-rubrik">Dagsavslut i dag</h2></div>
-      ${k.avslut.length ? `<ul class="enkel-lista">${k.avslut.map(a => `<li>${esc(klockslag(a.tid))}, ${esc(a.kassor.namn ?? '')}: ${a.antal} rader, kort ${esc(kr(a.summor.kort))}, faktura ${esc(kr(a.summor.faktura))}. ${esc(a.text)}${a.forklaring ? ` ${esc(a.forklaring)}` : ''}</li>`).join('')}</ul>` : tom('Inget dagsavslut ännu.')}
+      ${k.avslut.length ? `<ul class="enkel-lista">${k.avslut.map(a => `<li>${esc(klockslag(a.tid))}, ${esc(a.kassor.namn ?? '')}: ${a.antal} rader, kort ${esc(kr(a.summor.kort))}, faktura ${esc(kr(a.summor.faktura))}. ${esc(a.text)}${a.forklaring ? ` ${esc(a.forklaring)}` : ''}</li>`).join('')}</ul>` : tom('Inget dagsavslut ännu. Ett dagsavslut hamnar här när du gör det i slutet av dagen.')}
     </section>
     <p class="hjalp">${esc(k.demoregler)}</p>`;
   el.addEventListener('click', async (e) => {
@@ -183,7 +183,7 @@ export async function ombudIJournalen(el, pid) {
   const ritaOm = (x) => {
     sek.innerHTML = `<h3 id="fm-rubrik">Ombud med fullmakt</h3>
       ${x.fullmakter.length ? `<ul class="enkel-lista">${x.fullmakter.map(f => `<li><strong>${esc(f.ombud?.namn ?? '')}</strong> <span class="pnr">${esc(f.ombud?.personnummer ?? '')}</span>: ${esc(f.omfattning.map(o => o.text).join('. '))}. Till och med ${esc(f.giltigTill)}. ${esc(f.kallaText)}. <span class="tagg">${esc(f.statusText ?? '')}</span>
-        ${f.aktiv && x.kanRegistrera ? `<button type="button" class="knapp text liten" data-fm-aterkalla="${f.id}">Återkalla</button>` : ''}</li>`).join('')}</ul>` : '<p class="tom">Patienten har inga ombud.</p>'}
+        ${f.aktiv && x.kanRegistrera ? `<button type="button" class="knapp text liten" data-fm-aterkalla="${f.id}">Återkalla</button>` : ''}</li>`).join('')}</ul>` : '<p class="tom">Patienten har inga ombud. Ett ombud hamnar här när patienten ger någon fullmakt.</p>'}
       ${x.kanRegistrera ? `<form id="fm-ny" novalidate><div class="falt-rad"><div class="falt"><label for="fm-pnr">Ombudets personnummer</label><input id="fm-pnr" name="personnummer" autocomplete="off" maxlength="13"></div></div>
         <div class="radio"><input type="checkbox" id="fm-skriftlig" name="skriftlig"><label for="fm-skriftlig">Patienten har lämnat en skriftlig och undertecknad fullmakt</label></div>
         <p class="form-fel" hidden></p><div class="knapprad"><button type="submit" class="knapp sekundar">Registrera fullmakten</button></div></form>` : ''}

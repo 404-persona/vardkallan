@@ -24,13 +24,13 @@ export async function visa(main, _p, _q, ctx = {}) {
         <h3 id="pt-p-${esc(p.patient.id)}"><a class="patientlank" href="#/patient/${encodeURIComponent(p.patient.id)}/prover">${esc(pnamn(p.patient))}</a> <span class="pnr">${esc(p.patient.personnummer)}</span>${p.plats ? ` <span class="under-text">${esc(p.plats)}</span>` : ''}
           ${p.kvar ? ` <span class="tagg tagg-pagaende">${p.kvar} ${p.kvar === 1 ? 'rör' : 'rör'} kvar</span>` : ' <span class="tagg tagg-ok">Klart</span>'}</h3>
         ${p.bestallningar.map(b => bestallningKort(b, { rubrikNiva: 4, patient: p.patient })).join('')}
-      </section>`).join('') : '<p class="tom">Inga prover att ta i dag.</p>'}
+      </section>`).join('') : '<p class="tom">Inga prover att ta i dag. Ett prov hamnar här när det beställs till i dag.</p>'}
       <p class="dampad liten">${esc(d.simulerat)}</p>
     </section>
     <section class="ov-sektion" aria-labelledby="pt-kontr"><div class="sektion-huvud"><h2 id="pt-kontr">Kontroller i dag</h2></div>
       ${kontroller.length ? `<ul class="pt-uppgifter">${kontroller.map(u => `<li><span class="pt-tid">${esc(klockslag(u.tid))}</span><span class="pt-text"><a href="${esc(u.href)}">${esc(u.rubrik)}, ${esc(pnamn(u.patient))}</a>
         <span class="under-text">${esc(u.plats ?? u.enhet.namn)}. ${esc(u.text)}${u.utford?.tid ? ` Registrerat ${esc(tidpunkt(u.utford.tid))}${u.utford.av ? ` av ${esc(u.utford.av)}` : ''}.` : ''}</span></span>
-        <span class="tagg ${STATUS_KLASS[u.status] ?? ''}">${esc(u.statusText)}</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga kontroller är ordinerade i dag.</p>'}
+        <span class="tagg ${STATUS_KLASS[u.status] ?? ''}">${esc(u.statusText)}</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga kontroller är ordinerade i dag. Kontroller hamnar här när en läkare ordinerar dem.</p>'}
       <p class="dampad liten">En kontroll bockas av när mätvärdet registreras i tid. ${esc(plan?.demoregel ?? '')}</p>
     </section>
     ${uppf ? `<section class="ov-sektion" aria-labelledby="pt-uppf"><div class="sektion-huvud"><h2 id="pt-uppf">Uppföljning, senaste ${uppf.dagar} dagarna</h2></div>

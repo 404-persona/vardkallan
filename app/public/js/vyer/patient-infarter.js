@@ -43,7 +43,7 @@ export async function visa(el, ctx) {
   if (!ctx.aktuell()) return;
   el.innerHTML = `<div class="flikhuvud"><h2>In- och utfarter</h2><p class="dampad">Katetrar, sonder och dränage från insättning till avveckling.</p></div>${doldaRad(d.dolda)}
     ${d.kanRegistrera ? formular(d) : ''}
-    <section aria-labelledby="if-aktiva"><h3 id="if-aktiva">Sitter nu</h3>${d.aktiva.length ? `<ul class="if-lista">${d.aktiva.map(x => rad(x, d.kanRegistrera)).join('')}</ul>` : '<p class="tom">Inga in- eller utfarter som du kan se.</p>'}</section>
+    <section aria-labelledby="if-aktiva"><h3 id="if-aktiva">Sitter nu</h3>${d.aktiva.length ? `<ul class="if-lista">${d.aktiva.map(x => rad(x, d.kanRegistrera)).join('')}</ul>` : '<p class="tom">Inga in- eller utfarter som du kan se. En infart hamnar här när den registreras.</p>'}</section>
     ${d.avvecklade.length ? `<section aria-labelledby="if-avvecklade"><h3 id="if-avvecklade">Avvecklade</h3><ul class="if-lista">${d.avvecklade.map(x => rad(x, false)).join('')}</ul></section>` : ''}
     <p class="under-text">${esc(d.demoregel)}</p>`;
 

@@ -153,7 +153,7 @@ export async function visa(main) {
     const f = await api('/api/folkhalsa');
     el.querySelector('[data-folk]').innerHTML = `${f.niva === 'enhet' ? `<form data-ny-insats class="knapprad">${falt({ namn: 'omrade', etikett: 'Starta en insats för', alternativ: f.omraden.map(x => [x.id, x.risk]) })}<button type="submit" class="knapp">Starta insatsen</button></form>
       <p class="under-text">Systemet tar riskgruppen ur din vårdenhets patienter, föreslår stödet med KVÅ-kod för varje patient och följer upp hur många som har fått stöd.</p>` : `<p class="under-text">${esc(f.anmarkning)}</p>`}
-      ${f.insatser.length ? f.insatser.map(insatsKort).join('') : tom('Inga insatser.')}`;
+      ${f.insatser.length ? f.insatser.map(insatsKort).join('') : tom('Inga insatser än. En insats visas här när en vårdenhet startar den för en riskgrupp.')}`;
     el.querySelector('[data-ny-insats]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       try {

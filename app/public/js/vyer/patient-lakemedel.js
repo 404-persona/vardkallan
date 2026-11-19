@@ -204,7 +204,7 @@ export async function visa(el, ctx) {
         nastaOverforing = null;
         notis(`${o.lakemedel?.namn} är utsatt. ${nllResultat(r.nll)}`, r.nll.status === 'kvitterad' ? 'ok' : 'info');
         ctx.ladda();
-      } catch (err) { felNotis(err); }
+      } catch (err) { felNotis(err); /* Runda 18, r5: någon annan har redan satt ut den; listan visar det som gäller. */ if (err.status === 409) ctx.ladda(); }
     } else if (b.dataset.avstam) {
       try {
         const r = await medKnapp(b, () => api(`/api/ordination/${b.dataset.avstam}/nll-avstam`, { metod: 'POST', data: {} }));
@@ -326,11 +326,27 @@ async function andraDos(ctx, id, knapp) {
   if (!svar) return;
   const d = svar.data;
   const data = { lakemedelId: d.lakemedelId, dosering: d.dosering.trim(), dos: d.dos.trim() ? Number(d.dos.replace(',', '.')) : null, dosEnhet: d.dosEnhet.trim() || null,
-    tider: (d.tider ?? '').split(/[,\s]+/).map(t => t.trim()).filter(Boolean), fran: d.fran, orsak: d.orsak.trim() || undefined };
+    tider: (d.tider ?? '').split(/[,\s]+/).map(t => t.trim()).filter(Boolean), fran: d.fran, orsak: d.orsak.trim() || undefined,
+    // Runda 18, r5: det som visades när dialogen öppnades, så att servern ser om någon annan har ändrat under tiden.
+    forvantat: { dosering: o.dosering, lakemedelId: o.lakemedel?.id, status: 'aktiv' } };
   const vag = `/api/ordination/${encodeURIComponent(id)}/dosandring`;
   try {
     let r;
     try { r = await api(vag, { metod: 'POST', data }); } catch (e) {
+      // Runda 18, r5: någon annan har ändrat eller satt ut ordinationen. Beskedet säger vem och vad, och den egna
+      // ändringen står kvar, så att den kan sparas med ett klick från den nya dosen.
+      if (e.status === 409 && e.data?.kod === 'andrad') {
+        const kan = e.data?.nu?.status === 'aktiv';
+        const igen = await dialog(`<form><h2 id="dlg-rubrik">${ikon.varning}<span>Ordinationen har ändrats av någon annan</span></h2>
+          <p role="alert">${esc(e.message)}</p><p>Din ändring: <strong>${esc(data.dosering)}</strong>, från ${esc(datum(data.fran))}.</p>
+          <div class="knapprad">${kan ? '<button type="button" class="knapp" data-varde="ok">Spara min ändring från den nya dosen</button>' : ''}<button type="button" class="knapp sekundar" data-varde="avbryt">${kan ? 'Avbryt' : 'Stäng'}</button></div></form>`);
+        if (!igen || !kan) { ctx.ladda(); return; }
+        r = await api(vag, { metod: 'POST', data: { ...data, forvantat: e.data.nu } });
+        nastaOverforing = null;
+        notis(`${r.ordination.lakemedel?.namn}: dosen är ändrad. ${nllResultat(r.nll)}`);
+        ctx.ladda();
+        return;
+      }
       if (!(e.status === 400 && e.data?.varningar)) throw e;
       // En allvarlig varning kvitteras med motivering, som vid en ny ordination.
       const k = await dialog(`<form><h2 id="dlg-rubrik">${ikon.varning}<span>Varning vid dosändringen</span></h2>

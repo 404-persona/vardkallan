@@ -21,7 +21,7 @@ export async function visa(el, ctx) {
     ${planeratHtml(d.planerat ?? [])}
     <section class="ov-sektion" aria-labelledby="pr-best"><div class="sektion-huvud"><h3 id="pr-best">Beställningar</h3></div>
       <p class="dampad liten">${esc(d.simulerat)}</p>
-      <div id="pr-lista">${d.bestallningar.length ? d.bestallningar.map(b => bestallningKort(b, { rubrikNiva: 4 })).join('') : '<p class="tom">Patienten har inga beställningar som du kan se.</p>'}</div>
+      <div id="pr-lista">${d.bestallningar.length ? d.bestallningar.map(b => bestallningKort(b, { rubrikNiva: 4 })).join('') : '<p class="tom">Patienten har inga beställningar som du kan se. En beställning hamnar här när prover beställs för patienten.</p>'}</div>
     </section>
     <section class="ov-sektion" aria-labelledby="pr-kontr"><div class="sektion-huvud"><h3 id="pr-kontr">Kontroller på avdelningen</h3></div>
       ${kontrollTabell(k.kontroller, kanKontroll)}
@@ -57,13 +57,13 @@ function planeratHtml(lista) {
     ${lista.length ? `<div class="tabellrulle"><table class="tabell tat pr-planerat"><caption class="sr">Planerade prover, undersökningar och kontroller i tidsordning</caption><thead><tr><th scope="col">När</th><th scope="col">Vad</th><th scope="col">Status</th><th scope="col">Vårdenhet</th></tr></thead><tbody>
       ${lista.map(x => `<tr><td>${esc(tidpunkt(x.tid))}${x.typ === 'undersokning' && !x.bokad && x.senast ? '<span class="under-text">senast</span>' : ''}</td><td><strong>${esc(x.rubrik)}</strong><span class="under-text">${esc(PLAN_TYP[x.typ])}${x.text ? `, ${esc(x.text)}` : ''}</span></td>
         <td><span class="tagg ${x.forsenad ? 'tagg-larm' : x.status === 'Bokad' ? 'tagg-ok' : ''}">${esc(x.status)}</span></td><td>${esc(x.vardenhet)}</td></tr>`).join('')}
-    </tbody></table></div>` : '<p class="tom liten">Inget är planerat för patienten bland det du kan se.</p>'}</section>`;
+    </tbody></table></div>` : '<p class="tom liten">Inget är planerat för patienten bland det du kan se. En beställning hamnar här när den har ett planerat datum.</p>'}</section>`;
 }
 
 const STATUS_KLASS = { utford: 'tagg-ok', forsenad: 'tagg-larm', pagar: 'tagg-pagaende', planerad: '' };
 const STATUS_TEXT = { utford: 'Utförd', forsenad: 'Försenad', pagar: 'Pågår', planerad: 'Planerad' };
 function kontrollTabell(lista, kanAvsluta) {
-  if (!lista.length) return '<p class="tom liten">Inga kontroller är ordinerade.</p>';
+  if (!lista.length) return '<p class="tom liten">Inga kontroller är ordinerade. Kontroller hamnar här när en läkare ordinerar dem.</p>';
   return `<div class="tabellrulle"><table class="tabell tat pr-kontroller"><caption class="sr">Ordinerade kontroller</caption><thead><tr><th scope="col">Kontroll</th><th scope="col">Hur ofta</th><th scope="col">Nästa</th><th scope="col">Ordinerad av</th>${kanAvsluta ? '<th scope="col"><span class="sr">Åtgärd</span></th>' : ''}</tr></thead><tbody>
     ${lista.map(k => `<tr${k.aktiv ? '' : ' class="pr-avslutad"'}><td><strong>${esc(k.namn)}</strong>${k.intern ? ' <span class="tagg">Intern analys</span>' : ''}<span class="under-text">${esc(k.enhet.namn)}</span></td>
       <td>${esc(k.frekvensText)}<span class="under-text">Från ${esc(tidpunkt(k.start))}</span></td>
@@ -82,7 +82,9 @@ async function bestallForm(plats, ctx) {
   const valda = new Set();
   const us = f.undersokning;
   const arUnd = (id) => Boolean(f.analyser.find(a => a.id === id)?.undersokning);
-  const lakareVal = f.paUppdrag ? `<div class="falt"><label for="pr-lakare">På uppdrag av</label><select id="pr-lakare" name="lakareId">${f.lakare.map(l => `<option value="${esc(l.id)}"${l.forvald ? ' selected' : ''}>${esc(l.namn)}</option>`).join('')}</select>
+  // Runda 18, r5: med en enda läkare på vårdenheten väljer systemet läkaren och säger vem det är, utan en lista.
+  const lakareVal = f.paUppdrag && f.lakare.length === 1 ? `<div class="falt"><p>På uppdrag av <strong>${esc(f.lakare[0].namn)}</strong>, den enda läkaren på vårdenheten.</p><input type="hidden" name="lakareId" value="${esc(f.lakare[0].id)}">
+    <p class="hjalp">Läkaren blir ansvarig för beställningen, får svaren och signerar beställningen i inkorgen.</p></div>` : f.paUppdrag ? `<div class="falt"><label for="pr-lakare">På uppdrag av</label><select id="pr-lakare" name="lakareId">${f.lakare.map(l => `<option value="${esc(l.id)}"${l.forvald ? ' selected' : ''}>${esc(l.namn)}</option>`).join('')}</select>
     <p class="hjalp">Läkaren blir ansvarig för beställningen, får svaren och signerar beställningen i inkorgen.</p></div>` : '';
   const paketKort = (p) => `<li class="pr-paket"><div class="pr-paket-text"><strong>${esc(p.namn)}</strong>
       <span class="under-text">${p.analyser.length ? esc(p.analyser.map(a => a.namn).join(', ')) : 'Allt i paketet är redan taget eller beställt'}${p.analyser.length ? `, till ${esc([...new Set(p.analyser.map(a => a.lab.kort))].join(' och '))}` : ''}.${p.pris?.belopp ? /* Runda 18, r3 (B4) */ ` <span class="pr-pris">Paketet kostar ${esc(`${p.pris.belopp.toLocaleString('sv-SE')} kr`)} (demopris).</span>` : ''}</span>

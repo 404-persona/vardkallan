@@ -2,6 +2,8 @@
 // Fälten beskrivs i ../index.js. Status räknas fram från testerna vid varje bygge.
 import { TEST, klickbudgetTest } from '../../krav.js';
 import { FLODEN } from '../../klickbudget.js';
+// Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (sussa/runda18-r2.js).
+import { medR18r2 } from '../runda18-r2.js';
 
 const { A } = TEST;
 // Runda 6, r1: sökning i patientens journal (journalsok.js).
@@ -10,7 +12,7 @@ const sokFlode = klickbudgetTest(FLODEN.find(f => f.id === 'sok-journal'));
 // Runda 10, r2: filter i sökträffarna och sökning över flera patienter (test/sokfilter.test.js).
 const SF = 'Sökning, filter och flera patienter > ';
 
-export default [
+export default medR18r2([
   {
     id: '3.1.8.1', kategori: 'system', egna: ['L6'], avsedd: 'uppfyllt_demo',
     tester: [
@@ -49,4 +51,4 @@ export default [
     expert: 'Sökningen tål skiftläge och å, ä och ö, tolkar vanliga ord till kodverken och förklarar tolkningen, så användaren behöver varken kunna koderna eller veta var uppgiften står. Filtren räknas fram ur träffarna, och sökningen över patienter prövar varje patient i behörighetsmotorn och loggar den.',
     anmarkning: 'Sökningen över patienter tar diagnoser och läkemedel. Fritext söks bara i en patients journal i taget. På vårdgivarnivå räknas varje kod för sig, och antal under fem visas som färre än fem.',
   },
-];
+]);
