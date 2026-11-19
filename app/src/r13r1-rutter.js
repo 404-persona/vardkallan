@@ -7,6 +7,8 @@ import { join, dirname } from 'node:path';
 import { Fel } from './db.js';
 import * as sp from './synpunkter.js';
 import * as ti from './testinbjudan.js';
+// Runda 18, r1: första passet.
+import * as fp from './forsta-pass.js';
 import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT, TYPER, ALLVAR, JAMFORELSE, MAX_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM } from '../public/js/synpunkt-regler.js';
 
 const LASKOD_FEL = 'Läskoden gäller inte.';
@@ -60,11 +62,20 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
   // Uppdragen.
   rutt('GET', '/api/testare/roller', () => ({ roller: ti.rollerUt(), ...ti.VAL }));
   rutt('GET', '/api/testare', (c) => (c.db ? ti.tillstand(c.db) : { aktiv: false }));
-  rutt('POST', '/api/testare/starta', (c) => ti.starta(c.db, c.body));
+  // Runda 18, r1: med pass: true börjar uppdragen med första passet. Raden för en mätning skapas med serverns sammanhang.
+  const passRad = (c) => (u) => fp.skapaRad(db, { ...sammanhang(c), ...u });
+  rutt('POST', '/api/testare/starta', (c) => ti.starta(c.db, c.body, { passRad: passRad(c) }));
   rutt('POST', '/api/testare/profil', (c) => ti.sparaProfil(c.db, c.body));
   rutt('POST', '/api/testare/avsluta', (c) => ti.avsluta(c.db));
   rutt('POST', '/api/testare/uppdrag/:id/svar', (c, id) => ti.svara(c.db, id, c.body));
   rutt('POST', '/api/testare/uppdrag/:id/hoppa', (c, id) => ti.hoppa(c.db, id));
+  // Runda 18, r1: första passet. Frågan om mätning, mätningen, SUS och vidare till nästa uppdrag. Sammanfattningen för
+  // kravsidan har bara antalet genomförda pass och SUS-medelvärdet och kräver ingen sandlåda.
+  rutt('POST', '/api/testare/pass/samtycke', (c) => ti.samtycke(c.db, c.body, { passRad: passRad(c) }));
+  rutt('POST', '/api/testare/pass/matning', (c) => ti.matning(c.db, c.body, { uppdatera: (nr, m, o) => fp.uppdateraRad(db, nr, m, o) }));
+  rutt('POST', '/api/testare/pass/sus', (c) => ti.sus(c.db, c.body, { spara: (svar, u) => fp.sparaSus(db, svar, { ...sammanhang(c), ...u }) }));
+  rutt('POST', '/api/testare/pass/vidare', (c) => ti.vidare(c.db));
+  rutt('GET', '/api/testare/pass/sammanfattning', () => fp.sammanfattning(db));
   rutt('POST', '/api/testare/uppdrag/:id/jamforelse', (c, id) => {
     const x = sammanhang(c);
     return [201, ti.jamfor(c.db, id, c.body, (u) => sp.sparaJamforelse(db, c.body, { ...x, ...u, tak: takJamforelser }))];
@@ -74,7 +85,7 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
   rutt('POST', '/api/testledare/synpunkter', (c) => { kravLaskod(c); return sp.lista(db, { filter: c.body.filter ?? {}, namnFor: ti.namnFor }); });
   rutt('POST', '/api/testledare/export', (c) => {
     kravLaskod(c);
-    const format = ['csv', 'csv-uppdrag', 'md'].includes(c.body.format) ? c.body.format : 'csv';
+    const format = ['csv', 'csv-uppdrag', 'csv-pass', 'csv-sus', 'md'].includes(c.body.format) ? c.body.format : 'csv';
     const ut = sp.exportera(db, { format, filter: c.body.filter ?? {}, namnFor: ti.namnFor });
     return new Response(ut.text, { status: 200, headers: { 'Content-Type': ut.contentType, 'Content-Disposition': `attachment; filename="${ut.namn}"`, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
   });

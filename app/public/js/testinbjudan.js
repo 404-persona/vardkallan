@@ -7,9 +7,15 @@
 import { esc, api, ikon, krokar, notis, felNotis, faltFel, avbrott } from './ui.js';
 import { S, loggaIn, loggaInInvanare } from './app.js';
 import { TYPER, ALLVAR, YRKEN, SYSTEM, AR, VARDFORM, JAMFORELSE, SPARAS, VEM_LASER, HUR_LANGE, PERSONNUMMER_TEXT, MAX_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM } from './synpunkt-regler.js';
+// Runda 18, r1: första passet med vägledning, mätning med samtycke, återkoppling och SUS efter passet.
+import * as fp from './forsta-pass.js';
+import { MATNING_FRAGA, MATNING_TEXT } from './forsta-pass-steg.js';
+import { SUS_PASTAENDEN, SUS_INSTRUKTION, SUS_SKALA, SUS_KALLA } from './sus.js';
 
 const AKTIV = 'vk_testare_aktiv';
 const OPPEN = 'vk_testare_oppen';
+// Runda 18, r1: svaret på frågan om mätning, så att frågan ställs en gång.
+export const MATNING = 'vk_testare_matning';
 const las = (k, s = sessionStorage) => { try { return s.getItem(k); } catch { return null; } };
 const satt = (k, v, s = sessionStorage) => { try { if (v == null) s.removeItem(k); else s.setItem(k, v); } catch { /* utan lagring */ } };
 
@@ -79,7 +85,9 @@ export async function uppdatera({ visa = false } = {}) {
 }
 
 export async function starta(testroll, profil, knapp) {
-  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil } });
+  // Runda 18, r1: uppdragen börjar med första passet. Har testaren redan svarat på frågan om mätning följer svaret med.
+  const matning = las(MATNING, localStorage);
+  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil, pass: true, ...(['ja', 'nej'].includes(matning) ? { matning } : {}) } });
   T = r;
   satt(AKTIV, '1');
   satt(OPPEN, '1', localStorage);
@@ -97,7 +105,10 @@ function rita({ oppna = false } = {}) {
   const n = T.uppdrag.length;
   const gjorda = T.klara + T.hoppade;
   knapp.hidden = false;
-  knapp.innerHTML = `${ikon.lista}<span>Uppdrag ${Math.min(gjorda + 1, n)} av ${n}</span>`;
+  // Runda 18, r1: under passet heter knappen Första passet, och panelen är öppen.
+  const iPass = T.pass && T.pass.fas !== 'klar';
+  knapp.innerHTML = `${ikon.lista}<span>${iPass ? 'Första passet' : `Uppdrag ${Math.min(gjorda + 1, n)} av ${n}`}</span>`;
+  if (iPass && T.pass.fas !== 'pagar') oppna = true;
   const oppen = oppna || las(OPPEN, localStorage) === '1';
   panel.hidden = !oppen;
   knapp.setAttribute('aria-expanded', String(oppen));
@@ -105,11 +116,15 @@ function rita({ oppna = false } = {}) {
   const aktuell = T.uppdrag.find(u => u.id === T.aktuellt);
   const inloggadSom = S.session?.personal?.id ?? (S.session?.invanare ? S.session.invanare.id : null);
   const ratt = T.demoroll ? inloggadSom === T.demoroll : inloggadSom === T.invanare;
-  panel.innerHTML = `<div class="tp-huvud"><h2 id="tp-rubrik">${esc(T.knapp)}: ${gjorda} av ${n} uppdrag</h2>
+  panel.innerHTML = `<div class="tp-huvud"><h2 id="tp-rubrik">${esc(T.knapp)}: ${iPass ? 'första passet' : `${gjorda} av ${n} uppdrag`}</h2>
       <button type="button" class="knapp text liten" data-tp="stang" aria-label="Fäll ihop uppdragen">${ikon.kryss}</button></div>
     ${ratt ? '' : `<div class="ruta ruta-info liten tp-roll"><p>Uppdragen görs som ${esc(T.om.replace(/^Du (arbetar som|är) /, '').split(',')[0])}. ${inloggadSom ? 'Du är inloggad som någon annan.' : 'Du är inte inloggad.'}</p><button type="button" class="knapp liten" data-tp="logga-in">Logga in igen</button></div>`}
-    ${fraga ? jamforelseHtml(fraga) : aktuell ? aktuelltHtml(aktuell) : `<div class="tp-klart"><p><strong>Alla uppdrag är gjorda.</strong> Tack! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.</p><p><a href="#/testa">Välj en annan yrkesroll</a></p></div>`}
-    <details class="tp-alla"><summary>Alla uppdrag</summary><ol class="tp-lista">${T.uppdrag.map(u => `<li class="${u.id === T.aktuellt ? 'tp-ar-aktuell' : ''}">${ikonFor(u, u.id === T.aktuellt)}<span>${u.sussa ? `<span class="tp-sussa">Sussa ${esc(u.sussa)}</span> ` : ''}${esc(u.titel)}<span class="sr">, ${statusText(u)}</span></span></li>`).join('')}</ol></details>`;
+    ${iPass ? passHtml(T.pass, fraga) : fraga ? jamforelseHtml(fraga) : aktuell ? aktuelltHtml(aktuell) : `<div class="tp-klart"><p><strong>Alla uppdrag är gjorda.</strong> Tack! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.</p><p><a href="#/testa">Välj en annan yrkesroll</a></p></div>`}
+    ${iPass ? '' : `<details class="tp-alla"><summary>Alla uppdrag</summary><ol class="tp-lista">${T.uppdrag.map(u => `<li class="${u.id === T.aktuellt ? 'tp-ar-aktuell' : ''}">${ikonFor(u, u.id === T.aktuellt)}<span>${u.sussa ? `<span class="tp-sussa">Sussa ${esc(u.sussa)}</span> ` : ''}${esc(u.titel)}<span class="sr">, ${statusText(u)}</span></span></li>`).join('')}</ol></details>`}`;
+  // Runda 18, r1: vägledningen följer passet. Steget skrivs i panelen när det byts.
+  fp.aktivera(T, { onSteg: visaSteg });
+  if (T.pass?.fas === 'pagar') visaSteg(fp.stegInfo());
+  else if (T.pass?.fas === 'aterkoppling' && T.pass.matning === 'ja' && !T.pass.resultat) skickaMatning();
 }
 
 function aktuelltHtml(u) {
@@ -123,6 +138,128 @@ function aktuelltHtml(u) {
     <p class="knapprad"><button type="button" class="knapp text liten" data-tp="hoppa" data-id="${esc(u.id)}">Hoppa över uppdraget</button></p>
   </section>`;
 }
+
+// ---- Runda 18, r1: första passet i panelen. ------------------------------------------------------------------------
+const minSek = (s) => (s == null ? '' : s < 60 ? `${s} ${s === 1 ? 'sekund' : 'sekunder'}` : `${Math.floor(s / 60)} min${s % 60 ? ` ${s % 60} s` : ''}`);
+const antal = (n, en, flera) => `${n} ${n === 1 ? en : flera}`;
+const passEtikett = (p) => `Första passet${p.sussa ? `, Sussas testfall ${esc(p.sussa)}` : ''}`;
+function passHtml(p, fraga) {
+  if (p.fas === 'samtycke') {
+    return `<section class="tp-pass tp-samtycke" aria-labelledby="tp-pass-rubrik">
+      <p class="tp-etikett">${passEtikett(p)}</p>
+      <h3 id="tp-pass-rubrik">${esc(p.titel)}</h3>
+      <p class="tp-pass-text">${esc(p.text)}</p>
+      <p>Du behöver inte kunna systemet. Vägledningen visar nästa steg, och du kan stänga av den.</p>
+      <h4 id="tp-matning-fraga">${esc(MATNING_FRAGA)}</h4>
+      <p class="liten">${esc(MATNING_TEXT)}</p>
+      <p class="knapprad"><button type="button" class="knapp liten" data-tp="matning" data-varde="ja">Ja, mät passet</button><button type="button" class="knapp sekundar liten" data-tp="matning" data-varde="nej">Nej, mät inte</button></p>
+    </section>`;
+  }
+  if (p.fas === 'pagar') {
+    const pa = fp.vagledningPa();
+    return `<section class="tp-pass" aria-labelledby="tp-pass-rubrik">
+      <p class="tp-etikett">${passEtikett(p)}</p>
+      <h3 id="tp-pass-rubrik">${esc(p.titel)}</h3>
+      <p class="tp-pass-text">${esc(p.text)}</p>
+      <p class="tp-steg" id="tp-steg" tabindex="-1" aria-live="polite" data-steg=""${pa ? '' : ' hidden'}></p>
+      <p class="knapprad tp-pass-knappar">${pa ? '<button type="button" class="knapp liten" data-tp="visa-steg">Visa var</button>' : ''}<button type="button" class="knapp sekundar liten" data-tp="vagledning">${pa ? 'Stäng av vägledningen' : 'Slå på vägledningen'}</button><button type="button" class="knapp text liten" data-tp="avbryt-pass">Avbryt passet</button></p>
+      <p class="dampad liten">${p.matning === 'ja' ? 'Passet mäts, som du svarade ja till.' : 'Passet mäts inte.'} Systemet ser själv när uppgiften är gjord.</p>
+    </section>`;
+  }
+  // Återkopplingen, sedan jämförelsen, SUS och valet av vad som händer sedan.
+  const nasta = fraga?.id === p.uppdrag ? jamforelseHtml(fraga)
+    : p.sus === null ? `<section class="tp-sus-erbjudande" aria-labelledby="tp-sus-rubrik"><h3 id="tp-sus-rubrik">Hur kändes det?</h3>
+        <p>Vill du svara på tio korta påståenden om systemet? Det tar ungefär en minut och är frivilligt.</p>
+        <p class="knapprad"><button type="button" class="knapp liten" data-tp="sus">Svara på påståendena</button><button type="button" class="knapp text liten" data-tp="sus-hoppa">Nej tack</button></p></section>`
+    : `<section class="tp-vidare" aria-labelledby="tp-vidare-rubrik"><h3 id="tp-vidare-rubrik">Vad vill du göra nu?</h3>
+        <p>Det finns fler uppdrag för yrket. De görs utan vägledning, och efter varje uppdrag får du en kort fråga.</p>
+        <p class="knapprad"><button type="button" class="knapp liten" data-tp="vidare">Fortsätt med nästa uppdrag</button><button type="button" class="knapp sekundar liten" data-tp="avsluta-test">Avsluta testet</button></p>
+        <p class="liten"><a href="#/testa">Välj en annan yrkesroll</a></p></section>`;
+  return `${aterkopplingHtml(p)}${nasta}`;
+}
+function aterkopplingHtml(p) {
+  const r = p.resultat;
+  if (!r) return `<section class="tp-aterkoppling" aria-labelledby="tp-ak-rubrik"><h3 id="tp-ak-rubrik">Uppgiften är gjord</h3><p>Räknar ihop passet.</p></section>`;
+  const klar = r.status === 'klar';
+  const tk = r.tidsklass ? `Sussa räknade med högst ${r.tidsklass} minuter för uppgiften, och full poäng för den som klarar den på under ${r.tidsklass / 3} minuter.` : 'Uppgiften är inte ett av Sussas testfall, så det finns ingen tidsklass att jämföra med.';
+  const rader = [];
+  if (r.tidS != null && klar) rader.push(`Det tog ${minSek(r.tidS)}. ${tk}${r.tidspoang === 10 ? ' Du klarade den inom den snabbaste nivån.' : ''}`);
+  else if (klar) rader.push(tk);
+  if (r.steg != null && klar) {
+    rader.push(`Du behövde ${r.steg} steg: ${antal(r.klick, 'klick', 'klick')}, ${antal(r.faltbyten, 'fältbyte', 'fältbyten')} och ${antal(r.tangenter, 'tangent', 'tangenter')}. Klickbudgeten, som Vårdkällan ska klara uppgiften inom, är ${r.budget} steg.`);
+    rader.push(r.steg <= r.budget ? 'Du klarade den inom budgeten.' : 'Det är vanligt att det tar fler steg första gången.');
+  } else if (klar) rader.push(`Klickbudgeten, som Vårdkällan ska klara uppgiften inom, är ${r.budget} steg.`);
+  if (p.matning === 'nej') rader.push('Du valde att passet inte mäts, så det här är bara vad uppgiften brukar kräva.');
+  if (!klar) rader.push(p.matning === 'ja' ? 'Det som hann mätas är sparat och visar var det blev svårt. Det hjälper oss att göra systemet enklare.' : 'Det är bra att veta var det blev svårt. Skriv gärna det i frågan nedan.');
+  return `<section class="tp-aterkoppling" aria-labelledby="tp-ak-rubrik">
+    <p class="tp-etikett">${passEtikett(p)}</p>
+    <h3 id="tp-ak-rubrik" tabindex="-1">${klar ? `${ikon.bock}Klart!` : 'Du avbröt passet'}</h3>
+    ${rader.map(x => `<p>${esc(x)}</p>`).join('')}
+  </section>`;
+}
+// Steget i panelen. forsta-pass.js anropar när steget byts.
+function visaSteg(info) {
+  const el = rot?.querySelector('#tp-steg');
+  if (!el) return;
+  el.dataset.steg = info.id;
+  el.innerHTML = `${info.nr ? `<span class="tp-steg-nr">Steg ${info.nr} av ${info.antal}</span> ` : ''}${esc(info.text)}`;
+}
+let skickar = false;
+async function skickaMatning({ avbruten = false } = {}) {
+  if (skickar) return;
+  skickar = true;
+  try {
+    let r = await fp.skicka({ avbruten });
+    // Utan räkning i fliken (en ny flik eller en tömd webbläsare) rapporteras passet utan siffror.
+    if (!r && T?.pass?.matning === 'ja' && !T.pass.resultat) r = await api('/api/testare/pass/matning', { metod: 'POST', data: { slut: true, avbruten, utanRakning: true }, direkt: true, tyst: true });
+    if (r?.tillstand) T = r.tillstand;
+  } catch (err) { if (err?.status !== 409) felNotis(err); else await uppdatera(); } finally { skickar = false; }
+  rita({ oppna: true });
+  rot.querySelector('#tp-ak-rubrik')?.focus();
+}
+// SUS efter passet i en dialog. Poängen räknar servern.
+function susDialog() {
+  const forra = document.activeElement;
+  const dl = document.createElement('dialog');
+  dl.className = 'dialog dialog-bred fp-sus-dialog';
+  dl.setAttribute('aria-labelledby', 'fp-sus-rubrik');
+  dl.innerHTML = `<div class="dialog-inre"><form id="fp-sus-form" novalidate>
+    <h2 id="fp-sus-rubrik">Hur upplevde du systemet?</h2>
+    <p>${esc(SUS_INSTRUKTION)}</p>
+    <ol class="sus-lista">${SUS_PASTAENDEN.map((t, i) => `<li><fieldset class="sus"><legend>${esc(t)}</legend>
+      <div class="sus-skala"><span class="sus-anda" aria-hidden="true">${esc(SUS_SKALA[1])}</span>
+      ${[1, 2, 3, 4, 5].map(v => `<label class="sus-val"><input type="radio" name="sus${i + 1}" value="${v}"><span>${v}<span class="sr">${SUS_SKALA[v] ? `, ${esc(SUS_SKALA[v])}` : ''}</span></span></label>`).join('')}
+      <span class="sus-anda" aria-hidden="true">${esc(SUS_SKALA[5])}</span></div></fieldset></li>`).join('')}</ol>
+    <p class="dampad liten">Påståendena är System Usability Scale (SUS). Källa: ${esc(SUS_KALLA)}. Svaren sparas utan namn, och poängen räknas av servern.</p>
+    <p class="form-fel" role="alert" hidden></p>
+    <div class="knapprad"><button type="submit" class="knapp">Skicka svaren</button><button type="button" class="knapp sekundar" data-sus="stang">Avbryt</button></div>
+  </form></div>`;
+  document.body.append(dl);
+  dl.addEventListener('close', () => { setTimeout(() => dl.remove(), 30); if (forra?.isConnected) forra.focus(); });
+  dl.addEventListener('click', (e) => { if (e.target.closest('[data-sus="stang"]')) dl.close(); });
+  dl.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = dl.querySelector('form');
+    const d = new FormData(form);
+    const svar = SUS_PASTAENDEN.map((_, i) => (d.get(`sus${i + 1}`) == null ? null : Number(d.get(`sus${i + 1}`))));
+    const f = form.querySelector('.form-fel');
+    const saknas = svar.map((v, i) => (v == null ? i + 1 : null)).filter(Boolean);
+    if (saknas.length) { f.textContent = `Svar saknas för påstående ${saknas.join(', ')}.`; f.hidden = false; form.querySelector(`[name="sus${saknas[0]}"]`).focus(); return; }
+    const knapp = form.querySelector('[type="submit"]');
+    knapp.disabled = true;
+    try {
+      const r = await api('/api/testare/pass/sus', { metod: 'POST', data: { svar }, direkt: true });
+      T = r.tillstand;
+      dl.close();
+      notis(`Tack! Poängen blev ${String(r.poang).replace('.', ',')} av 100. Svaret är sparat med nummer ${r.nummer}.`);
+      rita({ oppna: true });
+    } catch (err) { f.textContent = err?.message ?? 'Svaren kunde inte skickas.'; f.hidden = false; } finally { if (knapp.isConnected) knapp.disabled = false; }
+  });
+  dl.addEventListener('cancel', (e) => { e.preventDefault(); dl.close(); });
+  dl.showModal();
+  dl.querySelector('input[name="sus1"]').focus();
+}
+// ---------------------------------------------------------------------------------------------------------------------
 
 function jamforelseHtml(u) {
   return `<form class="tp-jamforelse" data-tp-form="jamforelse" data-id="${esc(u.id)}" novalidate aria-labelledby="tp-jf-rubrik">
@@ -154,6 +291,34 @@ async function klick(e) {
       return;
     }
     if (a === 'logga-in') return T.demoroll ? loggaIn(T.demoroll, b) : loggaInInvanare(T.invanare, b);
+    // Runda 18, r1: första passet.
+    if (a === 'matning') {
+      satt(MATNING, b.dataset.varde, localStorage);
+      T = await api('/api/testare/pass/samtycke', { metod: 'POST', data: { matning: b.dataset.varde }, direkt: true });
+      rita({ oppna: true });
+      rot.querySelector('#tp-steg')?.focus();
+      return;
+    }
+    if (a === 'visa-steg') { if (!fp.visaMal()) rot.querySelector('#tp-steg')?.focus(); return; }
+    if (a === 'vagledning') { const pa = fp.vaxlaVagledning(); rita({ oppna: true }); rot.querySelector('[data-tp="vagledning"]')?.focus(); rot.querySelector('#testare-meddelande').textContent = pa ? 'Vägledningen är på.' : 'Vägledningen är avstängd. Du kan slå på den igen här.'; return; }
+    if (a === 'avbryt-pass') {
+      if (T.pass?.matning === 'ja') return skickaMatning({ avbruten: true });
+      T = await api(`/api/testare/uppdrag/${encodeURIComponent(T.pass.uppdrag)}/hoppa`, { metod: 'POST', data: {}, direkt: true });
+      fp.rensa();
+      return rita({ oppna: true });
+    }
+    if (a === 'sus') return susDialog();
+    if (a === 'sus-hoppa') { T = (await api('/api/testare/pass/sus', { metod: 'POST', data: { hoppa: true }, direkt: true })).tillstand; return rita({ oppna: true }); }
+    if (a === 'vidare') { T = await api('/api/testare/pass/vidare', { metod: 'POST', data: {}, direkt: true }); rita({ oppna: true }); rot.querySelector('#tp-aktuellt')?.setAttribute('tabindex', '-1'); rot.querySelector('#tp-aktuellt')?.focus(); return; }
+    if (a === 'avsluta-test') {
+      T = await api('/api/testare/avsluta', { metod: 'POST', data: {}, direkt: true });
+      satt(AKTIV, null);
+      fp.rensa();
+      rita();
+      notis('Tack för att du testade Vårdkällan! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.');
+      rot.querySelector('[data-tp="synpunkt"]')?.focus();
+      return;
+    }
     if (a === 'hoppa') { T = await api(`/api/testare/uppdrag/${encodeURIComponent(b.dataset.id)}/hoppa`, { metod: 'POST', data: {}, direkt: true }); return rita({ oppna: true }); }
     if (a === 'hoppa-fraga') { const r = await api(`/api/testare/uppdrag/${encodeURIComponent(b.dataset.id)}/jamforelse`, { metod: 'POST', data: { hoppa: true }, direkt: true }); T = r.tillstand; return rita({ oppna: true }); }
   } catch (err) { felNotis(err); }

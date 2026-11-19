@@ -2681,6 +2681,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 13, r1: panelen med uppdragen och yrkesrollerna frågar utan att skapa en sandlåda. Ett sådant anrop som korsar
   // en inloggning, där sessionskakan byts, får då aldrig ge webbläsaren en ny, tom session.
   for (const v of ['/api/testare', '/api/testare/roller', '/api/synpunkter/om']) UTAN_SESSION.add(v);
+  // Runda 18, r1: kravsidans sammanfattning av första passen (antal och SUS-medelvärde) kräver ingen sandlåda.
+  UTAN_SESSION.add('/api/testare/pass/sammanfattning');
   // Runda 14, r1: Vårdkällans publika nyckel och övningstjänstens metadata och nycklar.
   for (const v of R14R1_UTAN_SESSION) UTAN_SESSION.add(v);
 
