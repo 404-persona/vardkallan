@@ -197,7 +197,7 @@ export function kontrolleraTal(texter, f = fakta(), { undantag = INTE_FAKTA } = 
 }
 
 // Tankstreck, ellipser och ordet hen hör inte hemma i Vårdkällans texter.
-export const FORBJUDNA_ORD = /[—–…]|(?<!\p{L})hens?(?!\p{L})/u;
+export const FORBJUDNA_ORD = /[\u2014\u2013\u2026]|(?<!\p{L})hens?(?!\p{L})/u;
 
 // Svaret från GET /api/textgranskning: vad som ska granskas, och uppdragens texter, som syns först efter inloggningen.
 export function svar() {
