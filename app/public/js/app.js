@@ -126,6 +126,8 @@ import * as ordlistaVy from './vyer/ordlista.js';
 import * as levandeListor from './levande-listor.js';
 // Runda 18, r5: osparad text följer med när vyn byts, och ett byte av patient märks.
 import * as osparadText from './osparad-text.js';
+// Runda 18, r5: sökfält bredvid listor med många val.
+import './listsok.js';
 
 // Globalt tillstånd.
 export const S = { session: null, inkorg: null, svarstid: null };

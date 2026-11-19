@@ -308,10 +308,33 @@ function mallgrupper(egnaMallar, forval, ctx) {
   const forst = [...new Set([forval.typ, ...sit, ...(TILLAGG[forval.typ] ?? []), ...sit.filter(t => kat(t) === forval.kategori).flatMap(t => TILLAGG[t] ?? [])])].filter(t => egnaMallar.some(m => m.typ === t)).slice(0, 5);
   return { forst: forst.map(t => egnaMallar.find(m => m.typ === t)), fler: egnaMallar.filter(m => !forst.includes(m.typ)) };
 }
-const mallVal = (egnaMallar, forval, ctx) => {
+// Runda 18, r5: listor utan överflöd. Efter förslagen för situationen kommer de mallar som personen senast har använt
+// (servern, /api/mallar/senaste) och personens favoriter (sparade i webbläsaren per person), och resten sist i
+// bokstavsordning. Alla mallar finns kvar i listan, och sökfältet bredvid listan (listsok.js) hittar en mall på en del
+// av namnet.
+let senasteCache = null;
+const senasteMallar = async () => {
+  const nyckel = S.session?.personal?.id;
+  if (senasteCache?.nyckel === nyckel) return senasteCache.typer;
+  let typer = [];
+  try { typer = (await api('/api/mallar/senaste', { tyst: true })).typer ?? []; } catch { /* utan senaste */ }
+  senasteCache = { nyckel, typer };
+  return typer;
+};
+const FAVORIT_NYCKEL = () => `vk_favoritmallar_${S.session?.personal?.id ?? ''}`;
+export const favoritMallar = () => { try { return JSON.parse(localStorage.getItem(FAVORIT_NYCKEL()) ?? '[]').filter(t => typeof t === 'string').slice(0, 20); } catch { return []; } };
+const sparaFavoriter = (l) => { try { localStorage.setItem(FAVORIT_NYCKEL(), JSON.stringify(l.slice(0, 20))); } catch { /* privat läge */ } };
+const mallVal = (egnaMallar, forval, ctx, senaste = []) => {
   const g = mallgrupper(egnaMallar, forval, ctx);
   const opt = (m) => `<option${m === forval ? ' selected' : ''}>${esc(m.typ)}</option>`;
-  return g.fler.length ? `<optgroup label="Förslag för situationen">${g.forst.map(opt).join('')}</optgroup><optgroup label="Fler mallar">${g.fler.map(opt).join('')}</optgroup>` : g.forst.map(opt).join('');
+  const tagna = new Set(g.forst.map(m => m.typ));
+  const ur = (typer) => typer.map(t => egnaMallar.find(m => m.typ === t)).filter(m => m && !tagna.has(m.typ) && tagna.add(m.typ));
+  const sen = ur(senaste);
+  const fav = ur(favoritMallar());
+  const fler = g.fler.filter(m => !tagna.has(m.typ)).sort((a, b) => a.typ.localeCompare(b.typ, 'sv'));
+  const grupp = (rubrik, l) => (l.length ? `<optgroup label="${rubrik}">${l.map(opt).join('')}</optgroup>` : '');
+  if (!sen.length && !fav.length && !fler.length) return g.forst.map(opt).join('');
+  return `${grupp('Förslag för situationen', g.forst)}${grupp('Senast använda', sen)}${grupp('Dina favoriter', fav)}${grupp('Fler mallar', fler)}`;
 };
 
 // Runda 8, r5: innehållet i formuläret för en mall. En strukturerad mall (tobaksvanor) har fasta svarsalternativ i
@@ -350,7 +373,7 @@ async function nyForm(las, ctx, egnaMallar, { typ = null, varden = {}, info = nu
 // Runda 15, r4: skrivrutan för en ny anteckning och för ett utkast. Systemet väljer mallen och kontakten, visar underlaget
 // och sparar utkastet av sig självt. utkast är ett sparat utkast som öppnas igen.
 async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info = null, utkast = null }) {
-  const [dok, s0] = await Promise.all([utkast ? null : aktuellKontakt(ctx), forval.strukturerad ? null : stod.hamtaStod(ctx, forval.typ, utkast?.id ?? null)]);
+  const [dok, s0, senaste] = await Promise.all([utkast ? null : aktuellKontakt(ctx), forval.strukturerad ? null : stod.hamtaStod(ctx, forval.typ, utkast?.id ?? null), utkast ? [] : senasteMallar()]);
   if (!ctx.aktuell()) return;
   let s = s0;
   const kontakt = { val: null };
@@ -360,7 +383,7 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
     <h2 id="ny-rubrik" tabindex="-1">${utkast ? `${esc(utkast.typ)}, utkast` : 'Ny anteckning'}</h2>
     ${utkast ? `<p class="ant-meta">Skapat ${esc(tidpunkt(utkast.skapad))}${utkast.andrad ? `, senast sparat ${esc(tidpunkt(utkast.andrad))}` : ''}. Bara du ser utkastet. Det hör till den vårdkontakt som systemet knöt det till.</p>` : `<div id="ny-kontakt">${dokumenterasHtml(dok)}</div>`}
     ${andraUtkast.length ? `<p class="ruta ruta-info liten" data-utkast-finns>Du har ${andraUtkast.length === 1 ? 'ett utkast' : `${andraUtkast.length} utkast`} för patienten: ${andraUtkast.map(u => `<a href="${ctx.href('journal', u.id)}">${esc(u.typ)} från ${esc(tidpunkt(u.andrad))}</a>`).join(', ')}.</p>` : ''}
-    ${utkast ? '' : `<div class="falt-rad"><div class="falt"><label for="ny-mall">Mall</label><select id="ny-mall" name="typ">${mallVal(egnaMallar, forval, ctx)}</select></div></div>`}
+    ${utkast ? '' : `<div class="falt-rad"><div class="falt"><label for="ny-mall">Mall</label><select id="ny-mall" name="typ" data-sokbar>${mallVal(egnaMallar, forval, ctx, senaste)}</select></div><button type="button" class="knapp text liten" data-favoritmall aria-pressed="${favoritMallar().includes(forval.typ)}">${favoritMallar().includes(forval.typ) ? 'Ta bort ur favoriter' : 'Lägg till bland favoriter'}</button></div>`}
     ${info ? `<p class="ruta ruta-info liten" data-forslag-info>${esc(info)}</p>` : ''}
     <div id="ny-innehall">${innehall(forval, varden, s, { rost })}</div>
     <p class="form-fel" role="alert" hidden></p>
@@ -369,6 +392,23 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
     <p class="hjalp">Ett utkast syns bara för dig. När du signerar kan anteckningen inte längre ändras, bara rättas.</p>
   </form>`;
   const form = las.querySelector('form');
+  // Runda 18, r5: mallen läggs till bland personens favoriter eller tas bort, och listan säger det direkt.
+  form.querySelector('[data-favoritmall]')?.addEventListener('click', (e) => {
+    const typ = form.typ.value;
+    const l = favoritMallar();
+    const ny = l.includes(typ) ? l.filter(t => t !== typ) : [typ, ...l];
+    sparaFavoriter(ny);
+    e.currentTarget.setAttribute('aria-pressed', String(ny.includes(typ)));
+    e.currentTarget.textContent = ny.includes(typ) ? 'Ta bort ur favoriter' : 'Lägg till bland favoriter';
+    notis(ny.includes(typ) ? `${typ} är bland dina favoriter.` : `${typ} är borttagen ur dina favoriter.`, 'info');
+  });
+  form.typ?.addEventListener('change', () => {
+    const b = form.querySelector('[data-favoritmall]');
+    if (!b) return;
+    const pa = favoritMallar().includes(form.typ.value);
+    b.setAttribute('aria-pressed', String(pa));
+    b.textContent = pa ? 'Ta bort ur favoriter' : 'Lägg till bland favoriter';
+  });
   const ritaKontakt = () => { const k = form.querySelector('#ny-kontakt'); k.innerHTML = dokumenterasHtml(dok, kontakt.val); kopplaDokumenteras(k, dok, kontakt, ritaKontakt); };
   if (dok) kopplaDokumenteras(form.querySelector('#ny-kontakt'), dok, kontakt, ritaKontakt);
   const mall = () => (utkast ? forval : egnaMallar.find(x => x.typ === form.typ.value));

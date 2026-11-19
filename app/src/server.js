@@ -197,6 +197,7 @@ import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
 import { registreraRutter as r18r2Rutter, UTAN_SESSION as R18R2_UTAN_SESSION } from './handlingssok-rutter.js';
 // Runda 18, r5: två som arbetar med samma patient (samtidighet.js).
 import * as samtidighet from './samtidighet.js';
+import { registreraRutter as r18r5Rutter } from './arbetsro-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -2648,6 +2649,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // Runda 13, r1 (r13r1-rutter.js).
   // Runda 18, r2 (handlingssok-rutter.js).
   r18r2Rutter({ rutt, kravInloggad, sessionUt, valFor });
+  // Runda 18, r5 (arbetsro-rutter.js): de senast använda mallarna, ur samma lista som GET /api/mallar.
+  r18r5Rutter({ rutt, kravInloggad, mallar: (c) => [...strukturMallar(c.db, c.personal, konfiguration.mallar(c.db)), ...formularMallar(c.db, c.personal)] });
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.
   // Runda 13, r2 (säkerhetsgranskningen av runda 12, fynd 3): efter inläsningen av en kopia loggas sessionen ut, så att

@@ -2082,3 +2082,4 @@ a.hs-traff:hover, a.hs-traff:focus-visible { border-color: var(--kalla); backgro
 .patientband.patientbyte { box-shadow: 0 0 0 4px var(--fokus); }
 @media (prefers-reduced-motion: no-preference) { .patientband.patientbyte { transition: box-shadow 300ms ease-out; } }
 @media (max-width: 640px) { .osparad-rad { padding: 6px 16px; } }
+.ls-sok { display: block; width: 100%; max-width: 280px; margin: 0 0 4px; padding: 4px 8px; font: inherit; font-size: var(--f-s); }

@@ -110,3 +110,35 @@ describe('Listor som uppdaterar sig själva', () => {
     expect(r.status).toBe(401);
   });
 });
+
+describe('Listor utan överflöd', () => {
+  test('de senast använda mallarna är personens egna, högst tre och bara sådana som rollen får skriva med', async () => {
+    const k = await inloggad('lak-kard');
+    const s = sandlada(app, k);
+    for (const typ of ['Mottagningsanteckning', 'Epikris', 'Daganteckning']) {
+      expect((await k.post('/api/patient/p01/anteckningar', { typ, sokord: [{ sokord: 'Aktuellt', text: 'Senast använd' }] })).status).toBe(201);
+    }
+    const r = (await k.get('/api/mallar/senaste')).data;
+    expect(r.typer.length).toBeLessThanOrEqual(3);
+    expect(r.typer).toContain('Daganteckning');
+    const tillatna = (await k.get('/api/mallar')).data.map(m => m.typ);
+    expect(r.typer.every(t => tillatna.includes(t))).toBe(true);
+    // En annan person ser inte Saras mallar som sina senaste.
+    somPerson(s, 'ssk-kard');
+    const ssk = (await k.get('/api/mallar/senaste')).data;
+    expect(ssk.typer).not.toContain('Epikris');
+    expect(JSON.stringify(ssk)).not.toContain('p01');
+  });
+
+  test('andra vårdenheters formulär och lokala mallar finns inte i listan', async () => {
+    const k = await inloggad('lak-kard');
+    const s = sandlada(app, k);
+    const mallar = (await k.get('/api/mallar')).data;
+    const egna = new Set(mallar.map(m => m.typ));
+    const formular = s.db.query("SELECT namn, definition FROM formular WHERE status = 'aktiv'").all().map(r => ({ namn: r.namn, def: JSON.parse(r.definition) }));
+    const { vardenhetFor } = await import('../src/atkomst.js');
+    const min = vardenhetFor(s.db, 'uso-kard');
+    for (const f of formular.filter(x => x.def.enheter && !x.def.enheter.includes(min))) expect(egna.has(f.namn)).toBe(false);
+    expect(mallar.filter(m => m.lokal && m.lokal.enhet && !/Kardiolog/.test(m.lokal.enhet))).toEqual([]);
+  });
+});
