@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T14:09:03.647Z",
-  "bas": "http://127.0.0.1:18283",
+  "tid": "2026-11-19T18:31:28.571Z",
+  "bas": "http://127.0.0.1:18292",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7e48de36f03d7c8ede5080306d64f868d7901712974f702d63e0da2137ff4d4d",
+  "gransnittHash": "2999768134fc19351075c280e8257aec61384f9a4a0fe8778781107681a9456c",
   "tester": [
     {
       "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
@@ -138,6 +138,126 @@
     },
     {
       "namn": "Gränssnitt > Användartest > testläget rensas när testet avslutas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: läkaren på sjukhus följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: läkaren i primärvården följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: sjuksköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: undersköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: barnmorskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vårdadministratören följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: fysioterapeuten följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: systemförvaltaren följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: patienten i Min journal följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: frågan om mätning ställs en gång före passet, och med nej skickas ingen mätning",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vägledningen följer med när testaren tar en annan väg, kan stängas av och slås på igen och läses upp för skärmläsare",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: återkopplingen visar tid och steg mot Sussas tidsklass och klickbudget, och SUS efter passet räknas på servern",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vägledningen fungerar på 390 px och med tangentbordet, och markeringen skymmer inte det som ska klickas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken utan att något skickas till servern, delningslänkarna öppnar tjänsternas delningssidor, och en besökare via länken räknas på kanalen",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: inget som skickas under passet innehåller patientens id, namn eller personnummer",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > sökrutan nås från sidhuvudet och med Ctrl K i varje roll, och varje förslag öppnar en vy som rollen får",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > med en öppen patient öppnar sökrutan formuläret i patientens journal, och utan patient väntar handlingen tills patienten öppnas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > en handling som rollen saknar säger vilken roll som gör den, och ett ord från ett annat system förklaras",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > mätningen av sökningar anropas genom r1:s funktion när den finns, utan söktext med siffror",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > ordlistan Jag letar efter går att filtrera, länkar bara till det rollen får och är öppen utan inloggning",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Hitta rätt > varje tom lista och varje fel i rollernas vyer och i journalens flikar säger vad man kan göra i stället",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > systemet frågar aldrig det det vet: inga val med ett enda alternativ, inget obligatoriskt fält för den inloggades yrke, vårdenhet eller namn, och tid för det som görs nu är förifylld",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > osparad text finns kvar när man går till en annan patient eller rad, systemet säger var den finns, och ett byte av patient märks i patienthuvudet",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > i två flikar med samma inloggning följer den andra fliken med till en ny patient utan att texten försvinner",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > listor går att söka i på början eller en del av namnet, och mallarna har de senast använda och egna favoriter först",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > inkorgen visar det nya av sig själv utan att fokus flyttas, och frågan räknas inte som aktivitet",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Arbetsro > den som ändrar en dos som har ändrats i en annan flik får besked om vad som ändrats, och den egna ändringen sparas med ett klick",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Svarstider i webbläsaren > 95 procent av stegen ger synlig återkoppling inom 100 ms, också med processorn strypt fyra gånger",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Svarstider i webbläsaren > 95 procent av stegen har sitt resultat inom 500 ms på en vanlig dator",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Svarstider i webbläsaren > 95 procent av stegen har sitt resultat inom 1 sekund med processorn strypt fyra gånger",
       "status": "grön"
     },
     {

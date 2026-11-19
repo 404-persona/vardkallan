@@ -12,7 +12,8 @@ import { byggSeed } from '../src/db.js';
 const SRC = join(import.meta.dir, '..', 'src');
 // Moduler med en egen databas utanför sandlådan (synpunkterna och användartestets svar, som delas mellan besökarna).
 // Deras tabeller finns aldrig i en sandlåda och hör inte till lagringen per huvudman.
-const EGEN_DATABAS = new Set(['synpunkter.js', 'anvandartest-svar.js']);
+// Sammanslagningen av runda 18: r1:s räknare för inbjudningar (inbjudan.js) ligger i synpunkternas databas.
+const EGEN_DATABAS = new Set(['synpunkter.js', 'anvandartest-svar.js', 'inbjudan.js']);
 const filer = (dir) => readdirSync(dir).flatMap(f => { const p = join(dir, f); return statSync(p).isDirectory() ? filer(p) : f.endsWith('.js') ? [p] : []; });
 
 // Varje CREATE TABLE med sin kolumnlista, utan de som byggs med en variabel i namnet eller i ett annat schema.

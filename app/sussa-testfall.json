@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T13:32:28.053Z",
-  "bas": "http://127.0.0.1:18283",
+  "tid": "2026-11-19T17:24:14.865Z",
+  "bas": "http://127.0.0.1:18292",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7e48de36f03d7c8ede5080306d64f868d7901712974f702d63e0da2137ff4d4d",
+  "gransnittHash": "2999768134fc19351075c280e8257aec61384f9a4a0fe8778781107681a9456c",
   "kalla": "Region Örebro län, upphandlingen Framtidens vårdinformationsstöd (Sussa samverkan, dnr 16RS2022): Bilaga F1:4 Testfall, Bilaga F1:2 Modell för att testa och utvärdera användbarhet, Bilaga F1:3 Information till anbudsgivare och Bilaga F1 Utvärderingsmodell, versionerna 2018-03-07.",
   "klm": {
     "kalla": "Card, Moran och Newell 1980, Communications of the ACM 23(7), s. 396 till 410",
@@ -44,15 +44,15 @@
       "tecken": 260,
       "uppmatt": 23,
       "inomBudget": true,
-      "skriptetsTidMs": 3370,
-      "uppskattadTidS": 136.6,
+      "skriptetsTidMs": 3567,
+      "uppskattadTidS": 136.8,
       "klmDelar": {
         "klick": 42.4,
         "listval": 4,
         "faltbyten": 13.8,
         "tecken": 72.8,
         "tangenter": 0.3,
-        "svarstid": 3.4
+        "svarstid": 3.6
       },
       "steg": [
         "klick: Gerda Ström i arbetslistan",
@@ -113,15 +113,15 @@
       "tecken": 152,
       "uppmatt": 16,
       "inomBudget": true,
-      "skriptetsTidMs": 2970,
-      "uppskattadTidS": 88,
+      "skriptetsTidMs": 2926,
+      "uppskattadTidS": 87.9,
       "klmDelar": {
         "klick": 31.8,
         "listval": 0,
         "faltbyten": 10.4,
         "tecken": 42.6,
         "tangenter": 0.3,
-        "svarstid": 3
+        "svarstid": 2.9
       },
       "steg": [
         "klick: Elin Arnström i arbetslistan",
@@ -175,7 +175,7 @@
       "tecken": 50,
       "uppmatt": 18,
       "inomBudget": true,
-      "skriptetsTidMs": 2030,
+      "skriptetsTidMs": 2110,
       "uppskattadTidS": 61.1,
       "klmDelar": {
         "klick": 26.5,
@@ -183,7 +183,7 @@
         "faltbyten": 10.4,
         "tecken": 14,
         "tangenter": 0.3,
-        "svarstid": 2
+        "svarstid": 2.1
       },
       "steg": [
         "klick: Trevis Ljung i arbetslistan",
@@ -233,7 +233,7 @@
       "tecken": 78,
       "uppmatt": 14,
       "inomBudget": true,
-      "skriptetsTidMs": 2915,
+      "skriptetsTidMs": 3001,
       "uppskattadTidS": 61.9,
       "klmDelar": {
         "klick": 37.1,
@@ -241,7 +241,7 @@
         "faltbyten": 0,
         "tecken": 21.8,
         "tangenter": 0,
-        "svarstid": 2.9
+        "svarstid": 3
       },
       "steg": [
         "klick: Läkemedel att ge i menyn",
@@ -288,7 +288,7 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 367,
+      "skriptetsTidMs": 415,
       "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
@@ -332,15 +332,15 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 452,
-      "uppskattadTidS": 47,
+      "skriptetsTidMs": 384,
+      "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
         "listval": 4,
         "faltbyten": 6.9,
         "tecken": 27.7,
         "tangenter": 0,
-        "svarstid": 0.5
+        "svarstid": 0.4
       },
       "steg": [
         "klick: Mira Axelsson i arbetslistan",
@@ -376,7 +376,7 @@
       "tecken": 99,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 418,
+      "skriptetsTidMs": 374,
       "uppskattadTidS": 46.9,
       "klmDelar": {
         "klick": 8,
@@ -421,7 +421,7 @@
       "tecken": 103,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 503,
+      "skriptetsTidMs": 545,
       "uppskattadTidS": 51.1,
       "klmDelar": {
         "klick": 10.6,
@@ -470,7 +470,7 @@
       "tecken": 172,
       "uppmatt": 15,
       "inomBudget": true,
-      "skriptetsTidMs": 794,
+      "skriptetsTidMs": 825,
       "uppskattadTidS": 89,
       "klmDelar": {
         "klick": 29.2,
@@ -524,8 +524,8 @@
       "tecken": 172,
       "uppmatt": 15,
       "inomBudget": true,
-      "skriptetsTidMs": 1010,
-      "uppskattadTidS": 89.2,
+      "skriptetsTidMs": 951,
+      "uppskattadTidS": 89.1,
       "klmDelar": {
         "klick": 29.2,
         "listval": 4,
@@ -577,7 +577,7 @@
       "tecken": 0,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 544,
+      "skriptetsTidMs": 472,
       "uppskattadTidS": 16.4,
       "klmDelar": {
         "klick": 15.9,
@@ -622,8 +622,8 @@
       "tecken": 158,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 757,
-      "uppskattadTidS": 66.7,
+      "skriptetsTidMs": 762,
+      "uppskattadTidS": 66.8,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
@@ -668,15 +668,15 @@
       "tecken": 70,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 353,
-      "uppskattadTidS": 30.6,
+      "skriptetsTidMs": 325,
+      "uppskattadTidS": 30.5,
       "klmDelar": {
         "klick": 10.6,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 19.6,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Sara Sandmark i arbetslistan",
@@ -711,7 +711,7 @@
       "tecken": 70,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 333,
+      "skriptetsTidMs": 308,
       "uppskattadTidS": 30.5,
       "klmDelar": {
         "klick": 10.6,
@@ -756,15 +756,15 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 464,
-      "uppskattadTidS": 8.4,
+      "skriptetsTidMs": 356,
+      "uppskattadTidS": 8.3,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.5
+        "svarstid": 0.4
       },
       "steg": [
         "klick: Hamid Burvall i arbetslistan",
@@ -799,7 +799,7 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 441,
+      "skriptetsTidMs": 412,
       "uppskattadTidS": 8.4,
       "klmDelar": {
         "klick": 8,
@@ -829,7 +829,7 @@
       "budget": 5,
       "motivering": "Ett klick på patienten i arbetslistan och ett på Beställ prover i översikten, två klick för att välja den läkare som gav uppdraget och ett klick på Beställ vid paketet Feber och frossa. Läkaren signerar beställningen i inkorgen.",
       "avvikelser": [
-        "Läkaren i Sussas testdata spelas av läkaren på kardiologen. Sjuksköterska i öppenvården har ingen egen demoroll.",
+        "Läkaren i Sussas testdata spelas av läkaren på kardiologen. Distriktssköterskan på vårdcentralen är en demoroll men har ingen körning i testfallet än, så det körs med sjuksköterskan i slutenvården.",
         "Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
@@ -841,15 +841,15 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 353,
-      "uppskattadTidS": 12.3,
+      "skriptetsTidMs": 334,
+      "uppskattadTidS": 12.2,
       "klmDelar": {
         "klick": 8,
         "listval": 4,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Laura August i arbetslistan",
@@ -872,7 +872,7 @@
       "budget": 5,
       "motivering": "Samma steg som för sjuksköterskan. Undersköterskan beställer på uppdrag men inte själv.",
       "avvikelser": [
-        "Läkaren i Sussas testdata spelas av läkaren på kardiologen. Sjuksköterska i öppenvården har ingen egen demoroll.",
+        "Läkaren i Sussas testdata spelas av läkaren på kardiologen. Distriktssköterskan på vårdcentralen är en demoroll men har ingen körning i testfallet än, så det körs med sjuksköterskan i slutenvården.",
         "Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
@@ -884,7 +884,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 308,
+      "skriptetsTidMs": 303,
       "uppskattadTidS": 12.2,
       "klmDelar": {
         "klick": 8,
@@ -926,7 +926,7 @@
       "tecken": 0,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 427,
+      "skriptetsTidMs": 373,
       "uppskattadTidS": 11,
       "klmDelar": {
         "klick": 10.6,
@@ -968,15 +968,15 @@
       "tecken": 0,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 368,
-      "uppskattadTidS": 11,
+      "skriptetsTidMs": 451,
+      "uppskattadTidS": 11.1,
       "klmDelar": {
         "klick": 10.6,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Prover och kontroller i menyn",
@@ -1010,7 +1010,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 445,
+      "skriptetsTidMs": 431,
       "uppskattadTidS": 13.7,
       "klmDelar": {
         "klick": 13.3,
@@ -1053,7 +1053,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 318,
+      "skriptetsTidMs": 326,
       "uppskattadTidS": 13.6,
       "klmDelar": {
         "klick": 13.3,
@@ -1096,7 +1096,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 318,
+      "skriptetsTidMs": 324,
       "uppskattadTidS": 13.6,
       "klmDelar": {
         "klick": 13.3,
@@ -1128,7 +1128,7 @@
       "budget": 9,
       "motivering": "Ett klick på patienten i arbetslistan och ett på Kontroller i översikten, ett klick på var och en av de sex kontrollerna och ett på Ordinera. Klockan 7 i morgon är förvald, och vätskebalansen följs ett dygn. Systemet lägger kontrollerna på avdelningen där patienten ligger, och sjuksköterskan ser dem som uppgifter med tid.",
       "avvikelser": [
-        "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs i läkemedelsprocessens vätskebalans."
+        "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs under Mätvärden."
       ],
       "slut": "Beställningen är sparad, signerad eller verkställd.",
       "uppnatt": true,
@@ -1139,7 +1139,7 @@
       "tecken": 0,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 439,
+      "skriptetsTidMs": 481,
       "uppskattadTidS": 24.3,
       "klmDelar": {
         "klick": 23.9,
@@ -1147,7 +1147,7 @@
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.5
       },
       "steg": [
         "klick: Inga Strand i arbetslistan",
@@ -1175,7 +1175,7 @@
       "budget": 9,
       "motivering": "Samma steg som för läkaren i slutenvården. Kontrollerna görs på vårdcentralen, där patienten har sitt besök.",
       "avvikelser": [
-        "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs i läkemedelsprocessens vätskebalans."
+        "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs under Mätvärden."
       ],
       "slut": "Beställningen är sparad, signerad eller verkställd.",
       "uppnatt": true,
@@ -1186,7 +1186,7 @@
       "tecken": 0,
       "uppmatt": 9,
       "inomBudget": true,
-      "skriptetsTidMs": 492,
+      "skriptetsTidMs": 491,
       "uppskattadTidS": 24.3,
       "klmDelar": {
         "klick": 23.9,
@@ -1223,7 +1223,7 @@
       "motivering": "Ett klick på patienten i arbetslistan och ett på Dokumentera tobaksvanor i översikten. Ett klick på Dagligen för cigaretter sätter svaret Ja själv och flyttar fokus till antalet, och systemet föreslår kvalificerat rådgivande samtal med KVÅ-kod. Ett klick på Erbjudet och accepterat, ett fältbyte för kommentaren och ett klick för att signera.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter läkaren, sjuksköterskan, barnmorskan och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1270,7 +1270,7 @@
       "motivering": "Samma steg som för läkaren, från arbetslistan på Kardiologiska kliniken. Tobaksvanorna skrivs och läses med samma behörighet som omvårdnadsanteckningar.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter läkaren, sjuksköterskan, barnmorskan och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1282,7 +1282,7 @@
       "tecken": 68,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 536,
+      "skriptetsTidMs": 558,
       "uppskattadTidS": 36.3,
       "klmDelar": {
         "klick": 13.3,
@@ -1290,7 +1290,7 @@
         "faltbyten": 3.5,
         "tecken": 19,
         "tangenter": 0,
-        "svarstid": 0.5
+        "svarstid": 0.6
       },
       "steg": [
         "klick: Berit Strandhall i arbetslistan",
@@ -1317,7 +1317,7 @@
       "motivering": "Samma steg som för läkaren. Tobaksvanorna hör till fysioterapeutens mallar.",
       "avvikelser": [
         "Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.",
-        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
+        "Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter läkaren, sjuksköterskan, barnmorskan och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.",
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
@@ -1329,7 +1329,7 @@
       "tecken": 68,
       "uppmatt": 6,
       "inomBudget": true,
-      "skriptetsTidMs": 464,
+      "skriptetsTidMs": 453,
       "uppskattadTidS": 36.2,
       "klmDelar": {
         "klick": 13.3,
@@ -1375,7 +1375,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 430,
+      "skriptetsTidMs": 416,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1422,7 +1422,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 399,
+      "skriptetsTidMs": 381,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1469,7 +1469,7 @@
       "tecken": 13,
       "uppmatt": 7,
       "inomBudget": true,
-      "skriptetsTidMs": 394,
+      "skriptetsTidMs": 398,
       "uppskattadTidS": 25,
       "klmDelar": {
         "klick": 10.6,
@@ -1517,7 +1517,7 @@
       "tecken": 308,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 769,
+      "skriptetsTidMs": 762,
       "uppskattadTidS": 98.4,
       "klmDelar": {
         "klick": 8,
@@ -1549,7 +1549,7 @@
       "budget": 3,
       "motivering": "Ett klick på Inkorg i menyn, ett på Granska och signera alla, som visar alla utkast med patient, tid och text i en lista, och ett klick för att signera alla. Varje anteckning går att öppna från listan innan den signeras.",
       "avvikelser": [
-        "Posterna är 30 osignerade anteckningar för de tre patienterna. Osignerade mätvärden och provsvar finns inte i Vårdkällan, eftersom mätvärden sparas direkt.",
+        "Posterna är 30 osignerade anteckningar för de tre patienterna. Mätvärden sparas direkt utan signering, och provsvar vidimeras för sig i inkorgen, så de ingår inte i posterna.",
         "Granska och signera alla i inkorgen byggdes i runda 7 för testfallet."
       ],
       "slut": "Alla osignerade poster är signerade.",
@@ -1561,15 +1561,15 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 737,
-      "uppskattadTidS": 8.7,
+      "skriptetsTidMs": 616,
+      "uppskattadTidS": 8.6,
       "klmDelar": {
         "klick": 8,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.7
+        "svarstid": 0.6
       },
       "steg": [
         "klick: Inkorg i menyn",
@@ -1604,7 +1604,7 @@
       "tecken": 11,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 177,
+      "skriptetsTidMs": 160,
       "uppskattadTidS": 8.8,
       "klmDelar": {
         "klick": 5.3,
@@ -1647,15 +1647,15 @@
       "tecken": 14,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 186,
-      "uppskattadTidS": 9.7,
+      "skriptetsTidMs": 128,
+      "uppskattadTidS": 9.6,
       "klmDelar": {
         "klick": 5.3,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 3.9,
         "tangenter": 0.3,
-        "svarstid": 0.2
+        "svarstid": 0.1
       },
       "steg": [
         "klick: Boka teambesök i Dagens arbete",
@@ -1690,8 +1690,8 @@
       "tecken": 61,
       "uppmatt": 14,
       "inomBudget": true,
-      "skriptetsTidMs": 732,
-      "uppskattadTidS": 43.1,
+      "skriptetsTidMs": 681,
+      "uppskattadTidS": 43,
       "klmDelar": {
         "klick": 23.9,
         "listval": 0,
@@ -1747,7 +1747,7 @@
       "tecken": 37,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 318,
+      "skriptetsTidMs": 323,
       "uppskattadTidS": 21.6,
       "klmDelar": {
         "klick": 10.6,
@@ -1792,7 +1792,7 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 44,
+      "skriptetsTidMs": 37,
       "uppskattadTidS": 2.7,
       "klmDelar": {
         "klick": 2.7,
@@ -1831,8 +1831,8 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 97,
-      "uppskattadTidS": 2.7,
+      "skriptetsTidMs": 130,
+      "uppskattadTidS": 2.8,
       "klmDelar": {
         "klick": 2.7,
         "listval": 0,
@@ -1871,7 +1871,7 @@
       "tecken": 5,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 305,
+      "skriptetsTidMs": 334,
       "uppskattadTidS": 12.6,
       "klmDelar": {
         "klick": 10.6,
@@ -1904,7 +1904,7 @@
       "budget": 3,
       "motivering": "Ett klick på Väntelista i menyn, ett på Boka tid för patienten och ett på den tid som systemet föreslår först. Kallelsen går ut av sig själv.",
       "avvikelser": [
-        "Systemet föreslår tiden hos den vårdgivare som har lediga tider av rätt typ, så användaren väljer inte klockslaget. Vårdgivaren är en läkare på Kardiologiska mottagningen, eftersom fysioterapeuten inte har någon tidbok."
+        "Systemet föreslår tiden hos den vårdgivare som har lediga tider av rätt typ, så användaren väljer inte klockslaget. Vårdgivaren är en läkare på Kardiologiska mottagningen, eftersom fysioterapeutens tidbok i Sussas testdata är till för gruppbesöket i testfall 5.3."
       ],
       "slut": "Jonas Brun är bokad till ett besök och en kallelse är skickad.",
       "uppnatt": true,
@@ -1915,7 +1915,7 @@
       "tecken": 0,
       "uppmatt": 3,
       "inomBudget": true,
-      "skriptetsTidMs": 295,
+      "skriptetsTidMs": 282,
       "uppskattadTidS": 8.2,
       "klmDelar": {
         "klick": 8,
@@ -1956,7 +1956,7 @@
       "tecken": 37,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 357,
+      "skriptetsTidMs": 360,
       "uppskattadTidS": 22.1,
       "klmDelar": {
         "klick": 8,
@@ -1999,7 +1999,7 @@
       "tecken": 37,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 375,
+      "skriptetsTidMs": 343,
       "uppskattadTidS": 22.1,
       "klmDelar": {
         "klick": 8,
@@ -2007,7 +2007,7 @@
         "faltbyten": 3.5,
         "tecken": 10.4,
         "tangenter": 0,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Mira Axelsson i arbetslistan",
@@ -2042,7 +2042,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 213,
+      "skriptetsTidMs": 235,
       "uppskattadTidS": 12.1,
       "klmDelar": {
         "klick": 8,
@@ -2084,7 +2084,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 228,
+      "skriptetsTidMs": 239,
       "uppskattadTidS": 12.1,
       "klmDelar": {
         "klick": 8,
@@ -2126,15 +2126,15 @@
       "tecken": 7,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 409,
-      "uppskattadTidS": 11.4,
+      "skriptetsTidMs": 272,
+      "uppskattadTidS": 11.3,
       "klmDelar": {
         "klick": 5.3,
         "listval": 0,
         "faltbyten": 3.5,
         "tecken": 2,
         "tangenter": 0.3,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Bertil Danielsson i arbetslistan",
@@ -2168,7 +2168,7 @@
       "tecken": 7,
       "uppmatt": 4,
       "inomBudget": true,
-      "skriptetsTidMs": 351,
+      "skriptetsTidMs": 260,
       "uppskattadTidS": 11.3,
       "klmDelar": {
         "klick": 5.3,
@@ -2176,7 +2176,7 @@
         "faltbyten": 3.5,
         "tecken": 2,
         "tangenter": 0.3,
-        "svarstid": 0.4
+        "svarstid": 0.3
       },
       "steg": [
         "klick: Bertil Danielsson i arbetslistan",
@@ -2200,7 +2200,47 @@
       "motivering": "Ett klick på Avdelningens planering i arbetslistan. Vyn visar dagens händelser för avdelningens patienter i tidsordning: uppgifter, läkemedel att ge och bokade tider.",
       "avvikelser": [
         "Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.",
-        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
+        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller finns, men avdelningens planering visar dem inte än."
+      ],
+      "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 95,
+      "uppskattadTidS": 2.7,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
+    },
+    {
+      "nr": "7.1",
+      "titel": "Överblicka dagens arbete för din arbetsplats",
+      "tema": 7,
+      "roll": "Läkare slutenvård",
+      "demoroll": "lak-kard",
+      "tidsklass": 6,
+      "tidsklassSkal": "En vy och en tid.",
+      "budget": 1,
+      "motivering": "Samma steg som för sjuksköterskan. Avdelningen är förvald, eftersom läkarens patienter ligger där.",
+      "avvikelser": [
+        "Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.",
+        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller finns, men avdelningens planering visar dem inte än."
       ],
       "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
       "uppnatt": true,
@@ -2232,46 +2272,6 @@
       "nr": "7.1",
       "titel": "Överblicka dagens arbete för din arbetsplats",
       "tema": 7,
-      "roll": "Läkare slutenvård",
-      "demoroll": "lak-kard",
-      "tidsklass": 6,
-      "tidsklassSkal": "En vy och en tid.",
-      "budget": 1,
-      "motivering": "Samma steg som för sjuksköterskan. Avdelningen är förvald, eftersom läkarens patienter ligger där.",
-      "avvikelser": [
-        "Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.",
-        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
-      ],
-      "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
-      "uppnatt": true,
-      "klick": 1,
-      "listval": 0,
-      "faltbyten": 0,
-      "tangenter": 0,
-      "tecken": 0,
-      "uppmatt": 1,
-      "inomBudget": true,
-      "skriptetsTidMs": 99,
-      "uppskattadTidS": 2.7,
-      "klmDelar": {
-        "klick": 2.7,
-        "listval": 0,
-        "faltbyten": 0,
-        "tecken": 0,
-        "tangenter": 0,
-        "svarstid": 0.1
-      },
-      "steg": [
-        "klick: Avdelningens planering i arbetslistan"
-      ],
-      "brister": [],
-      "malpoang": 10,
-      "tidspoang": 10
-    },
-    {
-      "nr": "7.1",
-      "titel": "Överblicka dagens arbete för din arbetsplats",
-      "tema": 7,
       "roll": "Paramedicinare",
       "demoroll": "fys-kard",
       "tidsklass": 6,
@@ -2280,7 +2280,7 @@
       "motivering": "Samma steg som för sjuksköterskan. Fysioterapeuten på mottagningen ser avdelningen på samma vårdenhet.",
       "avvikelser": [
         "Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.",
-        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
+        "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller finns, men avdelningens planering visar dem inte än."
       ],
       "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
       "uppnatt": true,
@@ -2291,7 +2291,7 @@
       "tecken": 0,
       "uppmatt": 1,
       "inomBudget": true,
-      "skriptetsTidMs": 93,
+      "skriptetsTidMs": 96,
       "uppskattadTidS": 2.7,
       "klmDelar": {
         "klick": 2.7,
@@ -2330,7 +2330,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 409,
+      "skriptetsTidMs": 401,
       "uppskattadTidS": 13.7,
       "klmDelar": {
         "klick": 13.3,
@@ -2373,7 +2373,7 @@
       "tecken": 0,
       "uppmatt": 5,
       "inomBudget": true,
-      "skriptetsTidMs": 395,
+      "skriptetsTidMs": 379,
       "uppskattadTidS": 13.6,
       "klmDelar": {
         "klick": 13.3,
@@ -2416,15 +2416,15 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 308,
-      "uppskattadTidS": 5.6,
+      "skriptetsTidMs": 241,
+      "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
         "listval": 0,
         "faltbyten": 0,
         "tecken": 0,
         "tangenter": 0,
-        "svarstid": 0.3
+        "svarstid": 0.2
       },
       "steg": [
         "klick: Avdelningens planering i arbetslistan",
@@ -2456,7 +2456,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 214,
+      "skriptetsTidMs": 198,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
@@ -2496,7 +2496,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 214,
+      "skriptetsTidMs": 193,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
@@ -2536,7 +2536,7 @@
       "tecken": 0,
       "uppmatt": 2,
       "inomBudget": true,
-      "skriptetsTidMs": 195,
+      "skriptetsTidMs": 196,
       "uppskattadTidS": 5.5,
       "klmDelar": {
         "klick": 5.3,
