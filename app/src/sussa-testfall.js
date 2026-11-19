@@ -21,8 +21,9 @@ export const TEMAN = {
   1: 'Läkemedelshantering', 2: 'Vårdbegäran', 3: 'Beställning och svar', 4: 'Strukturerad information', 5: 'Administration', 6: 'Övergångar', 7: 'Gemensamma vyer',
 };
 
-// Sussas sju användargrupper och den demoroll i Vårdkällan som spelar gruppen. Sjuksköterska i öppenvården har ingen egen
-// demoroll: sjuksköterskan på vårdcentralen finns i seeden men går inte att logga in som.
+// Sussas sju användargrupper och den demoroll i Vårdkällan som spelar gruppen. Runda 18, r4: distriktssköterskan på
+// vårdcentralen (ssk-vc) är en demoroll sedan runda 7, men testfallen har inga körningar för Sussas sjuksköterska i
+// öppenvården än, så gruppen har ingen demoroll här.
 export const ROLLER = {
   lakare_oppenvard: { namn: 'Läkare öppenvård', demoroll: 'lak-vc' },
   lakare_slutenvard: { namn: 'Läkare slutenvård', demoroll: 'lak-kard' },
@@ -250,7 +251,7 @@ export const TESTFALL = [
     tidsklass: 9, tidsklassSkal: 'Som testfall 3.1 med en uppdragsgivare.',
     korningar: [kor('ssk_slutenvard', 5, 'Ett klick på patienten i arbetslistan och ett på Beställ prover i översikten, två klick för att välja den läkare som gav uppdraget och ett klick på Beställ vid paketet Feber och frossa. Läkaren signerar beställningen i inkorgen.'),
       kor('underskoterska', 5, 'Samma steg som för sjuksköterskan. Undersköterskan beställer på uppdrag men inte själv.')],
-    avvikelser: ['Läkaren i Sussas testdata spelas av läkaren på kardiologen. Sjuksköterska i öppenvården har ingen egen demoroll.', 'Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen.'],
+    avvikelser: ['Läkaren i Sussas testdata spelas av läkaren på kardiologen. Distriktssköterskan på vårdcentralen är en demoroll men har ingen körning i testfallet än, så det körs med sjuksköterskan i slutenvården.', 'Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen.'],
   }),
   t('3.3', 'Registrera provtagning', ['ssk_oppenvard', 'ssk_slutenvard', 'underskoterska'], {
     syfte: 'Registrera provtagning utifrån en befintlig beställning för Trevis Ljung och skicka den.',
@@ -279,7 +280,7 @@ export const TESTFALL = [
     tidsklass: 9, tidsklassSkal: 'Sex kontroller vid samma tid.',
     korningar: [kor('lakare_slutenvard', 9, 'Ett klick på patienten i arbetslistan och ett på Kontroller i översikten, ett klick på var och en av de sex kontrollerna och ett på Ordinera. Klockan 7 i morgon är förvald, och vätskebalansen följs ett dygn. Systemet lägger kontrollerna på avdelningen där patienten ligger, och sjuksköterskan ser dem som uppgifter med tid.'),
       kor('lakare_oppenvard', 9, 'Samma steg som för läkaren i slutenvården. Kontrollerna görs på vårdcentralen, där patienten har sitt besök.')],
-    avvikelser: ['SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs i läkemedelsprocessens vätskebalans.'],
+    avvikelser: ['SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs under Mätvärden.'],
   }),
 
   // Tema 4: Strukturerad information
@@ -294,7 +295,7 @@ export const TESTFALL = [
       kor('paramedicinare', 6, 'Samma steg som för läkaren. Tobaksvanorna hör till fysioterapeutens mallar.')],
     avvikelser: ['Tiden för besöket är nu, eftersom Sussas datum ligger före testet. Besöket är på Vårdcentralen Tybble för läkaren och på Kardiologiska mottagningen för sjuksköterskan och fysioterapeuten.',
       // Runda 15, r5: undersköterskan skriver observationsanteckningar men inte tobaksvanor, som vårdgivaren bestämmer.
-      'Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter sjuksköterskan, läkaren och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.',
+      'Vårdadministratören skriver inte anteckningar i Vårdkällan och kan därför inte spela testfallet. Undersköterskan skriver observationsanteckningar men inte tobaksvanor, eftersom vårdgivaren i förvalet låter läkaren, sjuksköterskan, barnmorskan och fysioterapeuten skriva dem. Undersköterskan ser tobaksvanorna i översikten.',
       'Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat.'],
   }),
   t('4.2', 'Registrera mätvärden', ['lakare_slutenvard', 'lakare_oppenvard', 'ssk_oppenvard', 'ssk_slutenvard', 'underskoterska', 'medicinsk_sekreterare'], {
@@ -323,7 +324,7 @@ export const TESTFALL = [
     slut: 'Alla osignerade poster är signerade.',
     tidsklass: 9, tidsklassSkal: 'Många poster, men samma handling varje gång.',
     korningar: [kor('lakare_oppenvard', 3, 'Ett klick på Inkorg i menyn, ett på Granska och signera alla, som visar alla utkast med patient, tid och text i en lista, och ett klick för att signera alla. Varje anteckning går att öppna från listan innan den signeras.')],
-    avvikelser: ['Posterna är 30 osignerade anteckningar för de tre patienterna. Osignerade mätvärden och provsvar finns inte i Vårdkällan, eftersom mätvärden sparas direkt.', 'Granska och signera alla i inkorgen byggdes i runda 7 för testfallet.'],
+    avvikelser: ['Posterna är 30 osignerade anteckningar för de tre patienterna. Mätvärden sparas direkt utan signering, och provsvar vidimeras för sig i inkorgen, så de ingår inte i posterna.', 'Granska och signera alla i inkorgen byggdes i runda 7 för testfallet.'],
   }),
 
   // Tema 5: Administration
@@ -392,7 +393,7 @@ export const TESTFALL = [
     slut: 'Jonas Brun är bokad till ett besök och en kallelse är skickad.',
     tidsklass: 9, tidsklassSkal: 'En sökning i väntelistan, en bokning och en kallelse.',
     korningar: [kor('medicinsk_sekreterare', 3, 'Ett klick på Väntelista i menyn, ett på Boka tid för patienten och ett på den tid som systemet föreslår först. Kallelsen går ut av sig själv.')],
-    avvikelser: ['Systemet föreslår tiden hos den vårdgivare som har lediga tider av rätt typ, så användaren väljer inte klockslaget. Vårdgivaren är en läkare på Kardiologiska mottagningen, eftersom fysioterapeuten inte har någon tidbok.'],
+    avvikelser: ['Systemet föreslår tiden hos den vårdgivare som har lediga tider av rätt typ, så användaren väljer inte klockslaget. Vårdgivaren är en läkare på Kardiologiska mottagningen, eftersom fysioterapeutens tidbok i Sussas testdata är till för gruppbesöket i testfall 5.3.'],
   }),
 
   // Tema 6: Övergångar
@@ -434,7 +435,7 @@ export const TESTFALL = [
     korningar: [kor('ssk_slutenvard', 1, 'Ett klick på Avdelningens planering i arbetslistan. Vyn visar dagens händelser för avdelningens patienter i tidsordning: uppgifter, läkemedel att ge och bokade tider.'),
       kor('lakare_slutenvard', 1, 'Samma steg som för sjuksköterskan. Avdelningen är förvald, eftersom läkarens patienter ligger där.'),
       kor('paramedicinare', 1, 'Samma steg som för sjuksköterskan. Fysioterapeuten på mottagningen ser avdelningen på samma vårdenhet.')],
-    avvikelser: ['Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.', 'Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns.'],
+    avvikelser: ['Avdelningen är Avdelning 72, kardiologi. Sussas händelser ligger i dag med Sussas klockslag.', 'Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller finns, men avdelningens planering visar dem inte än.'],
   }),
   // Runda 8, r3: avdelningens planering för ett urval av patienter (avdelningsplan.js).
   t('7.2', 'Överblicka dagens händelser för en grupp patienter', ['lakare_slutenvard', 'ssk_slutenvard', 'paramedicinare', 'underskoterska'], {

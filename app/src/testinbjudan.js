@@ -154,7 +154,8 @@ export const TESTROLLER = [
   },
   {
     id: 'fysioterapeut', knapp: 'Fysioterapeut och andra yrken', yrke: 'paramedicin', demoroll: 'fys-kard', sussaData: true, avdelning: true,
-    om: 'Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen. Hon spelar Sussas paramedicinare, alltså också arbetsterapeut, dietist och kurator.',
+    // Runda 18, r4: sedan 1.6 har arbetsterapeuten, dietisten, logopeden, kuratorn och psykologen egna demoroller.
+    om: 'Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen, som i Sussas testfall för paramedicinare. Uppdragen passar också andra yrken. Arbetsterapeut, dietist, logoped, kurator och psykolog har dessutom egna demoroller under Logga in med en demoroll, men inga egna uppdrag än.',
     uppdrag: [
       { id: '7.1', sussa: '7.1', ...fraga('Vilka händelser äger rum klockan 11?', minstAv(1, 'provtagning', 'sjukgymnastik'), 'provtagning och sjukgymnastik') },
       { id: '2.3', sussa: '2.3', klar: nagon(andrade('remisser', 'bedomd_av', 'bedomd_tid'), nya('remiss_fordelningar', 'av'), andrade('remisskonferens_remisser', 'lagd_av', 'lagd_tid')) },

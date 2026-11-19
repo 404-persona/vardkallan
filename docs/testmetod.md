@@ -50,7 +50,7 @@ Enligt standarden: Dynamisk testdokumentation: testprocedurspecifikation (29119-
 
 Servertesterna körs med ett skript som också skriver resultatet och kontrollerar att kravregistret bara pekar på tester som finns. Gränssnittstesterna körs i en bestämd ordning mot en lokal container, eftersom de skriver resultat med en hash av gränssnittet. Docker-bygget kör servertesterna igen och stoppas vid ett rött test.
 
-Finns i: `app/scripts/kor-tester.js`, `app/Dockerfile`, `test/klienttester.cjs`.
+Finns i: `app/scripts/kor-tester.js`, `app/Dockerfile`, `test/klienttester.cjs`, `app/scripts/textgranskning.js`, `app/test/textgranskning.test.js`.
 
 ## Testdata och testmiljö
 
@@ -67,6 +67,14 @@ Enligt standarden: Testledningens och den dynamiska testningens rapporter (29119
 Varje körning skriver resultatet per test till filer som följer med i bygget, och kravsidan i demon är testrapporten: för varje krav och varje post visas testerna och deras status från det senaste bygget. Gränssnittets resultat räknas som inaktuella om gränssnittet har ändrats sedan testerna kördes. Fel och fynd från säkerhetsgranskningarna sparas med åtgärd, och tillgänglighetsredogörelsen skrivs ur tillgänglighetstestet.
 
 Finns i: `app/klienttest-resultat.json`, `app/klickbudget.json`, `app/sussa-testfall.json`, `app/src/klientresultat.js`, `app/src/sakerhetsfynd.json`, `docs/tillganglighet.md`, `docs/fhir-validering.md`.
+
+## Ordningen för en ny version
+
+1. Höj versionen i app/package.json och lägg den nya versionens nyheter överst i app/src/nyheter.json och dess rad överst i app/src/api-andringar.js.
+2. Kör servertesterna med scripts/kor-tester.js tills sista raden säger 0 röda.
+3. Granska texterna på de publika sidorna #/testa, #/om, #/krav och #/moduler: kör scripts/textgranskning.js mot en lokal container och läs filerna. Pröva varje känd begränsning mot koden och sätt granskad till den nya versionen, rätta det som är fel, och uppdatera src/textgranskning-granskade.js för varje källa som är läst. Testet test/textgranskning.test.js är grönt först när allt är granskat i versionen och inget handskrivet tal skiljer sig från det som koden räknar fram.
+4. Kör gränssnittstesterna sist, efter den sista ändringen i app/public/, mot en ny container i ordningen klickbudget, avbrott, användartest och Sussas testfall, sedan servertesterna igen och sist genomgång, tillgänglighet och mobil, och skriv docs/tillganglighet.md med scripts/tillganglighet-md.js.
+5. Bygg imagen, så att bygget kör servertesterna igen med resultaten från gränssnittstesterna, och kontrollera i en lokal container att GET /api/krav/version ger alla fyra villkoren för 1.0.
 
 ## Avgränsning
 

@@ -1041,6 +1041,12 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - En inloggning svarar 403 när legitimationen för rollen saknas eller är återkallad i registret, och alla handlingar utom övningarna nekas för en sådan person.
 - Rapporten från inläsningen av personalkatalogen har `legitimation` (`[{ id, namn, status, text }]`) när någon som fick en roll som kräver legitimation saknar giltig legitimation eller inte gick att slå upp.
 
+## Version 1.8.0: textgranskningen av de publika sidorna (runda 18, r4)
+
+- `GET /api/krav/version` har också `fakta`: `{ sussaTestfall, sussaPoster, sandladaTimmar, testroller, uppdrag, moduler, gallringDagar, kontaktDagar }`, talen som sidorna #/testa, #/om och #/krav nämner, räknade ur koden. Sidorna läser talen härifrån i stället för att skriva dem för hand.
+- Nytt: `GET /api/textgranskning` ger `{ version, sidor, attGranska, uppdrag }`. `version` är major och minor ur `package.json`, `sidor` de fyra publika sidorna med sina vyer, `attGranska` det som inte är granskat i versionen (`[{ sidor, kalla, vad, granskad }]`) och `uppdrag` testrollernas texter och uppdrag som testaren ser dem. Svaret innehåller inget ur en sandlåda. `scripts/textgranskning.js` läser det.
+- `GET /api/moduler`: varje rutt har också `namn`, menyns namn eller, för en offentlig sida utan rad i menyn, sidans eget namn.
+
 ## Intygen i intygsapplikationen (runda 16, r1)
 
 - `GET /api/patient/:id/intyg`: varje intyg har också `version`, `blankett`, `ersatt` (text när intygstypen har ersatts), `sandning` (`samrad`, `utskrift`, `post` eller `vid_signering`), `relation` (`{ typ, text }` för ett förnyat eller bytt intyg), `kanFornyas` och `fornyasMed` (`{ kod, version, text }`). Varje intygstyp i `typer` har också `version`, `blankett`, `sandning` och `kanSignera`. Listan har bara de intygstyper som den inloggade får skapa eller signera, och ett ersatt intyg står med `mojlig: false` och vad som ersatte det.

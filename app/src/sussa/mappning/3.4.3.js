@@ -24,7 +24,7 @@ const AVSNITT = [
   {
     id: '3.4.3.3', kategori: 'system', egna: [], avsedd: 'delvis',
     tester: [T.kallelse, T.paminnelse, T.omboka, T.avboka, T.skyddad, T.egenIncheckning, T.grupp],
-    losning: 'Systemet skriver kallelsen ur bokningen på enkel svenska: tid, plats, vårdgivarens yrke, förberedelser och avgift, aldrig journaltext. Påminnelsen går ut av sig själv, en ändrad eller avbokad tid ger ett nytt besked, och patienten kan bekräfta att hen kommer. Kallelserna som patienten har fått visas för personalen och i Min journal.',
+    losning: 'Systemet skriver kallelsen ur bokningen på enkel svenska: tid, plats, vårdgivarens yrke, förberedelser och avgift, aldrig journaltext. Påminnelsen går ut av sig själv, en ändrad eller avbokad tid ger ett nytt besked, och patienten kan bekräfta att besöket blir av. Kallelserna som patienten har fått visas för personalen och i Min journal.',
     expert: 'Ingen behöver skriva eller skicka en kallelse för hand. Systemet ser när bokningen ändras och skickar ett nytt besked, och väljer kanal efter skyddad identitet och patientens val.',
     anmarkning: 'Språkpreferens, export till andra format, en central distributionskanal och kallelse till vårdkontakter utan förbokad tid saknas. Sms och brev är simulerade.',
   },

@@ -2,6 +2,22 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.8.0",
+      "datum": "2026-11-19",
+      "nyheter": [
+        {
+          "id": "kanda-begransningar-1-8-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/om",
+          "rubrik": "Kända begränsningar är prövade för version 1.8",
+          "text": "Listan Kända begränsningar på startsidan för testare och på sidan Om demon är prövad mot systemet i version 1.8. Det som har byggts står inte längre som saknat, till exempel sjukintygen och partogrammets varnings- och åtgärdslinje, och allt som är simulerat står samlat, till exempel HOSP och e-legitimationen."
+        }
+      ]
+    },
+    {
       "version": "1.7.0",
       "datum": "2026-11-17",
       "nyheter": [

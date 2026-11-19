@@ -193,12 +193,16 @@ import { registreraRutter as reservloggRutter } from './reservlogg-rutter.js';
 import { registreraRutter as r15r4Rutter } from './r15r4-rutter.js';
 // Runda 16, r3: handledningen av studenter och barnmorskans förskrivning av preventivmedel (r16r3-rutter.js).
 import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
+// Runda 18, r4: sandlådans livslängd på ett ställe, och textgranskningen av de publika sidorna.
+import { SANDLADA_TIMMAR } from './sandlada-livslangd.js';
+import * as textgranskning from './textgranskning.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
 // en ny; när taket är nått får en ny besökare en sida som säger när det är lönt att försöka igen.
 const MAX_SANDLADOR = 3000;
-const SESSION_TTL = 8 * 3600_000;
+// Runda 18, r4: timmarna står i sandlada-livslangd.js, som sidorna #/testa och #/om också läser.
+const SESSION_TTL = SANDLADA_TIMMAR * 3600_000;
 // Runda 13, r2: en sandlåda där ingen har loggat in har inget att förlora och försvinner efter en timme utan användning.
 const TOM_TTL = 3600_000;
 // Runda 13, r2: så mycket ledigt utrymme lämnas alltid kvar på disken.
@@ -2516,8 +2520,13 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   rutt('GET', '/api/krav/version', () => {
     const resultat = lasTestresultat(testresultat);
     const klient = lasKlientresultat(klientresultat);
-    return villkor10(sussaRegister(resultat, klient, { egna: kravregister(resultat, undefined, klient) }), klient.sussaTestfall, { version: APPVERSION });
+    // Runda 18, r4: fakta är talen som de publika sidorna nämner, räknade ur koden (textgranskning.js).
+    return { ...villkor10(sussaRegister(resultat, klient, { egna: kravregister(resultat, undefined, klient) }), klient.sussaTestfall, { version: APPVERSION }), fakta: textgranskning.fakta() };
   });
+  // Runda 18, r4: vad som ska granskas på de publika sidorna i den här versionen (scripts/textgranskning.js). Texterna
+  // ändras inte medan servern kör, så svaret räknas en gång.
+  let textgranskningSvar = null;
+  rutt('GET', '/api/textgranskning', () => (textgranskningSvar ??= textgranskning.svar()));
   // Runda 14, r4 (Sussa 11.2.1.7): testprotokollet med varje krav, dess testfall, resultat, datum och den byggda versionen.
   rutt('GET', '/api/krav/testprotokoll', () => testprotokoll.franFiler({ testresultat, klientresultat }));
   // Svarstidsmål (D5): p95 under 200 ms per endpoint.

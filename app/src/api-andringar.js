@@ -11,6 +11,17 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 18: version 1.8. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.8.0', datum: '2026-11-19',
+    text: 'Den som testar Vårdkällan för första gången.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 18, r4: textgranskningen av de publika sidorna (docs/api-avvikelser.md).
+      'GET /api/krav/version har fältet fakta med talen som de publika sidorna nämner, räknade ur koden: Sussas testfall och poster, sandlådans livslängd i timmar, testrollerna, uppdragen, modulerna och gallringen av synpunkter',
+      'GET /api/textgranskning säger vilka texter på #/testa, #/om, #/krav och #/moduler som ska granskas i versionen och har uppdragens texter för testrollerna',
+      'GET /api/moduler har namnet för varje rutt, också för en offentlig sida som inte har en rad i menyn',
+    ],
+  },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.
   {
     version: '1.7.0', datum: '2026-11-17',

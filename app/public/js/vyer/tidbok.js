@@ -88,7 +88,7 @@ export async function ombokaBokning(id, namn) {
 
 export async function avbokaBokning(id, namn, styrLakemedel = null) {
   const svar = await dialog(`<form><h2 id="dlg-rubrik">Avboka tiden för ${esc(namn)}</h2>
-    <div class="dialog-text"><p>Patienten får ett besked om avbokningen av sig själv. Står patienten på väntelistan läggs hen tillbaka där.</p>${styrLakemedel ? `<p class="ruta ruta-info liten">${esc(styrLakemedel)} Avbokas tiden väntar dosen tills vårdhändelsen har fått en ny tid.</p>` : ''}</div>
+    <div class="dialog-text"><p>Patienten får ett besked om avbokningen av sig själv. Kom tiden från väntelistan läggs patienten tillbaka där.</p>${styrLakemedel ? `<p class="ruta ruta-info liten">${esc(styrLakemedel)} Avbokas tiden väntar dosen tills vårdhändelsen har fått en ny tid.</p>` : ''}</div>
     <div class="falt"><label for="ab-orsak">Orsak <span class="obl">(obligatoriskt)</span></label><input id="ab-orsak" name="orsak" required maxlength="120" autocomplete="off"></div>
     <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Avboka</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div></form>`);
   if (!svar) return null;

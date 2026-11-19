@@ -92,6 +92,8 @@ import { lagmatris } from '../lagmatris.js';
 // Runda 9, r6: de mobila flödena per funktionellt krav för 2.3.1.3.
 import { perKrav } from '../mobil.js';
 import { klickbudgetTest } from '../krav.js';
+// Runda 18, r4.
+import { rattaTexter } from './runda18-r4.js';
 
 export const SPEC = spec;
 export const KATEGORIER = ['system', 'nationell', 'leverantor'];
@@ -109,6 +111,8 @@ export const AVSNITTSFILER = {
   '7.1': a7_1, '8.4': a8_4, '9.1': a9_1, '10.1': a10_1, '12.1': a12_1, '12.2': a12_2, '12.3': a12_3, 'KD1.1': aKD1_1, 'KD1.2': aKD1_2, 'KD1.3': aKD1_3,
 };
 export const MAPPNING = Object.values(AVSNITTSFILER).flat();
+// Runda 18, r4: rättelser av texter som hade blivit inaktuella (runda18-r4.js). Det som inte hittades prövas i testet.
+export const MISSADE_RATTELSER = rattaTexter(MAPPNING);
 
 // Alla testnamn som registret pekar på. Bygget stoppas om något av dem inte finns (scripts/kor-tester.js).
 export const sussaTester = (mappning = MAPPNING) => [...new Set(mappning.flatMap(m => m.tester))];

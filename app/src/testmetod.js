@@ -23,13 +23,24 @@ export const DOKUMENT = [
     ['app/test', 'test/avbrott.cjs', 'test/anvandartest.cjs', 'test/genomgang.cjs', 'test/klickbudget.cjs', 'test/sussa-testfall.cjs', 'test/tillganglighet.cjs', 'test/mobil.cjs']),
   d('testprocedur', 'Testprocedurer', 'Dynamisk testdokumentation: testprocedurspecifikation (29119-3 avsnitt 7.4)',
     'Servertesterna körs med ett skript som också skriver resultatet och kontrollerar att kravregistret bara pekar på tester som finns. Gränssnittstesterna körs i en bestämd ordning mot en lokal container, eftersom de skriver resultat med en hash av gränssnittet. Docker-bygget kör servertesterna igen och stoppas vid ett rött test.',
-    ['app/scripts/kor-tester.js', 'app/Dockerfile', 'test/klienttester.cjs']),
+    ['app/scripts/kor-tester.js', 'app/Dockerfile', 'test/klienttester.cjs', 'app/scripts/textgranskning.js', 'app/test/textgranskning.test.js']),
   d('testdata', 'Testdata och testmiljö', 'Dynamisk testdokumentation: krav på testdata och testmiljö (29119-3 avsnitt 7.5 och 7.6)',
     'Testdata är påhittade patienter med Skatteverkets testpersonnummer och testsamordningsnummer, som seeden lägger i en ny sandlåda för varje test och varje besökare. Testmiljön är en container med samma image som demon. Testerna får inte bero på dagens datum: tid skickas in som en fast tid, och en falsk klocka prövar tiderna som har fällt tester förut.',
     ['app/src/seed', 'app/src/seed/testsamordningsnummer.json', 'research/testpersonnummer.json', 'app/test/falsk-klocka.js', 'test/testklocka.cjs']),
   d('testrapport', 'Testresultat, testlogg och testrapporter', 'Testledningens och den dynamiska testningens rapporter (29119-3 avsnitt 6.3, 6.4 och 7.9 till 7.12)',
     'Varje körning skriver resultatet per test till filer som följer med i bygget, och kravsidan i demon är testrapporten: för varje krav och varje post visas testerna och deras status från det senaste bygget. Gränssnittets resultat räknas som inaktuella om gränssnittet har ändrats sedan testerna kördes. Fel och fynd från säkerhetsgranskningarna sparas med åtgärd, och tillgänglighetsredogörelsen skrivs ur tillgänglighetstestet.',
     ['app/klienttest-resultat.json', 'app/klickbudget.json', 'app/sussa-testfall.json', 'app/src/klientresultat.js', 'app/src/sakerhetsfynd.json', 'docs/tillganglighet.md', 'docs/fhir-validering.md']),
+];
+
+// Runda 18, r4: ordningen för en ny version. Stegen följer lärdomarna från rundorna: gränssnittstesterna sist efter den
+// sista ändringen i public/, eftersom de skriver resultat med en hash av gränssnittet, och textgranskningen av de
+// publika sidorna innan versionen sätts.
+export const NY_VERSION = [
+  'Höj versionen i app/package.json och lägg den nya versionens nyheter överst i app/src/nyheter.json och dess rad överst i app/src/api-andringar.js.',
+  'Kör servertesterna med scripts/kor-tester.js tills sista raden säger 0 röda.',
+  'Granska texterna på de publika sidorna #/testa, #/om, #/krav och #/moduler: kör scripts/textgranskning.js mot en lokal container och läs filerna. Pröva varje känd begränsning mot koden och sätt granskad till den nya versionen, rätta det som är fel, och uppdatera src/textgranskning-granskade.js för varje källa som är läst. Testet test/textgranskning.test.js är grönt först när allt är granskat i versionen och inget handskrivet tal skiljer sig från det som koden räknar fram.',
+  'Kör gränssnittstesterna sist, efter den sista ändringen i app/public/, mot en ny container i ordningen klickbudget, avbrott, användartest och Sussas testfall, sedan servertesterna igen och sist genomgång, tillgänglighet och mobil, och skriv docs/tillganglighet.md med scripts/tillganglighet-md.js.',
+  'Bygg imagen, så att bygget kör servertesterna igen med resultaten från gränssnittstesterna, och kontrollera i en lokal container att GET /api/krav/version ger alla fyra villkoren för 1.0.',
 ];
 
 export const ROT = join(import.meta.dir, '..', '..');
@@ -44,6 +55,7 @@ export function markdown() {
     '| Dokument enligt 29119-3 | Motsvarighet i Vårdkällan |', '| --- | --- |',
     ...DOKUMENT.map(x => `| ${x.standard} | ${x.rubrik} |`)];
   for (const x of DOKUMENT) ut.push('', `## ${x.rubrik}`, '', `Enligt standarden: ${x.standard}.`, '', x.text, '', `Finns i: ${x.filer.map(f => `\`${f}\``).join(', ')}.`);
+  ut.push('', '## Ordningen för en ny version', '', ...NY_VERSION.map((x, i) => `${i + 1}. ${x}`));
   ut.push('', '## Avgränsning', '',
     'Metoden är Vårdkällans egen tillämpning av standardens struktur och är inte certifierad. Acceptanstest med en beställare och tester med personer som arbetar i vården ingår inte i det som körs automatiskt.');
   return `${ut.join('\n')}\n`;

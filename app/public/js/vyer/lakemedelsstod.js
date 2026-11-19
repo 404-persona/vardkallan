@@ -123,7 +123,7 @@ export async function ordineraDirektiv(ctx, d, knapp) {
   const x = d.direktiv.find(y => String(y.id) === knapp.dataset.direktiv);
   const svar = await dialog(`<form><h2 id="dlg-rubrik">${esc(x.lakemedel.namn)} enligt generellt direktiv</h2>
     <p>${esc(x.indikation)}. ${esc(x.dosering)}.</p>
-    ${x.bekrafta.length ? `<fieldset class="kryssgrupp"><legend>Kontrollera med patienten att hen inte har</legend>${x.bekrafta.map((b, i) => `<div class="kryssfalt"><input type="checkbox" id="db-${i}" name="b${i}" value="${esc(b)}"><label for="db-${i}">${esc(b)}</label></div>`).join('')}</fieldset>` : ''}
+    ${x.bekrafta.length ? `<fieldset class="kryssgrupp"><legend>Fråga patienten och bekräfta att inget av följande gäller</legend>${x.bekrafta.map((b, i) => `<div class="kryssfalt"><input type="checkbox" id="db-${i}" name="b${i}" value="${esc(b)}"><label for="db-${i}">${esc(b)}</label></div>`).join('')}</fieldset>` : ''}
     <div class="falt"><label for="d-bed">Din bedömning av behovet <span class="obl">(dokumenteras i journalen)</span></label><textarea id="d-bed" name="bedomning" rows="2" maxlength="500">${esc(x.bedomningForslag)}</textarea></div>
     <p class="dialog-fel form-fel" role="alert" hidden></p>
     <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Ordinera</button><button type="button" class="knapp sekundar" data-varde="avbryt">Avbryt</button></div></form>`,
