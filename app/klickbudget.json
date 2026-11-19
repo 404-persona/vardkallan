@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T14:43:24.583Z",
+  "tid": "2026-11-19T14:48:36.403Z",
   "bas": "http://127.0.0.1:18282",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "e01ab4b6c11acac95d1ae3426ab793cd24c4624f14138d988372397286454ecf",
+  "gransnittHash": "6445e0a62cb83cb398b44acd9fbb552a06a6eba0ff846f9ca49bcefcd814e6f2",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -597,18 +597,12 @@
       "start": "Vårdadministratörens startsida",
       "budget": 2,
       "motivering": "Ett klick på Boka tid vid remissen och ett på den tid som systemet föreslår först. Tidstyp, yrkesroll, gränsen mot vårdgarantin och tidigare vårdgivare har systemet redan tagit hänsyn till, och kallelsen går ut av sig själv.",
-      "klick": 2,
+      "klick": 0,
       "faltbyten": 0,
       "tangenter": 0,
-      "uppmatt": 2,
-      "inomBudget": true,
-      "steg": [
-        "klick: Boka tid vid remissen",
-        "klick: den första föreslagna tiden"
-      ],
-      "teckenSkrivna": 0,
-      "teckenSystemet": 0,
-      "teckenKundeSystemet": 0
+      "uppmatt": 0,
+      "inomBudget": false,
+      "steg": []
     },
     {
       "id": "checka-in",
@@ -3230,7 +3224,7 @@
     },
     {
       "namn": "Gränssnitt > Klickbudget > Boka tid för en remiss inom budget",
-      "status": "grön"
+      "status": "röd"
     },
     {
       "namn": "Gränssnitt > Klickbudget > Checka in en patient inom budget",

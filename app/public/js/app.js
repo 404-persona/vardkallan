@@ -829,10 +829,12 @@ export async function aterstallDemo(knapp = null) {
   const s = await medKnapp(knapp, () => api('/api/reset', { metod: 'POST', data: {} }));
   const { ok, ...sess } = s;
   S.session = sess;
-  notis('Demon är återställd. Alla ändringar är borta och patienterna är som från början.');
   ramNyckel = null;
   await uppdateraInkorg();
-  rita();
+  // Runda 18, r5: beskedet kommer när vyn visar den återställda demon. Förut kom det före omritningen, och den som
+  // klickade direkt efter beskedet kunde träffa en vy som just byttes ut, så att klicket inte gjorde något.
+  await rita();
+  notis('Demon är återställd. Alla ändringar är borta och patienterna är som från början.');
 }
 
 document.addEventListener('click', async (e) => {

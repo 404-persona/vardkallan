@@ -5,7 +5,8 @@
 //
 // Frågan räknas inte som aktivitet för utloggningen, görs inte när fliken inte syns, inte under ett avbrott och inte
 // efter fem minuter utan att användaren har gjort något. En sandlåda som vilar väcks inte (servern svarar 204). Medan
-// användaren skriver i ett fält, har en dialog öppen eller markerar text väntar omritningen tills det är klart.
+// användaren skriver i ett fält, har en dialog öppen, markerar text eller just har klickat väntar omritningen tills det
+// är klart.
 import { avbrott, sessionNummer } from './ui.js';
 import { arPersonal, ritaTyst } from './app.js';
 
@@ -26,7 +27,11 @@ for (const t of ['pointerdown', 'keydown', 'wheel', 'touchstart']) document.addE
 document.addEventListener('click', (e) => { if (e.target.closest?.('[data-a="loggaut"]')) pausTill = Date.now() + 10_000; }, true);
 
 const vyNu = () => (location.hash || '').split('?')[0];
+// Användaren håller på: skriver i ett fält, har en dialog eller menyn öppen, markerar text eller har just klickat eller
+// tryckt på en tangent. Då väntar omritningen till nästa fråga, så att ingen klickar på något som just byts ut.
+export const NYSS_MS = 4000;
 function upptagen() {
+  if (Date.now() - aktivitet < NYSS_MS) return true;
   const a = document.activeElement;
   if (a && a !== document.body && a.matches('input, textarea, select, [contenteditable="true"]')) return true;
   if ([...document.querySelectorAll('dialog')].some(d => d.open) || document.body.classList.contains('meny-oppen')) return true;
