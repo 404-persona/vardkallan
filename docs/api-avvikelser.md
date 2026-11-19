@@ -1052,6 +1052,12 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - En inloggning svarar 403 när legitimationen för rollen saknas eller är återkallad i registret, och alla handlingar utom övningarna nekas för en sådan person.
 - Rapporten från inläsningen av personalkatalogen har `legitimation` (`[{ id, namn, status, text }]`) när någon som fick en roll som kräver legitimation saknar giltig legitimation eller inte gick att slå upp.
 
+## Version 1.8.1: vägledningen i alla uppdrag och omladdningen (runda 19, r1)
+
+- `POST /api/testare/uppdrag/:id/jamforelse` tar emot `vagledning` (sant eller falskt), om vägledningen var på när testaren svarade. Annan typ ger 400, och utan värde sparas inget. Testledarens lista har `vagledning` för varje svar (`true`, `false` eller `null` för äldre svar) och `medVagledning` och `utanVagledning` per uppdrag i `perUppdrag`. Exporten `csv-uppdrag` har kolumnen `vagledning`, och Markdown och `scripts/testinbjudan.js nya` har antalen med och utan vägledning.
+- Ett första pass som blir gjort eller avbrutet innan frågan om mätning är besvarad får `fas: "aterkoppling"` med `matning: null` och en återkoppling utan mätning, och `POST /api/testare/pass/samtycke` svarar 409. Vägledningen visas nu direkt när passet börjar, så det kan hända.
+- Gränssnittet jämför `gransnitt` i `GET /api/health` med versionen det startade med (`public/js/ny-version.js`). Rutten är oförändrad. I en testcontainer med `VARDKALLAN_TESTVERSION=1` finns `POST /api/test/ny-version`, som byter versionen som hälsokontrollen visar, så att gränssnittstestet kan se att en öppen flik laddar om. Utan flaggan, och alltid tillsammans med `SESSION_FIL` eller `LITA_PA_PROXY`, är adressen okänd (404).
+
 ## Version 1.8.0: textgranskningen av de publika sidorna (runda 18, r4)
 
 - `GET /api/krav/version` har också `fakta`: `{ sussaTestfall, sussaPoster, sandladaTimmar, testroller, uppdrag, moduler, gallringDagar, kontaktDagar }`, talen som sidorna #/testa, #/om och #/krav nämner, räknade ur koden. Sidorna läser talen härifrån i stället för att skriva dem för hand.

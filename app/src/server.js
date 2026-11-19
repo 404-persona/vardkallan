@@ -2,6 +2,8 @@
 // Sandlådorna sparas till SESSION_FIL vid SIGTERM och läses in vid start.
 // Runda 11, r1: testcontainerns falska klocka läses in först av allt (gör ingenting utan testflaggan, se testklocka.js).
 import { TESTKLOCKA } from './testklocka.js';
+// Runda 19, r1: testkroken som byter gränssnittets version i en testcontainer (testversion.js).
+import * as testversion from './testversion.js';
 import { join, normalize, dirname } from 'node:path';
 import { existsSync, readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { createDecipheriv } from 'node:crypto';
@@ -2732,7 +2734,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   for (const v of R18R5_UTAN_SESSION) UTAN_SESSION.add(v);
 
   async function api(req, server, url, c) {
-    if (url.pathname === '/api/health') return json({ ok: true, sandladar: sessioner.size, version: APPVERSION, gransnitt: gransnittVersion(),
+    // Runda 19, r1: testkroken för omladdningen, bara med testflaggan VARDKALLAN_TESTVERSION=1 (testversion.js).
+    if (url.pathname === '/api/test/ny-version' && req.method === 'POST' && testversion.byt()) return json({ gransnitt: testversion.version(gransnittVersion()) });
+    if (url.pathname === '/api/health') return json({ ok: true, sandladar: sessioner.size, version: APPVERSION, gransnitt: testversion.version(gransnittVersion()),
       // Runda 12, r2: programmets schemaversion, den högsta migreringen det känner till (releaser.js).
       schemaversion: Math.max(0, ...r12r2Migreringar.map(m => m.id)),
       // Runda 11, r1: bara i en testcontainer med falsk klocka, så att Playwright kan ställa webbläsarens klocka lika.

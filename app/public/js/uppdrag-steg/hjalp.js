@@ -22,14 +22,17 @@ export const svar = ({ id = 'svar', text, nar, hash, svar: varde }) => ({
 // Ordinationsformuläret i patientens journal. pre skiljer två ordinationer åt, och nar (frivilligt) är det som måste
 // synas för att varvet ska gälla, till exempel den förra ordinationen i listan.
 export const VALT = { sel: '#ordform #o-forslag' };
-export function ordination({ pre, sok, namn, orsak, typ = null, nar = null }) {
+// dosering är det testet skriver när systemet inte kan fylla i doseringen ur produkten. Steget hoppas över när fältet
+// redan har ett värde.
+export function ordination({ pre, sok, namn, orsak, dosering = null, typ = null, nar = null }) {
   const med = (x) => (nar ? [].concat(nar, x) : x);
   return [
     { id: `${pre}-ordinera`, text: 'Välj Ordinera.', mal: [{ sel: '.snabbval a', innehaller: 'Ordinera' }, { sel: 'button[data-ny]' }], ...(nar ? { nar } : {}) },
     { id: `${pre}-sok`, text: `Skriv ${sok} i fältet Läkemedel.`, mal: [{ sel: '#ordform #lm-sok' }], klar: 'varde', gor: { skriv: sok }, ...(nar ? { nar } : {}) },
     { id: `${pre}-valj`, text: `Välj ${namn} i listan.`, mal: [{ sel: '#lm-traffar [data-lm]', innehaller: namn }, { sel: '#lm-traffar [data-lm]' }], ...(nar ? { nar } : {}) },
-    ...(typ ? [{ id: `${pre}-typ`, nar: med(VALT), text: `Systemet har fyllt i dosen ur produkten. Välj ${typ} under Typ.`, mal: [{ sel: '#ordform #o-typ' }], klar: 'andrat', gor: { skriv: typ } }] : []),
-    { id: `${pre}-orsak`, nar: med(VALT), text: `${typ ? '' : 'Systemet har fyllt i doseringen ur produkten. '}Skriv orsaken under Ordinationsorsak: ${orsak}.`, mal: [{ sel: '#ordform #o-orsak' }], klar: 'varde', gor: { skriv: orsak } },
+    ...(dosering ? [{ id: `${pre}-dosering`, nar: med(VALT), text: `Skriv doseringen, till exempel ${dosering}.`, mal: [{ sel: '#ordform #o-dosering' }], klar: 'varde', gor: { skriv: dosering } }] : []),
+    ...(typ ? [{ id: `${pre}-typ`, nar: med(VALT), text: `Välj ${typ} under Typ.`, mal: [{ sel: '#ordform #o-typ' }], klar: 'andrat', gor: { skriv: typ } }] : []),
+    { id: `${pre}-orsak`, nar: med(VALT), text: `${typ || dosering ? '' : 'Systemet har fyllt i doseringen ur produkten. '}Skriv orsaken under Ordinationsorsak: ${orsak}.`, mal: [{ sel: '#ordform #o-orsak' }], klar: 'varde', gor: { skriv: orsak } },
     { id: `${pre}-spara`, nar: med(VALT), text: 'Välj Kontrollera och spara.', mal: [{ sel: '#ordform [data-spara]' }] },
   ];
 }

@@ -35,7 +35,7 @@ export default {
   '1.1': [
     ...fran('Gerda Ström'),
     ...ordination({ pre: 'alvedon', sok: 'alvedon forte', namn: 'Alvedon forte', orsak: 'Värk', typ: 'Vid behov' }),
-    ...ordination({ pre: 'ogondroppar', sok: 'kloramfenikol', namn: 'ögondroppar', orsak: 'Infektion', nar: ALVEDON }),
+    ...ordination({ pre: 'ogondroppar', sok: 'kloramfenikol', namn: 'ögondroppar', orsak: 'Infektion', dosering: '1 droppe 6 gånger dagligen i höger öga i 1 vecka', nar: ALVEDON }),
   ],
   '3.1': [
     ...fran('Hamid Burvall'),

@@ -28,11 +28,11 @@ export default {
   '1.2': [
     ...fran('Elin Arnström'),
     ...ordination({ pre: 'paracetamol', sok: 'paracetamol fresenius', namn: 'Paracetamol Fresenius Kabi', orsak: 'Smärta' }),
-    ...ordination({ pre: 'stesolid', sok: 'stesolid', namn: 'Stesolid 10', orsak: 'Premedicinering inför röntgen', nar: PARACETAMOL }),
+    ...ordination({ pre: 'stesolid', sok: 'stesolid', namn: 'Stesolid 10', orsak: 'Premedicinering inför röntgen', dosering: '1 tablett 1 timme före röntgen', nar: PARACETAMOL }),
   ],
   varning: [
     ...sokPatient('Gunnar Åkesson'),
-    ...ordination({ pre: 'ibuprofen', sok: 'ibuprofen', namn: 'Ibuprofen', orsak: 'Smärta', typ: 'Vid behov' }),
+    ...ordination({ pre: 'ibuprofen', sok: 'ibuprofen', namn: 'Ibuprofen', orsak: 'Smärta', dosering: '1 tablett vid behov, högst 3 per dygn', typ: 'Vid behov' }),
     { id: 'motivering', nar: VALT, text: 'Systemet varnar för blödning, eftersom han har Waran. Skriv varför ordinationen ska göras ändå, eller välj Avbryt.', mal: [{ sel: '#ordform [data-motivering]' }], klar: 'varde', gor: { skriv: 'Kort behandling, följer blödningsrisken.' } },
     { id: 'spara-igen', nar: [VALT, { sel: '#ordform [data-motivering]' }], text: 'Välj Kontrollera och spara igen. Varningen och din motivering sparas med ordinationen.', mal: [{ sel: '#ordform [data-spara]' }] },
   ],

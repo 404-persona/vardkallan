@@ -25,6 +25,8 @@ const satt = (k, v, s = sessionStorage) => { try { if (v == null) s.removeItem(k
 
 let T = null;
 let rot = null;
+// Runda 19, r1: det som panelen senast ritade.
+let ritadHtml = '';
 let hamtar = null;
 let senast = 0;
 
@@ -126,11 +128,14 @@ function rita({ oppna = false } = {}) {
   const aktuell = T.uppdrag.find(u => u.id === T.aktuellt);
   const inloggadSom = S.session?.personal?.id ?? (S.session?.invanare ? S.session.invanare.id : null);
   const ratt = T.demoroll ? inloggadSom === T.demoroll : inloggadSom === T.invanare;
-  panel.innerHTML = `<div class="tp-huvud"><h2 id="tp-rubrik">${esc(T.knapp)}: ${iPass ? 'första passet' : `${gjorda} av ${n} uppdrag`}</h2>
+  // Runda 19, r1: panelen ritas bara om när innehållet har ändrats, så att det testaren har börjat skriva eller välja i
+  // jämförelsefrågan inte försvinner när en lista i vyn uppdaterar sig själv.
+  const html = `<div class="tp-huvud"><h2 id="tp-rubrik">${esc(T.knapp)}: ${iPass ? 'första passet' : `${gjorda} av ${n} uppdrag`}</h2>
       <button type="button" class="knapp text liten" data-tp="stang" aria-label="Fäll ihop uppdragen">${ikon.kryss}</button></div>
     ${ratt ? '' : `<div class="ruta ruta-info liten tp-roll"><p>Uppdragen görs som ${esc(T.om.replace(/^Du (arbetar som|är) /, '').split(',')[0])}. ${inloggadSom ? 'Du är inloggad som någon annan.' : 'Du är inte inloggad.'}</p><button type="button" class="knapp liten" data-tp="logga-in">Logga in igen</button></div>`}
     ${iPass ? passHtml(T.pass, fraga) : fraga ? jamforelseHtml(fraga) : aktuell ? aktuelltHtml(aktuell) : `<div class="tp-klart"><p><strong>Alla uppdrag är gjorda.</strong> Tack! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.</p><p><a href="#/testa">Välj en annan yrkesroll</a></p></div>`}
     ${iPass ? '' : `<details class="tp-alla"><summary>Alla uppdrag</summary><ol class="tp-lista">${T.uppdrag.map(u => `<li class="${u.id === T.aktuellt ? 'tp-ar-aktuell' : ''}">${ikonFor(u, u.id === T.aktuellt)}<span>${u.sussa ? `<span class="tp-sussa">Sussa ${esc(u.sussa)}</span> ` : ''}${esc(u.titel)}<span class="sr">, ${statusText(u)}</span></span></li>`).join('')}</ol></details>`}`;
+  if (ritadHtml !== html || !panel.firstElementChild) { panel.innerHTML = html; ritadHtml = html; }
   // Runda 18, r1: vägledningen följer passet. Steget skrivs i panelen när det byts.
   // Runda 19, r1: vägledningen följer också uppdragen, och i passet börjar den direkt.
   document.body.classList.toggle('i-forsta-pass', fp.harVagledning(T) && !panel.hidden);

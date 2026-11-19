@@ -11,6 +11,16 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 19: version 1.8.1.
+  {
+    version: '1.8.1', datum: '2026-11-20',
+    text: 'Vägledning i alla uppdrag i testinbjudan.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 19, r1: vägledningen i uppdragen och omladdningen (docs/api-avvikelser.md).
+      'POST /api/testare/uppdrag/:id/jamforelse tar emot vagledning (sant eller falskt), om vägledningen var på när testaren svarade. Testledarens lista och exporten har fältet och antalen med och utan vägledning per uppdrag',
+      'Ett första pass som blir gjort eller avbrutet innan frågan om mätning är besvarad går till återkopplingen utan mätning, och POST /api/testare/pass/samtycke svarar då 409',
+    ],
+  },
   // Runda 18: version 1.8. Varje del lägger sina rader i annat i ett eget block.
   {
     version: '1.8.0', datum: '2026-11-19',
