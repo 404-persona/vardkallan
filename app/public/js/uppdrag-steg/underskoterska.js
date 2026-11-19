@@ -1,7 +1,7 @@
 // Runda 19, r2: vägledningen i undersköterskans uppdrag i testinbjudan (testroll underskoterska, demoroll usk-kard på
 // avdelning 72). Stegen har samma form som i första passet (forsta-pass-steg.js) och följer klickvägarna i Sussas
 // testfall (test/sussa-testfall.cjs) med Sussas testpatienter. Uppdragen görs i tur och ordning i samma sandlåda.
-import { meny } from './hjalp.js';
+import { meny, svar } from './hjalp.js';
 
 const arbetslistan = (namn) => ({ id: 'meny', text: `Välj Arbetslistan i menyn och leta upp ${namn}.`, mal: meny('#/arbetslista', 'Arbetslistan') });
 const oppna = (namn, hans) => ({ id: 'patient', text: `Klicka på ${namn} för att öppna ${hans} journal.`, mal: [{ sel: 'a.patientlank', innehaller: namn }] });
@@ -16,8 +16,7 @@ export default {
     markera('sus03', 'Elin Arnström'),
     markera('sus04', 'Trevis Ljung'),
     markera('sus05', 'Berit Strandhall'),
-    { id: 'klockan', hash: '#/avdelning', text: 'Systemet visar de fyra patienternas händelser i tidsordning. Läs raderna vid 11.00.', mal: [{ sel: '#av .av-tabell tr[data-klocka="11.00"]' }] },
-    { id: 'svar', hash: '#/avdelning', text: 'Skriv vilka händelser som äger rum klockan 11 här i panelen och välj Svara.', mal: [{ sel: '#tp-svar' }] },
+    svar({ hash: '#/avdelning', nar: [...['sus02', 'sus03', 'sus04', 'sus05'].map(id => ({ sel: `#av-patienter input[value="${id}"]:checked` })), { sel: '#av .av-tabell tr[data-klocka="11.00"]' }], text: 'Systemet visar bara de fyra patienternas händelser. Händelserna klockan 11 står på raderna 11.00. Skriv vilka de är här och välj Svara.', svar: 'dricka kontrast, börja fasta, såromläggning och teamrond' }),
   ],
   '4.2': [
     arbetslistan('Sara Sandmark'),
@@ -60,7 +59,6 @@ export default {
     { id: 'andra', hash: '#/patient/sus01/matvarden', text: 'Provet togs på vårdcentralen. Välj Visa uppgifter från andra vårdenheter.', mal: [{ sel: '[data-val="andra_enheter"]' }] },
     { id: 'syfte', text: 'Välj ett av förslagen på syfte, till exempel Bedöma aktuellt vårdbehov, eller skriv syftet här.', mal: [{ sel: 'dialog:modal #dlg-syfte' }], klar: 'varde', gor: { skriv: 'Bedöma aktuellt vårdbehov' } },
     { id: 'visa', text: 'Välj Visa uppgifterna. Åtkomsten loggas med syftet.', mal: [{ sel: 'dialog:modal:has(#dlg-syfte) [data-varde="ok"]', innehaller: 'Visa uppgifterna' }] },
-    { id: 'provsvar', hash: '#/patient/sus01/matvarden', text: 'Systemet visar nu också mätvärden och provsvar från vårdcentralen. Läs raden med PK (INR) som togs klockan 11.36.', mal: [{ sel: 'tr', innehaller: 'kl. 11:36' }] },
-    { id: 'svar', hash: '#/patient/sus01/matvarden', text: 'Skriv värdet på PK-provet här i panelen och välj Svara.', mal: [{ sel: '#tp-svar' }] },
+    svar({ hash: '#/patient/sus01/matvarden', nar: { sel: 'tr', innehaller: 'kl. 11:36' }, text: 'Systemet visar nu också provsvaren från vårdcentralen. PK-provet står i raden PK (INR), taget klockan 11.36. Skriv värdet här och välj Svara.', svar: '0,9 INR' }),
   ],
 };

@@ -1,7 +1,7 @@
 // Runda 19, r2: vägledningen i sjuksköterskans uppdrag i testinbjudan (testroll sjukskoterska, demoroll ssk-kard på
 // avdelning 72). Stegen har samma form som i första passet (forsta-pass-steg.js) och följer klickvägarna i Sussas
 // testfall (test/sussa-testfall.cjs) med Sussas testpatienter. Uppdragen görs i tur och ordning i samma sandlåda.
-import { meny } from './hjalp.js';
+import { meny, svar } from './hjalp.js';
 
 const arbetslistan = (namn) => ({ id: 'meny', text: `Välj Arbetslistan i menyn och leta upp ${namn}.`, mal: meny('#/arbetslista', 'Arbetslistan') });
 const oppna = (namn, hans) => ({ id: 'patient', text: `Klicka på ${namn} för att öppna ${hans} journal.`, mal: [{ sel: 'a.patientlank', innehaller: namn }] });
@@ -25,8 +25,7 @@ export default {
   '7.1': [
     { id: 'meny', text: 'Välj Arbetslistan i menyn.', mal: meny('#/arbetslista', 'Arbetslistan') },
     { id: 'avdelning', hash: '#/arbetslista', text: 'Välj Avdelningens planering.', mal: [{ sel: '.snabbval a[href="#/avdelning"]' }] },
-    { id: 'klockan', hash: '#/avdelning', text: 'Systemet visar dagens händelser för hela avdelningen i tidsordning. Läs raderna vid 11.00.', mal: [{ sel: '#av .av-tabell tr[data-klocka="11.00"]' }] },
-    { id: 'svar', hash: '#/avdelning', text: 'Skriv vilka händelser som äger rum klockan 11 här i panelen och välj Svara.', mal: [{ sel: '#tp-svar' }] },
+    svar({ hash: '#/avdelning', nar: { sel: '#av .av-tabell tr[data-klocka="11.00"]' }, text: 'Systemet visar dagens händelser för hela avdelningen i tidsordning. Händelserna klockan 11 står på raderna 11.00. Skriv vilka de är här och välj Svara.', svar: 'provtagning och sjukgymnastik' }),
   ],
   '6.1': [
     arbetslistan('Mira Axelsson'),
@@ -90,7 +89,7 @@ export default {
     arbetslistan('Fatima Baskar'),
     oppna('Fatima Baskar', 'hennes'),
     { id: 'flytta', hash: '#/patient/sus16', text: 'Välj Flytta vid vårdtillfället.', mal: [{ sel: '.vardtillfalle [data-vk="flytta"]' }] },
-    { id: 'avdelning', text: 'Skriv orto i sökfältet vid Till, så väljer systemet Ortopediska kliniken USÖ. Hon ska inte ha någon säng än, så lämna sal och säng tomt.', mal: [{ sel: 'dialog:modal .falt:has(select[name="enhetId"]) .ls-sok' }], klar: 'varde', gor: { skriv: 'Ortopediska kliniken USÖ' } },
+    { id: 'avdelning', text: 'Välj Ortopediska kliniken USÖ vid Till. Hon ska inte ha någon säng än, så lämna sal och säng tomt.', mal: [{ sel: 'dialog:modal #fl-enhet' }], klar: 'andrat', gor: { skriv: 'Ortopediska kliniken USÖ' } },
     { id: 'flytta-knapp', text: 'Välj Flytta. Systemet sätter tiden och flyttar vårdtillfället.', mal: [{ sel: 'dialog:modal:has(#fl-enhet) [data-varde="ok"]', innehaller: 'Flytta' }] },
   ],
   meddelande: [
