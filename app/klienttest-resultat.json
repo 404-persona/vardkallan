@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T15:08:58.287Z",
+  "tid": "2026-11-19T16:10:22.559Z",
   "bas": "http://127.0.0.1:18281",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7809bb339f964c0a2c9b7fc76f862b1a7e47aa7126a53b2e8a957b76134519f1",
+  "gransnittHash": "078e0bd26998081aa2cccf3b36fcb8348c2842b34262cb98260f9fc9a50a714c",
   "tester": [
     {
       "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
@@ -193,7 +193,7 @@
       "status": "grön"
     },
     {
-      "namn": "Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken, delningslänkarna öppnar tjänsternas delningssidor utan att något skickas, och en besökare via länken räknas per kanal",
+      "namn": "Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken utan att något skickas till servern, delningslänkarna öppnar tjänsternas delningssidor, och en besökare via länken räknas på kanalen",
       "status": "grön"
     },
     {

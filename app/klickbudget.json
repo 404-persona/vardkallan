@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T13:14:35.931Z",
+  "tid": "2026-11-19T15:20:50.794Z",
   "bas": "http://127.0.0.1:18281",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7809bb339f964c0a2c9b7fc76f862b1a7e47aa7126a53b2e8a957b76134519f1",
+  "gransnittHash": "078e0bd26998081aa2cccf3b36fcb8348c2842b34262cb98260f9fc9a50a714c",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2490,7 +2490,7 @@
       "roll": "lak-kard",
       "start": "Återkopplingen efter första passet",
       "budget": 3,
-      "motivering": "Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten, skapar länken med en slumpad kod och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.",
+      "motivering": "Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten och länken, som bara bär kanalen, utan något anrop till servern, och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.",
       "klick": 2,
       "faltbyten": 0,
       "tangenter": 0,
