@@ -12,6 +12,11 @@
 // ett steg som den redan har lämnat), öppnad hjälp och sökningar. Inget av det som skrivs, ingen adress och ingen text ur
 // sidan följer med: bara stegens id och talen. Tillståndet ligger i sessionStorage, så att passet fortsätter om sidan
 // laddas om, och när fliken stängs skickas det som har mätts hittills som ett delresultat.
+//
+// Runda 19, r1: samma vägledning i alla uppdrag. Under ett uppdrag (inget pass pågår och ingen jämförelsefråga väntar)
+// hämtas stegen för det aktuella uppdraget ur uppdrag-steg/<testroll>.js, med dynamisk import så att bara den aktuella
+// rollens fil hämtas. Byts uppdraget byts stegen. Vägledningen i passet visas direkt när passet börjar, också innan
+// testaren har svarat på frågan om mätning. Mätningen gäller bara passet och börjar när testaren har sagt ja.
 import { api } from './ui.js';
 import { nyRakning, registrera } from './anvandartest-rakning.js';
 import { malFor, arTextfalt } from './anvandartest.js';
@@ -31,15 +36,54 @@ let observator = null;
 let timer = null;
 let ram = null;
 let etikett = null;
+// Runda 19, r1: vad vägledningen följer just nu: { typ: 'pass' | 'uppdrag', nyckel }. Stegfilerna per testroll.
+let lage = null;
+const stegFiler = new Map();
 
 const spara = () => { if (P) satt(NYCKEL, JSON.stringify(P)); };
 export const vagledningPa = () => las(AV, localStorage) !== '1';
 
-// Startar eller fortsätter passet. T är tillståndet från servern. onSteg anropas när steget byts.
+// Startar eller fortsätter vägledningen i passet eller i det aktuella uppdraget. T är tillståndet från servern. onSteg
+// anropas när steget byts.
 export function aktivera(T, { onSteg } = {}) {
   paSteg = onSteg ?? paSteg;
   const p = T?.pass;
-  if (!p || p.fas !== 'pagar') { stoppa(); return; }
+  if (p && (p.fas === 'pagar' || p.fas === 'samtycke')) { aktiveraPass(T); return; }
+  const id = uppdragNu(T);
+  if (id) { aktiveraUppdrag(T, id); return; }
+  stoppa();
+}
+// Runda 19, r1: uppdraget som vägledningen följer, när inget pass pågår och ingen jämförelsefråga väntar.
+export const uppdragNu = (T) => (T?.aktiv && (!T.pass || T.pass.fas === 'klar') && T.aktuellt && !T.attBesvara?.length ? T.aktuellt : null);
+export const harVagledning = (T) => Boolean((T?.pass && ['pagar', 'samtycke'].includes(T.pass.fas)) || uppdragNu(T));
+// Stegen för en testroll. Testrollens id kommer från servern och har bara små bokstäver och bindestreck.
+export function hamtaStegfil(testroll) {
+  if (!/^[a-z][a-z-]*$/.test(String(testroll))) return Promise.resolve({});
+  if (!stegFiler.has(testroll)) stegFiler.set(testroll, import(`./uppdrag-steg/${testroll}.js`).then(m => m.default ?? {}).catch(() => { stegFiler.delete(testroll); return {}; }));
+  return stegFiler.get(testroll);
+}
+function aktiveraUppdrag(T, id) {
+  const nyckel = `${T.testroll}|${T.start}|${id}`;
+  if (lage?.nyckel === nyckel) { if (lyssnar) berakna(); return; }
+  if (lage?.typ === 'pass') stoppa();
+  lage = { typ: 'uppdrag', nyckel, laddar: true };
+  steg = [];
+  nu = null;
+  forraId = null;
+  hamtaStegfil(T.testroll).then((alla) => {
+    if (lage?.nyckel !== nyckel) return;
+    lage.laddar = false;
+    steg = Object.hasOwn(alla, id) && Array.isArray(alla[id]) ? alla[id] : [];
+    borja();
+    berakna();
+    paSteg?.(stegInfo());
+  });
+}
+function aktiveraPass(T) {
+  const p = T.pass;
+  const nyckel = `pass|${T.testroll}|${T.start}`;
+  if (lage && lage.nyckel !== nyckel) stoppa();
+  lage = { typ: 'pass', nyckel };
   if (!P || P.testroll !== T.testroll || P.start !== T.start) {
     let sparat = null;
     try { sparat = JSON.parse(las(NYCKEL) ?? 'null'); } catch { sparat = null; }
@@ -47,13 +91,20 @@ export function aktivera(T, { onSteg } = {}) {
       testroll: T.testroll, start: T.start, uppdrag: p.uppdrag, matning: p.matning, borjan: Date.now(), rakning: nyRakning(), forstaMs: null,
       steg: {}, aktuellt: null, sedan: Date.now(), hjalp: 0, sokningar: 0, aterkomster: 0, avstangd: 0, avstangdHela: false,
     };
-    P.matning = p.matning;
-    spara();
   }
+  // Runda 19, r1: vägledningen börjar direkt, men mätningen börjar först när testaren har sagt ja.
+  if (P.matning !== 'ja' && p.matning === 'ja') {
+    const t = Date.now();
+    Object.assign(P, { borjan: t, sedan: t, rakning: nyRakning(), forstaMs: null, steg: {}, hjalp: 0, sokningar: 0, aterkomster: 0 });
+    if (P.aktuellt) stegData(P.aktuellt).besok = 1;
+  }
+  P.matning = p.matning;
+  spara();
   steg = stegFor(T.testroll);
   borja();
   berakna();
 }
+const matarPass = () => lage?.typ === 'pass' && P && P.matning === 'ja';
 
 function borja() {
   if (lyssnar) return;
@@ -86,12 +137,14 @@ export function stoppa() {
   clearTimeout(timer);
   doljRam();
   nu = null;
+  lage = null;
+  forraId = null;
 }
 export const pagar = () => lyssnar;
 
 // Räkningen. Klick i panelen, i synpunkten och i SUS-rutan räknas inte, eftersom de inte hör till uppgiften.
 function lyssna(e) {
-  if (!P || P.matning !== 'ja') return;
+  if (!matarPass()) return;
   if (!e.isTrusted && !(e.type === 'change' && e.target instanceof HTMLSelectElement)) return;
   if (e.target instanceof Element && e.target.closest('#testare, .synpunkt-dialog, .fp-sus-dialog, #testlage')) return;
   const h = { typ: e.type, tid: Date.now(), mal: malFor(e.target), detail: e.detail };
@@ -106,7 +159,7 @@ function lyssna(e) {
 }
 const stegData = (id) => (P.steg[id] ??= { tidMs: 0, aterkomster: 0, hjalp: 0, sokningar: 0, besok: 0 });
 function hjalpOppnad(e) {
-  if (!P || P.matning !== 'ja') return;
+  if (!matarPass()) return;
   const d = e.target;
   if (!(d instanceof HTMLDetailsElement) || !d.open || !d.matches('.flodeshjalp, [data-hjalp]')) return;
   P.hjalp++;
@@ -120,7 +173,7 @@ function hjalpOppnad(e) {
 // så att sökrutan inte behöver importera den här filen. Bara att en sökning gjordes räknas, aldrig vad som söktes.
 // Under ett pass med mätning räknas sökningen i passet och i det steg som pågår; annars händer ingenting.
 export function matSokning() {
-  if (!P || P.matning !== 'ja' || !lyssnar) return;
+  if (!matarPass() || !lyssnar) return;
   P.sokningar++;
   if (P.aktuellt) stegData(P.aktuellt).sokningar++;
   spara();
@@ -136,17 +189,25 @@ function synlig(el) {
   return !modal || modal.contains(el);
 }
 function hitta(m) {
-  for (const el of document.querySelectorAll(m.sel)) if ((!m.innehaller || el.textContent.includes(m.innehaller)) && synlig(el)) return el;
+  for (const el of document.querySelectorAll(m.sel)) {
+    // Runda 19, r1: rad är det närmaste elementet runt målet (en rad, ett kort) som ska ha texten i innehaller.
+    const runt = m.rad ? el.closest(m.rad) : el;
+    if (runt && (!m.innehaller || runt.textContent.includes(m.innehaller)) && synlig(el)) return el;
+  }
   return null;
 }
 function malForSteg(s) {
   if (s.hash && !hashGaller(s.hash)) return null;
+  // Runda 19, r1: nar är ett eller flera element som måste synas, till exempel raden där svaret på en fråga står.
+  if (s.nar && ![].concat(s.nar).every(n => hitta(n))) return null;
   for (const m of s.mal) { const el = hitta(m); if (el) return { el, text: m.text ?? s.text }; }
   return null;
 }
 function arKlar(s, el) {
   if (s.klar === 'valt') return el.checked === true || el.getAttribute('aria-pressed') === 'true' || el.getAttribute('aria-checked') === 'true';
   if (s.klar === 'varde') return String(el.value ?? '').trim() !== '';
+  // Runda 19, r1: en lista räknas som ändrad när ett annat alternativ än det förvalda är valt.
+  if (s.klar === 'andrat' && el instanceof HTMLSelectElement) return el.value !== (([...el.options].find(o => o.defaultSelected) ?? el.options[0])?.value ?? '');
   if (s.klar === 'andrat') return 'defaultValue' in el ? el.value !== el.defaultValue && String(el.value).trim() !== '' : false;
   return false;
 }
@@ -155,16 +216,28 @@ export function stegNu(lista = steg) {
   let j = -1;
   for (let i = lista.length - 1; i >= 0; i--) if (hittade[i]) { j = i; break; }
   if (j < 0) return null;
-  for (let i = 0; i < j; i++) if (lista[i].klar && hittade[i] && !arKlar(lista[i], hittade[i].el)) return { index: i, id: lista[i].id, ...hittade[i] };
+  // Runda 19, r1: fälten som räknas är de som syns mellan steget och närmaste steg före det som syns och inte är ett
+  // fält, så att ett formulär som görs en gång till (en andra ordination) inte pekar tillbaka på det förra.
+  let fran = 0;
+  for (let i = j - 1; i >= 0; i--) if (hittade[i] && !lista[i].klar) { fran = i + 1; break; }
+  for (let i = fran; i < j; i++) if (lista[i].klar && hittade[i] && !arKlar(lista[i], hittade[i].el)) return { index: i, id: lista[i].id, ...hittade[i] };
   return { index: j, id: lista[j].id, ...hittade[j] };
 }
 
 const planera = () => { clearTimeout(timer); timer = setTimeout(berakna, 120); };
+let forraId = null;
 function berakna() {
-  if (!lyssnar || !P) return;
+  if (!lyssnar || !lage) return;
   const forra = nu;
   nu = stegNu();
   const id = nu?.id ?? null;
+  // Runda 19, r1: i ett uppdrag finns ingen mätning, bara steget.
+  if (lage.typ === 'uppdrag' || !P) {
+    if (id !== forraId) { forraId = id; paSteg?.(stegInfo()); if (nu && vagledningPa()) synligGor(nu.el); } else if (forra?.el !== nu?.el) paSteg?.(stegInfo());
+    placera();
+    return;
+  }
+  forraId = id;
   if (id !== P.aktuellt) {
     const t = Date.now();
     if (P.aktuellt) stegData(P.aktuellt).tidMs += t - P.sedan;
@@ -183,6 +256,9 @@ function berakna() {
 }
 // Det som panelen visar: stegets text och nummer, eller vad testaren kan göra när inget steg syns.
 export function stegInfo() {
+  // Runda 19, r1: ett uppdrag utan steg, eller medan stegen hämtas.
+  if (lage?.typ === 'uppdrag' && lage.laddar) return { id: '', nr: null, antal: 0, text: 'Vägledningen hämtas.' };
+  if (lage?.typ === 'uppdrag' && !steg.length) return { id: '', nr: null, antal: 0, text: 'Det här uppdraget har ingen vägledning än. Uppdraget säger vad som ska göras.' };
   if (!nu) {
     const modal = Boolean(document.querySelector('dialog:modal'));
     return { id: '', nr: null, antal: steg.length, text: modal ? 'Stäng rutan som är öppen, så visar vägledningen nästa steg.' : 'Gå till startsidan med menyn, så visar vägledningen nästa steg.' };
@@ -205,6 +281,10 @@ function placera() {
   if (!ram) skapaRam();
   const hem = nu.el.closest('dialog:modal') ?? document.body;
   if (ram.parentElement !== hem) { hem.append(ram, etikett); }
+  // Runda 19, r1: svarsfältet i panelen får ramen ovanpå panelen.
+  const iPanel = Boolean(nu.el.closest('#testare'));
+  ram.classList.toggle('fp-i-panel', iPanel);
+  etikett.classList.toggle('fp-i-panel', iPanel);
   const r = nu.el.getBoundingClientRect();
   const m = 4;
   Object.assign(ram.style, { top: `${r.top - m}px`, left: `${r.left - m}px`, width: `${r.width + 2 * m}px`, height: `${r.height + 2 * m}px` });
@@ -248,7 +328,7 @@ export function visaMal() {
 export function vaxlaVagledning() {
   const pa = !vagledningPa();
   satt(AV, pa ? null : '1', localStorage);
-  if (P && !pa) { P.avstangd++; spara(); }
+  if (P && !pa && lage?.typ === 'pass') { P.avstangd++; spara(); }
   if (pa && nu) synligGor(nu.el);
   placera();
   return pa;
