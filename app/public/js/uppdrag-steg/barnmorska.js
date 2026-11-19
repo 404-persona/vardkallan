@@ -44,7 +44,7 @@ export default {
   fodelseanmalan: [
     { id: 'meny', text: 'Välj Förlossningen i menyn.', mal: tillForlossningen },
     nora(),
-    { id: 'anmalan', hash: '#/forlossning/', text: 'Barnet har inget personnummer än. Välj Skicka födelseanmälan till Skatteverket.', mal: [{ sel: '[data-fp-anmalan]' }] },
+    { id: 'anmalan', hash: '#/forlossning', text: 'Barnet har inget personnummer än. Välj Skicka födelseanmälan till Skatteverket.', mal: [{ sel: '[data-fp-anmalan]' }] },
   ],
   bb: [
     { id: 'meny', text: 'Välj Förlossningen i menyn.', mal: tillForlossningen },
