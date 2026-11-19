@@ -542,8 +542,9 @@ FLODEN.push(
     motivering: 'Ett klick på Lämna synpunkt, som syns på varje sida. Textfältet har fokus direkt, så testaren skriver utan fältbyte. Ett klick för vad det gäller, ett för hur allvarligt det är och ett på Skicka. Sidan, demorollen, uppdraget, versionen, skärmbredden, webbläsaren och tiden fyller systemet i själv, och yrke och journalsystem kommer från startsidan om testaren har fyllt i dem där.',
   },
   {
-    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första uppdraget', roll: 'lak-kard', start: 'Startsidan för testare', budget: 2,
-    motivering: 'Ett klick på yrkesrollen, som loggar in i rätt demoroll och startar uppdragen i panelen, och ett klick på en patient i arbetslistan för det första uppdraget. Systemet bockar av uppdraget själv och ställer jämförelsefrågan.',
+    // Runda 18, r1: yrkesrollen startar första passet. Passets uppgift mäts för sig mot Sussas klickbudget (test/anvandartest.cjs).
+    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första passet', roll: 'lak-kard', start: 'Startsidan för testare', budget: 2,
+    motivering: 'Ett klick på yrkesrollen, som loggar in i rätt demoroll och visar första passet i panelen, och ett klick för att svara på frågan om passet får mätas, som ställs en gång. Därefter pekar vägledningen ut nästa steg. Passets uppgift mäts för sig, mot klickbudgeten för samma uppgift i Sussas testfall, och vägledningen får inte göra den dyrare.',
   },
 );
 // Runda 14, r3: ett intyg genom intygsapplikationen och en e-remiss till en vårdgivare utanför Vårdkällan.

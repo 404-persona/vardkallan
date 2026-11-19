@@ -688,9 +688,10 @@ export const UPPGIFTER = [
     kontroll: { sel: '.synpunkt-kvitto', text: 'Tack' },
   },
   {
-    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första uppdraget', roll: 'lak-kard', start: 'Startsidan för testare',
-    text: 'Du har fått en länk till ett test av Vårdkällan och arbetar som läkare på sjukhus. Välj ditt yrke och gör det första uppdraget.',
-    kontroll: { sel: '#testare-panel .tp-jamforelse', text: 'Ta emot dagens första patient' },
+    // Runda 18, r1: yrkesrollen startar första passet med vägledning.
+    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första passet', roll: 'lak-kard', start: 'Startsidan för testare',
+    text: 'Du har fått en länk till ett test av Vårdkällan och arbetar som läkare på sjukhus. Välj ditt yrke och kom igång med det första passet.',
+    kontroll: { sel: '#testare-panel #tp-steg', text: 'Hamid Burvall' },
   },
   // Runda 14, r3: intyg i intygsapplikationen och e-remiss till en vårdgivare utanför Vårdkällan.
   {

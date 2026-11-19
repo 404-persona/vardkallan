@@ -724,15 +724,17 @@ function skapa(BAS) {
     // Dialogen stängs utan att räknas, så att nästa flöde börjar på en tom sida.
     await page.evaluate(() => document.querySelector('dialog[open]')?.close());
   };
+  // Runda 18, r1: yrkesrollen startar första passet. Frågan om mätning ställs en gång, och sedan pekar vägledningen ut
+  // patienten i arbetslistan. Passets uppgift mäts för sig i test/anvandartest.cjs.
   GOR['valj-yrkesroll'] = async (m, page) => {
     await m.klicka(page.locator('[data-testroll="lakare-sjukhus"]'), 'Läkare på sjukhus');
-    await synlig(page, '#testare-panel', 'Ta emot dagens första patient');
+    await synlig(page, '#testare-panel .tp-pass', 'Hamid Burvall');
+    if (await page.locator('#testare-panel [data-tp="matning"][data-varde="ja"]').count()) await m.klicka(page.locator('#testare-panel [data-tp="matning"][data-varde="ja"]'), 'Ja, mät passet');
     await page.waitForSelector('#lista table');
-    await m.klicka(page.locator('a.patientlank', { hasText: 'Gunnar Åkesson' }), 'en patient i arbetslistan');
-    await page.waitForSelector('.tidslinje');
-    await synlig(page, '#testare-panel .tp-jamforelse', 'Ta emot dagens första patient');
+    await synlig(page, '#testare-panel #tp-steg', 'Hamid Burvall');
+    await page.waitForSelector('.fp-ram');
     // Uppdragen avslutas utan att räknas, så att de inte följer med till nästa flöde.
-    await page.evaluate(() => fetch('/api/testare/avsluta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()).then(() => sessionStorage.removeItem('vk_testare_aktiv')));
+    await page.evaluate(() => fetch('/api/testare/avsluta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()).then(() => { sessionStorage.removeItem('vk_testare_aktiv'); sessionStorage.removeItem('vk_forsta_pass'); }));
   };
   // Runda 7, r7: de tio högst viktade kriterierna som inte är uppfyllda, med det högst viktade först.
   GOR['kravviktning'] = async (m, page) => {

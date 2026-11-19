@@ -9,6 +9,7 @@ import * as sp from './synpunkter.js';
 import * as ti from './testinbjudan.js';
 // Runda 18, r1: första passet.
 import * as fp from './forsta-pass.js';
+import { MATNING_FRAGA, MATNING_TEXT, MATNING_SPARAS } from '../public/js/forsta-pass-steg.js';
 import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT, TYPER, ALLVAR, JAMFORELSE, MAX_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM } from '../public/js/synpunkt-regler.js';
 
 const LASKOD_FEL = 'Läskoden gäller inte.';
@@ -49,7 +50,9 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
 
   // Det formuläret och sidan Om demon visar, så att sidan säger samma sak som servern gör.
   rutt('GET', '/api/synpunkter/om', () => ({ sparas: SPARAS, varfor: VARFOR, hurLange: HUR_LANGE, vemLaser: VEM_LASER, personnummer: PERSONNUMMER_TEXT,
-    typer: TYPER, allvar: ALLVAR, jamforelse: JAMFORELSE, max: { text: MAX_TEXT, kontakt: MAX_KONTAKT, mittSystem: MAX_MITT_SYSTEM }, ...ti.VAL }));
+    typer: TYPER, allvar: ALLVAR, jamforelse: JAMFORELSE, max: { text: MAX_TEXT, kontakt: MAX_KONTAKT, mittSystem: MAX_MITT_SYSTEM }, ...ti.VAL,
+    // Runda 18, r1: frågan om mätning före första passet och det som mätningen sparar.
+    matning: { fraga: MATNING_FRAGA, text: MATNING_TEXT, sparas: MATNING_SPARAS } }));
   rutt('POST', '/api/synpunkter', (c) => {
     const x = sammanhang(c);
     // Profilen från startsidan fyller i det testaren inte har fyllt i i formuläret.

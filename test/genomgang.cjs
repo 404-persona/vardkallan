@@ -392,6 +392,23 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.click('[data-testroll="underskoterska"]');
       await page.waitForSelector('[data-a="loggaut"]');
       await forvanta(page, '.inloggad', 'Amira Haddad');
+      // Runda 18, r1: uppdragen börjar med första passet. Frågan om mätning, vägledningen, att avbryta passet, jämförelsen,
+      // SUS som testaren tackar nej till och vidare till nästa uppdrag. Hela passet för varje roll prövas i test/anvandartest.cjs.
+      await forvanta(page, '#testare-panel .tp-samtycke', 'Får vi mäta hur ditt första pass går?');
+      await bild(page, '18r1-samtycke');
+      await page.click('[data-tp="matning"][data-varde="nej"]');
+      await forvanta(page, '#tp-steg', 'Sara Sandmark');
+      await page.waitForSelector('.fp-ram');
+      await bild(page, '18r1-vagledning');
+      await page.click('[data-tp="avbryt-pass"]');
+      await forvanta(page, '.tp-aterkoppling', 'Du avbröt passet');
+      await page.check('.tp-jamforelse input[value="kan_inte"]');
+      await page.click('.tp-jamforelse [type="submit"]');
+      await forvanta(page, '.tp-sus-erbjudande', 'tio korta påståenden');
+      await page.click('[data-tp="sus-hoppa"]');
+      await forvanta(page, '.tp-vidare', 'Vad vill du göra nu?');
+      await page.click('[data-tp="vidare"]');
+      if (await page.locator('.fp-ram').count()) throw new Error('vägledningen följde med till nästa uppdrag');
       await forvanta(page, '#testare-panel', 'Överblicka dagens händelser för en grupp patienter');
       await page.fill('#tp-svar', 'Fel svar');
       await page.click('.tp-fraga [type="submit"]');
@@ -403,15 +420,15 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.fill('#tp-jf-text', 'Ungefär som i mitt system.');
       await page.click('.tp-jamforelse [type="submit"]');
       await forvanta(page, '.notis', 'Svaret är sparat');
-      await forvanta(page, '#testare-panel', 'Registrera mätvärden');
+      await forvanta(page, '#testare-panel', 'Registrera vätskebalansen');
       // Panelen följer med till nästa vy och går att fälla ihop.
       await gaTill(page, '#/arbetslista');
-      await forvanta(page, '#testare-panel', 'Registrera mätvärden');
+      await forvanta(page, '#testare-panel', 'Registrera vätskebalansen');
       await page.click('[data-tp="stang"]');
       await page.waitForSelector('#testare-panel', { state: 'hidden' });
-      await forvanta(page, '[data-tp="vaxla"]', 'Uppdrag 2 av 7');
+      await forvanta(page, '[data-tp="vaxla"]', 'Uppdrag 3 av 7');
       await page.click('[data-tp="vaxla"]');
-      await forvanta(page, '#testare-panel', 'Registrera mätvärden');
+      await forvanta(page, '#testare-panel', 'Registrera vätskebalansen');
       await bild(page, '13r1-uppdrag');
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(200);
@@ -419,7 +436,7 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       if (bred > 390) throw new Error(`sidan är ${bred} px bred på mobil`);
       await bild(page, '13r1-uppdrag-mobil');
       await page.setViewportSize({ width: 1440, height: 900 });
-      await page.evaluate(() => fetch('/api/testare/avsluta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()).then(() => sessionStorage.removeItem('vk_testare_aktiv')));
+      await page.evaluate(() => fetch('/api/testare/avsluta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(r => r.text()).then(() => { sessionStorage.removeItem('vk_testare_aktiv'); localStorage.removeItem('vk_testare_matning'); }));
       await page.waitForLoadState('networkidle');
       await page.click('[data-a="loggaut"]');
       await page.waitForLoadState('networkidle');

@@ -216,14 +216,25 @@ function placera() {
   Object.assign(etikett.style, { top: `${ovanfor ? r.top - h - 10 : r.bottom + 10}px`, left: `${vanster}px` });
   etikett.dataset.sida = ovanfor ? 'ovanfor' : 'under';
 }
-// Rullar fram elementet när ett nytt steg börjar och elementet inte syns, så att det inte hamnar under panelen.
-function synligGor(el) {
-  const r = el.getBoundingClientRect();
+// Rullar fram elementet när ett nytt steg börjar och elementet inte syns, så att det hamnar mitt i den fria ytan mellan
+// sidhuvudet (och ett fast patienthuvud) och panelen längst ner, aldrig under panelen.
+function friYta(r) {
   const dock = document.getElementById('testare')?.getBoundingClientRect();
-  const nere = dock && dock.top > 0 ? dock.top : window.innerHeight;
-  if (r.top >= 56 && r.bottom <= nere - 8) return;
+  // Panelen är ett hinder bara där den ligger: på en bred skärm ligger den längst ner till höger.
+  const over = dock && r.right > dock.left && r.left < dock.right;
+  const nere = over && dock.top > 0 && dock.top < window.innerHeight ? dock.top : window.innerHeight;
+  const hinder = [...document.querySelectorAll('header, .patientband, .topp')].filter(e => ['sticky', 'fixed'].includes(getComputedStyle(e).position))
+    .map(e => e.getBoundingClientRect().bottom).filter(b => b > 0 && b < window.innerHeight / 2);
+  return { topp: Math.max(8, ...hinder), nere };
+}
+function synligGor(el) {
   const lugnt = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ block: 'center', behavior: lugnt ? 'auto' : 'smooth' });
+  el.scrollIntoView({ block: 'nearest' });
+  if (el.closest('dialog[open]')) return;
+  const r = el.getBoundingClientRect();
+  const { topp, nere } = friYta(r);
+  if (r.top >= topp + 8 && r.bottom <= nere - 8) return;
+  window.scrollBy({ top: (r.top + r.height / 2) - (topp + nere) / 2, behavior: lugnt ? 'auto' : 'smooth' });
 }
 
 // Visa var: rullar fram elementet och flyttar fokus dit.

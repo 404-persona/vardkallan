@@ -54,7 +54,11 @@ export function init() {
   document.body.classList.add('har-testare');
   rot.addEventListener('click', klick);
   rot.addEventListener('submit', skicka);
-  new ResizeObserver(() => document.documentElement.style.setProperty('--testare-hojd', `${rot.querySelector('.testare-knappar').offsetHeight}px`)).observe(rot);
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty('--testare-hojd', `${rot.querySelector('.testare-knappar').offsetHeight}px`);
+    // Runda 18, r1: under första passet får sidan plats under panelen, så att vägledningen kan rulla fram allt.
+    document.documentElement.style.setProperty('--testare-dock-hojd', `${rot.offsetHeight}px`);
+  }).observe(rot);
   // Efter en sparad ändring kan ett uppdrag ha blivit gjort.
   const forra = krokar.efterSkrivning;
   krokar.efterSkrivning = (vag) => { forra?.(vag); if (T?.aktiv && !/^\/api\/(testare|synpunkter|login|logout|reset)/.test(vag)) uppdatera(); };
@@ -100,7 +104,7 @@ const statusText = (u) => (u.status === 'klar' ? 'klart' : u.status === 'hoppade
 function rita({ oppna = false } = {}) {
   const knapp = rot.querySelector('[data-tp="vaxla"]');
   const panel = rot.querySelector('#testare-panel');
-  if (!T?.aktiv) { knapp.hidden = true; panel.hidden = true; panel.innerHTML = ''; document.body.classList.remove('har-uppdrag'); return; }
+  if (!T?.aktiv) { knapp.hidden = true; panel.hidden = true; panel.innerHTML = ''; document.body.classList.remove('har-uppdrag', 'i-forsta-pass'); fp.stoppa(); return; }
   document.body.classList.add('har-uppdrag');
   const n = T.uppdrag.length;
   const gjorda = T.klara + T.hoppade;
@@ -122,6 +126,7 @@ function rita({ oppna = false } = {}) {
     ${iPass ? passHtml(T.pass, fraga) : fraga ? jamforelseHtml(fraga) : aktuell ? aktuelltHtml(aktuell) : `<div class="tp-klart"><p><strong>Alla uppdrag är gjorda.</strong> Tack! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.</p><p><a href="#/testa">Välj en annan yrkesroll</a></p></div>`}
     ${iPass ? '' : `<details class="tp-alla"><summary>Alla uppdrag</summary><ol class="tp-lista">${T.uppdrag.map(u => `<li class="${u.id === T.aktuellt ? 'tp-ar-aktuell' : ''}">${ikonFor(u, u.id === T.aktuellt)}<span>${u.sussa ? `<span class="tp-sussa">Sussa ${esc(u.sussa)}</span> ` : ''}${esc(u.titel)}<span class="sr">, ${statusText(u)}</span></span></li>`).join('')}</ol></details>`}`;
   // Runda 18, r1: vägledningen följer passet. Steget skrivs i panelen när det byts.
+  document.body.classList.toggle('i-forsta-pass', T.pass?.fas === 'pagar' && !panel.hidden);
   fp.aktivera(T, { onSteg: visaSteg });
   if (T.pass?.fas === 'pagar') visaSteg(fp.stegInfo());
   else if (T.pass?.fas === 'aterkoppling' && T.pass.matning === 'ja' && !T.pass.resultat) skickaMatning();
@@ -181,9 +186,9 @@ function aterkopplingHtml(p) {
   const r = p.resultat;
   if (!r) return `<section class="tp-aterkoppling" aria-labelledby="tp-ak-rubrik"><h3 id="tp-ak-rubrik">Uppgiften är gjord</h3><p>Räknar ihop passet.</p></section>`;
   const klar = r.status === 'klar';
-  const tk = r.tidsklass ? `Sussa räknade med högst ${r.tidsklass} minuter för uppgiften, och full poäng för den som klarar den på under ${r.tidsklass / 3} minuter.` : 'Uppgiften är inte ett av Sussas testfall, så det finns ingen tidsklass att jämföra med.';
+  const tk = r.tidsklass ? `Sussa räknade med högst ${r.tidsklass} minuter för uppgiften när systemen jämfördes, och under ${r.tidsklass / 3} minuter räknades som snabbt.` : 'Uppgiften är inte ett av Sussas testfall, så det finns ingen tidsklass att jämföra med.';
   const rader = [];
-  if (r.tidS != null && klar) rader.push(`Det tog ${minSek(r.tidS)}. ${tk}${r.tidspoang === 10 ? ' Du klarade den inom den snabbaste nivån.' : ''}`);
+  if (r.tidS != null && klar) rader.push(`Det tog ${minSek(r.tidS)}. ${tk}${r.tidspoang === 10 ? ' Du var alltså snabb.' : ''}`);
   else if (klar) rader.push(tk);
   if (r.steg != null && klar) {
     rader.push(`Du behövde ${r.steg} steg: ${antal(r.klick, 'klick', 'klick')}, ${antal(r.faltbyten, 'fältbyte', 'fältbyten')} och ${antal(r.tangenter, 'tangent', 'tangenter')}. Klickbudgeten, som Vårdkällan ska klara uppgiften inom, är ${r.budget} steg.`);
