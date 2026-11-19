@@ -80,6 +80,7 @@ export function hjalpRuta(id) {
       <ol>${h.steg.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
       <p><strong>Det här gör systemet åt dig:</strong> ${esc(h.systemet)}</p>
       <p class="liten"><a href="#/utbildning">Övningar och intyg under Utbildning</a></p>
+      ${/* Runda 18, r2: ordlistan med ord från andra journalsystem. */ ''}<p class="liten"><a href="#/ordlista">Jag letar efter: ord från andra journalsystem</a></p>
     </div>
   </details>`;
 }

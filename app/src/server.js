@@ -193,6 +193,8 @@ import { registreraRutter as reservloggRutter } from './reservlogg-rutter.js';
 import { registreraRutter as r15r4Rutter } from './r15r4-rutter.js';
 // Runda 16, r3: handledningen av studenter och barnmorskans förskrivning av preventivmedel (r16r3-rutter.js).
 import { registreraRutter as r16r3Rutter } from './r16r3-rutter.js';
+// Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (handlingssok-rutter.js).
+import { registreraRutter as r18r2Rutter, UTAN_SESSION as R18R2_UTAN_SESSION } from './handlingssok-rutter.js';
 
 const PUBLIC = join(import.meta.dir, '..', 'public');
 // Runda 13, r2: taket för sandlådor i minnet och på disk tillsammans. En sandlåda tas aldrig bort för att ge plats åt
@@ -2639,6 +2641,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   // HOSP: systemförvaltarens lista och personens egna uppgifter.
   hospRutter({ rutt, kravInloggad });
   // Runda 13, r1 (r13r1-rutter.js).
+  // Runda 18, r2 (handlingssok-rutter.js).
+  r18r2Rutter({ rutt, kravInloggad, sessionUt, valFor });
   const synpunkter = r13r1Rutter({ rutt, sessionFil, synpunktFil, version: APPVERSION, gransnittVersion, ...(synpunktTak ? { tak: synpunktTak } : {}) });
   // Runda 12, r2.
   // Runda 13, r2 (säkerhetsgranskningen av runda 12, fynd 3): efter inläsningen av en kopia loggas sessionen ut, så att
@@ -2683,6 +2687,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   for (const v of ['/api/testare', '/api/testare/roller', '/api/synpunkter/om']) UTAN_SESSION.add(v);
   // Runda 14, r1: Vårdkällans publika nyckel och övningstjänstens metadata och nycklar.
   for (const v of R14R1_UTAN_SESSION) UTAN_SESSION.add(v);
+  // Runda 18, r2: ordlistan Jag letar efter är öppen utan inloggning.
+  for (const v of R18R2_UTAN_SESSION) UTAN_SESSION.add(v);
 
   async function api(req, server, url, c) {
     if (url.pathname === '/api/health') return json({ ok: true, sandladar: sessioner.size, version: APPVERSION, gransnitt: gransnittVersion(),

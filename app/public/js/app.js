@@ -119,6 +119,9 @@ import * as flera from './flera-fonster.js';
 import * as demoFull from './demo-full.js';
 // Runda 14, r4 (Sussa 11.2.1.7): testprotokollet med spårbarhet till kraven.
 import * as testprotokoll from './vyer/testprotokoll.js';
+// Runda 18, r2: sökrutan Vad vill du göra? i sidhuvudet och ordlistan Jag letar efter.
+import * as handlingssok from './handlingssok.js';
+import * as ordlistaVy from './vyer/ordlista.js';
 
 // Globalt tillstånd.
 export const S = { session: null, inkorg: null, svarstid: null };
@@ -365,6 +368,11 @@ MENY.splice(MENY.findIndex(m => m[0] === '#/remisser') + 1, 0,
 RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/nyheter$/)), 0, [/^#\/rehabkoordinator$/, rehabkoordinatorVy, () => far('sjukfall_reko')]);
 MENY.splice(MENY.findIndex(m => m[0] === '#/sjukskrivningar') + 1, 0, ['#/rehabkoordinator', 'Sjukfall', 'kalender', () => far('sjukfall_reko')]);
 
+// Runda 18, r2: ordlistan Jag letar efter, öppen utan inloggning som kravsidan.
+RUTTER.splice(RUTTER.findIndex(r => String(r[0]) === String(/^#\/tillganglighet$/)) + 1, 0,
+  [/^#\/ordlista$/, ordlistaVy, () => true, true],
+);
+
 // Invånarens adresser i Min journal, och de offentliga sidorna. Personalens vyer finns inte här.
 const RUTTER_MIN = [
   [/^#\/min(?:\/([\w-]+))?(?:\/([a-z]+))?(?:\/([\w-]+))?$/, minJournal],
@@ -542,6 +550,7 @@ function ritaRam(route) {
   ram.innerHTML = `<header class="topp"><div class="topp-inre">
       <a class="varumarke" href="${hem()}">${logotyp()}<span><span class="namn">Vårdkällan</span><span class="under">Hela vården i ett öppet system</span></span></a>
       <button type="button" class="menyknapp" data-a="meny" aria-expanded="false" aria-controls="meny">${ikon.meny}<span>Meny</span></button>
+      ${/* Runda 18, r2: sökrutan Vad vill du göra?. */ handlingssok.knappHtml()}
       <div class="inloggad" aria-label="Inloggad person">
         <span class="kort-ikon" aria-hidden="true">${ikon.kort}</span>
         <span class="vem"><strong>${esc(p.namn)}</strong><span>${esc(p.titel)}, ${esc(e.namn)}</span></span>

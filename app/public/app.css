@@ -2040,3 +2040,37 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .hl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .hl-rad { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; background: var(--yta); border: 1px solid var(--linje); border-radius: 10px; padding: 10px 14px; }
 .hl-rad > span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Runda 18, r2: sökrutan Vad vill du göra? i sidhuvudet och ordlistan Jag letar efter. Egna klasser (hs- och ol-). */
+.hs-knapp .hs-tangent { font: inherit; font-size: var(--f-xs); color: var(--dampad); border: 1px solid var(--linje-stark); border-radius: 4px; padding: 0 5px; margin-left: 4px; background: var(--grund); }
+.hs-dialog { border: 0; border-radius: 10px; padding: 0; width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 48px); margin-top: 8vh; color: var(--blak); background: var(--yta); }
+.hs-dialog::backdrop { background: rgba(16, 33, 37, 0.5); }
+.hs-inre { padding: 16px 20px 14px; }
+.hs-huvud { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.hs-huvud h2 { margin: 0; font-size: var(--f-xl); }
+.hs-etikett { display: block; font-weight: 600; margin-bottom: 4px; }
+#hs-falt { width: 100%; font-size: var(--f-l); padding: 9px 12px; }
+.hs-under { font-size: var(--f-s); color: var(--dampad); margin: 14px 0 4px; font-weight: 600; }
+.hs-traffar, .hs-saknas { list-style: none; padding: 0; margin: 6px 0 0; }
+.hs-traff { display: block; padding: 9px 12px; border: 1px solid var(--linje); border-radius: var(--r); margin-bottom: 6px; color: var(--blak); text-decoration: none; }
+a.hs-traff:hover, a.hs-traff:focus-visible { border-color: var(--kalla); background: var(--kalla-ljus); }
+.hs-traffar li:first-child a.hs-traff { border-color: var(--kalla-mellan); }
+.hs-namn { display: block; font-weight: 600; }
+.hs-via { display: block; font-size: var(--f-xs); color: var(--kalla-mork); margin-top: 2px; }
+.hs-ej { color: var(--dampad); background: var(--grund); }
+.hs-saknas li { padding: 6px 0; border-top: 1px solid var(--linje); font-size: var(--f-s); }
+.hs-inget { margin: 12px 0 0; }
+.hs-fot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; margin: 12px 0 0; color: var(--dampad); }
+.ol-filter { max-width: 420px; }
+.ol-lista { list-style: none; padding: 0; margin: 0; }
+.ol-post { border-top: 1px solid var(--linje); padding: 10px 0; }
+.ol-post p { margin: 0 0 4px; }
+.ol-ord { display: flex; flex-wrap: wrap; gap: 4px; }
+@media (max-width: 640px) {
+  .hs-knapp { order: 6; width: 100%; justify-content: flex-start; }
+  .hs-knapp .hs-tangent { display: none; }
+  .hs-dialog { margin-top: 12px; width: calc(100vw - 16px); }
+  .hs-inre { padding: 12px 14px; }
+  .hs-fot span { display: none; }
+}
+@media print { .hs-knapp { display: none !important; } }
