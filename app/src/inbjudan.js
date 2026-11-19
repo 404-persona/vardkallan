@@ -13,8 +13,10 @@ import { KANALER, KOD, BESOK } from '../public/js/inbjudan-regler.js';
 
 // Taken räknas på servern per skapare, alltså adressgruppen som HMAC (som för synpunkterna), ur raderna i databasen. De
 // gäller därför också när anropet kommer utan sessionskaka, som en ny tom session varje gång. Finns en session gäller
-// dess tak dessutom. Det totala taket låser aldrig ute någon: när det är nått tas de äldsta raderna bort.
-export const TAK_INBJUDAN = { perMinut: 3, perTimme: 10, perAdress: 20, totalt: 50000 };
+// dess tak dessutom. Ett globalt tak per minut och timme gäller nya koder oavsett adress. När det totala taket är nått
+// stoppas nya rader med 503 (fail closed). Inga levande rader tas bort när någon skapar en ny; bara gallringen tar bort
+// rader, efter ålder (synpunkter.stada).
+export const TAK_INBJUDAN = { perMinut: 3, perTimme: 10, perAdress: 20, totalt: 50000, globaltPerMinut: 60, globaltPerTimme: 600 };
 export const TAK_BESOK = { perMinut: 30, perTimme: 100, perAdress: 200, totalt: 500000 };
 const DAG = 86400_000;
 const fel429 = (text) => new Fel(429, text, 'for_manga');
@@ -31,8 +33,13 @@ function provaTakPerSkapare(db, tabell, { skapare, nu, tak, session = null, nyck
     if (tider.length >= tak.perTimme) throw fel429(`Högst ${tak.perTimme} ${namn} i timmen från samma webbläsare. Vänta en stund och försök igen.`);
     tider.push(ms);
   }
-  const totalt = db.query(`SELECT count(*) AS n FROM ${tabell}`).get().n;
-  if (totalt >= tak.totalt) db.query(`DELETE FROM ${tabell} WHERE id IN (SELECT id FROM ${tabell} ORDER BY id LIMIT ?)`).run(totalt - tak.totalt + 1);
+  const alla = (fonster) => db.query(`SELECT count(*) AS n FROM ${tabell} WHERE tid > ?`).get(new Date(ms - fonster).toISOString()).n;
+  if ((tak.globaltPerMinut && alla(60_000) >= tak.globaltPerMinut) || (tak.globaltPerTimme && alla(3600_000) >= tak.globaltPerTimme)) {
+    throw new Fel(503, `Demon tar emot väldigt många ${namn} just nu. Vänta en stund och försök igen.`, 'fullt');
+  }
+  if (db.query(`SELECT count(*) AS n FROM ${tabell}`).get().n >= tak.totalt) {
+    throw new Fel(503, `Demon tar inte emot fler ${namn} just nu, eftersom taket för hela testet är nått. Gamla ${namn} raderas efter ett år.`, 'fullt');
+  }
 }
 
 export function skapa(db, { nu = new Date(), session = null, adress = 'okänd', tak = TAK_INBJUDAN } = {}) {

@@ -114,7 +114,10 @@ export function satNyckel({ fil = null, hex = process.env.SYNPUNKT_NYCKEL } = {}
   }
   NYCKEL = randomBytes(32).toString('hex');
 }
-export const skapareFor = (adress) => { if (!NYCKEL) satNyckel(); return createHmac('sha256', NYCKEL).update(`synpunkt:${adressGrupp(adress)}`).digest('hex'); };
+// Runda 18, r1: IPv6-adresser räknas per /48 (adressGrupp ger /64), så att en klient inte kommer runt taken för rutterna
+// utan inloggning genom att byta adress i sitt nät. IPv4 räknas per adress.
+const grupp48 = (adress) => { const g = adressGrupp(adress); return g.endsWith('::/64') ? `${g.split(':').slice(0, 3).join(':')}::/48` : g; };
+export const skapareFor = (adress) => { if (!NYCKEL) satNyckel(); return createHmac('sha256', NYCKEL).update(`synpunkt:${grupp48(adress)}`).digest('hex'); };
 
 // Webbläsaren som namn, huvudversion och operativsystem. Hela rubriken sparas aldrig.
 export function webblasare(ua) {

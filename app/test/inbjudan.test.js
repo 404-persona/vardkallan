@@ -110,17 +110,44 @@ describe('Inbjudan', () => {
       expect(() => ib.skapa(db, { nu: new Date(nu.getTime() + 20 * 61_000), adress: '10.9.9.9' })).toThrow(/i timmen/);
       // En annan adress påverkas inte.
       expect(ib.skapa(db, { nu, adress: '10.8.8.8' }).kod).toMatch(KOD);
-      // Det totala taket låser inte ute någon: de äldsta inbjudningarna tas bort.
+      // Det totala taket tar aldrig bort någons levande inbjudan: nya stoppas med 503 (fail closed), och bara gallringen
+      // tar bort rader efter ålder.
       const db2 = sp.oppna(':memory:');
       const tak = { ...ib.TAK_INBJUDAN, totalt: 3 };
       const koder = [];
-      for (let i = 0; i < 5; i++) koder.push(ib.skapa(db2, { nu, adress: `10.7.7.${i}`, tak }).kod);
-      expect(db2.query('SELECT kod FROM inbjudningar ORDER BY id').all().map(r => r.kod)).toEqual(koder.slice(2));
-      // Besöken: taket per adress och dygn, och det totala taket tar bort de äldsta.
+      for (let i = 0; i < 3; i++) koder.push(ib.skapa(db2, { nu, adress: `10.7.7.${i}`, tak }).kod);
+      let fel = null;
+      try { ib.skapa(db2, { nu, adress: '10.7.7.9', tak }); } catch (e) { fel = e; }
+      expect(fel?.status).toBe(503);
+      expect(fel.message).toMatch(/tar inte emot fler inbjudningar/);
+      expect(db2.query('SELECT kod FROM inbjudningar ORDER BY id').all().map(r => r.kod)).toEqual(koder);
+      // Besöken: samma sak, och en levande inbjudans räkning per kanal ändras inte.
       const takB = { ...ib.TAK_BESOK, totalt: 2 };
-      for (let i = 0; i < 4; i++) expect(ib.besok(db2, { kod: koder[4], kanal: 'x' }, { nu, adress: `10.6.6.${i}`, tak: takB }).besok).toMatch(/^B-/);
+      for (let i = 0; i < 2; i++) expect(ib.besok(db2, { kod: koder[0], kanal: 'x' }, { nu, adress: `10.6.6.${i}`, tak: takB }).besok).toMatch(/^B-/);
+      expect(() => ib.besok(db2, { kod: koder[0], kanal: 'x' }, { nu, adress: '10.6.6.9', tak: takB })).toThrow(/tar inte emot fler/);
       expect(db2.query('SELECT count(*) AS n FROM inbjudan_besok').get().n).toBe(2);
+      // Ett globalt tak per minut och timme för nya koder, oavsett adress.
+      const db3 = sp.oppna(':memory:');
+      const takG = { ...ib.TAK_INBJUDAN, globaltPerMinut: 4, globaltPerTimme: 6 };
+      for (let i = 0; i < 4; i++) ib.skapa(db3, { nu, adress: `10.5.5.${i}`, tak: takG });
+      expect(() => ib.skapa(db3, { nu, adress: '10.5.5.99', tak: takG })).toThrow(/just nu/);
+      for (let i = 0; i < 2; i++) ib.skapa(db3, { nu: new Date(nu.getTime() + 120_000), adress: `10.5.6.${i}`, tak: takG });
+      expect(() => ib.skapa(db3, { nu: new Date(nu.getTime() + 240_000), adress: '10.5.7.1', tak: takG })).toThrow(/just nu/);
     } finally { t.stopp(); }
+  });
+
+  test(T.ipv6, () => {
+    // IPv6-adresser grupperas per /48 för rutterna utan inloggning, så att en klient inte kan byta adress i sitt nät för
+    // att komma runt taken. IPv4 räknas per adress.
+    expect(sp.skapareFor('2001:db8:1:1::5')).toBe(sp.skapareFor('2001:db8:1:ffff::9'));
+    expect(sp.skapareFor('2001:db8:1::1')).not.toBe(sp.skapareFor('2001:db8:2::1'));
+    expect(sp.skapareFor('[2001:0db8:0001:0002::1]')).toBe(sp.skapareFor('2001:db8:1:3::1'));
+    expect(sp.skapareFor('10.0.0.1')).not.toBe(sp.skapareFor('10.0.0.2'));
+    expect(sp.skapareFor('::ffff:10.0.0.1')).toBe(sp.skapareFor('10.0.0.1'));
+    const db = sp.oppna(':memory:');
+    const nu = new Date('2026-11-19T10:00:00Z');
+    for (let i = 0; i < ib.TAK_INBJUDAN.perMinut; i++) ib.skapa(db, { nu, adress: `2001:db8:7:${i}::1` });
+    expect(() => ib.skapa(db, { nu, adress: '2001:db8:7:99::1' })).toThrow(/Högst/);
   });
 
   test(T.text, () => {

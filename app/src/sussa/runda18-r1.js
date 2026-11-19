@@ -28,7 +28,8 @@ export const T18R1IB = {
   besok: `${IB}ett besök via en inbjudan sparar bara kanalen, och en okänd kod eller kanal ger samma svar utan att något sparas`,
   pass: `${IB}ett genomfört pass räknas på besöket utan koppling till mätningen, svaren eller synpunkterna`,
   testledare: `${IB}testledaren ser bara antal per kanal och hur många som genomförde ett pass, och inbjudningarna gallras som synpunkterna`,
-  takUtanSession: `${IB}taken per minut, timme och dygn räknas per adressgrupp i databasen också utan session, och det totala taket tar bort de äldsta i stället för att låsa ute någon`,
+  takUtanSession: `${IB}taken per minut, timme och dygn räknas per adressgrupp i databasen också utan session, det globala taket per minut och timme gäller alla, och det totala taket stoppar nya med 503 utan att ta bort någons levande inbjudan`,
+  ipv6: `${IB}IPv6-adresser räknas per /48 för taken utan inloggning, och IPv4 per adress`,
   text: `${IB}inbjudningstexten är neutral och delningslänkarna går till tjänsternas egna delningssidor med länken till testinbjudans startsida`,
 };
 
