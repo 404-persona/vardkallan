@@ -2,6 +2,22 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.8.1",
+      "datum": "2026-11-20",
+      "nyheter": [
+        {
+          "id": "vagledning-uppdrag-1-8-1",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/testa",
+          "rubrik": "Vägledning i alla uppdrag för den som testar",
+          "text": "Vägledningen från första passet finns nu i alla uppdrag för alla yrken i testet: en ram runt nästa steg och en kort mening om vad du ska göra. Den följer med om du tar en annan väg, och du kan stänga av den och slå på den igen i panelen. I första passet syns den direkt. En flik som är öppen när demon uppdateras får den nya versionen av sig själv, och har du text som inte är sparad väntar sidan tills den är sparad."
+        }
+      ]
+    },
+    {
       "version": "1.8.0",
       "datum": "2026-11-19",
       "nyheter": [

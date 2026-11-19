@@ -62,6 +62,7 @@ async function folj(p, namn, steg, klart) {
   let senast = null;
   let upprepning = 0;
   let utanMal = Date.now();
+  let ramFel = null;
   for (let i = 0; i < MAX_HANDLINGAR * 3; i++) {
     await p.waitForTimeout(250);
     if (await klart()) return sedda;
@@ -71,7 +72,13 @@ async function folj(p, namn, steg, klart) {
       continue;
     }
     utanMal = Date.now();
-    anta(l.ram, `${namn}, steget ${l.id}: ramen ligger inte runt elementet`);
+    // Ramen följer med när sidan rullar fram elementet. Den får en stund på sig innan testet säger att den ligger fel.
+    if (!l.ram) {
+      ramFel = ramFel ?? Date.now();
+      anta(Date.now() - ramFel < 3000, `${namn}, steget ${l.id}: ramen ligger inte runt elementet`);
+      continue;
+    }
+    ramFel = null;
     anta(l.panelText.includes(l.text), `${namn}, steget ${l.id}: panelen visar inte stegets text`);
     if (l.etikett != null) anta(l.etikett === l.text, `${namn}, steget ${l.id}: meningen bredvid ramen är "${l.etikett}"`);
     upprepning = l.id === senast ? upprepning + 1 : 0;
@@ -87,9 +94,26 @@ async function folj(p, namn, steg, klart) {
       else { await loc.click(); await loc.fill(s.gor.skriv); }
     } else await loc.click();
     if (s.gor?.tangent) await loc.press(s.gor.tangent).catch(() => p.keyboard.press(s.gor.tangent));
-    await p.waitForLoadState('networkidle').catch(() => {});
+    await stilla(p);
   }
   throw new Error(`${namn}: blev inte klart (${sedda.slice(-6).join(', ')})`);
+}
+
+// Väntar tills sidan inte har några anrop på gång: först en kort stund så att klicket hinner skicka sitt anrop, sedan
+// tills inget anrop har pågått på 300 ms. waitForLoadState('networkidle') räcker inte, eftersom den svarar direkt när
+// sidan redan har varit stilla en gång.
+const pagaende = new WeakMap();
+function raknaAnrop(p) {
+  const n = { antal: 0, senast: Date.now() };
+  pagaende.set(p, n);
+  p.on('request', () => { n.antal++; n.senast = Date.now(); });
+  for (const h of ['requestfinished', 'requestfailed']) p.on(h, () => { n.antal = Math.max(0, n.antal - 1); n.senast = Date.now(); });
+}
+async function stilla(p, maxMs = 10000) {
+  const n = pagaende.get(p);
+  await p.waitForTimeout(150);
+  const slut = Date.now() + maxMs;
+  while (n && Date.now() < slut && (n.antal > 0 || Date.now() - n.senast < 300)) await p.waitForTimeout(50);
 }
 
 const tillstand = (p) => p.evaluate(async () => (await (await fetch('/api/testare')).json()));
@@ -102,13 +126,14 @@ async function jamfor(p, id, jamforelser) {
   const [req] = await Promise.all([p.waitForRequest(r => r.url().includes(`/api/testare/uppdrag/${encodeURIComponent(id)}/jamforelse`)), form.locator('[type="submit"]').click()]);
   jamforelser.push(JSON.parse(req.postData() ?? '{}'));
   await p.waitForFunction((x) => !document.querySelector(`#testare-panel .tp-jamforelse[data-id="${x}"]`), id, { timeout: 10000 });
-  await p.waitForLoadState('networkidle').catch(() => {});
+  await stilla(p);
 }
 
 async function kor(browser, roll) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
   await stallKlockan(ctx);
   const p = await ctx.newPage();
+  raknaAnrop(p);
   p.on('pageerror', e => sidfel.push(`${roll}: sidfel: ${e.message}`));
   p.on('console', m => { if (m.type() === 'error' && !/status of 40[349]/.test(m.text())) sidfel.push(`${roll}: konsolfel: ${m.text()}`); });
   const tester = [];
@@ -144,12 +169,19 @@ async function kor(browser, roll) {
       await jamfor(p, t.pass.uppdrag, jamforelser);
       await p.click('#testare-panel [data-tp="sus-hoppa"]');
       await p.click('#testare-panel [data-tp="vidare"]');
-      await p.waitForSelector('#tp-aktuellt');
+      await p.waitForSelector('#tp-aktuellt, #testare-panel .tp-jamforelse');
     });
     if (!startat) return tester;
     const alla = await p.evaluate(async (r) => (await import(`/js/uppdrag-steg/${r}.js`).catch(() => ({ default: {} }))).default, roll);
     for (let n = 0; n < 40; n++) {
-      const t = await tillstand(p);
+      let t = await tillstand(p);
+      // Ett uppdrag som blev gjort på vägen, till exempel att öppna en journal under passet, får sin fråga först.
+      while (t.attBesvara.length) {
+        const forut = t.attBesvara[0];
+        console.log(`    ${roll} ${forut}: gjort på vägen, jämförelsefrågan besvaras`);
+        await jamfor(p, forut, jamforelser);
+        t = await tillstand(p);
+      }
       const id = t.aktuellt;
       if (!id) break;
       const u = t.uppdrag.find(x => x.id === id);

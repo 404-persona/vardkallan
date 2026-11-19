@@ -250,6 +250,8 @@ export async function visa(main, [id, flik, sub], q, ctx = {}) {
   const tillgangliga = FLIKAR.filter(f => f[2]());
   let f = tillgangliga.find(x => x[0] === (flik ?? 'oversikt')) ?? tillgangliga[0];
   if (!ctx.sammaPatient || !huvud || huvud.id !== id || !main.querySelector('.patientvy')) {
+    // Runda 19, r1: en omritning efter en sparad ändring skriver inget när testaren redan har gått till en annan vy.
+    if (ctx.aktuell && !ctx.aktuell()) return;
     main.innerHTML = '<p class="tom">Öppnar journalen.</p>';
     try { huvud = await api(`/api/patient/${encodeURIComponent(id)}`); } catch (e) {
       if (e instanceof ApiFel && [403, 404].includes(e.status)) { huvud = null; return ingenAtkomst(main, id, e); }
@@ -301,7 +303,9 @@ export async function visa(main, [id, flik, sub], q, ctx = {}) {
     ladda: () => {
       const engang = (sub === 'ny' || /^(aterinsatt|utsatt|utvardera)-/.test(sub ?? '')) && flik !== 'journal';
       if (engang) history.replaceState(null, '', href(id, flik));
-      return visa(main, [id, flik, engang ? undefined : sub], q, { aktuell: () => true, sammaPatient: true });
+      // Runda 19, r1: omritningen gäller bara så länge testaren är kvar i samma vy. Har testaren hunnit gå vidare (till
+      // exempel till arbetslistan medan en signering sparades) skriver den gamla vyn inte över den nya.
+      return visa(main, [id, flik, engang ? undefined : sub], q, { aktuell: ctx.aktuell ?? (() => true), sammaPatient: true });
     },
     laddaOm: () => { huvud = null; return rita(); },
     aktuell: ctx.aktuell ?? (() => true),

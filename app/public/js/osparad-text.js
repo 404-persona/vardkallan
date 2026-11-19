@@ -113,6 +113,14 @@ window.addEventListener('hashchange', () => {
   if (sparade.length) setTimeout(() => meddela(sparade), 0);
 });
 
+// Runda 19, r1: om fliken har text som inte är sparad, så att en ny version av appen inte laddar om sidan över den
+// (ny-version.js). Både text i formulär som är öppna nu och text som bara finns sparad i fliken räknas.
+export function harOsparadText() {
+  if (utkast.size) return true;
+  for (const form of andrade.keys()) if (form.isConnected && textfalt(form).some(x => x.value.trim())) return true;
+  return false;
+}
+
 // Anropas efter varje visad vy (app.js): ett byte av patient märks i patienthuvudet och i ett meddelande.
 export function efterVy() {
   if (!arPersonal()) { utkast.clear(); forraPatient = null; ritaRad(); return; }

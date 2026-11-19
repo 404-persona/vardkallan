@@ -89,6 +89,9 @@ export function oppna(fil = ':memory:') {
   const kol = db.query("SELECT name FROM pragma_table_info('synpunkt_utskrifter')").all().map(k => k.name);
   if (!kol.includes('pass')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN pass INTEGER NOT NULL DEFAULT 0');
   if (!kol.includes('sus')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN sus INTEGER NOT NULL DEFAULT 0');
+  // Runda 19, r1: om vägledningen var på när testaren svarade på jämförelsefrågan (1 eller 0, tomt för äldre svar).
+  const jkol = db.query("SELECT name FROM pragma_table_info('jamforelser')").all().map(k => k.name);
+  if (!jkol.includes('vagledning')) db.exec('ALTER TABLE jamforelser ADD COLUMN vagledning INTEGER CHECK (vagledning IN (0, 1))');
   // Tillägg 2026-11-19: räknarna för inbjudningar, en rad per dag och kanal (inbjudan.js).
   sakraInbjudan(db);
   return db;
@@ -222,12 +225,16 @@ export function sparaJamforelse(db, body = {}, { nu = new Date(), session = {}, 
   const text = fritext(body.text, 'text', { max: MAX_TEXT, namn: 'Texten' });
   const mitt = fritext(body.mittSystem, 'mittSystem', { max: MAX_MITT_SYSTEM, namn: 'Klick eller tid i ditt system' });
   const p = profil({ ...pr, ...profilUrBody(body) });
+  // Runda 19, r1: bara sant eller falskt tas emot. Utan värde sparas inget.
+  if (body.vagledning !== undefined && body.vagledning !== null && typeof body.vagledning !== 'boolean') throw fel('Vägledningen ska vara sann eller falsk.', ['vagledning']);
+  const vagledning = typeof body.vagledning === 'boolean' ? Number(body.vagledning) : null;
   const skapare = skapareFor(adress);
   provaTak(db, 'jamforelser', { session, skapare, nu, tak, nyckel: 'jamforelserTider' });
   const nummer = nyttNummer(db, 'J', 'jamforelser');
   db.query(`INSERT INTO jamforelser (nummer, tid, testroll, uppdrag, sussa, status, tid_s, jamforelse, text, mitt_system, yrke, system, ar, vardform, version, gransnitt, bredd, webblasare, skapare)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(nummer, nu.toISOString(), testroll, uppdrag, sussa, status, Number.isInteger(tidS) ? tidS : null, body.jamforelse, text, mitt,
     p.yrke, p.system, p.ar, p.vardform, String(version), String(gransnitt).slice(0, 64), breddFor(body.bredd), wb, skapare);
+  db.query('UPDATE jamforelser SET vagledning = ? WHERE nummer = ?').run(vagledning, nummer);
   return { nummer };
 }
 const profilUrBody = (b) => Object.fromEntries(['yrke', 'system', 'ar', 'vardform'].filter(k => b[k] !== undefined).map(k => [k, b[k]]));
@@ -257,6 +264,8 @@ const jamforelseUt = (r) => ({
   nummer: r.nummer, tid: r.tid, testroll: r.testroll, uppdrag: r.uppdrag, sussa: r.sussa, status: r.status, tidS: r.tid_s, jamforelse: r.jamforelse,
   text: r.text, mittSystem: r.mitt_system, yrke: r.yrke, system: r.system, ar: r.ar, vardform: r.vardform, version: r.version,
   gransnitt: r.gransnitt.slice(0, 12), bredd: r.bredd, webblasare: r.webblasare,
+  // Runda 19, r1.
+  vagledning: r.vagledning == null ? null : r.vagledning === 1,
 });
 
 // Filtret som testledarens vy och exporten delar. Okända värden ignoreras.
@@ -278,8 +287,10 @@ export function perUppdrag(jamforelser, namnFor = () => null) {
   for (const r of jamforelser) {
     for (const system of ['alla', r.system || 'okänt']) {
       const k = `${r.testroll}|${r.uppdrag}|${system}`;
-      const g = grupper.get(k) ?? { testroll: r.testroll, uppdrag: r.uppdrag, sussa: r.sussa, titel: namnFor(r.testroll, r.uppdrag), system, antal: 0, klara: 0, hoppade: 0, lattare: 0, lika: 0, svarare: 0, kan_inte: 0, texter: [] };
+      const g = grupper.get(k) ?? { testroll: r.testroll, uppdrag: r.uppdrag, sussa: r.sussa, titel: namnFor(r.testroll, r.uppdrag), system, antal: 0, klara: 0, hoppade: 0, lattare: 0, lika: 0, svarare: 0, kan_inte: 0, medVagledning: 0, utanVagledning: 0, texter: [] };
       g.antal++;
+      // Runda 19, r1: hur många som hade vägledningen på eller avstängd.
+      if (r.vagledning === true) g.medVagledning++; else if (r.vagledning === false) g.utanVagledning++;
       if (r.status === 'klar') g.klara++; else if (r.status === HOPPADE_OVER) g.hoppade++;
       g[r.jamforelse]++;
       if (r.text && system === 'alla') g.texter.push({ jamforelse: r.jamforelse, system: r.system, text: r.text, mittSystem: r.mittSystem });
@@ -346,10 +357,10 @@ function synpunktMd(s) {
   ].filter((r, i, a) => r !== '' || a[i - 1] !== '').join('\n');
 }
 function perUppdragMd(rader) {
-  const r = ['| Roll | Uppdrag | Sussa | Journalsystem | Svar | Klara | Hoppade | Lättare | Lika | Svårare | Går inte att jämföra |', '|---|---|---|---|---|---|---|---|---|---|---|'];
+  const r = ['| Roll | Uppdrag | Sussa | Journalsystem | Svar | Klara | Hoppade | Lättare | Lika | Svårare | Går inte att jämföra | Med vägledning | Utan vägledning |', '|---|---|---|---|---|---|---|---|---|---|---|---|---|'];
   for (const g of rader) {
     const p = (n, a) => `${n}${a == null ? '' : ` (${a} %)`}`;
-    r.push(`| ${mdText(g.testroll)} | ${mdText(g.titel ?? g.uppdrag)} | ${mdText(g.sussa)} | ${g.system === 'alla' ? 'alla' : mdText(text(SYSTEM, g.system) || g.system)} | ${g.antal} | ${g.klara} | ${g.hoppade} | ${p(g.lattare, g.andelLattare)} | ${p(g.lika, g.andelLika)} | ${p(g.svarare, g.andelSvarare)} | ${g.kan_inte} |`);
+    r.push(`| ${mdText(g.testroll)} | ${mdText(g.titel ?? g.uppdrag)} | ${mdText(g.sussa)} | ${g.system === 'alla' ? 'alla' : mdText(text(SYSTEM, g.system) || g.system)} | ${g.antal} | ${g.klara} | ${g.hoppade} | ${p(g.lattare, g.andelLattare)} | ${p(g.lika, g.andelLika)} | ${p(g.svarare, g.andelSvarare)} | ${g.kan_inte} | ${g.medVagledning} | ${g.utanVagledning} |`);
   }
   return r.join('\n');
 }
@@ -381,7 +392,7 @@ export function exportera(db, { format = 'csv', filter = {}, namnFor, nu = new D
     return { text: `${rader.join('\n')}\n`, contentType: 'text/csv; charset=utf-8', namn: `synpunkter-${dag}.csv` };
   }
   if (format === 'csv-uppdrag') {
-    const kol = ['nummer', 'tid', 'testroll', 'uppdrag', 'sussa', 'status', 'tidS', 'jamforelse', 'text', 'mittSystem', 'yrke', 'system', 'ar', 'vardform', 'version', 'gransnitt', 'bredd', 'webblasare'];
+    const kol = ['nummer', 'tid', 'testroll', 'uppdrag', 'sussa', 'status', 'tidS', 'jamforelse', 'vagledning', 'text', 'mittSystem', 'yrke', 'system', 'ar', 'vardform', 'version', 'gransnitt', 'bredd', 'webblasare'];
     const rader = [kol.join(';'), ...l.jamforelser.map(s => kol.map(k => cell(s[k])).join(';'))];
     return { text: `${rader.join('\n')}\n`, contentType: 'text/csv; charset=utf-8', namn: `jamforelser-${dag}.csv` };
   }

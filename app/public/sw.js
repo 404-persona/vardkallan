@@ -74,11 +74,12 @@ const FILER = [
   '/js/vyer/patient-sjukskrivning.js', '/js/vyer/sjukskrivningar.js', '/js/vyer/rehabkoordinator.js', '/js/beslutsstod-fmb-ui.js',
   '/js/handlingssok.js', '/js/vyer/ordlista.js',
   '/js/levande-listor.js', '/js/osparad-text.js', '/js/listsok.js',
-  '/js/uppdrag-steg/hjalp.js', '/js/uppdrag-steg/lakare-sjukhus.js', '/js/uppdrag-steg/lakare-primarvard.js',
+  '/js/uppdrag-steg/hjalp.js', '/js/uppdrag-steg/lakare-sjukhus.js', '/js/uppdrag-steg/lakare-primarvard.js', '/js/ny-version.js',
   '/js/uppdrag-steg/vardadministrator.js', '/js/uppdrag-steg/fysioterapeut.js', '/js/uppdrag-steg/systemforvaltare.js', '/js/uppdrag-steg/patient.js',
 ];
 // Runda 19, r3: stegen för vårdadministratören, fysioterapeuten, systemförvaltaren och patienten.
-// Runda 19, r1: listan har vägledningens steg för uppdragen, en fil per testroll i js/uppdrag-steg/ och hjälparna.
+// Runda 19, r1: listan har vägledningens steg för uppdragen, en fil per testroll i js/uppdrag-steg/ och hjälparna, och
+// omladdningen när en ny version finns (ny-version.js).
 // Varje ny stegfil läggs till här (testet Läskopia > service workern cachar alla statiska filer jämför).
 // Runda 18, r5: listan har listorna som uppdaterar sig själva, den osparade texten och sökningen i listor.
 // Runda 18, r2: listan har sökrutan Vad vill du göra? (handlingssok.js) och ordlistan Jag letar efter (vyer/ordlista.js).

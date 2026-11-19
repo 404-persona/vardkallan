@@ -126,6 +126,8 @@ import * as ordlistaVy from './vyer/ordlista.js';
 import * as levandeListor from './levande-listor.js';
 // Runda 18, r5: osparad text följer med när vyn byts, och ett byte av patient märks.
 import * as osparadText from './osparad-text.js';
+// Runda 19, r1: en öppen flik får den nya versionen när vyn byts eller fliken blir synlig igen.
+import * as nyVersion from './ny-version.js';
 // Runda 18, r5: sökfält bredvid listor med många val.
 import './listsok.js';
 
@@ -689,6 +691,8 @@ async function visaVy(vy, main, param, q, nr) {
   // Runda 18, r5.
   levandeListor.efterVy();
   osparadText.efterVy();
+  // Runda 19, r1.
+  nyVersion.efterVy();
 }
 
 // Runda 18, r5: vyn ritas om utan att fokus eller rullning flyttas, när en lista har fått något nytt.
@@ -934,6 +938,8 @@ async function start() {
     if (e.status !== 429 && !avbrott.aktivt) felNotis(e);
   }
   await uppdateraInkorg();
+  // Runda 19, r1: versionen som fliken startade med.
+  nyVersion.init();
   rita();
 }
 // Runda 14, sammanslagningen: ett datumfält utan övre gräns tar upp till sex siffror i året, så den som skriver
