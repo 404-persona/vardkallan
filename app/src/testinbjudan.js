@@ -152,10 +152,16 @@ export const TESTROLLER = [
       // Runda 13: registreringen i åtkomstloggen, inte ankomsttiden. En ankomst som registreras i efterhand räknas från
       // den bokade tiden, som kan ligga före testets start (tidbok.checkaInRad).
       { id: '5.5', sussa: '5.5', klar: nyLogg("handling = 'checka_in' AND resurs LIKE 'bokning:%:incheckad'") },
-      { id: '5.7', sussa: '5.7', klar: nya('vardkontakter', 'skapad_av') },
+      // Runda 19, r1: bara en oplanerad kontakt som testaren registrerar själv. En bokning skapar en planerad kontakt, och
+      // en anteckning utan kontakt skapar en automatisk.
+      { id: '5.7', sussa: '5.7', klar: nya('vardkontakter', 'skapad_av', 'AND t.planerad = 0 AND t.automatisk = 0') },
       { id: '5.1', sussa: '5.1', klar: nya('bokningar', 'bokad_av', 'AND t.ersatter_id IS NULL AND t.vantelista_id IS NULL AND NOT EXISTS (SELECT 1 FROM teambesok_deltagare d WHERE d.bokning_id = t.id) AND (SELECT platser FROM tider WHERE id = t.tid_id) = 1') },
       { id: '5.2', sussa: '5.2', klar: egen(['bokningar', 'teambesok_deltagare'], (db, u) => Boolean(db.query('SELECT 1 FROM bokningar b JOIN teambesok_deltagare d ON d.bokning_id = b.id WHERE b.id > ? AND b.bokad_av = ? LIMIT 1').get(u.bas.bokningar ?? 0, u.av))) },
-      { id: '5.3', sussa: '5.3', klar: nya('bokningar', 'bokad_av', 'AND (SELECT platser FROM tider WHERE id = t.tid_id) > 1') },
+      // Runda 19, r1: gruppbesöket är klart när kallelserna är skickade (Sussas slutvillkor), inte redan när den första
+      // patienten har lagts till medan dialogen för gruppen är öppen.
+      { id: '5.3', sussa: '5.3', klar: egen(['bokningar', 'kallelser'], (db, u) => Boolean(db.query(`SELECT 1 FROM kallelser k JOIN bokningar b ON b.id = k.bokning_id
+        WHERE k.rowid > ? AND k.typ = 'kallelse' AND k.status IN ('skickad', 'kan_inte') AND k.skapad_av = ? AND b.bokad_av = ? AND b.rowid > ?
+        AND (SELECT platser FROM tider WHERE id = b.tid_id) > 1 LIMIT 1`).get(u.bas.kallelser ?? 0, u.av, u.av, u.bas.bokningar ?? 0))) },
       { id: '5.4', sussa: '5.4', klar: andrade('bokningar', 'andrad_av', 'andrad', "AND t.status = 'avbokad'") },
       { id: '5.8', sussa: '5.8', klar: nya('bokningar', 'bokad_av', 'AND t.vantelista_id IS NOT NULL') },
       { id: '2.2', sussa: '2.2', klar: nya('remiss_pa_uppdrag', 'skriven_av') },

@@ -94,6 +94,28 @@ describe('Vägledningen i uppdragen, servern', () => {
     } finally { t.stopp(); }
   });
 
+  test('gruppbesöket (5.3) är klart först när kallelserna är skickade, och den oplanerade ankomsten (5.7) räknar bara en oplanerad kontakt', async () => {
+    const t = testserver({ synpunktFil: ':memory:' });
+    try {
+      const { k } = await borja(t, 'vardadministrator', 'adm-kard');
+      const status = async (id) => (await k.get('/api/testare')).data.uppdrag.find(u => u.id === id).status;
+      const g = (await k.get('/api/grupptraffar')).data.grupper.find(x => x.tid.rubrik === 'Hjärtrehabilitering i grupp');
+      expect((await k.post(`/api/tid/${g.tid.id}/grupp`, { patientId: 'sus10' })).status).toBe(201);
+      expect(await status('5.3')).toBe('kvar');
+      expect((await k.post(`/api/tid/${g.tid.id}/grupp`, { patientId: 'sus08' })).status).toBe(201);
+      expect(await status('5.3')).toBe('kvar');
+      expect((await k.post(`/api/tid/${g.tid.id}/kalla`, {})).data.skickade.length).toBeGreaterThan(0);
+      expect(await status('5.3')).toBe('klar');
+      // En bokning skapar en planerad vårdkontakt, som inte är en oplanerad ankomst.
+      const f = (await k.get('/api/patient/sus11/boka-fri/forslag')).data;
+      expect((await k.post('/api/patient/sus11/boka-fri', { tidId: f.forslag[0].tidId })).status).toBe(201);
+      expect(await status('5.7')).toBe('kvar');
+      const r = await k.post('/api/patient/sus02/vardkontakter', { orsak: 'Akut besök, oplanerat' });
+      expect(r.status).toBeLessThan(300);
+      expect(await status('5.7')).toBe('klar');
+    } finally { t.stopp(); }
+  });
+
   test('testkroken som byter gränssnittets version finns bara med testflaggan, och aldrig med driftens inställningar', async () => {
     expect(testversion.aktiv({})).toBe(false);
     expect(testversion.aktiv({ VARDKALLAN_TESTVERSION: '1' })).toBe(true);

@@ -182,7 +182,8 @@ export function matSokning() {
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Steget räknas fram ur det som syns.
-const hashGaller = (h) => { const x = (location.hash || '#/').split('?')[0]; return x === h || x.startsWith(`${h}/`); };
+// Runda 19, r1: en hash som slutar med snedstreck (till exempel '#/patient/') gäller alla adresser som börjar så.
+const hashGaller = (h) => { const x = (location.hash || '#/').split('?')[0]; return x === h || x.startsWith(h.endsWith('/') ? h : `${h}/`); };
 function synlig(el) {
   if (!el?.isConnected || !el.getClientRects().length) return false;
   if (getComputedStyle(el).visibility === 'hidden' || el.closest('[inert], [hidden]')) return false;

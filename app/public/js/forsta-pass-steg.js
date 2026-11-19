@@ -9,7 +9,8 @@
 //          texten. Ett alternativ med egen text ersätter stegets text, till exempel när menyn är ihopfälld på en smal skärm.
 //          rad (runda 19) är en väljare för det närmaste elementet runt målet som ska ha texten i innehaller, till exempel
 //          { sel: '[data-remiss-atgard="fordela"]', rad: 'article.remiss', innehaller: 'Berit Strandhall' }.
-//   hash   (frivilligt) steget gäller bara när adressen börjar så, till exempel journalen för rätt patient.
+//   hash   (frivilligt) steget gäller bara när adressen börjar så, till exempel journalen för rätt patient. '#/patient/sus01'
+//          gäller den adressen och allt under den; '#/patient/' med snedstreck sist gäller vilken patient som helst.
 //   klar   (frivilligt) ett fält eller val som är gjort: varde (fältet har ett värde), andrat (fältet har ändrats från
 //          det systemet fyllde i) eller valt (rutan eller valet är markerat).
 //   gor    (frivilligt) vad testet av passet gör i steget: skriv och tangent. Utan gor klickar testet på elementet.
