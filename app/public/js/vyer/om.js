@@ -51,7 +51,7 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
       <h2 id="om-sparas">Det här sparas</h2>
       <ul>${SPARAS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
       <h3>Mätningen av första passet</h3>
-      <p>Före det första passet frågar systemet en gång: ${esc(MATNING_FRAGA.toLowerCase())} ${esc(MATNING_TEXT)}</p>
+      <p>När det första passet börjar frågar systemet en gång: ${esc(MATNING_FRAGA.toLowerCase())} ${esc(MATNING_TEXT)}</p>
       <ul>${MATNING_SPARAS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
       <h3>Inbjudningar och delning</h3>
       <p>${esc(INBJUDAN_SPARAS)} Länkarna för att dela i sociala medier är vanliga länkar till tjänsternas egna delningssidor. Inget laddas från tjänsterna när du läser här.</p>

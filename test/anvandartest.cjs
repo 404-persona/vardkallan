@@ -404,8 +404,14 @@ const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
       await p.waitForSelector('.notis:has-text("Poängen blev 87,5 av 100")');
       await p.waitForSelector('.tp-vidare');
       await p.click('[data-tp="vidare"]');
+      await p.waitForSelector('#tp-aktuellt, #testare-panel .tp-jamforelse');
+      // Runda 19, r1: nästa uppdrag har sin egen vägledning. Ett uppdrag som blev gjort på vägen får sin fråga först.
+      while (await p.locator('#testare-panel .tp-jamforelse').count()) {
+        await p.click('#testare-panel [data-tp="hoppa-fraga"]');
+        await p.waitForTimeout(300);
+      }
       await p.waitForSelector('#tp-aktuellt');
-      anta(!(await p.locator('.fp-ram').count()), 'vägledningen följde med till nästa uppdrag');
+      await p.waitForSelector('#testare-panel #tp-steg', { timeout: 10000 }).catch(() => { throw new Error('vägledningen följde inte med till nästa uppdrag'); });
       anta((await p.locator('[data-tp="vaxla"]').innerText()).includes('Uppdrag 2 av'), 'panelen gick inte vidare till uppdragen');
     } finally { await c.close(); }
   });

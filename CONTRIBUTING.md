@@ -47,11 +47,12 @@ Kör dem i den här ordningen:
 1. `test/klickbudget.cjs`: de vanliga arbetsflödena med riktiga klick och tangenttryck, mot klickbudgeten i `app/src/klickbudget.js`.
 2. `test/avbrott.cjs`: läsläget och skrivkön när servern inte svarar.
 3. `test/anvandartest.cjs`: testläget för användartest från början till slut.
-4. `test/sussa-testfall.cjs`: Sussas användbarhetstestfall.
-5. Servertesterna med `scripts/kor-tester.js`, som ovan.
-6. `test/genomgang.cjs`: varje vy för varje demoroll och Min journal, också på 360 px.
-7. `test/tillganglighet.cjs`: tillgänglighetskontrollen mot det som går att pröva automatiskt i WCAG 2.1 nivå AA.
-8. `test/mobil.cjs`: de mobila flödena i en skärm som är 360 px bred.
+4. `test/vagledning.cjs`: varje uppdrag för varje testroll i testinbjudan, genom att bara följa vägledningen, och omladdningen när en ny version finns. Containern ska ha `-e VARDKALLAN_TESTVERSION=1`. Skriptet kan köras för en roll i taget: `node test/vagledning.cjs <bas-url> lakare-sjukhus`.
+5. `test/sussa-testfall.cjs`: Sussas användbarhetstestfall.
+6. Servertesterna med `scripts/kor-tester.js`, som ovan.
+7. `test/genomgang.cjs`: varje vy för varje demoroll och Min journal, också på 360 px.
+8. `test/tillganglighet.cjs`: tillgänglighetskontrollen mot det som går att pröva automatiskt i WCAG 2.1 nivå AA.
+9. `test/mobil.cjs`: de mobila flödena i en skärm som är 360 px bred.
 
 Resultaten skrivs till filer i `app/` med en hash av `app/public/`. Ändras gränssnittet efteråt räknas gränssnittstesterna som inaktuella tills skripten har körts igen.
 

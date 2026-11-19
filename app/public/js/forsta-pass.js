@@ -70,6 +70,7 @@ function aktiveraUppdrag(T, id) {
   steg = [];
   nu = null;
   forraId = null;
+  doljRam();
   hamtaStegfil(T.testroll).then((alla) => {
     if (lage?.nyckel !== nyckel) return;
     lage.laddar = false;

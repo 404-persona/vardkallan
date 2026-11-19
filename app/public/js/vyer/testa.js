@@ -43,7 +43,7 @@ export async function visa(main, _param, q) {
       <ol>
         <li>Berätta gärna vilket journalsystem du använder i dag. Det är frivilligt.</li>
         <li>Välj din yrkesroll. Du loggas in direkt som en påhittad person med det yrket och börjar med ett första pass på några minuter: en patient och en uppgift som yrket gör varje dag. Vägledningen visar nästa steg, och efteråt ser du hur det gick.</li>
-        <li>Gör sedan fler uppdrag i panelen längst ner, i din egen takt. Uppdraget säger vad du ska göra, inte var du klickar, och systemet bockar av det när det är gjort. Efter varje uppdrag får du en kort fråga om hur det var jämfört med ditt system.</li>
+        <li>Gör sedan fler uppdrag i panelen längst ner, i din egen takt. Vägledningen visar varje steg med en ram runt det du ska välja eller skriva i, och du kan stänga av den i panelen. Systemet bockar av uppdraget när det är gjort. Efter varje uppdrag får du en kort fråga om hur det var jämfört med ditt system.</li>
         <li>Knappen Lämna synpunkt finns på varje sida, när något är fel, saknas eller är svårt.</li>
       </ol>
     </section>

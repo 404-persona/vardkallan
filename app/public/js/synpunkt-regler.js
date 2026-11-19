@@ -70,7 +70,7 @@ export const KONTAKT_DAGAR = 90;
 // Det som sparas, varför, hur länge och vem som läser. Visas i formuläret och på sidan Om demon.
 export const SPARAS = [
   'Det du skriver i en synpunkt, vad den gäller och hur allvarligt det är för dig.',
-  'Efter varje uppdrag: om det var lättare, ungefär lika eller svårare än i ditt journalsystem, det du skriver om varför och, om du vill, ungefär hur många klick eller hur lång tid det tar hos dig.',
+  'Efter varje uppdrag: om det var lättare, ungefär lika eller svårare än i ditt journalsystem, om vägledningen var på, det du skriver om varför och, om du vill, ungefär hur många klick eller hur lång tid det tar hos dig.',
   'Om du väljer att fylla i dem: vilket journalsystem du använder i dag, hur länge, ditt yrke och om du arbetar i region, kommun eller privat vård. Aldrig namn eller arbetsplats.',
   'Det systemet fyller i själv: vilken sida du var på (till exempel #/patient/p01, där p01 är en påhittad patient), vilken demoroll du var inloggad som, vilket uppdrag du arbetade med, versionen av Vårdkällan och av gränssnittet, skärmens bredd, webbläsarens namn och huvudversion, operativsystemets namn och tiden.',
   'Ingen e-postadress och inget namn, om du inte själv skriver en kontaktuppgift i det frivilliga fältet.',

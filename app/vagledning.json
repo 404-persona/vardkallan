@@ -1,0 +1,248 @@
+{
+  "roller": {
+    "lakare-sjukhus": {
+      "tid": "2026-11-19T20:53:11.024Z",
+      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18291",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 3.4: Överblicka provsvar",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 1.2: Ordinera läkemedel",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > varning: Ordinera ett läkemedel och ta ställning till varningen",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.3: Ta emot vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.6: Besvara en vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.1: Upprätta och skicka vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 7.3: Överblicka patientens planering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 6.3: Hitta information från tidigare slutenvårdstillfälle",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 4.3: Skapa slutanteckning eller epikris",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 7.4: Visualisera en specifik resurs arbetsplanering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-sjukhus > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "lakare-primarvard": {
+      "tid": "2026-11-19T20:53:11.024Z",
+      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18291",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 5.6: Överblicka ankomstregistrering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 4.2: Registrera mätvärden",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 1.1: Förskriva läkemedel",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 3.1: Upprätta en labbeställning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 3.5: Upprätta en beställning eller ordination på intern analys eller mätvärde",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 2.1: Upprätta och skicka vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > kvittera: Kvittera ett remissvar",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > 4.4: Signera",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > lakare-primarvard > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "omladdning": {
+      "tid": "2026-11-19T20:53:11.024Z",
+      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18291",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > Omladdning > en öppen flik laddar om till samma vy när en ny version finns",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > Omladdning > med osparad text visas en rad i stället, och sidan laddas inte om",
+          "status": "grön"
+        }
+      ]
+    }
+  },
+  "tester": [
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 3.4: Överblicka provsvar",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 1.2: Ordinera läkemedel",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > varning: Ordinera ett läkemedel och ta ställning till varningen",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.3: Ta emot vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.6: Besvara en vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 2.1: Upprätta och skicka vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 7.3: Överblicka patientens planering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 6.3: Hitta information från tidigare slutenvårdstillfälle",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 4.3: Skapa slutanteckning eller epikris",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > 7.4: Visualisera en specifik resurs arbetsplanering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-sjukhus > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 5.6: Överblicka ankomstregistrering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 4.2: Registrera mätvärden",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 1.1: Förskriva läkemedel",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 3.1: Upprätta en labbeställning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 3.5: Upprätta en beställning eller ordination på intern analys eller mätvärde",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 2.1: Upprätta och skicka vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > kvittera: Kvittera ett remissvar",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > 4.4: Signera",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > lakare-primarvard > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > Omladdning > en öppen flik laddar om till samma vy när en ny version finns",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > Omladdning > med osparad text visas en rad i stället, och sidan laddas inte om",
+      "status": "grön",
+      "aktuell": true
+    }
+  ],
+  "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+  "tid": "2026-11-19T20:53:11.024Z"
+}

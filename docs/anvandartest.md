@@ -174,7 +174,15 @@ Skriptet för sammanställningen kontrollerar villkor 1 till 3 och skriver om al
 
 Från version 1.8 börjar varje yrkesroll i testinbjudan (#/testa) med ett första pass för den som aldrig har sett Vårdkällan: en patient och en uppgift ur Sussas testfall, eller ett vanligt flöde för de yrken som Sussas testfall saknar, med vägledning som pekar ut nästa steg. Före passet frågar systemet en gång om passet får mätas. Med ja räknas klick, fältbyten och tangenter med samma regler som testläget ovan, tiden till första handlingen, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten. Med nej mäts ingenting. Inga namn, ingen adress, inget som skrivs och inget om demons patienter sparas, och svaren gallras efter 365 dagar som synpunkterna.
 
+Från version 1.8.1 visas vägledningen direkt när passet börjar. Frågan om mätning står kvar i panelen tills testaren svarar, men den stoppar inte vägledningen. Tiden för passet räknas fortfarande från svaret, och klick och steg räknas först efter ett ja. Blir uppgiften gjord, eller avbryter testaren passet, innan frågan är besvarad mäts passet inte, och frågan ställs inte längre.
+
 Efter passet kan testaren svara på SUS, med samma tio påståenden och samma svenska översättning som enkäten ovan (Åvik Persson m.fl. 2025, CC BY 4.0). Svaret är frivilligt, och poängen räknas av servern med standardformeln. Testledaren ser passen per yrkesroll och uppgift och SUS med medelvärde och spridning i testledarens vy, och skriptet `bun scripts/testinbjudan.js nya` skriver ut de nya passen och SUS-svaren. Passen ersätter inte användartestet med testledare: testarna väljer själva att vara med, ingen observerar dem och ingen frågar varför de fastnade.
+
+## Vägledningen i uppdragen
+
+Från version 1.8.1 har alla uppdrag för alla yrken i testinbjudan samma vägledning som första passet: en ram runt det som är nästa steg och en kort mening om vad som ska göras, med de ord som står på knappen eller länken. Vägledningen följer med när testaren tar en annan väg, och den kan stängas av och slås på igen i panelen. Valet gäller passet och uppdragen. Jämförelsefrågan efter varje uppdrag sparar om vägledningen var på, så att testledaren kan skilja svar med och utan vägledning åt i sin vy och i exporten.
+
+Det betyder att testarna i testinbjudan inte längre visar om ett arbetsflöde går att hitta på egen hand. Det visar användartestet med testledare ovan, där deltagarna får uppgifterna utan vägledning, och svaren med vägledningen avstängd i testinbjudan.
 
 ## Källor
 

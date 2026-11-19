@@ -8,9 +8,11 @@
 // när ett uppdrag inte blir klart. Resultatet skrivs till app/vagledning.json med en hash av public/, per testroll, så
 // att en körning för några roller behåller resultatet för de andra.
 //
-// Användning (servern måste vara igång, med -e NYA_PER_TIMME=100000 -e MAX_PER_ADRESS=100000):
+// Testet prövar också omladdningen när en ny version finns. Den kräver testflaggan VARDKALLAN_TESTVERSION=1 i containern.
+//
+// Användning (servern måste vara igång, med -e NYA_PER_TIMME=100000 -e MAX_PER_ADRESS=100000 -e VARDKALLAN_TESTVERSION=1):
 //   NODE_PATH=$(npm root -g) node test/vagledning.cjs <bas-url> [testroll ...]
-// Utan testroller körs alla. Ordningen bland gränssnittstesterna: efter test/anvandartest.cjs.
+// Utan testroller körs alla. Med bara ordet omladdning prövas bara omladdningen. Ordningen bland gränssnittstesterna: efter test/anvandartest.cjs.
 
 const { chromium } = require('@playwright/test');
 const { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } = require('node:fs');
@@ -214,17 +216,83 @@ async function kor(browser, roll) {
   return tester;
 }
 
+// Omladdningen när en ny version finns (public/js/ny-version.js). Containern ska ha testflaggan
+// VARDKALLAN_TESTVERSION=1, så att testet kan byta gränssnittets version med POST /api/test/ny-version. Webbläsarens
+// klocka flyttas fram en minut, eftersom fliken jämför högst en gång i minuten.
+async function omladdning(browser) {
+  const tester = [];
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
+  await ctx.clock.install({ time: Date.now() });
+  const p = await ctx.newPage();
+  raknaAnrop(p);
+  p.on('pageerror', e => sidfel.push(`omladdning: sidfel: ${e.message}`));
+  const byt = () => p.evaluate(async () => (await fetch('/api/test/ny-version', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status);
+  async function test(namn, fn) {
+    try { await fn(); tester.push({ namn: `${PREFIX}Omladdning > ${namn}`, status: 'grön' }); console.log(`ok  omladdning: ${namn}`); } catch (e) {
+      const fel = e.message.split('\n')[0];
+      tester.push({ namn: `${PREFIX}Omladdning > ${namn}`, status: 'röd', fel });
+      console.log(`FEL omladdning: ${namn}: ${fel}`);
+      await p.screenshot({ path: join(UT, `00-fel-vagledning-${++felNr}.png`), fullPage: true }).catch(() => {});
+    }
+  }
+  try {
+    await test('en öppen flik laddar om till samma vy när en ny version finns', async () => {
+      await p.goto(`${BAS}/#/testa`);
+      await p.waitForSelector('.testa-rollknapp');
+      await p.click('[data-testroll="lakare-sjukhus"]');
+      await p.waitForSelector('#tp-steg:not([data-steg=""])', { timeout: 20000 });
+      await p.click('#meny-lista a[href="#/arbetslista"]');
+      await p.waitForSelector('#lista table');
+      await stilla(p);
+      anta(await byt() === 200, 'POST /api/test/ny-version svarade inte. Starta containern med -e VARDKALLAN_TESTVERSION=1.');
+      // Inom en minut jämför fliken inte igen.
+      await p.evaluate(() => { window.__vkFore = 1; });
+      await p.click('#meny-lista a[href="#/remisser"]');
+      await p.waitForSelector('article.remiss, .tom', { timeout: 10000 });
+      await stilla(p);
+      anta(await p.evaluate(() => window.__vkFore) === 1, 'fliken laddade om fast det inte har gått en minut');
+      // Efter en minut laddar nästa vybyte om sidan, och testaren hamnar i samma vy.
+      await p.clock.fastForward('01:05');
+      await Promise.all([p.waitForEvent('load', { timeout: 15000 }), p.click('#meny-lista a[href="#/inkorg"]')]);
+      await p.waitForFunction(() => document.querySelector('main h1')?.textContent.includes('Inkorg'), null, { timeout: 15000 });
+      anta(await p.evaluate(() => window.__vkFore) === undefined, 'sidan laddades inte om');
+      anta(await p.evaluate(() => location.hash) === '#/inkorg', 'testaren hamnade inte i samma vy');
+      await p.waitForSelector('#testare-panel #tp-steg:not([data-steg=""])', { timeout: 15000 }).catch(() => { throw new Error('panelen med vägledningen kom inte tillbaka efter omladdningen'); });
+    });
+    await test('med osparad text visas en rad i stället, och sidan laddas inte om', async () => {
+      await stilla(p);
+      await p.evaluate(() => { window.__vkFore = 2; });
+      await p.goto(`${BAS}/#/patient/sus17`);
+      await p.waitForSelector('.snabbval a:has-text("Skicka remiss")');
+      await p.click('.snabbval a:has-text("Skicka remiss")');
+      await p.waitForSelector('#remissform textarea[name="fragestallning"]');
+      await p.fill('#remissform textarea[name="fragestallning"]', 'Text som inte är sparad.');
+      anta(await byt() === 200, 'versionen kunde inte bytas');
+      await p.clock.fastForward('01:05');
+      await p.click('.flikar a:has-text("Översikt")');
+      await p.waitForSelector('#ny-version-rad', { timeout: 10000 });
+      const text = await p.locator('#ny-version-rad').innerText();
+      anta(text.includes('En ny version av Vårdkällan finns. Spara det du skriver, så laddas sidan om.'), `raden säger: ${text}`);
+      anta(await p.locator('#ny-version-rad').getAttribute('role') === 'status', 'raden läses inte upp för skärmläsare');
+      anta(await p.evaluate(() => window.__vkFore) === 2, 'sidan laddades om över osparad text');
+    });
+  } finally { await ctx.close(); }
+  return tester;
+}
+
 (async () => {
   const { gransnittHash } = await import(pathToFileURL(join(APP, 'src', 'klientresultat.js')).href);
   const hash = gransnittHash(join(APP, 'public'));
   await foljServernsKlocka(BAS);
   const roller = (await (await fetch(`${BAS}/api/testare/roller`)).json()).roller.map(r => r.id);
-  const okanda = VALDA.filter(r => !roller.includes(r));
+  // "omladdning" ensam prövar bara omladdningen.
+  const okanda = VALDA.filter(r => !roller.includes(r) && r !== 'omladdning');
   if (okanda.length) { console.error(`Okända testroller: ${okanda.join(', ')}. Rollerna är ${roller.join(', ')}.`); process.exit(2); }
-  const kora = VALDA.length ? VALDA : roller;
+  const kora = VALDA.length ? VALDA.filter(r => r !== 'omladdning') : roller;
   const browser = await chromium.launch();
   const resultat = {};
   for (const roll of kora) resultat[roll] = await kor(browser, roll);
+  resultat.omladdning = await omladdning(browser);
   const version = browser.version();
   await browser.close();
 
@@ -242,7 +310,7 @@ async function kor(browser, roll) {
 
   const alla = Object.values(resultat).flat();
   const roda = alla.filter(t => t.status !== 'grön');
-  console.log(`\nVägledning: ${alla.length - roda.length} av ${alla.length} gröna för ${kora.join(', ')}. Resultatet finns i app/${resultatfil('vagledning.json')}`);
+  console.log(`\nVägledning: ${alla.length - roda.length} av ${alla.length} gröna för ${[...kora, 'omladdningen'].join(', ')}. Resultatet finns i app/${resultatfil('vagledning.json')}`);
   if (sidfel.length) console.log(`Sidfel och konsolfel:\n  ${sidfel.join('\n  ')}`);
   process.exit(roda.length || sidfel.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

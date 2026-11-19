@@ -18,7 +18,8 @@ export const T18R1 = {
   export: `${FP}exporten som CSV och Markdown och skriptets utskrift av det nya har passen och SUS`,
   krav: `${FP}kravsidans sammanfattning räknas ur databasen och visar bara antal och SUS-medelvärdet`,
   gallring: `${FP}passen och SUS gallras efter samma tid som synpunkterna, och taken gäller också dem`,
-  vidare: `${FP}efter passet väljer testaren nästa uppdrag eller avslutar, och vägledningen följer inte med`,
+  // Runda 19, r1: uppdragen efter passet har sin egen vägledning (uppdrag-steg/).
+  vidare: `${FP}efter passet väljer testaren nästa uppdrag eller avslutar, och uppdragen har sin egen vägledning`,
 };
 
 // Tillägg 2026-11-19 (Jonas): bjud in andra och dela (inbjudan.js och public/js/inbjudan-regler.js).
