@@ -39,7 +39,7 @@ export function osparat() {
   if (harOsparadText() || lamnaVakt.fn) return true;
   const ifyllt = (rot) => [...rot.querySelectorAll('textarea, input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]):not([type="search"])')]
     .some(e => !e.disabled && !e.readOnly && String(e.value ?? '').trim() !== '' && e.value !== e.defaultValue);
-  for (const d of document.querySelectorAll('dialog[open]')) if (ifyllt(d)) return true;
+  for (const d of document.querySelectorAll('dialog')) if (d.open && ifyllt(d)) return true;
   const panel = document.getElementById('testare-panel');
   return Boolean(panel && ifyllt(panel));
 }

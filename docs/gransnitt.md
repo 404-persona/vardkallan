@@ -373,3 +373,4 @@ Koden: `app/src/server.js`, `app/public/js/lasekopia.js`, `app/public/js/reservk
 - `/api`: Webbgränssnittets eget API. Det är inte ett gränssnitt för informationsutbyte och ändras med gränssnittet; adresserna och avvikelserna står i docs/design.md och docs/api-avvikelser.md.
 - `/api/min`: Min journal, invånarens del av webbgränssnittet.
 - `/api/health`: Driftens hälsokontroll, utan uppgifter om patienter.
+- `/api/test/ny-version`: Testkroken som byter gränssnittets version, bara med testflaggan VARDKALLAN_TESTVERSION=1 i en testcontainer och aldrig i driften (testversion.js).

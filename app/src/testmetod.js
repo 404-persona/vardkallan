@@ -20,7 +20,7 @@ export const DOKUMENT = [
     ['app/src/sussa-testfall.js', 'app/src/lagmatris.js', 'app/scripts/klocktest.js']),
   d('testfall', 'Testfall', 'Dynamisk testdokumentation: testfallsspecifikation (29119-3 avsnitt 7.3)',
     'Varje testfall är ett namngivet test med förutsättningar, steg och förväntat resultat i koden. Servertesterna körs med Bun, och gränssnittstesterna körs i en riktig webbläsare med Playwright. Testnamnen är desamma i kravregistret, så att ett krav som pekar på ett test som inte finns syns i bygget.',
-    ['app/test', 'test/avbrott.cjs', 'test/anvandartest.cjs', 'test/genomgang.cjs', 'test/klickbudget.cjs', 'test/sussa-testfall.cjs', 'test/tillganglighet.cjs', 'test/mobil.cjs']),
+    ['app/test', 'test/avbrott.cjs', 'test/anvandartest.cjs', 'test/vagledning.cjs', 'test/genomgang.cjs', 'test/klickbudget.cjs', 'test/sussa-testfall.cjs', 'test/tillganglighet.cjs', 'test/mobil.cjs']),
   d('testprocedur', 'Testprocedurer', 'Dynamisk testdokumentation: testprocedurspecifikation (29119-3 avsnitt 7.4)',
     'Servertesterna körs med ett skript som också skriver resultatet och kontrollerar att kravregistret bara pekar på tester som finns. Gränssnittstesterna körs i en bestämd ordning mot en lokal container, eftersom de skriver resultat med en hash av gränssnittet. Docker-bygget kör servertesterna igen och stoppas vid ett rött test.',
     ['app/scripts/kor-tester.js', 'app/Dockerfile', 'test/klienttester.cjs', 'app/scripts/textgranskning.js', 'app/test/textgranskning.test.js']),

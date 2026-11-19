@@ -17,7 +17,7 @@ export const ANDRINGAR = [
     text: 'Vägledning i alla uppdrag i testinbjudan.',
     resurser: [], skrivning: [], annat: [
       // Runda 19, r1: vägledningen i uppdragen och omladdningen (docs/api-avvikelser.md).
-      'POST /api/testare/uppdrag/:id/jamforelse tar emot vagledning (sant eller falskt), om vägledningen var på när testaren svarade. Testledarens lista och exporten har fältet och antalen med och utan vägledning per uppdrag',
+      'Jämförelsefrågan efter ett uppdrag tar emot om vägledningen var på när testaren svarade, som sant eller falskt. Testledarens lista och exporten har uppgiften och antalen med och utan vägledning per uppdrag (docs/api-avvikelser.md)',
       'Ett första pass som blir gjort eller avbrutet innan frågan om mätning är besvarad går till återkopplingen utan mätning, och POST /api/testare/pass/samtycke svarar då 409',
     ],
   },
