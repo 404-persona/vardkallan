@@ -3451,5 +3451,5 @@ på en billigare volym, och bilden behövs inte.
 
 Klassningen för uttaget per huvudman prövas nu på alla tabeller som någon modul skapar, också de som skapas först när
 de används (`test/lagring-klassning-r18.test.js` läser alla CREATE TABLE i `src/`). Rapporterna till myndigheter
-(`myndighetsrapporter`) följer den som skickade dem, och kvalitetsregistrets återkoppling (`registeraterkoppling`) hör
-till systemet. Synpunkterna och användartestets svar ligger i egna databaser utanför sandlådan och prövas inte.
+(`myndighetsrapporter`) och kvalitetsregistrets återkoppling (`registeraterkoppling`) hör till systemet och följer inte
+med i en huvudmans uttag, eftersom en rapport kan ha identifierare och uppgifter per vårdenhet från flera huvudmän. Synpunkterna och användartestets svar ligger i egna databaser utanför sandlådan och prövas inte.
