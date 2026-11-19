@@ -691,9 +691,14 @@ async function visaVy(vy, main, param, q, nr) {
 export const tystOmritning = { pagar: false };
 export async function ritaTyst() {
   const y = window.scrollY;
+  // Fokus följer med till samma element efter omritningen, till exempel en länk i menyn.
+  const a = document.activeElement;
+  const sel = a && a !== document.body ? (a.id ? `#${CSS.escape(a.id)}` : a.getAttribute('href') ? `${a.tagName.toLowerCase()}[href="${CSS.escape(a.getAttribute('href'))}"]` : null) : null;
+  const iMeny = Boolean(a?.closest?.('#meny'));
   tystOmritning.pagar = true;
   try { await rita(); } finally { tystOmritning.pagar = false; }
   window.scrollTo(0, y);
+  if (sel && document.activeElement !== a) (document.querySelector(iMeny ? `#meny ${sel}` : sel))?.focus({ preventScroll: true });
 }
 
 // Demoknappen Simulera avbrott visas för den som är inloggad, och inte under ett avbrott.
