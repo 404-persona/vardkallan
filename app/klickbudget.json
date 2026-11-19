@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T12:00:21.577Z",
+  "tid": "2026-11-19T14:43:24.583Z",
   "bas": "http://127.0.0.1:18282",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7ecc6a12a191bd3a392ff51bc3f2ce2544260c0c818eb2c478378e5dab83eed3",
+  "gransnittHash": "e01ab4b6c11acac95d1ae3426ab793cd24c4624f14138d988372397286454ecf",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
