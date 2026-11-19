@@ -25,6 +25,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { Fel } from './db.js';
 import { tolka, demoKontroll } from './identitet.js';
 import { adressGrupp } from './anvandartest-svar.js';
+// Runda 18, r1: första passet (forsta-pass.js) sparar sina mätningar och SUS i samma databas.
+import { sammanstall as passSammanstall, radUt as passRadUt, susUt as passSusUt, passFor } from './forsta-pass.js';
+// Tillägg 2026-11-19: inbjudningarna (inbjudan.js).
+import { sammanstall as inbjudanSammanstall, sakra as sakraInbjudan, stada as stadaInbjudan } from './inbjudan.js';
 import {
   TYPER, ALLVAR, YRKEN, SYSTEM, AR, VARDFORM, JAMFORELSE, HOPPADE_OVER, MAX_TEXT, MIN_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM,
   GALLRING_DAGAR, KONTAKT_DAGAR, PERSONNUMMER_TEXT, kandidater,
@@ -57,12 +61,36 @@ CREATE TABLE IF NOT EXISTS synpunkt_laskoder (
   id INTEGER PRIMARY KEY, hash TEXT NOT NULL UNIQUE, namn TEXT NOT NULL, skapad TEXT NOT NULL, aterkallad TEXT
 );
 CREATE TABLE IF NOT EXISTS synpunkt_utskrifter (namn TEXT PRIMARY KEY, synpunkt INTEGER NOT NULL, jamforelse INTEGER NOT NULL);
+-- Runda 18, r1: första passet. En rad per pass med samtycke till mätning, skapad när passet börjar, och en rad per svar
+-- på SUS efter passet. Inga personuppgifter, ingen adress och inget om demons patienter (forsta-pass.js).
+CREATE TABLE IF NOT EXISTS pass_matningar (
+  id INTEGER PRIMARY KEY, nummer TEXT NOT NULL UNIQUE, tid TEXT NOT NULL, slut_tid TEXT,
+  testroll TEXT NOT NULL, uppdrag TEXT NOT NULL, sussa TEXT NOT NULL DEFAULT '', status TEXT NOT NULL CHECK (status IN ('pagar', 'klar', 'avbruten')),
+  tid_s INTEGER, tid_forsta_s INTEGER, klick INTEGER, faltbyten INTEGER, tangenter INTEGER, steg_antal INTEGER, budget INTEGER, tidsklass INTEGER,
+  aterkomster INTEGER, hjalp INTEGER, sokningar INTEGER, vagledning INTEGER, avstangd INTEGER, steg TEXT NOT NULL DEFAULT '[]', uppdateringar INTEGER NOT NULL DEFAULT 0,
+  yrke TEXT NOT NULL DEFAULT '', system TEXT NOT NULL DEFAULT '', ar TEXT NOT NULL DEFAULT '', vardform TEXT NOT NULL DEFAULT '',
+  version TEXT NOT NULL, gransnitt TEXT NOT NULL, bredd INTEGER, webblasare TEXT NOT NULL, skapare TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS pass_sus (
+  id INTEGER PRIMARY KEY, nummer TEXT NOT NULL UNIQUE, tid TEXT NOT NULL, testroll TEXT NOT NULL, uppdrag TEXT NOT NULL, sussa TEXT NOT NULL DEFAULT '',
+  svar TEXT NOT NULL, poang REAL NOT NULL,
+  yrke TEXT NOT NULL DEFAULT '', system TEXT NOT NULL DEFAULT '', ar TEXT NOT NULL DEFAULT '', vardform TEXT NOT NULL DEFAULT '',
+  version TEXT NOT NULL, gransnitt TEXT NOT NULL, webblasare TEXT NOT NULL, skapare TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_pass_matningar_skapare ON pass_matningar (skapare, tid);
+CREATE INDEX IF NOT EXISTS ix_pass_sus_skapare ON pass_sus (skapare, tid);
 `;
 
 export function oppna(fil = ':memory:') {
   const db = new Database(fil, { create: true });
   if (fil !== ':memory:') { db.exec('PRAGMA journal_mode = WAL'); db.exec('PRAGMA busy_timeout = 5000'); }
   db.exec(SCHEMA);
+  // Runda 18, r1: skriptets utskrifter minns också passen och SUS.
+  const kol = db.query("SELECT name FROM pragma_table_info('synpunkt_utskrifter')").all().map(k => k.name);
+  if (!kol.includes('pass')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN pass INTEGER NOT NULL DEFAULT 0');
+  if (!kol.includes('sus')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN sus INTEGER NOT NULL DEFAULT 0');
+  // Tillägg 2026-11-19: räknarna för inbjudningar, en rad per dag och kanal (inbjudan.js).
+  sakraInbjudan(db);
   return db;
 }
 
@@ -81,7 +109,10 @@ export function satNyckel({ fil = null, hex = process.env.SYNPUNKT_NYCKEL } = {}
   }
   NYCKEL = randomBytes(32).toString('hex');
 }
-export const skapareFor = (adress) => { if (!NYCKEL) satNyckel(); return createHmac('sha256', NYCKEL).update(`synpunkt:${adressGrupp(adress)}`).digest('hex'); };
+// Runda 18, r1: IPv6-adresser räknas per /48 (adressGrupp ger /64), så att en klient inte kommer runt taken för rutterna
+// utan inloggning genom att byta adress i sitt nät. IPv4 räknas per adress.
+const grupp48 = (adress) => { const g = adressGrupp(adress); return g.endsWith('::/64') ? `${g.split(':').slice(0, 3).join(':')}::/48` : g; };
+export const skapareFor = (adress) => { if (!NYCKEL) satNyckel(); return createHmac('sha256', NYCKEL).update(`synpunkt:${grupp48(adress)}`).digest('hex'); };
 
 // Webbläsaren som namn, huvudversion och operativsystem. Hela rubriken sparas aldrig.
 export function webblasare(ua) {
@@ -147,16 +178,16 @@ const breddFor = (b) => (Number.isInteger(b) && b >= 200 && b <= 10000 ? b : nul
 
 // Kort nummer som bekräftelse: en bokstav för slaget och sex tecken utan förväxlingsbara tecken.
 const TECKEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function nyttNummer(db, prefix, tabell) {
+export function nyttNummer(db, prefix, tabell, kol = 'nummer') {
   for (let i = 0; i < 20; i++) {
     const n = `${prefix}-${Array.from({ length: 6 }, () => TECKEN[randomInt(TECKEN.length)]).join('')}`;
-    if (!db.query(`SELECT 1 FROM ${tabell} WHERE nummer = ?`).get(n)) return n;
+    if (!db.query(`SELECT 1 FROM ${tabell} WHERE ${kol} = ?`).get(n)) return n;
   }
   throw new Fel(500, 'Kunde inte skapa ett nummer.', 'fel');
 }
 
 // Taken. session är ett objekt per webbläsarsession, där tiderna för de senaste raderna hålls.
-function provaTak(db, tabell, { session, skapare, nu, tak, nyckel }) {
+export function provaTak(db, tabell, { session, skapare, nu, tak, nyckel }) {
   const ms = nu.getTime();
   const tider = (session[nyckel] ?? []).filter(x => x > ms - 3600_000);
   session[nyckel] = tider;
@@ -279,7 +310,11 @@ export function lista(db, { filter = {}, namnFor } = {}) {
     synpunkter, jamforelser,
     perVy: raknaPer(synpunkter, 'vy'), perTyp: raknaPer(synpunkter, 'typ'), perRoll: raknaPer(synpunkter, 'roll'), perAllvar: raknaPer(synpunkter, 'allvar'),
     perUppdrag: perUppdrag(jamforelser, namnFor),
-    val: { roller: [...new Set(alla.map(r => r.roll ?? ''))], vyer: [...new Set(alla.map(r => r.vy))].sort(), testroller: [...new Set([...alla, ...allaJ].map(r => r.testroll).filter(Boolean))] },
+    // Runda 18, r1: första passet per yrkesroll och uppgift, och SUS.
+    pass: passSammanstall(db, { filter }),
+    // Tillägg 2026-11-19: bara antal besök och genomförda pass per kanal.
+    inbjudningar: inbjudanSammanstall(db),
+    val: { roller: [...new Set(alla.map(r => r.roll ?? ''))], vyer: [...new Set(alla.map(r => r.vy))].sort(), testroller: [...new Set([...alla, ...allaJ, ...db.query('SELECT DISTINCT testroll FROM pass_matningar').all()].map(r => r.testroll).filter(Boolean))] },
   };
 }
 
@@ -319,7 +354,24 @@ function perUppdragMd(rader) {
   return r.join('\n');
 }
 
-// Exporten för testledaren som fil. format: csv (synpunkterna), csv-uppdrag (jämförelserna) eller md (allt).
+// Runda 18, r1: första passet i Markdown, per yrkesroll och uppgift.
+const tal1 = (v) => (v == null ? '' : Number(v).toLocaleString('sv-SE', { maximumFractionDigits: 1 }));
+const median = (s) => (s?.n ? tal1(s.median) : '');
+function passMd(p) {
+  if (!p.perUppgift.length) return ['Inga pass än.'];
+  const r = ['Tiden är serverns, från svaret på frågan om mätning till att uppgiften är gjord. Steg är klick, fältbyten och tangenter som i klickbudgeten. Medianerna gäller de klarade passen med mätning.', '',
+    '| Roll | Uppgift | Sussa | Pass | Klarade | Avbrutna | Pågår | Tid, median (s) | Tidsklass (min) | Steg, median | Budget | Inom budget | Fastnar oftast | SUS, medel (sd, antal) |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|'];
+  for (const g of p.perUppgift) {
+    const fast = g.fastnar.slice(0, 3).map(f => `${mdText(f.id)} (${f.antal})`).join(', ');
+    r.push(`| ${mdText(g.testroll)} | ${mdText(g.titel)} | ${mdText(g.sussa ?? '')} | ${g.antal} | ${g.klara}${g.andelKlara == null ? '' : ` (${g.andelKlara} %)`} | ${g.avbrutna} | ${g.pagar} | ${median(g.tidS)} | ${g.tidsklass ?? ''} | ${median(g.steg)} | ${g.budget ?? ''} | ${g.inomBudget} | ${fast} | ${g.sus.n ? `${tal1(g.sus.medel)} (${g.sus.sd == null ? 'en' : tal1(g.sus.sd)}, ${g.sus.n})` : ''} |`);
+  }
+  r.push('', p.sus.n ? `SUS efter passet, alla roller: medel ${tal1(p.sus.medel)}, standardavvikelse ${p.sus.sd == null ? 'saknas' : tal1(p.sus.sd)}, median ${tal1(p.sus.median)}, ${tal1(p.sus.min)} till ${tal1(p.sus.max)}, ${p.sus.n} svar.` : 'SUS efter passet: inga svar.');
+  return r;
+}
+
+// Exporten för testledaren som fil. format: csv (synpunkterna), csv-uppdrag (jämförelserna), csv-pass (första passen),
+// csv-sus (SUS efter passen) eller md (allt).
 export function exportera(db, { format = 'csv', filter = {}, namnFor, nu = new Date() } = {}) {
   const l = lista(db, { filter, namnFor });
   const dag = datumSv(nu);
@@ -333,12 +385,26 @@ export function exportera(db, { format = 'csv', filter = {}, namnFor, nu = new D
     const rader = [kol.join(';'), ...l.jamforelser.map(s => kol.map(k => cell(s[k])).join(';'))];
     return { text: `${rader.join('\n')}\n`, contentType: 'text/csv; charset=utf-8', namn: `jamforelser-${dag}.csv` };
   }
+  // Runda 18, r1: första passen och SUS, en rad per pass eller svar.
+  if (format === 'csv-pass' || format === 'csv-sus') {
+    const f = (v) => (typeof v === 'string' && v ? v : null);
+    const ok = (r) => (!f(filter.system) || r.system === filter.system) && (!f(filter.testroll) || r.testroll === filter.testroll);
+    const pass = format === 'csv-pass';
+    const rader = db.query(`SELECT * FROM ${pass ? 'pass_matningar' : 'pass_sus'} ORDER BY id DESC LIMIT ?`).all(MAX_LISTA).filter(ok).map(pass ? passRadUt : passSusUt);
+    const kol = pass
+      ? ['nummer', 'tid', 'slutTid', 'testroll', 'uppdrag', 'sussa', 'status', 'tidS', 'tidForstaS', 'klick', 'faltbyten', 'tangenter', 'stegAntal', 'budget', 'tidsklass', 'aterkomster', 'hjalp', 'sokningar', 'vagledning', 'avstangd', 'steg', 'yrke', 'system', 'ar', 'vardform', 'version', 'gransnitt', 'bredd', 'webblasare']
+      : ['nummer', 'tid', 'testroll', 'uppdrag', 'sussa', 'svar', 'poang', 'yrke', 'system', 'ar', 'vardform', 'version', 'gransnitt', 'webblasare'];
+    const rubrik = kol.map(k => (k === 'stegAntal' ? 'steg_antal' : k)).join(';');
+    return { text: `${[rubrik, ...rader.map(x => kol.map(k => cell(x[k])).join(';'))].join('\n')}\n`, contentType: 'text/csv; charset=utf-8', namn: `${pass ? 'forsta-pass' : 'sus-efter-pass'}-${dag}.csv` };
+  }
   const md = [
     `# Synpunkter och jämförelser från testinbjudan, ${dag}`, '',
     `${l.synpunkter.length} synpunkter och ${l.jamforelser.length} svar efter uppdrag med det valda filtret.`, '',
     '## Jämförelse per uppdrag och journalsystem', '',
     'Andelarna räknas på dem som kunde jämföra (lättare, lika eller svårare).', '',
     l.perUppdrag.length ? perUppdragMd(l.perUppdrag) : 'Inga svar än.', '',
+    // Runda 18, r1: första passet.
+    '## Första passet', '', ...passMd(l.pass), '',
     '## Fritexter efter uppdragen', '',
     ...l.perUppdrag.filter(g => g.system === 'alla' && g.texter.length).flatMap(g => [`### ${mdText(g.testroll)}: ${mdText(g.titel ?? g.uppdrag)}`, '',
       ...g.texter.map(t => `- ${mdText(text(JAMFORELSE, t.jamforelse))}${t.system ? ` (${mdText(text(SYSTEM, t.system))})` : ''}: ${mdText(t.text)}${t.mittSystem ? ` Hos testaren: ${mdText(t.mittSystem)}` : ''}`), '']),
@@ -350,17 +416,24 @@ export function exportera(db, { format = 'csv', filter = {}, namnFor, nu = new D
 
 // Skriptet på servern: de synpunkter och jämförelser som har kommit sedan förra gången, som Markdown.
 export function nyaSomMarkdown(db, { namn = 'skript', namnFor, markera = true, nu = new Date() } = {}) {
-  const forra = db.query('SELECT * FROM synpunkt_utskrifter WHERE namn = ?').get(namn) ?? { synpunkt: 0, jamforelse: 0 };
+  const forra = db.query('SELECT * FROM synpunkt_utskrifter WHERE namn = ?').get(namn) ?? { synpunkt: 0, jamforelse: 0, pass: 0, sus: 0 };
   const s = db.query('SELECT * FROM synpunkter WHERE id > ? ORDER BY id').all(forra.synpunkt);
   const j = db.query('SELECT * FROM jamforelser WHERE id > ? ORDER BY id').all(forra.jamforelse);
-  const r = [`# Nya synpunkter, ${tidSv(nu.toISOString())}`, '', `${s.length} nya synpunkter och ${j.length} nya svar efter uppdrag sedan förra utskriften.`, ''];
+  // Runda 18, r1: de pass och SUS-svar som har kommit sedan förra utskriften. Ett pass som pågick står med sin status.
+  const pa = db.query('SELECT * FROM pass_matningar WHERE id > ? ORDER BY id').all(forra.pass ?? 0);
+  const su = db.query('SELECT * FROM pass_sus WHERE id > ? ORDER BY id').all(forra.sus ?? 0);
+  const r = [`# Nya synpunkter, ${tidSv(nu.toISOString())}`, '', `${s.length} nya synpunkter och ${j.length} nya svar efter uppdrag sedan förra utskriften, och ${pa.length} nya pass och ${su.length} nya svar på SUS efter första passet.`, ''];
   if (j.length) r.push('## Jämförelse per uppdrag och journalsystem (de nya svaren)', '', perUppdragMd(perUppdrag(j.map(jamforelseUt), namnFor)), '');
+  if (pa.length || su.length) r.push('## Första passet (de nya passen)', '');
+  for (const x of pa) r.push(`- ${mdText(x.nummer)}: ${mdText(x.testroll)}, ${mdText(passFor(x.testroll)?.titel ?? x.uppdrag)}, ${x.status === 'klar' ? 'klarat' : x.status === 'avbruten' ? 'avbrutet' : 'pågår eller övergivet'}${x.tid_s != null ? `, ${x.tid_s} s` : ''}${x.steg_antal != null ? `, ${x.steg_antal} steg mot budgeten ${x.budget}` : ''}${x.system ? `, arbetar i ${mdText(text(SYSTEM, x.system))}` : ''}.`);
+  for (const x of su) r.push(`- ${mdText(x.nummer)}: SUS ${tal1(x.poang)} efter passet ${mdText(x.testroll)}, ${mdText(passFor(x.testroll)?.titel ?? x.uppdrag)}.`);
+  if (pa.length || su.length) r.push('');
   if (s.length) r.push('## Synpunkter', '', ...s.map(x => synpunktMd(synpunktUt(x))));
   if (markera) {
-    db.query('INSERT INTO synpunkt_utskrifter (namn, synpunkt, jamforelse) VALUES (?, ?, ?) ON CONFLICT(namn) DO UPDATE SET synpunkt = excluded.synpunkt, jamforelse = excluded.jamforelse')
-      .run(namn, s.at(-1)?.id ?? forra.synpunkt, j.at(-1)?.id ?? forra.jamforelse);
+    db.query('INSERT INTO synpunkt_utskrifter (namn, synpunkt, jamforelse, pass, sus) VALUES (?, ?, ?, ?, ?) ON CONFLICT(namn) DO UPDATE SET synpunkt = excluded.synpunkt, jamforelse = excluded.jamforelse, pass = excluded.pass, sus = excluded.sus')
+      .run(namn, s.at(-1)?.id ?? forra.synpunkt, j.at(-1)?.id ?? forra.jamforelse, pa.at(-1)?.id ?? forra.pass ?? 0, su.at(-1)?.id ?? forra.sus ?? 0);
   }
-  return { antal: s.length + j.length, synpunkter: s.length, jamforelser: j.length, text: `${r.join('\n')}\n` };
+  return { antal: s.length + j.length + pa.length + su.length, synpunkter: s.length, jamforelser: j.length, pass: pa.length, sus: su.length, text: `${r.join('\n')}\n` };
 }
 
 // Gallring: kontaktuppgiften efter KONTAKT_DAGAR och raden efter GALLRING_DAGAR.
@@ -370,5 +443,10 @@ export function stada(db, { nu = new Date() } = {}) {
   const k = db.query("UPDATE synpunkter SET kontakt = '' WHERE kontakt <> '' AND tid < ?").run(kontakt).changes;
   const s = db.query('DELETE FROM synpunkter WHERE tid < ?').run(grans).changes;
   const j = db.query('DELETE FROM jamforelser WHERE tid < ?').run(grans).changes;
-  return { kontakter: k, synpunkter: s, jamforelser: j };
+  // Runda 18, r1: första passen och SUS gallras på samma sätt.
+  const pa = db.query('DELETE FROM pass_matningar WHERE tid < ?').run(grans).changes;
+  const su = db.query('DELETE FROM pass_sus WHERE tid < ?').run(grans).changes;
+  // Tillägg 2026-11-19: räknarna för inbjudningar, per dag.
+  const ib = stadaInbjudan(db, new Date(nu.getTime() - GALLRING_DAGAR * DAG));
+  return { kontakter: k, synpunkter: s, jamforelser: j, pass: pa, sus: su, inbjudningar: ib };
 }

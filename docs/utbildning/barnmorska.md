@@ -145,6 +145,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Sofia Ekdahl, barnmorska på förlossningen. Sussas testfall har inga uppdrag för barnmorskor, så uppdragen här är förlossningens vanliga arbetsflöden.
 
+Första passet: Bedöma CTG under en förlossning. Amanda Lindholm föder. Bedöm hennes pågående CTG. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot klickbudgeten på 3 steg.
+
 1. Ta emot på förlossningen.
    Se vilka kvinnor som är inne på förlossningen och öppna journalen för den som föder nu.
 2. Bedöm CTG.

@@ -266,6 +266,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Karin Berg, vårdadministratör på kardiologiska kliniken, som motsvarar Sussas mottagning.
 
+Första passet: Boka patient till ett besök (Sussas testfall 5.1). Helene Lund ska komma på ett återbesök hos läkaren. Boka en tid och skicka kallelsen. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 4 steg.
+
 1. Ankomstregistrering (Sussas testfall 5.5).
    Ankomstregistrera Sofia Andersson på mottagningen i dag hos en namngiven läkare.
    Klart när: Sofia Andersson är ankomstregistrerad.

@@ -851,6 +851,17 @@ Inget av detta är FHIR. Inga svar till testaren innehåller patientuppgifter ur
 - `POST /api/testledare/synpunkter { laskod, filter? }` ger `{ antal, synpunkter, jamforelser, perVy, perTyp, perRoll, perAllvar, perUppdrag, val }` och `POST /api/testledare/export { laskod, format, filter? }` en fil (`csv`, `csv-uppdrag` eller `md`). Fel läskod ger 403 med samma text varje gång, och efter tio fel i timmen från samma adress 429.
 - Miljövariabler: `SYNPUNKT_FIL` (databasen, annars `synpunkter.sqlite` bredvid `SESSION_FIL`) och `SYNPUNKT_NYCKEL` (nyckeln för adresserna, annars filen `synpunkter.nyckel` bredvid databasen).
 
+## Första passet och inbjudan (runda 18, r1)
+
+Inget av detta är FHIR. Inga svar innehåller patientuppgifter ur sandlådan, och inget sparat innehåller patientens id, namn eller personnummer.
+
+- `POST /api/testare/starta` tar också `pass` (sant börjar med första passet), `matning` (`ja` eller `nej`, om testaren redan har svarat på frågan om mätning) och `via` (kanalen som besökaren kom via: `lank`, `epost`, `linkedin`, `facebook`, `x` eller `dela`). `GET /api/testare` har `pass: { uppdrag, sussa, titel, text, budget, tidsklass, matning, fas, resultat, sus }` eller `null`, där `fas` är `samtycke`, `pagar`, `aterkoppling` eller `klar`, och passets uppdrag står först i `uppdrag`.
+- `POST /api/testare/pass/samtycke { matning }` svarar på frågan om mätning, en gång (409 andra gången). `POST /api/testare/pass/matning { klick, faltbyten, tangenter, tidForstaS, hjalp, sokningar, aterkomster, vagledning, avstangd, steg: [{ id, tidS, aterkomster, hjalp, sokningar }], slut, avbruten, bredd }` sparar mätningen (201 med `{ resultat, tillstand }`, 200 för ett delresultat med `slut: false`, 409 utan samtycke, före uppgiften är gjord eller när passet redan är rapporterat, 400 för fel typ, tal utanför gränserna och okända steg). `POST /api/testare/pass/sus { svar }` eller `{ hoppa: true }` (201 med `{ nummer, poang, tillstand }`, poängen räknas av servern) och `POST /api/testare/pass/vidare`.
+- `GET /api/testare/pass/sammanfattning` ger `{ genomforda, sus: { antal, medel } }` utan sandlåda.
+- `POST /api/testledare/synpunkter` har också `pass: { perUppgift, sus, antal }` och `inbjudningar: { besok, pass, perKanal }`, och `POST /api/testledare/export` tar också `format: 'csv-pass'` och `'csv-sus'`.
+- `POST /api/inbjudan/besok { kanal }` räknar ett besök via en inbjudan för dagen och kanalen och svarar alltid `{ ok: true }`, också för en okänd kanal och när adressgruppens tak för timmen är nått (då räknas besöket inte). Rutten skapar ingen sandlåda. Att bjuda in har ingen rutt.
+- `GET /api/synpunkter/om` har också `matning` och `inbjudan` med texterna om vad som sparas.
+
 ## Arbetsdagen, väntelistan, vätskebalansen och vaccinationerna (runda 13, r4)
 
 - `GET /api/idag` har för en bokning vars tid för incheckning har gått ut `rad: { status: 'Ankomsten är inte registrerad. Tiden var HH.MM', atgard: { typ: 'checka_in', text: 'Registrera ankomsten' } }`. `POST /api/bokning/:id/checka-in` registrerar då ankomsten i efterhand samma dag, räknad från den bokade tiden.

@@ -64,6 +64,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du är Gunnar Åkesson, en påhittad patient, och loggar in i Min journal med en simulerad e-legitimation.
 
+Första passet: Lämna en egen mätning i Min journal. Du har mätt blodtrycket hemma och fick 138/86. Lämna värdet till vården. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot klickbudgeten på 3 steg.
+
 1. Läs din journal.
    Läs den senaste anteckningen i din journal.
 2. Se vem som har läst din journal.

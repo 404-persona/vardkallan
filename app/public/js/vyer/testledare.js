@@ -46,7 +46,7 @@ function ritaData(el, d) {
       <div class="falt"><label for="tl-f-roll">Demoroll</label><select id="tl-f-roll" name="roll">${opt(d.val.roller.map(x => [x, x || 'Inte inloggad']), 'Alla')}</select></div>
       <div class="falt"><label for="tl-f-vy">Vy</label><select id="tl-f-vy" name="vy">${opt(d.val.vyer.map(x => [x, x]), 'Alla')}</select></div>
     </form>
-    <p class="knapprad tl-export"><button type="button" class="knapp sekundar liten" data-export="md">Exportera allt som Markdown</button><button type="button" class="knapp sekundar liten" data-export="csv">Synpunkterna som CSV</button><button type="button" class="knapp sekundar liten" data-export="csv-uppdrag">Jämförelserna som CSV</button></p>
+    <p class="knapprad tl-export"><button type="button" class="knapp sekundar liten" data-export="md">Exportera allt som Markdown</button><button type="button" class="knapp sekundar liten" data-export="csv">Synpunkterna som CSV</button><button type="button" class="knapp sekundar liten" data-export="csv-uppdrag">Jämförelserna som CSV</button><button type="button" class="knapp sekundar liten" data-export="csv-pass">Första passen som CSV</button><button type="button" class="knapp sekundar liten" data-export="csv-sus">SUS efter passen som CSV</button></p>
     <div id="tl-innehall"></div>`;
   const filter = el.querySelector('#tl-filter');
   const nuvarande = () => Object.fromEntries([...new FormData(filter)].filter(([, v]) => v));
@@ -72,9 +72,39 @@ function ritaData(el, d) {
 }
 
 const pct = (n) => (n == null ? '' : ` (${n} %)`);
+// Runda 18, r1: första passet per yrkesroll och uppgift. Medianerna gäller de klarade passen med mätning, och tiden är
+// serverns. De steg där flest fastnar är steg där testaren var minst en minut, kom tillbaka, öppnade hjälpen eller sökte.
+const tal = (v) => (v == null ? '' : Number(v).toLocaleString('sv-SE', { maximumFractionDigits: 1 }));
+const medianText = (s) => (s?.n ? tal(s.median) : '');
+function passHtml(p) {
+  if (!p?.perUppgift?.length) return '<section aria-labelledby="tl-pass"><h2 id="tl-pass">Första passet</h2><p class="tom">Inga pass än. När en testare har sagt ja till mätningen och gjort passet syns det här.</p></section>';
+  return `<section aria-labelledby="tl-pass">
+    <h2 id="tl-pass">Första passet</h2>
+    <p class="liten dampad">Ett pass per yrkesroll med vägledning, för den som testar för första gången. Bara pass där testaren sade ja till mätningen finns här. Medianerna gäller de klarade passen, och ett pass som inte har rapporterats på två timmar räknas som avbrutet. Ett steg räknas som att testaren fastnade vid minst en minut, en återvända, öppnad hjälp eller en sökning.</p>
+    <div class="tabellrulle"><table class="tabell tl-tabell tl-pass"><thead><tr><th scope="col">Uppgift</th><th scope="col">Pass</th><th scope="col">Klarade</th><th scope="col">Avbrutna</th><th scope="col">Tid, median</th><th scope="col">Steg mot budget</th><th scope="col">Tid till första handling</th><th scope="col">Fastnar oftast</th><th scope="col">SUS</th></tr></thead><tbody>
+    ${p.perUppgift.map(g => `<tr><th scope="row">${esc(g.testroll)}: ${esc(g.titel)}${g.sussa ? ` (Sussa ${esc(g.sussa)})` : ''}</th><td>${g.antal}${g.pagar ? ` <span class="dampad">(${g.pagar} pågår)</span>` : ''}</td><td>${g.klara}${g.andelKlara == null ? '' : pct(g.andelKlara)}</td><td>${g.avbrutna}</td>
+      <td>${g.tidS.n ? `${tal(g.tidS.median)} s` : ''}${g.tidsklass ? ` <span class="dampad">av högst ${g.tidsklass} min</span>` : ''}</td>
+      <td>${g.steg.n ? `${medianText(g.steg)} mot ${g.budget}, ${g.inomBudget} av ${g.steg.n} inom` : `budget ${g.budget}`}</td><td>${g.tidForstaS.n ? `${tal(g.tidForstaS.median)} s` : ''}</td>
+      <td>${g.fastnar.length ? `<ul class="tl-fastnar">${g.fastnar.slice(0, 3).map(f => `<li>${esc(f.text)} <span class="dampad">(${f.antal})</span></li>`).join('')}</ul>` : ''}</td>
+      <td>${g.sus.n ? `${tal(g.sus.medel)} <span class="dampad">(sd ${g.sus.sd == null ? 'saknas' : tal(g.sus.sd)}, ${g.sus.n} svar)</span>` : ''}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p>${p.sus.n ? `SUS efter passet, alla roller: medel ${tal(p.sus.medel)}, standardavvikelse ${p.sus.sd == null ? 'saknas' : tal(p.sus.sd)}, median ${tal(p.sus.median)}, ${tal(p.sus.min)} till ${tal(p.sus.max)}, ${p.sus.n} svar.` : 'Inga svar på SUS efter passet än.'}</p>
+  </section>`;
+}
+
+// Tillägg 2026-11-19: inbjudningarna, bara antal besök och genomförda pass per kanal.
+function inbjudanHtml(ib) {
+  if (!ib) return '';
+  return `<section aria-labelledby="tl-inbjudan"><h2 id="tl-inbjudan">Inbjudningar och delning</h2>
+    <p>${ib.besok} besök kom via en inbjudan, och ${ib.pass} gånger gjorde en sådan besökare klart ett första pass. Räknarna gäller per dag och kanal, och en adress räknas högst 20 gånger i timmen.</p>
+    <div class="tabellrulle"><table class="tabell tl-tabell"><thead><tr><th scope="col">Kanal</th><th scope="col">Besök</th><th scope="col">Genomförde ett pass</th></tr></thead><tbody>
+    ${ib.perKanal.map(k => `<tr><th scope="row">${esc(k.text)}</th><td>${k.besok}</td><td>${k.pass}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+
 function innehall(el, d) {
   const alla = d.perUppdrag.filter(g => g.system === 'alla');
-  el.innerHTML = `<section aria-labelledby="tl-jf">
+  el.innerHTML = `${passHtml(d.pass)}${inbjudanHtml(d.inbjudningar)}
+    <section aria-labelledby="tl-jf">
       <h2 id="tl-jf">Jämförelse per uppdrag och journalsystem</h2>
       <p class="liten dampad">Andelarna räknas på dem som kunde jämföra. Raden Alla gäller alla journalsystem tillsammans.</p>
       ${d.perUppdrag.length ? `<div class="tabellrulle"><table class="tabell tl-tabell"><thead><tr><th scope="col">Uppdrag</th><th scope="col">Journalsystem</th><th scope="col">Svar</th><th scope="col">Klara</th><th scope="col">Hoppade</th><th scope="col">Lättare</th><th scope="col">Lika</th><th scope="col">Svårare</th><th scope="col">Kan inte jämföra</th></tr></thead><tbody>

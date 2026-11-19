@@ -4,6 +4,10 @@
 import { esc, api, vyRubrik } from '../ui.js';
 import { begransningarHtml } from '../kanda-begransningar.js';
 import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT } from '../synpunkt-regler.js';
+// Runda 18, r1: mätningen av första passet, med samma text som frågan före passet.
+import { MATNING_FRAGA, MATNING_TEXT, MATNING_SPARAS } from '../forsta-pass-steg.js';
+// Tillägg 2026-11-19: inbjudningar och delning.
+import { INBJUDAN_SPARAS } from '../inbjudan-regler.js';
 
 export const namn = 'om';
 const GITHUB = 'https://github.com/404-persona/vardkallan';
@@ -46,6 +50,11 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
     <section class="ruta" aria-labelledby="om-sparas">
       <h2 id="om-sparas">Det här sparas</h2>
       <ul>${SPARAS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+      <h3>Mätningen av första passet</h3>
+      <p>Före det första passet frågar systemet en gång: ${esc(MATNING_FRAGA.toLowerCase())} ${esc(MATNING_TEXT)}</p>
+      <ul>${MATNING_SPARAS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+      <h3>Inbjudningar och delning</h3>
+      <p>${esc(INBJUDAN_SPARAS)} Länkarna för att dela i sociala medier är vanliga länkar till tjänsternas egna delningssidor. Inget laddas från tjänsterna när du läser här.</p>
       <h3>Varför</h3><p>${esc(VARFOR)}</p>
       <h3>Hur länge</h3><p>${esc(HUR_LANGE)} Din sandlåda med det du har gjort i demon ${sandlada}.</p>
       <h3>Vem som läser och hur det hanteras</h3><p>${esc(VEM_LASER)} Svaren sparas på projektets egen server, lämnas inte vidare till någon annan och används inte för något annat än det som står här. Trafiken till demon går krypterad genom Cloudflare, som skyddar den mot överbelastning.</p>

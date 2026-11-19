@@ -166,6 +166,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Amira Haddad, undersköterska på avdelning 72, som motsvarar Sussas medicinavdelning.
 
+Första passet: Registrera mätvärden (Sussas testfall 4.2). Sara Sandmark har kommit till avdelningen. Registrera längd 165 cm, vikt 75 kg, blodtryck 140/90 och puls 83. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 7 steg.
+
 1. Överblicka dagens händelser för en grupp patienter (Sussas testfall 7.2).
    Visa händelserna för Gerda Ström, Elin Arnström, Trevis Ljung och Berit Strandhall.
    Meddela vilka händelser som äger rum klockan 11.

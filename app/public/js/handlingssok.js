@@ -21,6 +21,8 @@ function matSokning(h) {
   try {
     const f = globalThis.vkMatning?.sokning;
     if (typeof f === 'function') f(h);
+    // Sammanslagningen av runda 18: r1:s mätning lyssnar på händelsen vk-sokning och räknar bara att en sökning gjordes.
+    document.dispatchEvent(new CustomEvent('vk-sokning'));
   } catch { /* mätningen får aldrig störa sökningen */ }
 }
 

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Tillägg 2026-11-19, runda 18, r1: bilden för förhandsvisningen när länken delas (og:image). Byggs till
+       public/og-bild.png med: rsvg-convert -w 1200 -h 630 scripts/og-bild.svg -o public/og-bild.png
+       Vit text på #0f5b5c har kontrasten 7,6:1 och den ljusa texten #e2eeed 6,6:1. -->
+  <rect width="1200" height="630" fill="#0f5b5c"/>
+  <rect x="0" y="560" width="1200" height="70" fill="#0a4142"/>
+  <g transform="translate(90 120)" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round">
+    <path d="M40 0 C 40 40, 0 60, 0 100 A 40 40 0 0 0 80 100 C 80 60, 40 40, 40 0 Z" fill="#ffffff" stroke="none"/>
+  </g>
+  <text x="220" y="215" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="96" font-weight="700" fill="#ffffff">Vårdkällan</text>
+  <text x="90" y="340" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="46" fill="#ffffff">Ett öppet journalsystem med fri källkod</text>
+  <text x="90" y="420" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="38" fill="#e2eeed">Pröva ett första pass på ungefär fem minuter.</text>
+  <text x="90" y="472" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="38" fill="#e2eeed">Demon har bara påhittade patienter.</text>
+  <text x="90" y="606" font-family="Noto Sans, DejaVu Sans, sans-serif" font-size="30" fill="#ffffff">Demo och test, EUPL 1.2</text>
+</svg>

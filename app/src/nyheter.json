@@ -117,6 +117,16 @@
           "var": null,
           "rubrik": "Listorna uppdaterar sig själva",
           "text": "Arbetslistan, inkorgen, väntrummet och avdelningens planering visar det nya utan att du behöver ladda om. Mallarna i en ny anteckning har dina senast använda och dina favoriter först, och långa listor har ett sökfält."
+        },
+        {
+          "id": "forsta-pass-1-8-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/testa",
+          "rubrik": "Ett första pass med vägledning för den som testar",
+          "text": "Den som väljer en yrkesroll på startsidan för testare börjar med ett kort första pass: en patient och en uppgift som yrket gör varje dag, med vägledning som visar nästa steg och följer med om du tar en annan väg. Efteråt ser du hur lång tid det tog och hur många steg det krävde, jämfört med Sussas tidsklass och klickbudgeten, och kan svara på tio korta påståenden om systemet. Passet mäts bara om du säger ja, och inga personuppgifter sparas."
         }
       ]
     },

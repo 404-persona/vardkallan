@@ -223,6 +223,274 @@ const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
     anta(!(await page.locator('#testlage').count()), 'listen kommer tillbaka efter omladdning');
   });
 
+  // ---- Runda 18, r1: första passet i testinbjudan. -----------------------------------------------------------------
+  // Varje yrkesroll gör sitt pass genom att följa vägledningen: testet läser steget i panelen, kontrollerar att ramen
+  // ligger runt elementet utan att skymma det och gör det steget säger, med samma räkning som klickbudgeten. Passet ska
+  // klaras inom klickbudgeten för uppgiften, och passets egen räkning ska ge samma steg som skriptets.
+  const { G18R1, PASSROLLER } = await import(pathToFileURL(join(APP, 'src', 'sussa', 'runda18-r1.js')).href);
+  const bild = async (p, namn) => { await p.waitForTimeout(250); await p.screenshot({ path: join(UT, `${namn}.png`) }); };
+  const tP = (namn, fn) => test(namn.replace(PREFIX, ''), fn);
+  const passAnrop = [];
+  async function nyPassSida({ bredd = 1440, hojd = 900 } = {}) {
+    const c = await browser.newContext({ viewport: { width: bredd, height: hojd }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
+    await stallKlockan(c);
+    await raknaISidan(c);
+    const p = await c.newPage();
+    felSida = p;
+    p.on('pageerror', e => sidfel.push(`sidfel: ${e.message}`));
+    p.on('console', m => { if (m.type() === 'error' && !/status of 40[34]/.test(m.text())) sidfel.push(`konsolfel: ${m.text()}`); });
+    p.on('request', r => { if (/\/api\/testare\//.test(r.url())) passAnrop.push({ url: r.url(), kropp: r.postData() ?? '' }); });
+    return { c, p };
+  }
+  async function startaPass(p, roll, matning) {
+    await p.goto(`${BAS}/#/testa`);
+    await p.waitForSelector('.testa-rollknapp');
+    await p.click(`[data-testroll="${roll}"]`);
+    if (matning) {
+      await p.waitForSelector('#testare-panel .tp-samtycke');
+      await p.click(`#testare-panel [data-tp="matning"][data-varde="${matning}"]`);
+    }
+    await p.waitForSelector('#tp-steg:not([data-steg=""])', { timeout: 15000 });
+    await p.waitForLoadState('networkidle');
+  }
+  // Märker elementet som vägledningen pekar på, så att testet kan använda det, och kontrollerar ramen.
+  async function markera(p) {
+    return p.evaluate(async () => {
+      const m = await import('/js/forsta-pass.js');
+      document.querySelectorAll('[data-fp-test]').forEach(e => e.removeAttribute('data-fp-test'));
+      const n = m.stegNu();
+      if (!n) return null;
+      n.el.setAttribute('data-fp-test', '1');
+      const r = n.el.getBoundingClientRect();
+      const ram = document.querySelector('.fp-ram')?.getBoundingClientRect();
+      return { id: n.id, ram: ram ? { runt: ram.left <= r.left && ram.top <= r.top && ram.right >= r.right && ram.bottom >= r.bottom } : null };
+    });
+  }
+  // Kontrollerar att elementet syns och inte är skymt av ramen, meningen eller panelen.
+  async function oskymt(p) {
+    return p.evaluate(() => {
+      const el = document.querySelector('[data-fp-test="1"]');
+      const r = el.getBoundingClientRect();
+      const mitt = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 12));
+      return Boolean(mitt) && (el === mitt || el.contains(mitt) || [...(el.labels ?? [])].some(l => l === mitt || l.contains(mitt)));
+    });
+  }
+  async function foljPass(p, roll, { tangentbord = false } = {}) {
+    const steg = await p.evaluate(async (r) => (await import('/js/forsta-pass-steg.js')).PASS_STEG[r], roll);
+    const m = new Matare(p);
+    await m.borja();
+    const sedda = [];
+    for (let i = 0; i < 30; i++) {
+      await p.waitForTimeout(300);
+      if (await p.locator('#testare-panel .tp-aterkoppling').count()) break;
+      const visat = await p.locator('#tp-steg').getAttribute('data-steg');
+      const mark = await markera(p);
+      anta(mark && mark.id === visat, `panelen visar steget ${visat} men vägledningen pekar på ${mark?.id}`);
+      anta(mark.ram?.runt, `ramen ligger inte runt elementet i steget ${visat}`);
+      anta(await oskymt(p), `elementet i steget ${visat} är skymt`);
+      sedda.push(visat);
+      const s = steg.find(x => x.id === visat);
+      const loc = p.locator('[data-fp-test="1"]');
+      if (tangentbord) {
+        // Visa var flyttar fokus till elementet, och resten görs med tangentbordet.
+        await p.focus('#testare-panel [data-tp="visa-steg"]');
+        await p.keyboard.press('Enter');
+        anta(await loc.evaluate(el => el === document.activeElement || el.contains(document.activeElement)), `Visa var gav inte fokus i steget ${visat}`);
+        if (s.gor?.skriv) await p.keyboard.type(s.gor.skriv); else await p.keyboard.press(await loc.evaluate(el => (el.matches('input[type="radio"], input[type="checkbox"]') ? ' ' : 'Enter')));
+        if (s.gor?.tangent) await p.keyboard.press(s.gor.tangent);
+        continue;
+      }
+      if (s.gor?.skriv) await m.skriv(loc, s.gor.skriv, visat); else await m.klicka(loc, visat);
+      if (s.gor?.tangent) await m.tangent(s.gor.tangent, visat);
+    }
+    await p.waitForSelector('#testare-panel .tp-aterkoppling h3', { timeout: 15000 });
+    await p.waitForLoadState('networkidle');
+    return { m, sedda, steg };
+  }
+  const tillstand = (p) => p.evaluate(async () => (await (await fetch('/api/testare')).json()));
+
+  for (const roll of PASSROLLER) {
+    await tP(G18R1.roll(roll), async () => {
+      const { c, p } = await nyPassSida();
+      try {
+        await startaPass(p, roll, 'ja');
+        const { m, sedda, steg } = await foljPass(p, roll);
+        await m.kontrollera();
+        const t = await tillstand(p);
+        anta(t.pass.resultat?.status === 'klar', `passet är inte klart: ${JSON.stringify(t.pass.resultat)}`);
+        anta(m.uppmatt <= t.pass.budget, `passet tog ${m.uppmatt} steg, budgeten är ${t.pass.budget} (${m.steg.join(', ')})`);
+        anta(t.pass.resultat.steg === m.uppmatt, `passets räkning gav ${t.pass.resultat.steg} steg, skriptet räknade ${m.uppmatt}`);
+        const saknas = steg.map(x => x.id).filter(id => id !== 'meny' && !sedda.includes(id));
+        anta(!saknas.length, `stegen ${saknas.join(', ')} visades aldrig`);
+        anta(!(await p.locator('.fp-ram').count()), 'ramen finns kvar efter passet');
+        console.log(`    ${roll}: ${m.uppmatt} av ${t.pass.budget} steg, ${t.pass.resultat.tidS} s`);
+        if (roll === 'sjukskoterska') await bild(p, '18r1-aterkoppling');
+      } finally { await c.close(); }
+    });
+  }
+
+  await tP(G18R1.samtycke, async () => {
+    const { c, p } = await nyPassSida();
+    try {
+      const fore = passAnrop.length;
+      await startaPass(p, 'lakare-sjukhus', 'nej');
+      anta(await p.evaluate(() => localStorage.getItem('vk_testare_matning')) === 'nej', 'svaret sparades inte');
+      await foljPass(p, 'lakare-sjukhus');
+      await p.waitForSelector('.tp-aterkoppling', { timeout: 10000 });
+      const text = await p.locator('.tp-aterkoppling').innerText();
+      anta(text.includes('Du valde att passet inte mäts') && !text.includes('Du behövde'), `återkopplingen utan mätning: ${text}`);
+      const matningar = passAnrop.slice(fore).filter(a => a.url.includes('/api/testare/pass/matning'));
+      anta(!matningar.length, `${matningar.length} mätningar skickades fast testaren sade nej`);
+      // Frågan ställs inte igen för nästa yrkesroll.
+      await p.goto(`${BAS}/#/testa`);
+      await p.waitForSelector('.testa-rollknapp');
+      await p.click('[data-testroll="sjukskoterska"]');
+      await p.waitForSelector('#tp-steg:not([data-steg=""])', { timeout: 15000 });
+      anta(!(await p.locator('.tp-samtycke').count()), 'frågan om mätning ställdes igen');
+      const t = await tillstand(p);
+      anta(t.pass.matning === 'nej', `nästa pass fick ${t.pass.matning}`);
+    } finally { await c.close(); }
+  });
+
+  await tP(G18R1.annanVag, async () => {
+    const { c, p } = await nyPassSida();
+    try {
+      const fore = passAnrop.length;
+      await startaPass(p, 'lakare-sjukhus', 'ja');
+      anta(await p.locator('#tp-steg').getAttribute('aria-live') === 'polite', 'steget läses inte upp för skärmläsare');
+      anta((await p.locator('#tp-steg').getAttribute('data-steg')) === 'patient', 'första steget är inte patienten i arbetslistan');
+      // En annan väg till patienten: sökningen i stället för arbetslistan.
+      await p.goto(`${BAS}/#/sok`);
+      await p.waitForSelector('#sokfalt');
+      await p.fill('#sokfalt', 'Hamid Burvall');
+      await p.keyboard.press('Enter');
+      await p.click('#traffar a:has-text("Hamid Burvall")');
+      await p.waitForSelector('.tidslinje');
+      await p.waitForFunction(() => document.querySelector('#tp-steg')?.dataset.steg === 'bestall', null, { timeout: 8000 });
+      // Tillbaka till arbetslistan utan framsteg: vägledningen följer med tillbaka och räknar en återvända.
+      await p.click('#meny-lista a[href="#/arbetslista"]');
+      await p.waitForFunction(() => document.querySelector('#tp-steg')?.dataset.steg === 'patient', null, { timeout: 8000 });
+      // Av och på.
+      await p.click('#testare-panel [data-tp="vagledning"]');
+      await p.waitForTimeout(300);
+      anta(!(await p.locator('.fp-ram').count()), 'ramen syns när vägledningen är avstängd');
+      anta(await p.locator('#tp-steg').isHidden(), 'steget syns när vägledningen är avstängd');
+      anta((await p.locator('#testare-meddelande').textContent()).includes('avstängd'), 'avstängningen lästes inte upp');
+      await p.click('#testare-panel [data-tp="vagledning"]');
+      await p.waitForSelector('.fp-ram');
+      anta(await p.evaluate(() => localStorage.getItem('vk_forsta_pass_av')) === null, 'valet att slå på sparades inte');
+      await foljPass(p, 'lakare-sjukhus');
+      const kropp = JSON.parse(passAnrop.slice(fore).filter(a => a.url.includes('/api/testare/pass/matning')).at(-1).kropp);
+      anta(kropp.aterkomster >= 1 && kropp.steg.find(x => x.id === 'patient')?.aterkomster >= 1, `återvändan räknades inte: ${JSON.stringify(kropp)}`);
+      anta(kropp.avstangd === 1 && kropp.vagledning === false, `avstängningen räknades inte: ${JSON.stringify(kropp)}`);
+      anta(kropp.tidForstaS != null, 'tiden till första handlingen saknas');
+    } finally { await c.close(); }
+  });
+
+  await tP(G18R1.aterkoppling, async () => {
+    const { c, p } = await nyPassSida();
+    try {
+      await startaPass(p, 'sjukskoterska', 'ja');
+      await foljPass(p, 'sjukskoterska');
+      const text = await p.locator('.tp-aterkoppling').innerText();
+      for (const t of ['Klart!', 'Sussa räknade med högst 6 minuter för uppgiften', 'Klickbudgeten, som Vårdkällan ska klara uppgiften inom, är 7 steg', 'Du behövde 7 steg']) anta(text.includes(t), `återkopplingen saknar "${t}": ${text}`);
+      await p.check('.tp-jamforelse input[value="lattare"]');
+      await p.click('.tp-jamforelse [type="submit"]');
+      await p.waitForSelector('.tp-sus-erbjudande');
+      await p.click('[data-tp="sus"]');
+      await p.waitForSelector('dialog[open].fp-sus-dialog');
+      for (const [i, v] of SUS_SVAR.entries()) await p.check(`dialog[open] input[name="sus${i + 1}"][value="${v}"]`);
+      await p.click('dialog[open] [type="submit"]');
+      await p.waitForSelector('.notis:has-text("Poängen blev 87,5 av 100")');
+      await p.waitForSelector('.tp-vidare');
+      await p.click('[data-tp="vidare"]');
+      await p.waitForSelector('#tp-aktuellt');
+      anta(!(await p.locator('.fp-ram').count()), 'vägledningen följde med till nästa uppdrag');
+      anta((await p.locator('[data-tp="vaxla"]').innerText()).includes('Uppdrag 2 av'), 'panelen gick inte vidare till uppdragen');
+    } finally { await c.close(); }
+  });
+
+  await tP(G18R1.mobil, async () => {
+    const { c, p } = await nyPassSida({ bredd: 390, hojd: 844 });
+    try {
+      await startaPass(p, 'underskoterska', 'ja');
+      await bild(p, '18r1-vagledning-mobil');
+      const { sedda } = await foljPass(p, 'underskoterska', { tangentbord: true });
+      anta(sedda.includes('registrera'), `alla steg nåddes inte: ${sedda.join(', ')}`);
+      const bred = await p.evaluate(() => document.documentElement.scrollWidth);
+      anta(bred <= 390, `sidan är ${bred} px bred`);
+      const t = await tillstand(p);
+      anta(t.pass.resultat?.status === 'klar', 'passet blev inte klart med tangentbordet');
+    } finally { await c.close(); }
+  });
+
+  // Tillägg 2026-11-19 (Jonas): bjud in en kollega och dela. Länkarna till tjänsterna öppnas, men varje anrop utanför
+  // demon stoppas innan det lämnar webbläsaren, så att inget laddas från tjänsterna och inget publiceras.
+  await tP(G18R1.bjudIn, async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
+    const externa = [];
+    await c.route((u) => !u.href.startsWith(BAS), (r) => { externa.push(r.request().url()); return r.abort(); });
+    await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BAS });
+    const p = await c.newPage();
+    felSida = p;
+    p.on('pageerror', e => sidfel.push(`sidfel: ${e.message}`));
+    try {
+      await p.goto(`${BAS}/#/testa`);
+      const skrivningar = [];
+      p.on('request', r => { if (r.method() !== 'GET' && r.url().startsWith(BAS)) skrivningar.push(r.url()); });
+      await p.click('[data-testa="bjud-in"]');
+      await p.waitForSelector('dialog[open].bj-dialog');
+      anta(!skrivningar.length, `att bjuda in skickade ${skrivningar.join(', ')}`);
+      anta(await p.locator('dialog[open]').getAttribute('aria-labelledby') === 'bj-rubrik', 'dialogen saknar rubrik för skärmläsare');
+      anta(await p.locator('label[for="bj-text"]').count() === 1, 'texten saknar etikett');
+      const text = await p.locator('#bj-text').inputValue();
+      anta(text.includes(`${BAS}/#/testa?via=lank`), `texten saknar länken: ${text}`);
+      anta(text.includes('påhittade patienter') && text.includes('fem minuter'), 'texten säger inte att patienterna är påhittade och att passet tar fem minuter');
+      await p.click('[data-bj="kopiera"]');
+      await p.waitForSelector('.notis:has-text("Inbjudan är kopierad")');
+      anta(await p.evaluate(() => navigator.clipboard.readText()) === text, 'urklippet har inte texten');
+      const epost = await p.locator('[data-bj-kanal="epost"]').getAttribute('href');
+      anta(epost.startsWith('mailto:?subject=') && decodeURIComponent(epost).includes(`${BAS}/#/testa?via=epost`), `e-postlänken: ${epost}`);
+      for (const [kanal, vard] of [['linkedin', 'www.linkedin.com'], ['facebook', 'www.facebook.com'], ['x', 'x.com']]) {
+        const l = p.locator(`[data-bj-kanal="${kanal}"]`);
+        anta(await l.getAttribute('target') === '_blank' && (await l.getAttribute('rel')).includes('noopener'), `länken till ${kanal} öppnas inte i en ny flik utan opener`);
+        const fore = externa.length;
+        const [ny] = await Promise.all([c.waitForEvent('page'), l.click()]);
+        await ny.waitForTimeout(500);
+        const adress = externa.slice(fore).find(u => new URL(u).hostname === vard);
+        anta(adress && decodeURIComponent(adress).includes(`${BAS}/#/testa?via=${kanal}`), `${kanal} öppnade ${externa.slice(fore).join(', ')}`);
+        await ny.close();
+      }
+      const inlasta = await p.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => !n.startsWith(location.origin)));
+      anta(!inlasta.length, `sidan laddade något utanför demon: ${inlasta.join(', ')}`);
+      await p.keyboard.press('Escape');
+      // En besökare via länken räknas per kanal, och besöket följer med när passet startar.
+      const c2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const p2 = await c2.newPage();
+      const starta = [];
+      p2.on('request', r => { if (r.url().endsWith('/api/testare/starta')) starta.push(r.postData() ?? ''); });
+      const [svar] = await Promise.all([p2.waitForRequest(r => r.url().endsWith('/api/inbjudan/besok')), p2.goto(`${BAS}/#/testa?via=linkedin`)]);
+      anta(JSON.parse(svar.postData()).kanal === 'linkedin', 'besöket räknades inte på kanalen');
+      await p2.waitForSelector('.testa-rollknapp');
+      await p2.click('[data-testroll="underskoterska"]');
+      await p2.waitForSelector('#testare-panel .tp-samtycke');
+      anta(starta.some(k => JSON.parse(k).via === 'linkedin'), 'kanalen följde inte med när passet startade');
+      await c2.close();
+    } finally { await c.close(); }
+  });
+
+  await tP(G18R1.inga, async () => {
+    // Allt som skickades till /api/testare under passen ovan.
+    const POSTER = ['sus19', 'sus05', 'sus06', 'obs3', 'p01', 'Hamid', 'Burvall', 'Berit', 'Strandhall', 'Sara', 'Sandmark', 'Helene', 'Lund', 'Amanda', 'Lindholm', 'Gunnar', 'Åkesson'];
+    anta(passAnrop.some(a => a.url.includes('/api/testare/pass/matning')), 'inga mätningar skickades');
+    for (const a of passAnrop) {
+      const traff = POSTER.find(x => a.kropp.includes(x) || decodeURIComponent(a.url).includes(x));
+      anta(!traff, `${a.url} innehåller ${traff}`);
+      anta(!/\d{6,8}[-+]?\d{4}/.test(a.kropp), `${a.url} innehåller något som liknar ett personnummer`);
+    }
+  });
+  // ---------------------------------------------------------------------------------------------------------------------
+
   const version = browser.version();
   await browser.close();
   skrivKlienttester({ app: APP, prefix: PREFIX, tester, bas: BAS, webblasare: `Chromium ${version}`, gransnittHash: hash });

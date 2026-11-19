@@ -21,6 +21,9 @@ import * as tidbok from './tidbok.js';
 import { vardenhetFor } from './atkomst.js';
 import { YRKEN, SYSTEM, AR, VARDFORM, HOPPADE_OVER } from '../public/js/synpunkt-regler.js';
 import { profil as provaProfil } from './synpunkter.js';
+// Runda 18, r1: första passet (forsta-pass.js).
+import * as forstaPass from './forsta-pass.js';
+import { KANALER } from '../public/js/inbjudan-regler.js';
 
 export function sakra(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS testare (
@@ -30,6 +33,16 @@ export function sakra(db) {
     uppdrag TEXT PRIMARY KEY, status TEXT NOT NULL, tid TEXT NOT NULL, tid_s INTEGER, besvarad INTEGER NOT NULL DEFAULT 0,
     CHECK (status IN ('klar', 'hoppade_over'))
   );`);
+  // Runda 18, r1: första passet. pass är uppdraget i passet, matning testarens svar på frågan om mätning ('ja' eller
+  // 'nej', tomt innan frågan är besvarad), pass_start när passet började räknas, pass_rad raden i synpunktsdatabasen,
+  // pass_resultat återkopplingen, pass_sus om SUS är besvarat ('ja') eller överhoppat ('nej') och pass_vidare att
+  // testaren har gått vidare till nästa uppdrag.
+  const kol = db.query("SELECT name FROM pragma_table_info('testare')").all().map(k => k.name);
+  for (const [k, typ] of [['pass', "TEXT NOT NULL DEFAULT ''"], ['matning', "TEXT NOT NULL DEFAULT ''"], ['pass_start', 'TEXT'], ['pass_rad', 'TEXT'], ['pass_resultat', 'TEXT'], ['pass_sus', "TEXT NOT NULL DEFAULT ''"], ['pass_vidare', 'INTEGER NOT NULL DEFAULT 0'],
+    // Tillägg 2026-11-19: kanalen som besökaren kom via, och om det genomförda passet är räknat på kanalen.
+    ['inbjudan_kanal', 'TEXT'], ['inbjudan_klar', 'INTEGER NOT NULL DEFAULT 0']]) {
+    if (!kol.includes(k)) db.exec(`ALTER TABLE testare ADD COLUMN ${k} ${typ}`);
+  }
   return db;
 }
 
@@ -220,10 +233,15 @@ function maxRowid(db, tabell) {
 
 // Startar uppdragen för en testroll i sandlådan. Sussas testdata läggs in för de roller vars uppdrag följer testfallen,
 // och baslinjen tas efter det, så att bara det testaren själv gör räknas. Tidigare uppdrag i sandlådan glöms.
-export function starta(db, body = {}, { nu = new Date() } = {}) {
+export function starta(db, body = {}, { nu = new Date(), passRad = null } = {}) {
   const r = typeof body.testroll === 'string' ? testroll(body.testroll) : null;
   if (!r) throw new Fel(400, 'Välj en av yrkesrollerna.', 'ogiltig', { falt: ['testroll'] });
   const p = provaProfil(body.profil ?? {});
+  // Runda 18, r1: första passet, och svaret på frågan om mätning om testaren redan har gett det.
+  if (body.pass !== undefined && typeof body.pass !== 'boolean') throw new Fel(400, 'pass ska vara sant eller falskt.', 'ogiltig', { falt: ['pass'] });
+  if (body.matning !== undefined && !['ja', 'nej'].includes(body.matning)) throw new Fel(400, 'Svara ja eller nej på frågan om mätning.', 'ogiltig', { falt: ['matning'] });
+  const pass = body.pass === true ? forstaPass.passFor(r.id, r.demoroll) : null;
+  if (body.via !== undefined && body.via !== null && !KANALER.some(([k]) => k === body.via)) throw new Fel(400, 'Kanalen för inbjudan känns inte igen.', 'ogiltig', { falt: ['via'] });
   sakra(db);
   if (r.sussaData) {
     const pers = db.query('SELECT * FROM personal WHERE id = ?').get(r.demoroll);
@@ -242,8 +260,101 @@ export function starta(db, body = {}, { nu = new Date() } = {}) {
     db.query('DELETE FROM testare_uppdrag').run();
     db.query('INSERT INTO testare (id, testroll, start, bas, profil) VALUES (1, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET testroll = excluded.testroll, start = excluded.start, bas = excluded.bas, profil = excluded.profil')
       .run(r.id, nu.toISOString(), JSON.stringify(bas), JSON.stringify(p));
+    db.query("UPDATE testare SET pass = ?, matning = '', pass_start = NULL, pass_rad = NULL, pass_resultat = NULL, pass_sus = '', pass_vidare = 0, inbjudan_kanal = ?, inbjudan_klar = 0 WHERE id = 1").run(pass?.uppdrag ?? '', body.via ?? null);
   })();
+  if (pass && body.matning) return samtycke(db, { matning: body.matning }, { nu, passRad });
   return tillstand(db, { nu });
+}
+
+// Runda 18, r1: svaret på frågan om mätning före passet. Frågan ställs en gång, och tiden räknas från svaret. Med ja
+// skapas raden för passet i synpunktsdatabasen (passRad är forsta-pass.skapaRad med serverns sammanhang).
+export function samtycke(db, body = {}, { nu = new Date(), passRad = null } = {}) {
+  const { t, r, pass } = aktivtPass(db);
+  if (!['ja', 'nej'].includes(body.matning)) throw new Fel(400, 'Svara ja eller nej på frågan om mätning.', 'ogiltig', { falt: ['matning'] });
+  if (t.matning) throw new Fel(409, 'Du har redan svarat på frågan om mätning.', 'ogiltig');
+  const rad = body.matning === 'ja' && passRad ? passRad({ testroll: r.id, pass, profil: profilFor(db) }) : null;
+  db.query('UPDATE testare SET matning = ?, pass_start = ?, pass_rad = ? WHERE id = 1').run(body.matning, nu.toISOString(), rad);
+  return tillstand(db, { nu });
+}
+
+function aktivtPass(db) {
+  const t = lasTillstand(db);
+  if (!t) throw new Fel(409, 'Välj en yrkesroll på startsidan för testare först.', 'ogiltig');
+  const r = testroll(t.testroll);
+  if (!t.pass || !r) throw new Fel(409, 'Det finns inget första pass för den här yrkesrollen just nu.', 'ogiltig');
+  return { t, r, pass: forstaPass.passFor(r.id, r.demoroll) };
+}
+
+// Mätningen av passet. Räkningen kommer från klienten och prövas i forsta-pass.js. Om uppgiften är gjord, och tiden,
+// bestämmer servern ur sandlådan. slut: false är ett delresultat medan passet pågår (när fliken stängs). avbruten: true
+// avbryter passet, och uppdraget räknas som överhoppat. db2 och x är synpunktsdatabasen och serverns sammanhang.
+export function matning(db, body = {}, { nu = new Date(), uppdatera } = {}) {
+  const { t, r, pass } = aktivtPass(db);
+  if (t.matning !== 'ja' || !t.pass_rad) throw new Fel(409, 'Passet mäts inte. Inget sparas.', 'ogiltig');
+  if (t.pass_resultat) throw new Fel(409, 'Passet är redan rapporterat.', 'ogiltig');
+  const m = forstaPass.provaMatning(r.id, body);
+  kontrollera(db, r, t, nu);
+  let s = db.query('SELECT * FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass);
+  if (m.avbruten && !s) { markera(db, r, t, t.pass, HOPPADE_OVER, nu); s = db.query('SELECT * FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass); }
+  const klar = s?.status === 'klar';
+  if (m.slut && !s) throw new Fel(409, 'Passet är inte klart än. Systemet bockar av uppgiften när den är gjord.', 'ogiltig');
+  if (!m.slut && !m.avbruten && !s) {
+    // Ett delresultat: raden uppdateras men passet pågår.
+    uppdatera(t.pass_rad, m, { status: 'pagar', tidS: passTid(t, nu), nu });
+    return [200, { tillstand: tillstand(db, { nu }) }];
+  }
+  const status = klar ? 'klar' : 'avbruten';
+  const rad = uppdatera(t.pass_rad, m, { status, tidS: passTid(t, s ? new Date(s.tid) : nu), nu });
+  const res = forstaPass.resultat(pass, { status, rad });
+  db.query('UPDATE testare SET pass_resultat = ? WHERE id = 1').run(JSON.stringify(res));
+  return [201, { resultat: res, tillstand: tillstand(db, { nu }) }];
+}
+const passTid = (t, slut) => Math.min(4 * 3600, Math.max(0, Math.round((slut.getTime() - Date.parse(t.pass_start)) / 1000)));
+
+// SUS efter passet, eller att testaren inte vill svara. spara är forsta-pass.sparaSus med serverns sammanhang.
+export function sus(db, body = {}, { nu = new Date(), spara } = {}) {
+  const { t, r, pass } = aktivtPass(db);
+  if (!db.query('SELECT 1 FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass)) throw new Fel(409, 'Gör passet eller hoppa över det först.', 'ogiltig');
+  if (t.pass_sus) throw new Fel(409, 'Du har redan svarat på påståendena efter passet.', 'ogiltig');
+  if (body.hoppa === true) {
+    db.query("UPDATE testare SET pass_sus = 'nej' WHERE id = 1").run();
+    return [200, { tillstand: tillstand(db, { nu }) }];
+  }
+  const ut = spara(body.svar, { testroll: r.id, pass, profil: profilFor(db) });
+  db.query("UPDATE testare SET pass_sus = 'ja' WHERE id = 1").run();
+  return [201, { ...ut, tillstand: tillstand(db, { nu }) }];
+}
+
+// Tillägg 2026-11-19: när passet är klart räknas det på kanalen som besökaren kom via, en gång. markera är
+// inbjudan.passKlar med serverns sammanhang.
+export function inbjudanKlar(db, markera) {
+  const t = lasTillstand(db);
+  if (!t?.pass || !t.inbjudan_kanal || t.inbjudan_klar) return false;
+  const s = db.query('SELECT status FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass);
+  if (s?.status !== 'klar') return false;
+  markera(t.inbjudan_kanal);
+  db.query('UPDATE testare SET inbjudan_klar = 1 WHERE id = 1').run();
+  return true;
+}
+
+// Efter passet: vidare till nästa uppdrag. Vägledningen följer inte med.
+export function vidare(db, { nu = new Date() } = {}) {
+  const { t } = aktivtPass(db);
+  if (!db.query('SELECT 1 FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass)) throw new Fel(409, 'Gör passet eller hoppa över det först.', 'ogiltig');
+  db.query('UPDATE testare SET pass_vidare = 1 WHERE id = 1').run();
+  return tillstand(db, { nu });
+}
+
+// Passet som det visas för testaren. Inget här kommer ur sandlådans journaler.
+function passUt(t, r, status) {
+  if (!t.pass) return null;
+  const p = forstaPass.passFor(r.id, r.demoroll);
+  const fas = !t.matning ? 'samtycke' : status === 'kvar' ? 'pagar' : t.pass_vidare ? 'klar' : 'aterkoppling';
+  let res = null;
+  try { res = t.pass_resultat ? JSON.parse(t.pass_resultat) : null; } catch { res = null; }
+  // Utan mätning finns bara Sussas budget och tidsklass att visa.
+  if (!res && t.matning === 'nej' && status !== 'kvar') res = forstaPass.resultat(p, { status: status === 'klar' ? 'klar' : 'avbruten' });
+  return { uppdrag: p.uppdrag, sussa: p.sussa ?? null, titel: p.titel, text: p.text, budget: p.budget, tidsklass: p.tidsklass, matning: t.matning || null, fas, resultat: res, sus: t.pass_sus || null };
 }
 
 export function sparaProfil(db, body = {}) {
@@ -283,7 +394,9 @@ export function tillstand(db, { nu = new Date() } = {}) {
   if (!r) return { aktiv: false };
   kontrollera(db, r, t, nu);
   const status = new Map(db.query('SELECT * FROM testare_uppdrag').all().map(x => [x.uppdrag, x]));
-  const uppdrag = r.uppdrag.map(u => {
+  // Runda 18, r1: passets uppdrag står först.
+  const ordning = t.pass ? [...r.uppdrag.filter(u => u.id === t.pass), ...r.uppdrag.filter(u => u.id !== t.pass)] : r.uppdrag;
+  const uppdrag = ordning.map(u => {
     const s = status.get(u.id);
     return { ...uppdragUt(u), status: s?.status ?? 'kvar', besvarad: Boolean(s?.besvarad) };
   });
@@ -291,6 +404,7 @@ export function tillstand(db, { nu = new Date() } = {}) {
   return {
     aktiv: true, testroll: r.id, knapp: r.knapp, om: r.om, demoroll: r.demoroll ?? null, invanare: r.invanare ?? null,
     start: t.start, profil: profilFor(db), uppdrag, aktuellt,
+    pass: passUt(t, r, status.get(t.pass)?.status ?? 'kvar'),
     attBesvara: uppdrag.filter(u => u.status !== 'kvar' && !u.besvarad).map(u => u.id),
     klara: uppdrag.filter(u => u.status === 'klar').length, hoppade: uppdrag.filter(u => u.status === HOPPADE_OVER).length,
   };
@@ -334,7 +448,9 @@ export function jamfor(db, id, body, spara, { nu = new Date() } = {}) {
     db.query('UPDATE testare_uppdrag SET besvarad = 1 WHERE uppdrag = ?').run(id);
     return { nummer: null, tillstand: tillstand(db, { nu }) };
   }
-  const ut = spara({ testroll: r.id, uppdrag: up.id, sussa: up.sussa ?? '', status: s.status, tidS: s.tid_s, profil: profilFor(db) });
+  // Runda 18, r1: den som har sagt nej till mätning får ingen tid sparad.
+  const t = lasTillstand(db);
+  const ut = spara({ testroll: r.id, uppdrag: up.id, sussa: up.sussa ?? '', status: s.status, tidS: t?.matning === 'nej' ? null : s.tid_s, profil: profilFor(db) });
   db.query('UPDATE testare_uppdrag SET besvarad = 1 WHERE uppdrag = ?').run(id);
   return { ...ut, tillstand: tillstand(db, { nu }) };
 }

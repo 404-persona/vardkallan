@@ -110,6 +110,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen, som i Sussas testfall för paramedicinare. Uppdragen passar också andra yrken. Arbetsterapeut, dietist, logoped, kurator och psykolog har dessutom egna demoroller under Logga in med en demoroll, men inga egna uppdrag än.
 
+Första passet: Besvara en vårdbegäran (Sussas testfall 2.6). Du har just träffat Sara Sandmark. Besvara remissen från vårdcentralen och skicka svaret. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 4 steg.
+
 1. Överblicka dagens arbete för din arbetsplats (Sussas testfall 7.1).
    Ta fram dagens arbete på avdelningen.
    Meddela vilka händelser som äger rum klockan 11.

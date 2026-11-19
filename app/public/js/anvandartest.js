@@ -34,7 +34,8 @@ const nummer = new WeakMap();
 let nastaNummer = 1;
 const idFor = (el) => { if (!el) return null; let n = nummer.get(el); if (!n) { n = nastaNummer++; nummer.set(el, n); } return n; };
 const TEXTTYPER = new Set(['text', 'search', 'email', 'tel', 'url', 'password', 'number', 'date', 'time', 'datetime-local', 'month', 'week']);
-const arTextfalt = (el) => el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && TEXTTYPER.has(el.type)) || Boolean(el?.isContentEditable);
+// Runda 18, r1: första passet (forsta-pass.js) räknar med samma regler och använder också arTextfalt och malFor.
+export const arTextfalt = (el) => el instanceof HTMLTextAreaElement || (el instanceof HTMLInputElement && TEXTTYPER.has(el.type)) || Boolean(el?.isContentEditable);
 const KLICKBAR = 'a[href], button, summary, label, input, [role="button"], [role="link"], [role="tab"], [role="option"], [role="menuitem"], [role="checkbox"], [role="radio"]';
 const kort = (s) => String(s ?? '').replace(/\(obligatoriskt\)/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
 // Vad ett element heter, för stegloggen. För textfält används etiketten, aldrig det som har skrivits.
@@ -43,7 +44,7 @@ function beskriv(el) {
   if (arTextfalt(el) || el instanceof HTMLSelectElement) return kort(el.getAttribute('aria-label') || el.labels?.[0]?.textContent || el.getAttribute('placeholder') || el.name);
   return kort(el.getAttribute('aria-label') || el.textContent || el.getAttribute('title') || el.value);
 }
-function malFor(t) {
+export function malFor(t) {
   const el = t instanceof Element ? t : t?.parentElement;
   if (!el) return {};
   const textfalt = arTextfalt(el);
@@ -137,6 +138,12 @@ const FORBERED = {
   'cytostatika-kur': async () => { await aterstallDemo(); await api('/api/demo/cytostatika-kur', { metod: 'POST', data: {} }); },
   // Runda 15, r4: Gunnar Åkessons journal har 30 anteckningar, där de senaste inte har någon bedömning.
   'journal-30': async () => { await aterstallDemo(); await api('/api/demo/journal-30', { metod: 'POST', data: {} }); },
+  // Tillägg 2026-11-19, runda 18, r1: första passet startas och avbryts, så att återkopplingen med Bjud in visas.
+  'pass-klart': async () => {
+    await api('/api/testare/starta', { metod: 'POST', data: { testroll: 'lakare-sjukhus', pass: true, matning: 'nej' } });
+    await api('/api/testare/uppdrag/3.1/hoppa', { metod: 'POST', data: {} });
+    await (await import('./testinbjudan.js')).uppdatera({ visa: true });
+  },
   // Runda 16, r3: förlossningens demopatienter, som läggs in en gång per sandlåda.
   obstetrik: async () => { await api('/api/demo/obstetrik', { metod: 'POST', data: {} }); },
   // Runda 14, r1: övningstjänsten kopplas in av de två systemförvaltarna, och sedan loggas personen ut, så att uppgiften

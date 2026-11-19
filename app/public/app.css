@@ -1878,6 +1878,33 @@ body.testlage-aktivt.har-testare #notiser { bottom: calc(var(--testlage-hojd, 64
 .tl-lista { list-style: none; padding: 0; margin: 0; }
 .tl-synpunkt p { margin: 0 0 4px; }
 .tl-antal { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+/* Runda 18, r1: första passet. Panelen visar uppgiften och steget, och ramen och meningen pekar ut nästa steg i vyn.
+   Ramen och meningen tar inte emot klick och läggs aldrig över elementet, och inget rör sig av sig självt. */
+.tp-pass h3, .tp-aterkoppling h3, .tp-sus-erbjudande h3, .tp-vidare h3 { font-size: var(--f-l); margin-bottom: 6px; }
+.tp-pass h4 { font-size: var(--f-m); margin: 10px 0 2px; }
+.tp-pass p, .tp-aterkoppling p, .tp-sus-erbjudande p, .tp-vidare p { margin: 0 0 6px; }
+.tp-pass-text { font-weight: 600; }
+.tp-steg { margin: 8px 0; padding: 8px 10px; border-left: 4px solid var(--fokus); background: var(--kalla-ljus); border-radius: 0 var(--r) var(--r) 0; color: var(--blak); }
+.tp-steg:focus { outline: 3px solid var(--fokus); outline-offset: 2px; }
+.tp-steg-nr { display: block; font-size: var(--f-xs); font-weight: 700; color: var(--kalla-mork); }
+.tp-aterkoppling { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--linje); }
+.tp-aterkoppling h3 .ikon { color: var(--ok); }
+.tp-pass-knappar { flex-wrap: wrap; }
+.fp-ram { position: fixed; z-index: 53; pointer-events: none; box-sizing: border-box; border: 3px solid var(--fokus); border-radius: 8px; box-shadow: 0 0 0 3px #ffffff, 0 0 0 7px rgba(26, 98, 214, 0.35); }
+.fp-etikett { position: fixed; z-index: 53; pointer-events: none; max-width: min(300px, calc(100vw - 16px)); padding: 6px 10px; border-radius: 6px; background: var(--blak); color: #ffffff; font-size: var(--f-s); line-height: 1.35; box-shadow: 0 4px 14px rgba(16, 33, 37, 0.3); }
+@media (forced-colors: active) { .fp-ram { border-color: Highlight; } .fp-etikett { border: 2px solid CanvasText; } }
+@media (max-width: 640px) { .fp-etikett { display: none; } .tp-pass .tp-etikett, .tp-pass > .dampad { display: none; } .tp-pass h3 { margin-bottom: 2px; } .tp-pass .tp-steg { margin: 6px 0; } }
+body.har-testare.i-forsta-pass { padding-bottom: calc(var(--testare-dock-hojd, 300px) + 20px); }
+.fp-sus-dialog .sus-lista { margin-bottom: 8px; }
+/* Tillägg 2026-11-19: bjud in en kollega och dela. */
+.bj-text { width: 100%; font: inherit; }
+.bj-knappar a.knapp { text-decoration: none; }
+.bj-sociala-rubrik { font-size: var(--f-m); margin: 12px 0 2px; }
+.bj-sociala { list-style: none; padding: 0; margin: 6px 0 10px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.bj-sparas summary { cursor: pointer; font-weight: 600; color: var(--kalla); }
+.testa-bjud h2 { font-size: var(--f-l); margin-bottom: 6px; }
+.tl-fastnar { margin: 0; padding-left: 16px; font-size: var(--f-s); }
+
 @media (max-width: 640px) {
   .testare-dock { left: 0; right: 0; bottom: 0; max-width: none; align-items: stretch; gap: 0; }
   .testare-knappar { flex-wrap: nowrap; gap: 6px; padding: 6px 10px calc(6px + env(safe-area-inset-bottom)); background: var(--yta); border-top: 1px solid var(--linje); box-shadow: 0 -2px 10px rgba(16, 33, 37, 0.12); }

@@ -71,7 +71,8 @@ async function visaEgna(yta, q) {
       const g = urval.filter(k => k.id.startsWith(pre));
       if (!g.length) return '';
       return `<section class="kravgrupp" aria-labelledby="kg-${pre}"><h2 id="kg-${pre}">${esc(rubrik)}</h2><ul class="kravlista">${g.map(kravRad).join('')}</ul></section>`;
-    }).join('') || '<p class="tom">Inga krav har den statusen.</p>'}`;
+    }).join('') || '<p class="tom">Inga krav har den statusen.</p>'}`;  // Runda 18, r1: svaren från testarna vid D6.
+  fyllPass(yta);
 }
 
 // Sussas kravspecifikation med originalnummer. Filtren sparas i adressen, och en post öppnas med ?post=id.
@@ -216,7 +217,7 @@ async function visaSussa(yta, q) {
     const el = e.target;
     if (!el.matches?.('details.sussapost') || !el.open) return;
     const del = el.querySelector('.sussa-detalj');
-    if (!del.dataset.fylld) { del.innerHTML = sussaDetalj(perId.get(el.dataset.id), d); del.dataset.fylld = '1'; }
+    if (!del.dataset.fylld) { del.innerHTML = sussaDetalj(perId.get(el.dataset.id), d); del.dataset.fylld = '1'; fyllPass(del); }
   }, true);
   rita();
   const oppna = q.get('post');
@@ -281,6 +282,7 @@ function sussaDetalj(p, d) {
     <h3>Vårdkällans lösning</h3><p>${p.losning ? esc(p.losning) : 'Inte byggt i Vårdkällan.'}</p>
     ${p.expert ? `<h3>Hur systemet är experten</h3><p>${esc(p.expert)}</p>` : ''}
     ${p.anmarkning ? `<h3>Det som saknas eller är simulerat</h3><p>${esc(p.anmarkning)}</p>` : ''}
+    ${PASS_POSTER.has(p.id) ? PASS_PLATS : ''}
     ${bilagaR6(p)}
     ${p.avsedd !== p.status && p.avsedd !== 'planerat' ? `<p class="ruta ruta-larm liten">Avsett som ${esc(STATUS[p.avsedd].toLowerCase())}, men ${p.tester.length ? 'alla tester är inte gröna' : 'posten har inga tester'}.</p>` : ''}
     <h3>Tester</h3>${p.tester.length ? `<ul class="testrader">${testrader(p.tester)}</ul>` : '<p class="dampad">Inga automatiska tester än, därför planerad.</p>'}
@@ -335,6 +337,22 @@ function klientRad(kt) {
   return `<p class="dampad liten">Gränssnittet testas dessutom i en webbläsare med Playwright: ${kt.godkanda} av ${kt.antal} tester gröna, ${esc(tidpunkt(kt.tid))}.${kt.aktuell ? '' : ' Gränssnittet har ändrats sedan dess, så de testerna räknas som inaktuella tills de körs igen.'}</p>`;
 }
 
+// Runda 18, r1: antalet genomförda första pass och SUS-medelvärdet efter passet, räknat ur synpunktsdatabasen av
+// servern. Visas vid posterna om användbarhet och användartest, och hämtas för sig när posten visas.
+const PASS_POSTER = new Set(['8.4.1.1', '8.4.1.2', '8.4.1.3', 'D6']);
+const PASS_PLATS = '<div class="pass-sammanfattning" data-pass-sammanfattning><p class="dampad liten">Hämtar resultatet från testarna.</p></div>';
+let passSvar = null;
+async function fyllPass(rot) {
+  const platser = [...rot.querySelectorAll('[data-pass-sammanfattning]')];
+  if (!platser.length) return;
+  passSvar ??= api('/api/testare/pass/sammanfattning').catch(() => { passSvar = null; return null; });
+  const d = await passSvar;
+  const text = !d ? 'Resultatet från testarna kunde inte hämtas.'
+    : d.genomforda || d.sus.antal ? `Testare i vården har gjort ${d.genomforda} första pass i testinbjudan med mätning.${d.sus.antal ? ` SUS efter passet: medel ${String(d.sus.medel).replace('.', ',')} av 100, ${d.sus.antal} svar.` : ' Ingen har svarat på SUS efter passet än.'}`
+      : 'Ingen testare har gjort första passet i testinbjudan med mätning än, och ingen har svarat på SUS efter passet.';
+  for (const el of platser) el.innerHTML = `<h3>Svar från testare</h3><p>${esc(text)}</p><p class="liten dampad">Räknat ur databasen med testarnas svar när sidan visas. Läs mer på <a href="#/testa">startsidan för testare</a>.</p>`;
+}
+
 // Klickbudgeten (D6): uppmätt antal steg mot budgeten per flöde.
 function klickbudgetTabell(kb) {
   if (!kb) return '<p class="ruta ruta-larm liten">Ingen mätning av klickbudgeten finns.</p>';
@@ -362,6 +380,7 @@ function kravRad(k) {
     ${k.avsedd !== k.status ? `<p class="ruta ruta-larm liten">Avsett som ${esc(STATUS[k.avsedd].toLowerCase())}, men alla tester är inte gröna.</p>` : ''}
     ${k.anmarkning ? `<p class="krav-anm">${esc(k.anmarkning)}</p>` : ''}
     ${'klickbudget' in k ? klickbudgetTabell(k.klickbudget) : ''}
+    ${PASS_POSTER.has(k.id) ? PASS_PLATS : ''}
     ${'sussaTestfall' in k ? sussaTestfallTabell(k.sussaTestfall) : ''}
     ${k.tester.length ? `<details class="testlista"><summary>${k.tester.length === 1 ? 'Ett test' : `${k.tester.length} tester`}, ${k.tester.filter(x => x.status === 'grön').length} gröna</summary><ul>${testrader(k.tester)}</ul></details>` : '<p class="dampad liten">Inga automatiska tester än.</p>'}
   </li>`;

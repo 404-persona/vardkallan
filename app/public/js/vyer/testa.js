@@ -11,7 +11,18 @@ const PROFIL = 'vk_testare_profil';
 const lasProfil = () => { try { return JSON.parse(localStorage.getItem(PROFIL) ?? '{}') ?? {}; } catch { return {}; } };
 const sparaProfil = (p) => { try { localStorage.setItem(PROFIL, JSON.stringify(p)); } catch { /* utan lagring */ } };
 
-export async function visa(main) {
+// Tillägg 2026-11-19 (Jonas): besökaren kom via en inbjudan. Kanalen i adressen räknas en gång per flik, och följer med
+// när ett pass startar, så att ett genomfört pass räknas på kanalen. Inget annat om besökaren sparas.
+const KANALNAMN = /^[a-z]{1,10}$/;
+async function inbjudanBesok(q) {
+  const kanal = q?.get?.('via');
+  if (!kanal || !KANALNAMN.test(kanal)) return;
+  try { if (sessionStorage.getItem(testare.VIA_NYCKEL)) return; sessionStorage.setItem(testare.VIA_NYCKEL, kanal); } catch { return; }
+  try { await api('/api/inbjudan/besok', { metod: 'POST', data: { kanal }, tyst: true, direkt: true }); } catch { /* utan räkning fungerar allt likadant */ }
+}
+
+export async function visa(main, _param, q) {
+  inbjudanBesok(q);
   main.innerHTML = `<div class="testa">
     <div class="testa-marke">${logotyp(40)}<p>Vårdkällan</p></div>
     ${vyRubrik('Testa Vårdkällan och jämför med ditt journalsystem')}
@@ -31,8 +42,8 @@ export async function visa(main) {
       <h2 id="testa-hur">Så går det till</h2>
       <ol>
         <li>Berätta gärna vilket journalsystem du använder i dag. Det är frivilligt.</li>
-        <li>Välj din yrkesroll. Du loggas in direkt som en påhittad person med det yrket.</li>
-        <li>Gör uppdragen i panelen längst ner, i din egen takt. Uppdraget säger vad du ska göra, inte var du klickar, och systemet bockar av det när det är gjort. Efter varje uppdrag får du en kort fråga om hur det var jämfört med ditt system.</li>
+        <li>Välj din yrkesroll. Du loggas in direkt som en påhittad person med det yrket och börjar med ett första pass på några minuter: en patient och en uppgift som yrket gör varje dag. Vägledningen visar nästa steg, och efteråt ser du hur det gick.</li>
+        <li>Gör sedan fler uppdrag i panelen längst ner, i din egen takt. Uppdraget säger vad du ska göra, inte var du klickar, och systemet bockar av det när det är gjort. Efter varje uppdrag får du en kort fråga om hur det var jämfört med ditt system.</li>
         <li>Knappen Lämna synpunkt finns på varje sida, när något är fel, saknas eller är svårt.</li>
       </ol>
     </section>
@@ -46,8 +57,14 @@ export async function visa(main) {
       <h2 id="testa-roll">Välj din yrkesroll</h2>
       <ul class="testa-roller" id="testa-roller"><li class="tom">Hämtar yrkesrollerna.</li></ul>
     </section>
+    <section class="ruta testa-bjud" aria-labelledby="testa-bjud">
+      <h2 id="testa-bjud">Känner du någon som borde pröva?</h2>
+      <p>Du får en färdig text med länken som du skickar själv, med e-post, i ett meddelande eller i sociala medier. Vårdkällan skickar ingenting och sparar inga adresser.</p>
+      <button type="button" class="knapp sekundar" data-testa="bjud-in">Bjud in en kollega</button>
+    </section>
     <p class="liten dampad testa-fot">Vill du hellre välja fritt bland alla demoroller? <a href="#/">Logga in med en demoroll</a>. Om testet och integriteten: <a href="#/om">Om demon och testet</a>.</p>
   </div>`;
+  main.querySelector('[data-testa="bjud-in"]').addEventListener('click', () => testare.bjudInDialog());
   await rollvaljare(main.querySelector('#testa-roller'), () => testare.profilUr(main.querySelector('#testa-profil')));
 }
 

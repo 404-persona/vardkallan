@@ -14,6 +14,8 @@ import { OVNINGAR_V1 } from './seed/ovningar.js';
 import { FLODEN } from './klickbudget.js';
 import { FILMER, filmFil, filmUrl } from './instruktionsfilmer.js';
 import { TESTROLLER, uppdragUt } from './testinbjudan.js';
+// Runda 18, r1: första passet per yrkesroll.
+import { passFor } from './forsta-pass.js';
 import { KURS, GILTIG_DAGAR } from './utbildning-schema.js';
 import { PROVA, GAR_UT_DAGAR } from './utbildning.js';
 import { PROVTYPER } from './praktiska-prov.js';
@@ -258,6 +260,9 @@ export function materialFor(yrke) {
     for (const r of d.testroller) {
       ut.push(`### ${r.knapp}`);
       ut.push(r.om);
+      // Runda 18, r1: uppdragen börjar med ett första pass med vägledning.
+      const pass = passFor(r.id, r.demoroll);
+      if (pass) ut.push(`Första passet: ${pass.titel}${pass.sussa ? ` (Sussas testfall ${pass.sussa})` : ''}. ${pass.text} Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot ${pass.tidsklass ? 'Sussas tidsklass och ' : ''}klickbudgeten på ${pass.budget} steg.`);
       ut.push(r.uppdrag.map((u, i) => {
         const x = uppdragUt(u);
         const rader = [`${i + 1}. ${x.titel}${x.sussa ? ` (Sussas testfall ${x.sussa})` : ''}.`];

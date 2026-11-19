@@ -361,11 +361,17 @@ Börjar i: Arbetslistan efter inloggning. Klickbudget: högst 4 steg. I demon g�
 
 Ett klick på Lämna synpunkt, som syns på varje sida. Textfältet har fokus direkt, så testaren skriver utan fältbyte. Ett klick för vad det gäller, ett för hur allvarligt det är och ett på Skicka. Sidan, demorollen, uppdraget, versionen, skärmbredden, webbläsaren och tiden fyller systemet i själv, och yrke och journalsystem kommer från startsidan om testaren har fyllt i dem där.
 
-### Välja yrkesroll och starta första uppdraget
+### Välja yrkesroll och starta första passet
 
 Börjar i: Startsidan för testare. Klickbudget: högst 2 steg. I demon gör Sara Lindqvist flödet.
 
-Ett klick på yrkesrollen, som loggar in i rätt demoroll och startar uppdragen i panelen, och ett klick på en patient i arbetslistan för det första uppdraget. Systemet bockar av uppdraget själv och ställer jämförelsefrågan.
+Ett klick på yrkesrollen, som loggar in i rätt demoroll och visar första passet i panelen, och ett klick för att svara på frågan om passet får mätas, som ställs en gång. Därefter pekar vägledningen ut nästa steg. Passets uppgift mäts för sig, mot klickbudgeten för samma uppgift i Sussas testfall, och vägledningen får inte göra den dyrare.
+
+### Bjuda in en kollega efter första passet
+
+Börjar i: Återkopplingen efter första passet. Klickbudget: högst 3 steg. I demon gör Sara Lindqvist flödet.
+
+Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten och länken, som bara bär kanalen, utan något anrop till servern, och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.
 
 ### Skriva ett intyg i intygsapplikationen
 
@@ -673,6 +679,8 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 Du arbetar som Sara Lindqvist, läkare på kardiologiska kliniken. Avdelning 72 motsvarar Sussas medicinavdelning.
 
+Första passet: Upprätta en labbeställning (Sussas testfall 3.1). Hamid Burvall har kommit in med feber och frossa. Beställ CRP, blodstatus, kreatinin och blododling. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 3 steg.
+
 1. Ta emot dagens första patient.
    Öppna journalen för en av dina patienter i arbetslistan och läs den senaste anteckningen.
 2. Överblicka provsvar (Sussas testfall 3.4).
@@ -729,6 +737,8 @@ Du arbetar som Sara Lindqvist, läkare på kardiologiska kliniken. Avdelning 72 
 ### Läkare i primärvården
 
 Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvarar Sussas vårdcentral.
+
+Första passet: Skapa anteckning (Sussas testfall 4.1). Berit Strandhall röker 25 cigaretter om dagen och vill ha hjälp att sluta. Dokumentera hennes tobaksvanor och att hon tackar ja till rådgivande samtal. Vägledningen pekar ut nästa steg i systemet, och efteråt visas tiden och stegen mot Sussas tidsklass och klickbudgeten på 6 steg.
 
 1. Överblicka ankomstregistrering (Sussas testfall 5.6).
    Sök fram dina patienter som har kommit i dag.

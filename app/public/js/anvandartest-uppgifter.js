@@ -44,6 +44,8 @@ export const STARTPUNKT = {
   'Kravsidan': { hash: '#/krav', klar: '#sussa-lista details.sussapost' },
   // Runda 13, r1: startsidan för testare.
   'Startsidan för testare': { hash: '#/testa', klar: '.testa-rollknapp' },
+  // Tillägg 2026-11-19, runda 18, r1: första passet är avbrutet, så att återkopplingen visas.
+  'Återkopplingen efter första passet': { hash: '#/arbetslista', klar: '#testare-panel [data-tp="bjud-in"]', forbered: 'pass-klart' },
   // Runda 11, r2: operationsavdelningens program för dagen.
   'Operationsavdelningens program': { hash: '#/operation/program', klar: '.op-program' },
   // Runda 9, r1: Birgitta Nyman tar insulin med penna, och demon återställs först.
@@ -688,9 +690,16 @@ export const UPPGIFTER = [
     kontroll: { sel: '.synpunkt-kvitto', text: 'Tack' },
   },
   {
-    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första uppdraget', roll: 'lak-kard', start: 'Startsidan för testare',
-    text: 'Du har fått en länk till ett test av Vårdkällan och arbetar som läkare på sjukhus. Välj ditt yrke och gör det första uppdraget.',
-    kontroll: { sel: '#testare-panel .tp-jamforelse', text: 'Ta emot dagens första patient' },
+    // Runda 18, r1: yrkesrollen startar första passet med vägledning.
+    id: 'valj-yrkesroll', namn: 'Välja yrkesroll och starta första passet', roll: 'lak-kard', start: 'Startsidan för testare',
+    text: 'Du har fått en länk till ett test av Vårdkällan och arbetar som läkare på sjukhus. Välj ditt yrke och kom igång med det första passet.',
+    kontroll: { sel: '#testare-panel #tp-steg', text: 'Hamid Burvall' },
+  },
+  // Tillägg 2026-11-19, runda 18, r1: bjuda in en kollega.
+  {
+    id: 'bjud-in-kollega', namn: 'Bjuda in en kollega efter första passet', roll: 'lak-kard', start: 'Återkopplingen efter första passet',
+    text: 'Du har gjort första passet och tänker på en kollega som också borde pröva. Ta fram en inbjudan som du kan skicka till kollegan.',
+    kontroll: { sel: '.bj-dialog .bj-text', text: 'Vårdkällan' },
   },
   // Runda 14, r3: intyg i intygsapplikationen och e-remiss till en vårdgivare utanför Vårdkällan.
   {
