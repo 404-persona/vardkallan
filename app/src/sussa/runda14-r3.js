@@ -45,7 +45,7 @@ export const T14R3 = {
   infSparr: 'Infektionsverktyget med tjänstekontrakt i RIVTA > Infektion > en diagnos från en vårdenhet som patienten har spärrat överförs inte',
   infAuto: 'Infektionsverktyget med tjänstekontrakt i RIVTA > Infektion > en infektionsdiagnos som läkaren registrerar överförs av systemet i bakgrunden, och en annan diagnos inte',
   infSchema: 'Infektionsverktyget med tjänstekontrakt i RIVTA > Infektion > meddelandena följer schemat med xsi:type, och ett element med en abstrakt typ utan xsi:type avvisas',
-  nkrrInvandning: `${ET}NKRR > en patient som har motsatt sig registrering i kvalitetsregistret anmäls inte, och efter att invändningen är återkallad anmäls hen`,
+  nkrrInvandning: `${ET}NKRR > en patient som har motsatt sig registrering i kvalitetsregistret anmäls inte, och efter att invändningen är återkallad anmäls patienten`,
 };
 const T = T14R3;
 
@@ -76,7 +76,7 @@ const POSTER = {
     tester: [T.portal],
     losning: 'Ett meddelande från vårdenheten går till patientens inkorg i 1177 med AddMessage, efter att systemet med IsActiveUser har frågat om patienten har ett konto.',
     expert: 'Systemet skickar bara till 1177 när patienten kan läsa meddelandet och säger annars att det ska gå som brev. Vårdenheten och vårdgivaren fyller systemet i.',
-    anmarkning: `${anm('riv-application.infrastructure.eservicesupply.patientportal 2.0 (IsActiveUser och AddMessage)')} 1177 är simulerat, och en patient har ett konto i demon när hen är invånare i Min journal. Kallelserna i tidboken går ännu inte genom kontraktet. Min journal är Vårdkällans egen e-tjänst.`,
+    anmarkning: `${anm('riv-application.infrastructure.eservicesupply.patientportal 2.0 (IsActiveUser och AddMessage)')} 1177 är simulerat, och en patient har ett konto i demon när patienten är invånare i Min journal. Kallelserna i tidboken går ännu inte genom kontraktet. Min journal är Vårdkällans egen e-tjänst.`,
   },
   '2.2.1.14': {
     tester: [T.nkrr, T.nkrrInvandning],

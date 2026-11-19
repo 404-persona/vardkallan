@@ -8,9 +8,18 @@ import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT } from '../synp
 export const namn = 'om';
 const GITHUB = 'https://github.com/404-persona/vardkallan';
 
+// Runda 18, r4: avsnittet Kostnad och licens sammanfattar avsnitten Vad licensen betyder och Namnet Vårdkällan i README
+// och länkar dit. Talen på sidan räknas ur koden och kommer från servern (GET /api/krav/version, fakta). Utan svar från
+// servern står meningarna utan tal, så att sidan aldrig säger ett tal som inte stämmer.
+const ORD = ['noll', 'en', 'två', 'tre', 'fyra', 'fem', 'sex', 'sju', 'åtta', 'nio', 'tio', 'elva', 'tolv'];
+const iOrd = (n) => (Number.isInteger(n) && n >= 0 && n < ORD.length ? ORD[n] : String(n));
+
 export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
   let inteVarden = '';
-  try { inteVarden = (await api('/api/krav/version', { tyst: true })).inteVarden ?? ''; } catch { inteVarden = ''; }
+  let fakta = {};
+  try { const v = await api('/api/krav/version', { tyst: true }); inteVarden = v.inteVarden ?? ''; fakta = v.fakta ?? {}; } catch { inteVarden = ''; }
+  const testfall = Number.isInteger(fakta.sussaTestfall) ? `de ${fakta.sussaTestfall} användbarhetstestfall` : 'de användbarhetstestfall';
+  const sandlada = Number.isInteger(fakta.sandladaTimmar) ? `raderas när den inte har använts på ${iOrd(fakta.sandladaTimmar)} timmar` : 'raderas när den inte har använts på en tid';
   if (!aktuell()) return;
   main.innerHTML = `${vyRubrik('Om demon och testet', 'Vem som står bakom Vårdkällan, vad testet är till för och vad som sparas.')}
   <div class="om">
@@ -21,11 +30,12 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
     <section class="ruta" aria-labelledby="om-syfte">
       <h2 id="om-syfte">Syftet</h2>
       <p>Syftet är att undersöka hur personal som arbetar i Cosmic eller i ett annat journalsystem upplever samma arbetsflöden i Vårdkällan. Testet påstår inte att Vårdkällan är bättre. Det är just det som ska undersökas: var det är lättare, ungefär lika eller svårare, och vad som saknas.</p>
-      <p>Uppdragen följer så långt det går de 34 användbarhetstestfall som regionerna i Sussa samverkan, ett samarbete mellan regioner som upphandlade Cosmic tillsammans, använde när systemet utvärderades. Så gäller jämförelsen samma sak.</p>
+      <p>Uppdragen följer så långt det går ${testfall} som regionerna i Sussa samverkan, ett samarbete mellan regioner som upphandlade Cosmic tillsammans, använde när systemet utvärderades. Så gäller jämförelsen samma sak.</p>
     </section>
     <section class="ruta" aria-labelledby="om-kostnad">
       <h2 id="om-kostnad">Kostnad och licens</h2>
       <p>Systemet är gratis. Källkoden har licensen EUPL 1.2, och vem som helst, till exempel en region, får använda, ändra och anpassa systemet efter sina egna behov, utan kostnad för själva systemet.</p>
+      <p>Koden förblir öppen. Den som ger ut en ändrad version, eller låter andra använda den över nätet, ska publicera hela källkoden till den under EUPL 1.2. Licensen hindrar inte att någon tar betalt för arbete runt systemet, som drift, support, utbildning och anpassning. En ändrad version ska ha ett eget namn som inte kan förväxlas med Vårdkällan. Hela texten om licensen och namnet finns i <a href="${GITHUB}#licens">README på GitHub</a>, och det är licenstexten som gäller.</p>
       ${inteVarden ? `<p>${esc(inteVarden)}</p>` : ''}
     </section>
     <section class="ruta" aria-labelledby="om-anonymt">
@@ -37,9 +47,9 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
       <h2 id="om-sparas">Det här sparas</h2>
       <ul>${SPARAS.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
       <h3>Varför</h3><p>${esc(VARFOR)}</p>
-      <h3>Hur länge</h3><p>${esc(HUR_LANGE)} Din sandlåda med det du har gjort i demon raderas efter åtta timmar.</p>
+      <h3>Hur länge</h3><p>${esc(HUR_LANGE)} Din sandlåda med det du har gjort i demon ${sandlada}.</p>
       <h3>Vem som läser och hur det hanteras</h3><p>${esc(VEM_LASER)} Svaren sparas på projektets egen server, lämnas inte vidare till någon annan och används inte för något annat än det som står här. Trafiken till demon går krypterad genom Cloudflare, som skyddar den mot överbelastning.</p>
-      <h3>Kakor och spårning</h3><p>Demon använder en enda kaka, för att hålla ihop din session och din sandlåda. Den försvinner när sessionen tar slut. Demon har inga spårningsverktyg, ingen statistiktjänst och inga annonser.</p>
+      <h3>Kakor och spårning</h3><p>Demon använder en enda kaka, för att hålla ihop din session och din sandlåda. Den försvinner när du stänger webbläsaren. Webbläsaren sparar också det du har fyllt i under Om dig, några val som kontrasten och om panelen med uppdragen är öppen, och när du är inloggad som personal en krypterad läskopia för avbrott. Det används bara av demon och lämnas inte till någon annan. Demon har inga spårningsverktyg, ingen statistiktjänst och inga annonser.</p>
     </section>
     ${begransningarHtml('om-kanda')}
     <section class="ruta" aria-labelledby="om-kontakt">

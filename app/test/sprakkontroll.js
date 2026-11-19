@@ -147,7 +147,7 @@ result results endpoint endpoints usability saturation
 // så att en ny förkortning eller ett nytt engelskt ord prövas en gång.
 export const TILLATNA = new Set(`
 FHIR SITHS NPÖ ATC HSA HSA-id NLL NPL NPU PDL ICD ICD-10-SE LOINC UCUM HL7 R4 JSON PDF CSV ZIP URL API API:t SMS QR ID PIN PEF INR
-eGFR EKG CRP Hb NT-proBNP KOL BMI SpO2 MEWS NEWS NEWS2 RETTS SFINX AT ASA EUPL GitHub Bun SQLite SPA CSP HTTP HTTPS TLS OK
+eGFR EKG CRP Hb NT-proBNP KOL BMI SpO2 MEWS NEWS NEWS2 RETTS SFINX AT ASA EUPL GitHub README Bun SQLite SPA CSP HTTP HTTPS TLS OK
 Skatteverket Socialstyrelsen Läkemedelsverket Inera E-hälsomyndigheten Konkurrensverket Sussa Cosmic Vårdkällan Region Örebro län
 Windows Linux macOS Android iOS Chrome Firefox Safari Edge PWA SUS IT SV SE EU OID UTF-8 XML HTML CSS JS NDJSON
 Patient Encounter EpisodeOfCare Condition Observation MedicationRequest MedicationAdministration List AllergyIntolerance Flag

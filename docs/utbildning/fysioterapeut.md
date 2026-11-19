@@ -108,7 +108,7 @@ Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Su
 
 ### Fysioterapeut och andra yrken
 
-Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen. Hon spelar Sussas paramedicinare, alltså också arbetsterapeut, dietist och kurator.
+Du arbetar som Jenny Holmberg, fysioterapeut på kardiologiska mottagningen, som i Sussas testfall för paramedicinare. Uppdragen passar också andra yrken. Arbetsterapeut, dietist, logoped, kurator och psykolog har dessutom egna demoroller under Logga in med en demoroll, men inga egna uppdrag än.
 
 1. Överblicka dagens arbete för din arbetsplats (Sussas testfall 7.1).
    Ta fram dagens arbete på avdelningen.

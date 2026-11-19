@@ -18,6 +18,10 @@ export const ANDRINGAR = [
     resurser: [], skrivning: [], annat: [
       // Runda 18, r3: ekonomin och lagringen för äldre uppgifter (docs/api-avvikelser.md).
       'Nya rutter för uthämtning och betalning av hjälpmedel med kvitto, priset för ett läkemedel, kostnaderna per vårdenhet och månad, avtal med betalningsmottagare och flytten till lagringen för äldre uppgifter. Läkemedelskatalogen och förslaget för beställning av prover har priset för den som ser priser, och kostnadsrutan har prover och undersökningar, källor, jämförelse och hjälpmedel att hämta ut (docs/api-avvikelser.md).',
+      // Runda 18, r4: textgranskningen av de publika sidorna (docs/api-avvikelser.md).
+      'GET /api/krav/version har fältet fakta med talen som de publika sidorna nämner, räknade ur koden: Sussas testfall och poster, sandlådans livslängd i timmar, testrollerna, uppdragen, modulerna och gallringen av synpunkter',
+      'GET /api/textgranskning säger vilka texter på #/testa, #/om, #/krav och #/moduler som ska granskas i versionen och har uppdragens texter för testrollerna',
+      'GET /api/moduler har namnet för varje rutt, också för en offentlig sida som inte har en rad i menyn',
     ],
   },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.

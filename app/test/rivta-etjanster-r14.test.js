@@ -60,7 +60,7 @@ describe('E-tjänster med tjänstekontrakt i RIVTA', () => {
     expect(logg(db, 'ProcessRegistrationNotification')).toEqual(['ok']);
   });
 
-  test('NKRR > en patient som har motsatt sig registrering i kvalitetsregistret anmäls inte, och efter att invändningen är återkallad anmäls hen', async () => {
+  test('NKRR > en patient som har motsatt sig registrering i kvalitetsregistret anmäls inte, och efter att invändningen är återkallad anmäls patienten', async () => {
     const db = nyDb();
     const mr = await import('../src/myndighetsrapport.js');
     const a = () => atk(db, 'lak-vc', 'p11', {}, 'kvalitetsregister');

@@ -23,7 +23,7 @@ export async function visa(main) {
       <h2 id="testa-viktigt">${ikon.info}Bra att veta</h2>
       <ul>
         <li>Alla patienter och all personal är påhittade. Skriv aldrig in uppgifter om riktiga personer.</li>
-        <li>Du får en egen sandlåda som bara du ser. Den försvinner efter åtta timmar, och du kan återställa den när du vill.</li>
+        <li>Du får en egen sandlåda som bara du ser. Den försvinner efter åtta timmar utan användning, och du kan återställa den när du vill.</li>
         <li>Du behöver inte ange namn eller e-post, och svaren är anonyma. Läs mer på <a href="#/om">Om demon och testet</a>.</li>
       </ul>
     </section>

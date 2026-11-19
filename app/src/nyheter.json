@@ -67,6 +67,16 @@
           "var": "#/lagring",
           "rubrik": "Lagringen för äldre uppgifter",
           "text": "Systemet flyttar filer i avslutade vårdkontakter som är äldre än lagringsklassens gräns till en egen databas och läser dem därifrån. Journalen ser ut som förut. Under Lagring ser du vad som har flyttats och vad som väntar."
+        },
+        {
+          "id": "kanda-begransningar-1-8-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/om",
+          "rubrik": "Kända begränsningar är prövade för version 1.8",
+          "text": "Listan Kända begränsningar på startsidan för testare och på sidan Om demon är prövad mot systemet i version 1.8. Det som har byggts står inte längre som saknat, till exempel sjukintygen och partogrammets varnings- och åtgärdslinje, och allt som är simulerat står samlat, till exempel HOSP och e-legitimationen."
         }
       ]
     },

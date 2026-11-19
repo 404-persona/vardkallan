@@ -16,9 +16,10 @@ const VAR = {
 const TESTSTATUS = { 'grön': ['ok', 'Grönt'], 'röd': ['fel', 'Rött'], hoppad: ['hoppad', 'Hoppades över'], saknas: ['fel', 'Saknas'], inaktuell: ['hoppad', 'Inaktuellt, gränssnittet har ändrats sedan testet kördes'] };
 const GRUPP = [['K', 'Spårbarhet från krav till test'], ['D', 'Icke-funktionella krav och design'], ['L', 'Lagkrav och nationella tjänster'], ['M', 'Misstag att inte upprepa']];
 
-// Runda 13, r4: en kort förklaring på vanlig svenska för den som inte kan upphandlingen.
+// Runda 13, r4: en kort förklaring på vanlig svenska för den som inte kan upphandlingen. Runda 18, r4: antalet krav fylls
+// i av visaVersion när servern har svarat.
 const INLEDNING = `<section class="ruta ruta-info kr-inledning" aria-labelledby="kr-inledning-rubrik"><h2 id="kr-inledning-rubrik">Vad sidan visar</h2>
-  <p>När regionerna i samarbetet Sussa köpte ett nytt journalsystem skrev de en kravspecifikation: en lista med 389 krav på vad systemet ska klara. Här står varje krav och hur långt Vårdkällan har kommit med det.</p>
+  <p>När regionerna i samarbetet Sussa köpte ett nytt journalsystem skrev de en kravspecifikation: en lista med <span id="kr-antal-krav"></span>krav på vad systemet ska klara. Här står varje krav och hur långt Vårdkällan har kommit med det.</p>
   <ul><li><strong>Uppfyllt i demon</strong> betyder att funktionen finns i demon och att alla dess automatiska tester är gröna. Det betyder inte att den är färdig för vården eller fri från fel.</li>
   <li><strong>Delvis</strong> betyder att en del finns, och anmärkningen säger vad som saknas.</li>
   <li><strong>Planerat</strong> betyder att funktionen inte är byggd än.</li></ul>
@@ -371,6 +372,9 @@ async function visaVersion(el) {
   let v;
   try { v = await api('/api/krav/version'); } catch { const t = el.querySelector('.tom'); if (t) t.textContent = 'Villkoren kunde inte hämtas.'; return; }
   if (!el.isConnected) return;
+  // Runda 18, r4: antalet krav i inledningen räknas ur kravspecifikationen (fakta), aldrig för hand.
+  const antalKrav = document.getElementById('kr-antal-krav');
+  if (antalKrav && Number.isInteger(v.fakta?.sussaPoster)) antalKrav.textContent = `${v.fakta.sussaPoster} `;
   el.innerHTML = `<h2 id="kr-version-rubrik">Version ${esc(v.version ?? '')} och villkoren för 1.0</h2>
     <p>${esc(v.princip)}</p>
     <ul class="version-villkor">${v.villkor.map(x => `<li class="test test-${x.uppfyllt ? 'ok' : 'fel'}" data-villkor="${esc(x.id)}">${x.uppfyllt ? ikon.bock : ikon.kryss}<span><strong>${esc(x.rubrik)}.</strong> <span class="sr">${x.uppfyllt ? 'Uppfyllt' : 'Inte uppfyllt'}: </span>${esc(x.text)}</span></li>`).join('')}</ul>

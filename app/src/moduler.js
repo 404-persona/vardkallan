@@ -28,6 +28,8 @@
 //   nas                hur modulen nås när det inte syns av rutterna, eller null.
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+// Runda 18, r4: antalet testfall i modulen Testinbjudan och synpunkter räknas ur Sussas register.
+import { TESTFALL } from './sussa-testfall.js';
 
 const APP = join(import.meta.dir, '..');
 
@@ -281,7 +283,8 @@ export const MODULER = [
     'Varje vy för varje roll prövas automatiskt mot det som går att pröva i WCAG 2.1 nivå AA och på mobil, platta och stor skärm, med en tillgänglighetsredogörelse och ett högkontrastläge.',
     { avsnitt: ['8.4.1.3', 'KD1.1.4'], rutter: ['#/tillganglighet'], vyer: ['tillganglighet.js'], kod: ['src/tillganglighet.js', 'public/js/kontrast.js'], api: ['/api/tillganglighet'] }),
   m('anvandartest', 'forvaltning', 'Användartester och Sussas testfall',
-    'Sussas 34 användbarhetstestfall spelas automatiskt i gränssnittet och mäts som i upphandlingen. Testläget ger personer som arbetar i vården uppgifter en i taget, och testledaren läser SUS och expertgranskningen.',
+    // Runda 18, r4: antalet räknas ur Sussas register.
+    `Sussas ${TESTFALL.length} användbarhetstestfall spelas automatiskt i gränssnittet och mäts som i upphandlingen. Testläget ger personer som arbetar i vården uppgifter en i taget, och testledaren läser SUS och expertgranskningen.`,
     { avsnitt: ['8.4.1.1', '8.4.1.2'], rutter: ['#/anvandartest', '#/sussatest'], vyer: ['sussatest.js'], kod: ['src/sussa-testfall.js', 'src/anvandartest.js', 'src/anvandartest-svar.js', 'public/js/anvandartest.js'], api: ['/api/anvandartest/svar'] }),
   m('krav', 'forvaltning', 'Kravspårbarhet och moduler',
     'Sussas kravspecifikation med originalnummer och det egna ramverket, där varje krav pekar på de automatiska tester som visar det, lagkravsmatrisen och den här sidan, som räknar fram vad som finns.',
@@ -293,7 +296,8 @@ export const MODULER = [
 
 // Runda 13, r1: testinbjudan, guidade uppdrag efter Sussas testfall och synpunkter från varje vy.
 MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
-  'En startsida för personal som vill jämföra Vårdkällan med sitt journalsystem. Testaren väljer yrkesroll och får uppdrag efter Sussas 34 testfall, som systemet bockar av själv, och svarar efter varje uppdrag om det var lättare, ungefär lika eller svårare än i det system hen använder i dag. Knappen Lämna synpunkt finns på varje sida, och testledaren läser allt sorterat per uppdrag, journalsystem och vy med en läskod.',
+  // Runda 18, r4: antalet testfall räknas ur registret, och texten säger testaren.
+  `En startsida för personal som vill jämföra Vårdkällan med sitt journalsystem. Testaren väljer yrkesroll och får uppdrag efter Sussas ${TESTFALL.length} testfall, som systemet bockar av själv, och svarar efter varje uppdrag om det var lättare, ungefär lika eller svårare än i det journalsystem som testaren använder i dag. Knappen Lämna synpunkt finns på varje sida, och testledaren läser allt sorterat per uppdrag, journalsystem och vy med en läskod.`,
   { avsnitt: [], rutter: ['#/testa', '#/om', '#/testledare'], vyer: ['testa.js', 'om.js', 'testledare.js'], kod: ['src/testinbjudan.js', 'src/synpunkter.js', 'src/r13r1-rutter.js', 'public/js/testinbjudan.js', 'public/js/synpunkt-regler.js', 'scripts/testinbjudan.js'],
     api: ['/api/synpunkter', '/api/testare', '/api/testledare/synpunkter'], simulerat: 'Demorollerna och testpatienterna är påhittade. Svaren är testarnas egna och sparas i en egen databas utanför sandlådorna.' }));
 
@@ -345,7 +349,8 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
 // Runda 12, r3 (vårt L5): flerfaktorsinloggning hör till modulen för behörighet och inloggning.
 {
   const b = MODULER.find(x => x.id === 'behorighet');
-  b.beskrivning += ' Flerfaktorsinloggning med passkeys (WebAuthn) och engångskoder (RFC 6238) för personalen och för invånaren i Min journal, påslagen av var och en.';
+  // Runda 18, r4: flerfaktor är en regel sedan 1.5, inte ett val.
+  b.beskrivning += ' Flerfaktorsinloggning med passkeys (WebAuthn) och engångskoder (RFC 6238) för personalen och för invånaren i Min journal. Inloggningen är alltid flerfaktor: en inloggning med tillitsnivå 3, som SITHS-kortet, räknas redan som flerfaktor, och en lägre nivå kompletteras med passkey eller kod.';
   b.rutter.push('#/flerfaktor');
   b.vyer.push('flerfaktor.js');
   b.kod.push('src/flerfaktor.js', 'public/js/flerfaktor-ui.js');
@@ -416,7 +421,8 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
 // läsläget vid avbrott.
 {
   const a = MODULER.find(x => x.id === 'arkiv');
-  a.beskrivning += ' Äldre journalhandlingar förs över till ett mellanarkiv efter ett beslut, och visas sedan i journalen, tidslinjen och sökningen som förut, med samma behörighet och loggning.';
+  // Runda 18, r4: det som förs över visas också i läkemedelslistan och Min journal.
+  a.beskrivning += ' Äldre journalhandlingar förs över till ett mellanarkiv efter ett beslut, och visas sedan i journalen, tidslinjen, sökningen, läkemedelslistan och Min journal som förut, med samma behörighet och loggning.';
   a.kod.push('src/mellanarkiv.js', 'src/mellanarkiv-rutter.js');
   a.api.push('/api/patient/:id/mellanarkiv', '/api/mellanarkiv/:id');
   a.simulerat = 'E-arkivet och mellanarkivet är simulerade.';
@@ -431,14 +437,15 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
 // Runda 14, r3: intyg genom intygsapplikationen, e-remiss till och från vårdgivare utanför Vårdkällan och del r3:s
 // tjänstekontrakt på den gemensamma grunden för RIVTA.
 MODULER.push(m('intyg', 'journal', 'Intyg',
-  'Läkaren skriver intyg i en intygsapplikation som öppnas från journalen med patienten, läkaren, vårdenheten och diagnosen ifyllda, och journalen visar intygets status av sig själv. Systemet föreslår det intyg som passar patienten och visar bara de intyg som får skrivas.',
+  // Runda 18, r4: alla intyg i Webcert, och de andra yrkena, sedan 1.6.
+  'Läkaren skriver alla intyg som finns i Webcert, med blankettens frågor, i en intygsapplikation som öppnas från journalen med patienten, läkaren, vårdenheten och diagnosen ifyllda, och journalen visar intygets status av sig själv. Systemet föreslår det intyg som passar patienten och visar bara de intyg som får skrivas. Sjuksköterskan och barnmorskan skriver intyg om graviditet, vårdadministratören skriver utkast som läkaren signerar, ett äldre intyg förnyas med ett klick och intyg till arbetsgivaren skrivs bara ut.',
   { avsnitt: ['2.2.1.9'], rutter: ['#/intygsapplikation/:id'], journal: ['intyg'], vyer: ['patient-intyg.js', 'intygsapplikation.js'], kod: ['src/lakarintyg.js', 'src/intygsapplikation-simulerad.js', 'src/r14r3-rutter.js', /* Runda 16, r1 */ 'src/intygstyper.js', 'src/intyg-seed.js'],
     api: ['/api/patient/:id/intyg', '/api/intygsapplikation/:id'],
     simulerat: 'Intygsapplikationen är simulerad och är inte Webcert. Inget intyg skickas till Försäkringskassan eller någon annan mottagare. Tjänstekontrakten är byggda och validerade mot sina scheman men inte anslutna till den nationella tjänsteplattformen.' }));
 // Runda 16, r2: stödet vid sjukskrivning: sjukfallen, Socialstyrelsens försäkringsmedicinska beslutsstöd, förlängning
 // med ett klick och översikterna för läkaren och verksamhetschefen.
 MODULER.push(m('sjukskrivning', 'journal', 'Sjukskrivning',
-  'Systemet för ihop sjukintygen till sjukfall efter regeln i Rehabstöd, räknar dagar och grad över tiden och visar var patienten är i rehabiliteringskedjan. När läkaren skriver ett sjukintyg visar systemet Socialstyrelsens försäkringsmedicinska beslutsstöd för diagnosen och varnar när den sammanlagda sjukskrivningen blir längre än rekommendationen. En sjukskrivning förlängs med ett klick. Läkaren har en översikt över sina pågående sjukfall och verksamhetschefen över vårdenhetens, utan patientuppgifter.',
+  'Systemet för ihop sjukintygen till sjukfall efter regeln i Rehabstöd, räknar dagar och grad över tiden och visar var patienten är i rehabiliteringskedjan. När läkaren skriver ett sjukintyg visar systemet Socialstyrelsens försäkringsmedicinska beslutsstöd för diagnosen och varnar när den sammanlagda sjukskrivningen blir längre än rekommendationen. En sjukskrivning förlängs med ett klick. Läkaren har en översikt över sina pågående sjukfall, och verksamhetschefen ser vårdenhetens sjukfall som antal, utan patientuppgifter.',
   { avsnitt: [], rutter: ['#/sjukskrivningar', '#/sjukskrivningar/enhet'], journal: ['sjukskrivning'], vyer: ['patient-sjukskrivning.js', 'sjukskrivningar.js'],
     kod: ['src/sjukfall.js', 'src/fmb.js', 'src/sjukfall-intygssvar.js', 'src/sjukfall-rutter.js', 'src/intygsapplikation-beslutsstod-simulerad.js', 'public/js/beslutsstod-fmb-ui.js'],
     api: ['/api/patient/:id/sjukskrivning', '/api/sjukskrivningar', '/api/intygsapplikation/:id/beslutsstod'],
@@ -517,18 +524,31 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
 // barnmorskans mallar till journalanteckningarna, och barnmorskans förskrivning av preventivmedel till läkemedlen.
 {
   const b = MODULER.find(x => x.id === 'behorighet');
-  b.beskrivning += ' Varje yrke har en egen roll med minsta åtkomst: läkare, sjuksköterska, barnmorska, undersköterska (också som skötare i psykiatrin), fysioterapeut, arbetsterapeut, dietist, logoped, hälso- och sjukvårdskurator och psykolog. Inloggningen genom en extern tjänst kräver legitimationen för yrket. Studenter dokumenterar under en namngiven handledare, bara under handledningen och på handledarens vårdenhet, och handledaren kontrasignerar det de signerar.';
+  b.beskrivning += ' Varje yrke har en egen roll med minsta åtkomst: läkare, sjuksköterska, barnmorska, undersköterska (också som skötare i psykiatrin), farmaceut, fysioterapeut, arbetsterapeut, dietist, logoped, hälso- och sjukvårdskurator och psykolog. Vid varje inloggning prövar systemet legitimationen för yrket i Socialstyrelsens register (HOSP), och den som saknar giltig legitimation loggas inte in. Studenter dokumenterar under en namngiven handledare, bara under handledningen och på handledarens vårdenhet, och handledaren kontrasignerar det de signerar.';
   b.rutter.push('#/handledning');
   b.vyer.push('handledning.js');
   b.kod.push('src/handledning.js', 'src/roller-r16r3.js', 'src/r16r3-rutter.js');
   b.api.push('/api/handledning');
   const l = MODULER.find(x => x.id === 'lakemedel');
-  l.beskrivning += ' Barnmorskan förskriver preventivmedel, och systemet visar bara de läkemedel som förskrivningsrätten omfattar.';
+  // Runda 18, r4: förskrivningsrätten kommer ur HOSP sedan 1.7, för alla som förskriver.
+  l.beskrivning += ' Förskrivningen och läkemedelskatalogen erbjuder bara det som förskrivarens förskrivningsrätt i Socialstyrelsens register (HOSP) omfattar, och systemet säger varför något inte går. Barnmorskan förskriver preventivmedel.';
   l.kod.push('src/preventivmedel.js', 'public/js/preventivmedel-ui.js');
   l.api.push('/api/patient/:id/preventivmedel');
 }
 // Runda 16: rehabkoordinatorn är en funktion med en egen roll (rehabkoordinator.js).
 MODULER.find(x => x.id === 'behorighet').beskrivning += ' Rehabkoordinatorn är en funktion med en egen roll: ser vårdenhetens pågående sjukfall och sätter REKO-status, men läser inte journalen.';
+
+// Runda 18, r4: det som kom i version 1.5 till 1.7 och som modultexterna inte nämnde (textgranskningen).
+{
+  const mod = (id) => MODULER.find(x => x.id === id);
+  mod('avbrott').beskrivning += ' Vid ett längre avbrott kan driften starta en reservserver som visar journalen ur den senaste säkerhetskopian och bara kan läsas.';
+  mod('nationella').beskrivning += ' Under Nationella tjänster ser systemförvaltaren personalens legitimation och förskrivningsrätt ur Socialstyrelsens register (HOSP) och kan hämta om uppgifterna.';
+  mod('samordnad').beskrivning += ' Kuratorn kan också upprätta en samordnad individuell plan.';
+  mod('behorighet').beskrivning += ' Undersköterskan läser inte kuratorns och psykologens anteckningar.';
+  mod('krav').kod.push('src/textgranskning.js', 'src/textgranskning-granskade.js', 'scripts/textgranskning.js');
+  mod('krav').api.push('/api/textgranskning');
+  mod('anteckningar').beskrivning += ' Varje yrke skriver med sina egna mallar, också psykologen, logopeden, barnmorskan, arbetsterapeuten, kuratorn och dietisten.';
+}
 
 export function lasGransnitt({ rot = APP, text = null } = {}) {
   const las = (f) => text?.[f] ?? readFileSync(join(rot, f), 'utf8');
@@ -561,6 +581,14 @@ export function lasGransnitt({ rot = APP, text = null } = {}) {
   };
 }
 
+// Runda 18, r4: namnen på de offentliga sidorna som inte har en rad i menyn, som sidans rubrik. Modulsidan skriver
+// Nås från med de här namnen, inte med modulens namn för varje sida.
+export const SIDNAMN = {
+  '#/testa': 'Testa Vårdkällan', '#/om': 'Om demon och testet', '#/testledare': 'Synpunkter och jämförelser',
+  '#/testprotokoll': 'Testprotokoll', '#/tillganglighet': 'Tillgänglighet', '#/anvandartest': 'Användartest',
+  '#/inloggning/extern': 'Inloggning genom en extern tjänst',
+};
+
 // En rutt i registret med :id prövas mot app.js med ett exempel i stället för variabeln.
 export const exempel = (vag) => vag.replace(/:\w+/g, '1');
 export const ruttFinns = (g, vag) => g.rutter.some(r => r.re.test(exempel(vag)));
@@ -576,7 +604,8 @@ export function modulregister({ register, gransnitt = null, apiFinns = () => fal
   const avsnittRubrik = new Map((register?.avsnitt ?? []).map(a => [a.id, a.rubrik]));
   const postRubrik = new Map(poster.map(p => [p.id, p.rubrik]));
   const ut = moduler.map((mod) => {
-    const rutter = mod.rutter.map(vag => ({ vag, finns: ruttFinns(g, vag), meny: g.meny.get(vag) ?? null, offentlig: Boolean(g.rutter.find(r => r.re.test(exempel(vag)))?.offentlig) }));
+    // Runda 18, r4: en offentlig sida utan rad i menyn nås med sitt eget namn (SIDNAMN).
+    const rutter = mod.rutter.map(vag => ({ vag, finns: ruttFinns(g, vag), meny: g.meny.get(vag) ?? null, offentlig: Boolean(g.rutter.find(r => r.re.test(exempel(vag)))?.offentlig), namn: g.meny.get(vag) ?? (Object.hasOwn(SIDNAMN, vag) ? SIDNAMN[vag] : null) }));
     const journal = mod.journal.map(flik => ({ flik, namn: g.journal.get(flik) ?? null, finns: g.journal.has(flik), dold: Boolean(g.dolda?.has(flik)) }));
     const min = mod.min.map(flik => ({ flik, namn: g.min.get(flik) ?? null, finns: g.min.has(flik) }));
     const kod = mod.kod.map(fil => ({ fil, finns: finnsFil(fil) }));

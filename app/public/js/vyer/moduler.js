@@ -9,14 +9,16 @@ const KLASS = { demo: 'modul-finns', api: 'modul-api', planerat: 'modul-planerat
 const IKON = { demo: 'bock', api: 'kod', planerat: 'klocka' };
 const ORDNING = ['demo', 'api', 'planerat'];
 const st = (n, en, flera) => `${n} ${n === 1 ? en : flera}`;
+const lista = (x) => (x.length > 1 ? `${x.slice(0, -1).join(', ')} och ${x.at(-1)}` : x[0] ?? '');
 
 // Var modulen nås: menyns rader, flikarna i journalen och Min journal, offentliga sidor och modulens egen text.
 function nas(m) {
   const ut = [];
   const meny = [...new Set(m.rutter.filter(r => r.finns && r.meny).map(r => r.meny))];
   if (meny.length) ut.push(`Menyn: ${meny.map(esc).join(', ')}`);
+  // Runda 18, r4: varje offentlig sida med sitt eget namn, en gång, i en mening.
   const offentliga = m.rutter.filter(r => r.finns && r.offentlig && !r.meny && !r.vag.includes(':'));
-  for (const r of offentliga) ut.push(`<a href="${esc(r.vag)}">${esc(m.namn)}</a>, utan inloggning`);
+  if (offentliga.length) ut.push(`${lista(offentliga.map(r => `<a href="${esc(r.vag)}">${esc(r.namn ?? m.namn)}</a>`))}, utan inloggning`);
   const flikar = m.journal.filter(f => f.finns && f.namn && !f.dold).map(f => f.namn);
   if (flikar.length) ut.push(`Journalen: ${flikar.length === 1 ? 'fliken' : 'flikarna'} ${flikar.map(esc).join(', ')}`);
   const min = m.min.filter(f => f.finns && f.namn).map(f => f.namn);
