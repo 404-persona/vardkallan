@@ -667,3 +667,15 @@ FLODEN.push(
     },
   );
 }
+// Runda 18, r3 (Sussa bör-krav B1 och B2): uthämtning och betalning av ett hjälpmedel i receptionen, och kostnaderna per
+// vårdenhet för verksamhetschefen. Flödena finns i test/flodessteg.cjs (GOR med samma id).
+FLODEN.push(
+  {
+    id: 'hamta-ut-hjalpmedel', namn: 'Lämna ut ett förskrivet hjälpmedel och ta betalt i kassan', roll: 'adm-kard', start: 'Patientens översikt', budget: 3,
+    motivering: 'Sussa bör-krav B1 och 3.4.4.4. Ett klick på hur patienten betalar vid hjälpmedlet i rutan Avgifter och högkostnadsskydd och ett för att stänga kvittot. Systemet vet vad som är förskrivet och vad avgiften är, registrerar uthämtningen och betalningen och lägger den i kassan och faktureringsunderlaget. Budgeten har plats för att skriva ut kvittot.',
+  },
+  {
+    id: 'kostnader-vardenhet', namn: 'Se vårdenhetens kostnader per månad', roll: 'vch-kard', start: 'Verksamhetschefens startsida', budget: 2,
+    motivering: 'Sussa bör-krav B2 och 7.1.2.1. Ett klick på Kostnader per vårdenhet i menyn. Systemet har räknat kostnaderna ur det som har hänt och visar de vårdenheter verksamhetschefen ansvarar för, som diagram och tabell. Budgeten har plats för att öppna tabellen.',
+  },
+);

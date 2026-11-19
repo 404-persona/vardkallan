@@ -423,6 +423,7 @@ export const lagring = {
           ${o.storsta.map(t => `<tr><th scope="row">${esc(t.tabell)}</th><td class="tal">${tal(t.rader, 0)}</td></tr>`).join('')}</tbody></table></div>
         ${o.matningar.length > 1 ? `<p class="liten">Tidigare mätningar: ${o.matningar.slice(1).map(m => `${esc(tidpunkt(m.tid))} ${esc(storlek(m.byte))}`).join(', ')}.</p>` : ''}
         ${prognosDel(o.prognos)}</section>
+      ${aldreDel(o.aldre)}
       <section class="lm-sektion" aria-labelledby="sf-l-rutin"><h2 id="sf-l-rutin">Rutinen</h2><ul>${o.rutin.map(r => `<li>${esc(r)}</li>`).join('')}</ul><p class="demoregel">${esc(o.anmarkning)}</p></section>`;
     el.addEventListener('click', async (e) => {
       // Runda 9, r5: ny miljö, återkallat certifikat och kontroll av ett bevis.
@@ -476,6 +477,16 @@ export const lagring = {
       }
       const n = e.target.closest('[data-nytt-uttag]');
       if (n) return nyttUttag(main, o, n);
+      // Runda 18, r3 (KD1.1.3.5): flytten till lagringen för äldre uppgifter.
+      const fl = e.target.closest('[data-flytta-aldre]');
+      if (fl) {
+        try {
+          const r = await medKnapp(fl, () => api('/api/lagring/flytt', { metod: 'POST', data: {} }));
+          notis(r.filer ? `${r.filer} ${r.filer === 1 ? 'fil är flyttad' : 'filer är flyttade'} till lagringen för äldre uppgifter, ${storlek(r.byte)}.` : 'Det fanns inget att flytta. Allt som är äldre än gränsen ligger redan i lagringen för äldre uppgifter.');
+          await lagring.visa(main);
+        } catch { /* notis visad */ }
+        return;
+      }
       const b = e.target.closest('[data-prova]');
       if (!b) return;
       try {
@@ -502,6 +513,21 @@ function prognosDel(p) {
       ${p.klasser.lista.map(k => `<tr><th scope="row">${esc(k.namn)}${k.flyttEfterAr != null ? `<span class="under-text">Uppgifter äldre än ${k.flyttEfterAr} år</span>` : ''}</th><td>${esc(k.kvalitet)}</td><td class="tal">${k.svarstidMs} ms</td><td class="tal">${esc(storlek(k.byte))}</td><td class="tal">${esc(kr(k.krPerManad))}</td></tr>`).join('')}</tbody></table></div>
       ${p.klasser.krPerManadUtanKlasser != null ? `<p class="liten">Med lagringsklasserna kostar lagringen ${esc(kr(p.klasser.krPerManad))} per månad, mot ${esc(kr(p.klasser.krPerManadUtanKlasser))} om allt låg i den snabba lagringen.</p>` : ''}` : '<p class="liten">Lagringsklasserna finns från version 1.2.</p>'}
     <p class="dampad liten">${esc(p.metod)}</p>`;
+}
+
+// Runda 18, r3 (KD1.1.3.5): lagringen för äldre uppgifter, en egen databas. Systemet flyttar filinnehållet i avslutade
+// vårdkontakter och äldre handlingar dit när det är äldre än lagringsklassens gräns, och journalen läser det därifrån.
+function aldreDel(a) {
+  if (!a) return '';
+  const v = a.vantar;
+  return `<section class="lm-sektion" aria-labelledby="sf-l-aldre" data-aldre><h2 id="sf-l-aldre">Lagringen för äldre uppgifter</h2>
+    <p>${a.filer ? `${tal(a.filer, 0)} ${a.filer === 1 ? 'fil' : 'filer'}, ${esc(storlek(a.byte))}, ligger i en egen databas.` : 'Inga filer är flyttade än.'} ${v.filer ? `${tal(v.filer, 0)} ${v.filer === 1 ? 'fil väntar' : 'filer väntar'} på flytt (${esc(storlek(v.byte))}).` : 'Inget väntar på flytt.'}</p>
+    <p class="liten">${esc(a.regel)}</p>
+    ${a.perTabell.some(x => x.filer) ? `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Innehåll</th><th scope="col" class="tal">Filer</th><th scope="col" class="tal">Storlek</th></tr></thead><tbody>
+      ${a.perTabell.filter(x => x.filer).map(x => `<tr><th scope="row">${esc(x.text)}</th><td class="tal">${tal(x.filer, 0)}</td><td class="tal">${esc(storlek(x.byte))}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${a.senaste.length ? `<p class="liten">Senaste flytt ${esc(tidpunkt(a.senaste[0].tid))}: ${tal(a.senaste[0].filer, 0)} filer, ${esc(storlek(a.senaste[0].byte))}, av ${esc(a.senaste[0].av ?? 'systemet')}.</p>` : ''}
+    ${v.filer && a.klass ? '<button type="button" class="knapp sekundar" data-flytta-aldre>Flytta nu</button>' : ''}
+    <p class="dampad liten">${esc(a.databas.text)} Systemet flyttar av sig självt en gång om dygnet, och knappen gör det direkt.</p></section>`;
 }
 
 // Runda 12, r2 (KD1.1.3.6): de schemalagda säkerhetskopiorna på två platser, verifieringen och återställningen.

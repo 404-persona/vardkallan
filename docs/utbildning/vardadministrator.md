@@ -134,6 +134,12 @@ Börjar i: Kassan. Klickbudget: högst 2 steg. I demon gör Karin Berg flödet.
 
 Sussa 3.4.4.1. Ett klick på Gör dagsavslut och ett på Stäm av och avsluta. Systemet har räknat kassan per betalsätt och fyllt i terminalens belopp, så kassören skriver något bara när det inte stämmer.
 
+### Lämna ut ett förskrivet hjälpmedel och ta betalt i kassan
+
+Börjar i: Patientens översikt. Klickbudget: högst 3 steg. I demon gör Karin Berg flödet.
+
+Sussa bör-krav B1 och 3.4.4.4. Ett klick på hur patienten betalar vid hjälpmedlet i rutan Avgifter och högkostnadsskydd och ett för att stänga kvittot. Systemet vet vad som är förskrivet och vad avgiften är, registrerar uthämtningen och betalningen och lägger den i kassan och faktureringsunderlaget. Budgeten har plats för att skriva ut kvittot.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.
@@ -244,6 +250,14 @@ Rätt svar: Läkaren, barnmorskan eller sjuksköterskan vid mödrahälsovården.
 
 Försäkringskassan tar emot intyget om graviditet från läkare, barnmorska eller sjuksköterska vid mödrahälsovården. Systemet visar knappen Signera bara för den som får signera.
 
+### Övning 12
+
+En patient kommer till receptionen för att hämta ut en knäortos som läkaren har förskrivit. Hur registrerar du det?
+
+Rätt svar: Du öppnar patientens översikt, där hjälpmedlet står med avgiften, och klickar på hur patienten betalar. Systemet registrerar uthämtningen och betalningen och visar kvittot.
+
+Systemet vet vad som ska hämtas ut och vad det kostar. Betalningen kommer med i kassan, dagsavslutet och faktureringsunderlaget. Terminalen är simulerad.
+
 ## Uppdrag i testinbjudan
 
 Uppdragen görs i demon under Testa (#/testa). De följer så långt det går Sussas användbarhetstestfall och ligger i den ordning en arbetsdag har dem. Systemet bockar av ett uppdrag själv när det har hänt, och ett uppdrag som går ut på att hitta något har en fråga som systemet rättar.
@@ -305,4 +319,4 @@ Du arbetar som Karin Berg, vårdadministratör på kardiologiska kliniken, som m
 - Boka om en tid och skicka en gruppkallelse.
 - Bekräfta en sammanslagning av två journaler.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 11 övningar och få intyget.
+- Svara rätt på alla 12 övningar och få intyget.

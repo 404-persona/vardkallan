@@ -55,7 +55,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, valFor }) {
       if (d?.lab) a.lab = { ...a.lab, ...labKort(d.lab) };
       if (d?.patientnara) a.patientnara = true;
     }
-    return { ...f, undersokning: undersokningar.forslag(atk, p) };
+    // Runda 18, r3 (Sussa B4): priset för varje analys och paket för den som ser priser (ekonomi-priser.js).
+    return require('./ekonomi-priser.js').markeraForslag(atk.personal, { ...f, undersokning: undersokningar.forslag(atk, p) });
   }); });
   rutt('POST', '/api/patient/:id/prover', (c, id) => { kravInloggad(c); return [201, medPatient(c, id, bestallHandling(c), (atk) => undersokningar.bestall(atk, c.body))]; });
   rutt('POST', '/api/labb/:id/signera', (c, id) => medBestallning(c, id, 'las_prover', (atk, b) => labb.signera(atk, b)));

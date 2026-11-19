@@ -756,6 +756,21 @@ function skapa(BAS) {
     await m.klicka(page.locator('dialog[open] [data-varde="HM-ROLLATOR"]'), 'Rollator');
     await synlig(page, '.notis', 'Rollator är registrerat som utlämnat');
   };
+  // Runda 18, r3 (Sussa B1): kassören tar betalt för den förskrivna blodtrycksmätaren med kort, och kvittot visas.
+  GOR['hamta-ut-hjalpmedel'] = async (m, page) => {
+    await m.klicka(page.locator('.ov-kostnader [data-att-hamta] [data-satt="kort"]').first(), 'Hämtas ut, betalt med kort');
+    await page.locator('dialog[open] .ek-kvitto').waitFor();
+    await synlig(page, 'dialog[open]', 'VK-DEMO-H-');
+    await m.klicka(page.locator('dialog[open] [data-varde="ok"]'), 'Stäng kvittot');
+    await synlig(page, '.notis', 'Blodtrycksmätare för mätning hemma är uthämtat');
+  };
+  // Runda 18, r3 (Sussa B2): verksamhetschefen öppnar kostnaderna per vårdenhet.
+  GOR['kostnader-vardenhet'] = async (m, page) => {
+    await m.klicka(page.locator('.meny a[href="#/kostnader"]'), 'Kostnader per vårdenhet');
+    await synlig(page, 'main h1', 'Kostnader per vårdenhet');
+    await page.locator('.kv-enhet svg.kv-diagram').first().waitFor();
+    await synlig(page, '.kv-enhet', 'Kardiologiska kliniken');
+  };
   // Runda 7, r6: vikt och längd vid ett besök i barnhälsovården. Vikten har fokus när fliken öppnas, och kurvan visar
   // det nya värdet direkt.
   GOR['tillvaxt-bhv'] = async (m, page) => {

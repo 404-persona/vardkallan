@@ -56,9 +56,19 @@ Systemet skapar faktureringsunderlaget av sig självt ur vårdkontakter, åtgär
 
 Pröva i demon: logga in som Fredrik Alm och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/ekonomi).
 
+### Övning 4
+
+Hur ser du vad vården på din vårdenhet har kostat de senaste månaderna?
+
+Rätt svar: Under Kostnader per vårdenhet. Systemet räknar kostnaden per månad ur det som har hänt, som diagram och tabell, utan patientuppgifter.
+
+Systemet räknar kostnaderna enligt prislistan. Ersättningen enligt DRG och patientavgifterna står för sig, och den pågående månaden är preliminär.
+
+Pröva i demon: logga in som Fredrik Alm och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/kostnader).
+
 ## Det här ska du kunna efter utbildningen
 
 - Exportera faktureringsunderlaget för en vårdenhet och en månad.
 - Förklara hur systemet räknar fram priserna och betalningsmottagarna.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 3 övningar och få intyget.
+- Svara rätt på alla 4 övningar och få intyget.

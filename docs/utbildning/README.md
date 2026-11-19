@@ -57,17 +57,17 @@ Materialet skrivs ur systemets egna register med scripts/dokument-md.js: arbetsf
 
 | Roll | Arbetsflöden | Filmer | Övningar | Uppdrag |
 | --- | --- | --- | --- | --- |
-| [Läkare](lakare.md) | 66 | 4 | 19 | 22 |
+| [Läkare](lakare.md) | 66 | 4 | 21 | 22 |
 | [Sjuksköterska](sjukskoterska.md) | 29 | 2 | 14 | 12 |
 | [Undersköterska](underskoterska.md) | 2 | 1 | 11 | 7 |
-| [Vårdadministratör](vardadministrator.md) | 19 | 1 | 11 | 12 |
+| [Vårdadministratör](vardadministrator.md) | 20 | 1 | 12 | 12 |
 | [Logggranskare](logggranskare.md) | 0 | 0 | 3 | 0 |
 | [Arkivarie](arkivarie.md) | 1 | 0 | 3 | 0 |
 | [Analytiker (uppföljning)](uppfoljning.md) | 1 | 0 | 3 | 0 |
 | [Kommunens personal (simulerad)](kommun.md) | 0 | 0 | 3 | 0 |
 | [Farmaceut](farmaceut.md) | 1 | 0 | 6 | 0 |
-| [Verksamhetschef](verksamhetschef.md) | 1 | 0 | 6 | 0 |
-| [Ekonom](ekonom.md) | 1 | 0 | 3 | 0 |
+| [Verksamhetschef](verksamhetschef.md) | 2 | 0 | 7 | 0 |
+| [Ekonom](ekonom.md) | 1 | 0 | 4 | 0 |
 | [Systemförvaltare](systemforvaltare.md) | 5 | 1 | 4 | 7 |
 | [Fysioterapeut](fysioterapeut.md) | 0 | 0 | 8 | 7 |
 | [Arbetsterapeut](arbetsterapeut.md) | 1 | 0 | 9 | 0 |

@@ -243,7 +243,7 @@ export const MODULER = [
     { avsnitt: ['6.3.3'], rutter: ['#/forskning'], vyer: ['forskning.js'], kod: ['src/forskning.js'], api: ['/api/forskning'] }),
   m('ekonomi', 'uppfoljning', 'Ekonomi och fakturering',
     'Systemet skapar transaktionsposterna för fakturering ur vårdkontakter, vårddygn, åtgärder, läkemedel, material och hjälpmedel, med priset ur vårdenhetens prislista och betalningsmottagaren uträknad. Prislistor med giltighetstid och kostnader i vårdprocessen.',
-    { avsnitt: ['7.1'], rutter: ['#/ekonomi', '#/prislistor'], vyer: ['ekonomi.js'], kod: ['src/ekonomi.js', 'public/js/ekonomi-ui.js'], api: ['/api/ekonomi/underlag', '/api/ekonomi/prislistor'] }),
+    { avsnitt: ['7.1'], rutter: ['#/ekonomi', '#/prislistor', /* Runda 18, r3 */ '#/kostnader'], vyer: ['ekonomi.js'], kod: ['src/ekonomi.js', 'public/js/ekonomi-ui.js', /* Runda 18, r3 */ 'src/ekonomi-priser.js'], api: ['/api/ekonomi/underlag', '/api/ekonomi/prislistor', /* Runda 18, r3 */ '/api/ekonomi/kostnader', '/api/ekonomi/avtal'] }),
 
   // Behörighet, förvaltning och teknik.
   m('behorighet', 'forvaltning', 'Behörighet, inloggning och logg',
@@ -256,7 +256,7 @@ export const MODULER = [
       simulerat: 'E-arkivet är simulerat.' }),
   m('systemforvaltning', 'forvaltning', 'Systemförvaltning',
     'Regler och parametrar med giltighetsdatum, förhandsvisning och fyra ögon, omorganisationer enligt HSA:s regler, undantag från visning, lagring och säkerhetskopior per huvudman, och miljöer för acceptanstest, utbildning och test ur en kopia av produktionsmiljön.',
-    { avsnitt: ['12.1', 'KD1.1.3', 'KD1.1.1.5'], rutter: ['#/regler', '#/omorganisation', '#/undantag', '#/lagring'], vyer: ['systemforvaltning.js'], kod: ['src/konfiguration.js', 'src/omorganisation.js', 'src/undantag.js', 'src/lagring.js', 'src/miljoer.js'], api: ['/api/konfiguration', '/api/omorganisation', '/api/lagring', '/api/miljoer'],
+    { avsnitt: ['12.1', 'KD1.1.3', 'KD1.1.1.5'], rutter: ['#/regler', '#/omorganisation', '#/undantag', '#/lagring'], vyer: ['systemforvaltning.js'], kod: ['src/konfiguration.js', 'src/omorganisation.js', 'src/undantag.js', 'src/lagring.js', 'src/miljoer.js', /* Runda 18, r3 */ 'src/lagring-aldre.js'], api: ['/api/konfiguration', '/api/omorganisation', '/api/lagring', '/api/miljoer'],
       simulerat: 'Kopplingen till HSA-katalogen är simulerad, och HSA-id för nya enheter är påhittade.' }),
   m('kodverk', 'forvaltning', 'Kodverk, masterdata och informationsstruktur',
     'Alla kodverk med version och giltighet, nationellt fackspråk där systemet sätter Snomed CT-koden själv, journalens uppgifter mappade mot Nationell informationsstruktur och masterdata för organisation, personal och befolkning.',

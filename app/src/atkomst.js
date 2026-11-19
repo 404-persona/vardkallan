@@ -858,3 +858,9 @@ Object.assign(HANDLINGAR, {
 // sjukfall_reko står inte i UTAN_PATIENT: den används bara som rollkrav för tabellen (kanRoll), och prövad mot en patient
 // ger den samma krav på vårdrelation som andra handlingar, så att den aldrig blir en väg till en enskild patient.
 ROLLER.rehabkoordinator = ['sjukfall_reko', 'reko_lasa', 'reko_satta', 'utbildning'];
+// Runda 18, r3 (Sussa bör-krav B2): verksamhetschefen och ekonomen ser kostnaderna per vårdenhet och period, med summor
+// och utan patientuppgifter (ekonomi.js, kostnadsoversikt). Kassan tar betalt för hjälpmedel med handlingen checka_in.
+HANDLINGAR.ekonomi_oversikt = 'se kostnaderna per vårdenhet och period';
+ROLLER.verksamhetschef.push('ekonomi_oversikt');
+ROLLER.ekonom.push('ekonomi_oversikt');
+UTAN_PATIENT.add('ekonomi_oversikt');

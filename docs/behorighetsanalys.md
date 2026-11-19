@@ -116,7 +116,7 @@ Handlingar i koden (2): `samverkan`, `utbildning`.
 
 ## Verksamhetschef (verksamhetschef)
 
-Behov: Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten.
+Behov: Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten. Följer kostnaderna per månad för de vårdenheter hen är chef för, som summor utan patientuppgifter.
 
 Risker: Att chefsrollen används för att läsa enskilda patienters journaler.
 
@@ -124,11 +124,11 @@ Så begränsas risken: Läser inte journalen. Uppgifterna gäller den egna vård
 
 Får inte: `las_journal`, `las_oversikt`, `ordinera`.
 
-Handlingar i koden (10): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `godkanna_flytt`, `las_flytt`, `vyforval`, `sjukfall_enhet`.
+Handlingar i koden (11): `lakemedelsansvar`, `utbildning`, `intyg_enhet`, `forskning_godkann`, `signeringslista`, `godkanna_gallring`, `godkanna_flytt`, `las_flytt`, `vyforval`, `sjukfall_enhet`, `ekonomi_oversikt`.
 
 ## Ekonom (ekonom)
 
-Behov: Hämtar faktureringsunderlag och ändrar prislistor.
+Behov: Hämtar faktureringsunderlag, ändrar prislistor, registrerar avtal med betalningsmottagare och följer kostnaderna per vårdenhet och månad.
 
 Risker: Att ekonomiska underlag röjer vårdinnehåll eller skyddade personuppgifter.
 
@@ -136,7 +136,7 @@ Så begränsas risken: Läser inte journalen. Underlaget innehåller aldrig namn
 
 Får inte: `las_journal`, `las_oversikt`, `sok`.
 
-Handlingar i koden (3): `faktureringsunderlag`, `prislista`, `utbildning`.
+Handlingar i koden (4): `faktureringsunderlag`, `prislista`, `utbildning`, `ekonomi_oversikt`.
 
 ## Systemförvaltare (systemforvaltare)
 

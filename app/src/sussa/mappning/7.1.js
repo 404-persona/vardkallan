@@ -9,8 +9,10 @@ const F = 'Ekonomi: faktureringsunderlag > ';
 const K = 'Ekonomi: kostnader i vårdprocessen > ';
 const S = 'Ekonomi: skydd i underlaget och högkostnadsskyddet > ';
 const flode = (id) => klickbudgetTest(FLODEN.find(f => f.id === id));
+// Runda 18, r3: priser, avtal, uthämtning av hjälpmedel och kostnader per vårdenhet (sussa/runda18-r3.js).
+import { medR18r3 } from '../runda18-r3.js';
 
-export default [
+export default medR18r3([
   {
     id: '7.1.1.1', kategori: 'system', egna: ['D6'], avsedd: 'uppfyllt_demo',
     tester: [
@@ -67,4 +69,4 @@ export default [
     expert: 'Systemet räknar kostnaden av sig självt ur det som har hänt och visar bara det användaren redan får se, så att ingen behöver leta i prislistor eller räkna avgifter.',
     anmarkning: 'Demopriser. Rabatterna på patientavgifterna visas med ordinarie avgift, rabatt och skäl (ålder, LMA-kort och frikort) och summeras i rutan. Högkostnadsskyddet och avgifterna i rutan räknas bara på de besök användaren får se, så de kan visa mindre än patienten har betalat när det finns besök på en annan vårdenhet eller en spärrad enhet. Rutan säger det, och patienten ser hela skyddet i Min journal. Att räkna skyddet över alla besök och bara visa att frikort gäller går inte utan att röja något: när de synliga besöken inte når taket säger ett frikort att det finns besök som användaren inte får se. Därför står posten kvar som delvis uppfylld. Rabatter i prislistorna för läkemedel och material finns inte.',
   },
-];
+]);

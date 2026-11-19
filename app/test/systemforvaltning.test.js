@@ -768,7 +768,8 @@ describe('Systemförvaltning', () => {
         const r = lagring.jamfor(db, kopia);
         expect(r.kontroller.filter(k => !k.ok)).toEqual([]);
         expect(r.ok).toBe(true);
-        expect(r.kontroller.map(k => k.id)).toEqual(['tabeller', 'rader', 'triggrar', 'index', 'skydd', 'integritet', 'atkomstlogg', 'sakerhetslogg']);
+        // Runda 18, r3: kontrollen av lagringen för äldre uppgifter (lagring-aldre.js, Sussa KD1.1.3.5).
+        expect(r.kontroller.map(k => k.id)).toEqual(['tabeller', 'rader', 'triggrar', 'index', 'skydd', 'aldre', 'integritet', 'atkomstlogg', 'sakerhetslogg']);
       } finally { kopia.close(); }
       // Samma med ögonblicksbilden i minnet.
       const m = lagring.aterlas(lagring.sakerhetskopiera(db));

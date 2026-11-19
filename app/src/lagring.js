@@ -20,6 +20,8 @@ import { datumAv } from './db.js';
 import * as sakerhetslogg from './sakerhetslogg.js';
 // Runda 12, r2: prognosen för volymen.
 import { prognos } from './lagringsprognos.js';
+// Runda 18, r3: lagringen för äldre uppgifter (Sussa KD1.1.3.5).
+import * as aldreLagring from './lagring-aldre.js';
 
 const ENHETSKOLUMNER = ['enhet_id', 'vardenhet_id', 'fran_enhet_id', 'till_enhet_id', 'registrerad_enhet'];
 // Tabeller som inte hör till en enskild huvudman: kodverk, katalog och systemets egna inställningar. De följer med i
@@ -38,7 +40,9 @@ const GEMENSAMMA = new Set(['katalog', 'installningar', 'migrering', 'forpacknin
   // Runda 12, r1: journalens mallar, sökord och mätvärdestyper gäller hela vårdgivaren (journalstruktur.js).
   'struktur_versioner',
   // Runda 12, r2: lagringsklasserna gäller hela vårdgivaren (releaser.js, migrering 2).
-  'lagringsklasser']);
+  'lagringsklasser',
+  // Runda 18, r3: vårdgivarens avtal med betalningsmottagare (ekonomi.js) har inga patientuppgifter.
+  'ekonomiavtal']);
 // Tabeller som hör till systemförvaltningen och inte till en huvudman i ett uttag.
 // Datauttaget för uppföljning byggs om ur uppgifterna och följer inte med i ett uttag.
 // Runda 9, r5: de gemensamma tabellerna kopieras till en ny utbildnings- eller testmiljö (miljoer.js).
@@ -211,6 +215,8 @@ export function uttag(db, hm) {
     const ins = ut.query(`INSERT INTO "${t}" (${kol.map(c => `"${c}"`).join(', ')}) VALUES (${kol.map(() => '?').join(', ')})`);
     const rader = db.query(`SELECT rowid AS __r, * FROM "${t}"`).all().filter(r => k.typ === 'gemensam' || val[t]?.has(r.__r));
     for (const r of rader) ins.run(...kol.map(c => r[c]));
+    // Runda 18, r3: filinnehåll som ligger i lagringen för äldre uppgifter följer med i uttaget (lagring-aldre.js).
+    aldreLagring.fyllI(db, ut, t, rader);
     antal[t] = rader.length;
   }
   for (const s of schema.filter(x => x.type === 'index' || x.type === 'trigger')) ut.exec(s.sql);
@@ -228,8 +234,10 @@ function tabellHash(db, t) {
 const schemaLista = (db, typ) => db.query('SELECT name, sql FROM sqlite_master WHERE type = ? ORDER BY name').all(typ);
 
 // Säkerhetskopian: en konsistent ögonblicksbild av hela databasen.
-export const sakerhetskopiera = (db) => db.serialize();
-export const aterlas = (kopia) => Database.deserialize(kopia);
+// Runda 18, r3 (Sussa KD1.1.3.5): ögonblicksbilden tar med lagringen för äldre uppgifter, och återläsningen kopplar den
+// som en egen databas igen (lagring-aldre.js).
+export const sakerhetskopiera = (db) => aldreLagring.bild(db);
+export const aterlas = (kopia) => aldreLagring.ny(kopia);
 
 // Jämför en återläst databas med originalet. Returnerar kontrollerna och om allt höll.
 export function jamfor(original, kopia) {
@@ -251,6 +259,11 @@ export function jamfor(original, kopia) {
   try { kopia.exec('UPDATE atkomstlogg SET resultat = resultat WHERE id = (SELECT min(id) FROM atkomstlogg)'); skyddad = false; } catch { /* ska stoppas */ }
   try { kopia.exec('DELETE FROM atkomstlogg WHERE id = (SELECT min(id) FROM atkomstlogg)'); skyddad = false; } catch { /* ska stoppas */ }
   lagg('skydd', 'Triggrarna stoppar ändring och radering av loggen i kopian', skyddad);
+  // Runda 18, r3 (Sussa KD1.1.3.5): lagringen för äldre uppgifter finns i kopian som en egen databas med samma innehåll.
+  const aldreHash = (d) => { aldreLagring.koppla(d); const h = createHash('sha256'); let n = 0; for (const r of d.query('SELECT tabell, rad_id, sha256 FROM aldre.filinnehall ORDER BY tabell, rad_id').iterate()) { h.update(JSON.stringify(r)); n++; } return { h: h.digest('hex'), n }; };
+  const ah = aldreHash(original);
+  const kh = aldreHash(kopia);
+  lagg('aldre', `Lagringen för äldre uppgifter finns som en egen databas med alla ${ah.n} filer`, ah.h === kh.h && ah.n === kh.n);
   const hel = kopia.query('PRAGMA integrity_check').get().integrity_check;
   lagg('integritet', 'Databasen är hel (SQLite integrity_check)', hel === 'ok', hel === 'ok' ? null : hel);
   const lg = verifieraLogg(kopia);
@@ -303,6 +316,8 @@ export function oversikt(db, personal) {
     huvudman: hm, matningar,
     // Runda 12, r2: prognosen för volymen ur tillväxten och lagringsklasserna (lagringsprognos.js, Sussa KD1.1.3.5).
     prognos: prognos(db),
+    // Runda 18, r3 (Sussa KD1.1.3.5): lagringen för äldre uppgifter, en egen databas (lagring-aldre.js).
+    aldre: aldreLagring.lage(db),
     uttag: db.query('SELECT * FROM uttagsbeslut ORDER BY id DESC LIMIT 20').all().map(b => uttagsbeslutUt(db, b, personal)), skal: SKAL,
     oklassadeText: per.some(x => x.klass === 'oklassad') ? oklassadeFel(per.filter(x => x.klass === 'oklassad').map(x => x.tabell)) : null,
     rutin: [

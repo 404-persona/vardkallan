@@ -2040,3 +2040,36 @@ code.tumavtryck { overflow-wrap: anywhere; word-break: break-word; font-size: va
 .hl-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .hl-rad { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; background: var(--yta); border: 1px solid var(--linje); border-radius: 10px; padding: 10px 14px; }
 .hl-rad > span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Runda 18, r3 (Sussa B2): kostnaderna per vårdenhet. Diagrammet har egna färger som är prövade mot sin yta: stapeln
+   har minst 3:1 mot ytan och texten minst 4,5:1, i ljust läge, i mörkt läge (datorns inställning) och i hög kontrast.
+   Vårdkällan har inget mörkt läge i övrigt, så rutan med diagrammet följer datorns mörka läge för sig. */
+.kv-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.kv-enhet { --kv-yta: #ffffff; --kv-text: #17282d; --kv-dampad: #43555a; --kv-stapel: #0f5b5c; --kv-linje: #738784;
+  background: var(--kv-yta); color: var(--kv-text); border: 1px solid var(--linje); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.kv-enhet h2 { font-size: var(--f-l); margin: 0 0 4px; }
+.kv-summa { margin: 0 0 6px; font-size: var(--f-s); }
+.kv-diagram { display: block; width: 100%; height: auto; max-height: 220px; overflow: visible; }
+.kv-diagram .kv-bas { stroke: var(--kv-linje); stroke-width: 1; }
+.kv-stapel path { fill: var(--kv-stapel); }
+.kv-preliminar path { fill: var(--kv-yta); stroke: var(--kv-stapel); stroke-width: 2; stroke-dasharray: 4 3; }
+.kv-stapel .kv-traff { fill: transparent; }
+.kv-stapel:hover path { opacity: 0.85; }
+.kv-diagram text { font-family: var(--sans); fill: var(--kv-dampad); font-size: 11px; }
+.kv-diagram .kv-varde { fill: var(--kv-text); font-weight: 600; }
+.kv-forklaring { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--kv-dampad); margin: 4px 0; }
+.kv-prov { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--kv-stapel); }
+.kv-prov-prel { background: var(--kv-yta); border: 2px dashed var(--kv-stapel); }
+.kv-tabell summary { cursor: pointer; color: var(--kv-text); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-kontrast="hog"]) .kv-enhet { --kv-yta: #16262a; --kv-text: #e8eeed; --kv-dampad: #b7c6c4; --kv-stapel: #6fc2c0; --kv-linje: #7f9592; border-color: #34494c; }
+  :root:not([data-kontrast="hog"]) .kv-enhet .tabellrulle, :root:not([data-kontrast="hog"]) .kv-enhet .tabell th, :root:not([data-kontrast="hog"]) .kv-enhet .tabell td { background: var(--kv-yta); color: var(--kv-text); }
+}
+:root[data-kontrast="hog"] .kv-enhet { --kv-yta: #ffffff; --kv-text: #000000; --kv-dampad: #000000; --kv-stapel: #000000; --kv-linje: #000000; border: 2px solid #000000; }
+/* Runda 18, r3 (Sussa B1, B4 och B5): priser, jämförelse, källor och hjälpmedel att hämta ut i kostnadsrutan. */
+.ek-jamforelse, .ek-kallor { margin: 6px 0; }
+.ek-kallor summary { cursor: pointer; }
+.ek-att-hamta { margin: 8px 0; }
+.ek-att-hamta li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; justify-content: space-between; }
+.lm-pris, .pr-pris { color: var(--blak-2); }
+.ek-kvitto dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 6px 0; }

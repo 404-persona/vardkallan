@@ -154,6 +154,8 @@ export function laddaHel(atk, body = {}, nu = new Date()) {
 // går att avkoda får en ritad miniatyr. Film, ljud och PDF får en ritad miniatyr, ljud i WAV med ljudkurvan.
 export async function gorVisning(db, m) {
   bilder.sakra(db);
+  // Runda 18, r3 (Sussa KD1.1.3.5): originalet kan ligga i lagringen för äldre uppgifter (lagring-aldre.js).
+  m = require('./lagring-aldre.js').medData(db, 'media', m);
   const har = new Set(db.query('SELECT storlek FROM media_visning WHERE media_id = ?').all(m.id).map(r => r.storlek));
   const slag = bilder.TYPER[m.typ]?.slag ?? 'dokument';
   const spara = (storlek, v) => db.query('INSERT OR IGNORE INTO media_visning (media_id, patient_id, enhet_id, storlek, typ, data, bredd, hojd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
@@ -179,7 +181,7 @@ export function visningsfil(atk, m, storlek) {
     let r = atk.db.query('SELECT * FROM media_visning WHERE media_id = ? AND storlek = ?').get(m.id, storlek);
     if (!r) { await gorVisning(atk.db, m); r = atk.db.query('SELECT * FROM media_visning WHERE media_id = ? AND storlek = ?').get(m.id, storlek); }
     // En bild som inte gick att avkoda visas som originalet.
-    if (!r) return new Response(m.data, { headers: bilder.huvuden(m.typ, m.namn) });
+    if (!r) return new Response(require('./lagring-aldre.js').lasData(atk.db, 'media', m), { headers: bilder.huvuden(m.typ, m.namn) });
     return new Response(r.data, { headers: bilder.huvuden(r.typ, `${storlek}-${m.id}.${r.typ === 'image/png' ? 'png' : 'jpg'}`) });
   })();
 }
@@ -506,7 +508,7 @@ export function mediaFhir(db, m, base) {
     createdDateTime: m.tagen, issued: m.registrerad, ...(m.registrerad_av ? { operator: ref('Practitioner', m.registrerad_av, personNamn(db, m.registrerad_av)) } : {}),
     ...(m.kroppsstalle ? { bodySite: { text: m.kroppsstalle } } : {}), ...(ut.apparat ? { deviceName: `${ut.apparat.namn}, ${ut.apparat.serienummer}` } : {}),
     ...(e?.hojd ? { height: e.hojd } : {}), ...(e?.bredd ? { width: e.bredd } : {}), ...(e?.langd_sek ? { duration: e.langd_sek } : {}),
-    content: { contentType: m.typ, url: `${base}/api/media/${m.id}/fil`, size: m.storlek, hash: createHash('sha1').update(Buffer.from(m.data)).digest('base64'), title: m.namn, creation: m.tagen },
+    content: { contentType: m.typ, url: `${base}/api/media/${m.id}/fil`, size: m.storlek, hash: createHash('sha1').update(Buffer.from(require('./lagring-aldre.js').lasData(db, 'media', m))).digest('base64'), title: m.namn, creation: m.tagen },
     note: [{ text: `Källa: ${ut.kalla.text}.${ut.ursprung ? ` ${ut.ursprung.vardenhet}, ${ut.ursprung.vardgivare}.` : ''}${m.beskrivning ? ` ${m.beskrivning}` : ''}` }],
   };
 }

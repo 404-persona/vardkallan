@@ -178,6 +178,12 @@ function transaktioner(db, ve, datum) {
     WHERE s.enhet_id IN (${ph}) ORDER BY x.id`).all(...enheter).filter(x => pa(x.tid))) {
     ut.push({ nyckel: `bokning:${b.id}`, kalla: 'bokning', id: b.id, tid: b.tid, kvitto: b.kvitto, slag: 'Patientavgift vid besöket', satt: b.satt, belopp: b.belopp, av: b.av, avInvanare: Boolean(b.av_invanare) });
   }
+  // Runda 18, r3 (Sussa B1): hjälpmedelsavgifterna som har betalats i kassan vid uthämtningen (ekonomi.js, uthamta).
+  if (db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'hjalpmedel_betalningar'").get()) {
+    for (const h of db.query('SELECT * FROM hjalpmedel_betalningar WHERE enhet_id = ? ORDER BY id').all(ve).filter(x => pa(x.tid))) {
+      ut.push({ nyckel: `hjalpmedel:${h.id}`, kalla: 'hjalpmedel', id: h.id, tid: h.tid, kvitto: h.kvitto, slag: 'Hjälpmedelsavgift', satt: h.satt, belopp: h.belopp, av: h.av, avInvanare: false });
+    }
+  }
   if (finns(db)) {
     for (const r of db.query('SELECT * FROM aterbetalningar WHERE enhet_id = ? ORDER BY id').all(ve).filter(x => pa(x.tid))) {
       ut.push({ nyckel: `aterbetalning:${r.id}`, kalla: 'aterbetalning', id: r.id, tid: r.tid, kvitto: r.kvitto, slag: `Återbetalning (${ORSAKER[r.orsak].toLowerCase()})`, satt: r.satt, belopp: -r.belopp, av: r.av, avInvanare: false, avser: `${r.kalla}:${r.kalla_id}` });
@@ -215,7 +221,7 @@ export function kassa(db, personal, { datum = idag() } = {}) {
   const rad = (r) => ({
     nyckel: r.nyckel, kalla: r.kalla, id: r.id, tid: r.tid, kvitto: r.kvitto, slag: r.slag, satt: r.satt, sattText: { kort: 'Kort', faktura: 'Faktura', frikort: 'Frikort', avgiftsfri: 'Avgiftsfritt' }[r.satt],
     belopp: r.belopp, avslutad: avslutade.has(r.nyckel),
-    kanAterbetalas: r.kalla !== 'aterbetalning' && ['kort', 'faktura'].includes(r.satt) && r.belopp > 0 && !aterbetalda.has(`${r.kalla}:${r.id}`),
+    kanAterbetalas: r.kalla === 'bokning' && ['kort', 'faktura'].includes(r.satt) && r.belopp > 0 && !aterbetalda.has(`${r.kalla}:${r.id}`),
   });
   return {
     datum, vardenhet: { id: ve, namn: db.query('SELECT namn FROM enheter WHERE id = ?').get(ve)?.namn ?? ve }, idag: datum === idag(),

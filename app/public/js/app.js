@@ -210,6 +210,8 @@ const MENY = [
   // Runda 7, r3: ekonomen.
   ['#/ekonomi', 'Faktureringsunderlag', 'lista', () => far('faktureringsunderlag')],
   ['#/prislistor', 'Prislistor', 'kort', () => far('prislista')],
+  // Runda 18, r3 (Sussa B2): kostnaderna per vårdenhet för verksamhetschefen och ekonomen.
+  ['#/kostnader', 'Kostnader per vårdenhet', 'krav', () => far('ekonomi_oversikt')],
   // Runda 7, r5.
   ['#/rapportering', 'Rapportering', 'arkiv', () => far('myndighetsrapport')],
   // Runda 9, r7: patientgrupper, statistik, folkhälsa och ledtider, och beställningar av forskningsuttag.
@@ -321,6 +323,8 @@ const RUTTER = [
   // Runda 7, r3.
   [/^#\/ekonomi$/, ekonomi, () => far('faktureringsunderlag')],
   [/^#\/prislistor$/, ekonomi.prislistor, () => far('prislista')],
+  // Runda 18, r3 (Sussa B2).
+  [/^#\/kostnader$/, ekonomi.kostnader, () => far('ekonomi_oversikt')],
   // Runda 7, r5.
   [/^#\/rapportering$/, rapportering, () => far('myndighetsrapport')],
   // Runda 7, r2: utbildningen, nyheterna och tillgänglighetsredogörelsen (öppen utan inloggning).

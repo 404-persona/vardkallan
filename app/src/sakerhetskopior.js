@@ -129,7 +129,8 @@ export function skapaKopielager({ katalog = null, andraKatalog = null, hemlighet
     // Storleken prövas innan databasen serialiseras, så att en uppblåst sandlåda inte läses in i minnet en gång till.
     const storleken = db instanceof Uint8Array ? db.byteLength : db.query('PRAGMA page_count').get().page_count * db.query('PRAGMA page_size').get().page_size;
     if (storleken > maxKopiaByte) throw new Fel(413, `Sandlådan är för stor för en säkerhetskopia (${Math.round(storleken / 1048576)} MB, högst ${Math.round(maxKopiaByte / 1048576)} MB). Återställ demon för att börja om med en sandlåda av normal storlek.`, 'ogiltig');
-    const data = db instanceof Uint8Array ? db : db.serialize();
+    // Runda 18, r3: kopian tar med lagringen för äldre uppgifter (lagring-aldre.js, Sussa KD1.1.3.5).
+    const data = db instanceof Uint8Array ? db : require('./lagring-aldre.js').bild(db);
     const summa = sha256(data);
     const id = `${iso(nu).replace(/[:.]/g, '-')}-${randomBytes(3).toString('hex')}`;
     const fil = `${id}.sqlite`;

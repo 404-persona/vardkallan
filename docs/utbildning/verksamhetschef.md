@@ -26,6 +26,12 @@ Börjar i: Verksamhetschefens startsida. Klickbudget: högst 3 steg. I demon gö
 
 Gröna häftet 1.3 och 1.4.2. Påminnelsen om att uppdraget saknas står först på verksamhetschefens startsida med systemets förslag (den som hade uppdraget senast). Ett klick på Utse och ett för att bekräfta. Systemet fyller i perioden, ett år, och omfattningen ur häftet och prövar att läkaren arbetar på vårdenheten och har kompetensen. Budgeten har plats för ett klick till.
 
+### Se vårdenhetens kostnader per månad
+
+Börjar i: Verksamhetschefens startsida. Klickbudget: högst 2 steg. I demon gör Ulrika Sandell flödet.
+
+Sussa bör-krav B2 och 7.1.2.1. Ett klick på Kostnader per vårdenhet i menyn. Systemet har räknat kostnaderna ur det som har hänt och visar de vårdenheter verksamhetschefen ansvarar för, som diagram och tabell. Budgeten har plats för att öppna tabellen.
+
 ## Övningar
 
 Övningarna görs under Utbildning i demon. Servern rättar svaren och förklarar varje svar. När alla svar är rätt får du ett intyg som gäller i 365 dagar. Här står frågorna med rätt svar och förklaringen, så att du kan läsa på före och efter.
@@ -86,6 +92,16 @@ Rätt svar: Små antal visas inte, så att översikten inte pekar ut enskilda pa
 
 Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar/enhet).
 
+### Övning 7
+
+Hur ser du vad vården på din vårdenhet har kostat de senaste månaderna?
+
+Rätt svar: Under Kostnader per vårdenhet. Systemet räknar kostnaden per månad ur det som har hänt, som diagram och tabell, utan patientuppgifter.
+
+Systemet räknar kostnaderna enligt prislistan. Ersättningen enligt DRG och patientavgifterna står för sig, och den pågående månaden är preliminär.
+
+Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/kostnader).
+
 ## Det här ska du kunna efter utbildningen
 
 - Utse en medicinskt ansvarig läkare.
@@ -93,4 +109,4 @@ Pröva i demon: logga in som Ulrika Sandell och öppna [samma ställe i demon](h
 - Utfärda ett utbildarintyg.
 - Veta vilket ansvar som inte kan lämnas över.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 6 övningar och få intyget.
+- Svara rätt på alla 7 övningar och få intyget.

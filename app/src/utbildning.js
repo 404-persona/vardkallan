@@ -90,6 +90,8 @@ export const PROVA = {
   '#/patient/p14/intyg': 'las_intyg', '#/patient/p01/intyg': 'las_intyg',
   // Runda 16, r3: handledningen av studenter och barnmorskans förskrivning för demopatienten på vårdcentralen.
   '#/handledning': null, '#/patient/p11/lakemedel': 'patient',
+  // Runda 18, r3: kostnaderna per vårdenhet för verksamhetschefen och ekonomen.
+  '#/kostnader': 'ekonomi_oversikt',
 };
 const provaNar = (vag, personal) => {
   if (!(vag in PROVA)) return false;

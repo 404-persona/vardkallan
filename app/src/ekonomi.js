@@ -23,6 +23,9 @@ import { CS } from './fhir-definitioner.js';
 import { HANDLING_FOR } from './atgarder.js';
 import * as samordnad from './samordnad.js';
 import { DEMO, KATEGORIER, DRG_DEMO, DRG_OGRUPPERAD, EGEN_REGION, folkbokforing, lmaFor } from './ekonomi-schema.js';
+// Runda 18, r3: avtal med betalningsmottagare, kommunens belopp, uthämtning av hjälpmedel och priser där beslutet fattas.
+import { UTHAMTNING, kommunDygnRiks, LAGRUM_KOMMUN } from './ekonomi-schema.js';
+import { analyspris, hjalpmedelspris, DEMO_PRISER } from './ekonomi-priser.js';
 // Beslut 2026-11-14 (runda 15, r3): statistiken räknar med det som har förts till mellanarkivet (mellanarkiv.js, statVy).
 const statVy = (db, t) => require('./mellanarkiv.js').vy(db, t);
 
@@ -118,6 +121,25 @@ export function andraPrislista(db, personal, enhetId, body = {}) {
     .run(e.id, version, fran, JSON.stringify(poster), iso(), personal.id, orsak);
   loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, handling: 'prislista', resurs: `prislista:${e.id}:v${version}`, grund: 'ekonomi', syfte: orsak });
   return { version, giltigFran: fran, andringar: skillnad(bas.poster, poster), vardenhet: { id: e.id, namn: e.namn } };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 18, r3 (Sussa 7.1.1.2): avtal med betalningsmottagare. Det avtal som gäller en dag är det med senast giltig_fran
+// som inte har passerat dagen och som inte har gått ut. Ett avtal ändras aldrig.
+export function avtalFor(db, typ, motpart, datum) {
+  if (!finns(db, 'ekonomiavtal') || !motpart) return null;
+  return db.query(`SELECT * FROM ekonomiavtal WHERE motpart_typ = ? AND motpart = ? AND giltig_fran <= ? AND (giltig_till IS NULL OR giltig_till >= ?)
+    ORDER BY giltig_fran DESC, id DESC LIMIT 1`).get(typ, motpart, datum, datum) ?? null;
+}
+const avtalKort = (a) => (a ? { id: a.id, motpart: a.motpart_namn, text: a.text, giltigFran: a.giltig_fran, giltigTill: a.giltig_till, rabattProcent: a.rabatt_procent, dygnspris: a.dygnspris } : null);
+
+// Kommunens pris per vårddygn för en utskrivningsklar patient: överenskommelsen med kommunen, annars genomsnittskostnaden
+// i riket enligt 5 kap. 6 § (demovärde).
+export function kommunDygnspris(db, kommun, datum) {
+  const a = avtalFor(db, 'kommun', kommun, datum);
+  if (a?.dygnspris) return { pris: a.dygnspris, grund: 'overenskommelse', avtal: avtalKort(a), text: `Överenskommet pris med ${a.motpart_namn} per vårddygn.` };
+  const r = kommunDygnRiks(datum);
+  return { pris: r.belopp, grund: 'riksgenomsnitt', avtal: null, text: `Det finns ingen överenskommelse med kommunen, så kommunen betalar genomsnittskostnaden i riket för ett vårddygn i den slutna vården (${LAGRUM_KOMMUN}). Demovärde för ${r.ar}, inte det belopp som gäller.` };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -312,11 +334,17 @@ function post(c, { id, typ, tid, enhetId, kontakt = null, kod, text: t, antal = 
   // En patient med en spärr får minsta möjliga uppgifter i underlaget: posten pekar bara på vårdkontakten på den egna
   // vårdenheten, inte på vårdtillfället eller hälsoärendet, som kan omfatta andra vårdenheter (beslut i runda 7).
   const minst = c.sparr(patientId) && typ !== 'drg';
+  // Runda 18, r3 (Sussa 7.1.1.2): ett avtal med patientens hemregion om rabatt på utomlänsvården.
+  const avtal = b.typ === 'annan_region' && typ !== 'patientavgift' ? avtalFor(c.db, 'region', b.lanKod, datum) : null;
+  const ordinarie = aPris * antal;
+  const belopp = avtal?.rabatt_procent ? Math.round(ordinarie * (1 - avtal.rabatt_procent / 100)) : ordinarie;
+  const avtalUt = avtal?.rabatt_procent ? { avtal: { ...avtalKort(avtal), ordinarie, rabatt: ordinarie - belopp } } : {};
   return {
+    ...avtalUt,
     id, typ, datum, tid, vardenhet: c.enhet(enhetId), enhet: enhetKort(c.db, enhetId),
     vardkontaktId: kontakt?.id ?? null, vardtillfalleId: minst ? null : vt?.id ?? (typ === 'drg' ? extra.vardtillfalleId : null) ?? null, halsoarendeId: minst ? null : kontakt?.halsoarende_id ?? null,
     sammanhallandeId: vt && !minst ? `vardtillfalle:${vt.id}` : typ === 'drg' ? `vardtillfalle:${extra.vardtillfalleId}` : kontakt ? `vardkontakt:${kontakt.id}` : null,
-    kalla, kod, text: t, antal, aPris, belopp: aPris * antal,
+    kalla, kod, text: t, antal, aPris, belopp,
     prislista: prislista ? { version: prislista.version, giltigFran: prislista.giltig_fran } : null,
     betalare: b, debiteras, ingarI: iVt && b.debiteras && !minst ? 'drg' : null,
     status: b.vantar ? 'vantar' : debiteras ? 'faktureras' : 'intern', patient: patientDel(p, c.hushall(p, datum)), demo: true, ...extra,
@@ -377,9 +405,11 @@ function kontaktPoster(c, v, { fran = null, till = null } = {}) {
     const pl = c.pris(v.enhet_id, datum);
     if (!pl) continue;
     const kommun = fb?.kommunFran && datum >= fb.kommunFran;
-    const pr = pl.poster.vardtillfalle[kommun ? 'kommunDygn' : 'varddygn'];
     const f = folkbokforing(p);
-    const betalare = kommun ? { typ: 'kommun', namn: `${f?.kommun ?? 'Hemkommunen'} (simulerad)`, debiteras: true, simulerad: true, text: 'Kommunens betalningsansvar för utskrivningsklara patienter (lag 2017:612, 5 kap.). Demopris, beloppet bestäms enligt 5 kap. 6 § eller en överenskommelse.' } : 'vard';
+    // Runda 18, r3 (Sussa 7.1.1.2): kommunens pris är överenskommelsen med kommunen eller genomsnittskostnaden i riket.
+    const kp = kommun ? kommunDygnspris(c.db, f?.kommun ?? null, datum) : null;
+    const pr = kommun ? { text: pl.poster.vardtillfalle.kommunDygn.text, pris: kp.pris } : pl.poster.vardtillfalle.varddygn;
+    const betalare = kommun ? { typ: 'kommun', namn: `${f?.kommun ?? 'Hemkommunen'} (simulerad)`, debiteras: true, simulerad: true, prisgrund: kp.grund, text: `Kommunens betalningsansvar för utskrivningsklara patienter (lag 2017:612, 5 kap.). ${kp.text}` } : 'vard';
     const extra = fb?.datum ? { fardigbehandlad: fb.datum, efterFardigbehandlad: datum > fb.datum } : {};
     ut.push(post(c, { id: `varddygn:vk${v.id}:${datum}`, typ: 'varddygn', tid, enhetId: v.enhet_id, kontakt: v, kod: kommun ? 'kommunDygn' : 'varddygn', text: pr.text, aPris: pr.pris, kalla: `vardkontakt:${v.id}`, prislista: pl, patientId: v.patient_id, betalare, extra }));
     const m = materialPost(c, { id: `vk${v.id}:${datum}`, schablon: 'varddygn', tid, enhetId: v.enhet_id, kontakt: v, kalla: `vardkontakt:${v.id}`, patientId: v.patient_id });
@@ -414,6 +444,12 @@ function lakemedelPoster(c, a, kontakt) {
   return ut;
 }
 
+// Runda 18, r3 (Sussa B1): ett hjälpmedel som ska hämtas ut blir en post när det är uthämtat, med tiden för uthämtningen,
+// och hjälpmedelsavgiften som patienten har betalat i kassan har betalningens status och kvitto.
+const hjalpmedelUrval = (db, where, ...arg) => db.query(`SELECT * FROM hjalpmedel_utlamnade WHERE ${where}`).all(...arg)
+  .filter(h => (h.status ?? 'utlamnad') !== 'forskriven').map(h => ({ ...h, tid: h.uthamtad ?? h.tid }));
+const hjalpmedelBetalning = (db, id) => (finns(db, 'hjalpmedel_betalningar') ? db.query('SELECT * FROM hjalpmedel_betalningar WHERE hjalpmedel_id = ? ORDER BY id DESC').get(id) ?? null : null);
+
 function hjalpmedelPoster(c, h, kontakt) {
   const pl = c.pris(h.enhet_id, datumI(h.tid));
   const pr = pl?.poster.hjalpmedel[h.artikel];
@@ -422,7 +458,11 @@ function hjalpmedelPoster(c, h, kontakt) {
   const ut = [post(c, { id: `hjalpmedel:h${h.id}`, typ: 'hjalpmedel', tid: h.tid, enhetId: h.enhet_id, kontakt, kod: h.artikel, text: pr.text, antal: h.antal, aPris: pr.pris, kalla, prislista: pl, patientId: h.patient_id })];
   if (pr.avgift > 0) {
     const r = post(c, { id: `patientavgift:h${h.id}`, typ: 'patientavgift', tid: h.tid, enhetId: h.enhet_id, kontakt, kod: h.artikel, text: `Hjälpmedelsavgift för ${pr.text.toLowerCase()}. ${DEMO_AVGIFT}`, antal: h.antal, aPris: pr.avgift, kalla, prislista: pl, patientId: h.patient_id, betalare: 'avgift' });
-    ut.push({ ...r, status: r.betalare.vantar ? 'vantar' : 'faktureras', statusText: r.betalare.vantar ? r.betalare.text : 'Faktureras till betalningsmottagaren.', debiteras: !r.betalare.vantar });
+    // Runda 18, r3 (Sussa B1): betald i kassan med kort, eller faktura vald i kassan.
+    const bet = hjalpmedelBetalning(c.db, h.id);
+    if (bet?.satt === 'kort') ut.push({ ...r, status: 'betald', statusText: `Betald med kort i kassan, kvitto ${bet.kvitto}.`, debiteras: false, kvitto: bet.kvitto });
+    else if (bet?.satt === 'faktura') ut.push({ ...r, status: 'faktureras', statusText: `Faktura vald i kassan, kvitto ${bet.kvitto}.`, debiteras: true, kvitto: bet.kvitto });
+    else ut.push({ ...r, status: r.betalare.vantar ? 'vantar' : 'faktureras', statusText: r.betalare.vantar ? r.betalare.text : 'Faktureras till betalningsmottagaren.', debiteras: !r.betalare.vantar });
   }
   return ut;
 }
@@ -464,7 +504,7 @@ export function transaktioner(db, { vardenhet, fran, till, nu = Date.now() }) {
     ...db.query(`SELECT * FROM atgarder WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan'`).all(...enh).map(a => ['a', a]),
     ...(finns(db, 'lakemedelsgenomgangar') ? db.query(`SELECT *, 'XV015' AS kod, 1 AS lg, NULL AS vardkontakt_id FROM lakemedelsgenomgangar WHERE enhet_id IN (${ph}) AND kalla = 'vardkallan'`).all(...enh).map(a => ['a', a]) : []),
     ...db.query(`SELECT * FROM ${statVy(db, 'administreringar')} WHERE enhet_id IN (${ph}) AND status IN ('given', 'overlamnad') AND kalla = 'vardkallan'`).all(...enh).map(a => ['l', a]),
-    ...db.query(`SELECT * FROM hjalpmedel_utlamnade WHERE enhet_id IN (${ph})`).all(...enh).map(a => ['h', a]),
+    ...hjalpmedelUrval(db, `enhet_id IN (${ph})`, ...enh).map(a => ['h', a]),
   ];
   for (const [typ, a] of objekt) {
     if (!inom(a.tid) || Date.parse(a.tid) > nu) continue;
@@ -541,12 +581,113 @@ export function exporter(db) {
   }));
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 18, r3 (Sussa bör-krav B2): kostnaderna per vårdenhet och månad för verksamhetschefen och ekonomen. Bara summor per
+// vårdenhet och månad, inga patientuppgifter. Verksamhetschefen ser de vårdenheter hen är chef för, ekonomen alla.
+// Kostnaden är det som har hänt enligt prislistan (vårdkontakter, vårddygn, läkemedel, material, åtgärder och
+// hjälpmedel). Ersättningen enligt DRG och patientavgifterna visas för sig, eftersom de inte är kostnader.
+export const KOSTNADSTYPER = ['vardkontakt', 'varddygn', 'lakemedel', 'material', 'atgard', 'hjalpmedel'];
+export function kostnadsoversikt(db, personal, { manader = 6, nu = Date.now() } = {}) {
+  if (!kanRoll(personal, 'ekonomi_oversikt')) throw new Fel(403, 'Din yrkesroll ser inte kostnaderna per vårdenhet.', 'nekad');
+  const n = Number.isInteger(manader) && manader >= 1 && manader <= 12 ? manader : 6;
+  const perioder = [];
+  for (let i = 0, m = datumI(nu).slice(0, 7); i < n; i++) { perioder.unshift({ manad: m, text: manadText(m), pagar: i === 0 }); m = addDagar(`${m}-01`, -1).slice(0, 7); }
+  const fran = `${perioder[0].manad}-01`;
+  const till = datumI(nu);
+  const alla = db.query("SELECT * FROM enheter WHERE typ = 'vardenhet' ORDER BY hsa_id").all();
+  const egna = kanRoll(personal, 'faktureringsunderlag') ? alla
+    : (() => {
+      const chef = finns(db, 'verksamhetschefer') ? new Set(db.query('SELECT enhet_id FROM verksamhetschefer WHERE personal_id = ?').all(personal.id).map(r => r.enhet_id)) : new Set();
+      const min = vardenhetFor(db, personal.enhet_id);
+      return alla.filter(e => chef.has(e.id) || (!chef.size && e.id === min));
+    })();
+  const tom = () => ({ kostnad: 0, drg: 0, avgifter: 0, perTyp: Object.fromEntries(KOSTNADSTYPER.map(t => [t, 0])) });
+  const vardenheter = egna.map(e => {
+    const per = new Map(perioder.map(p => [p.manad, tom()]));
+    for (const r of transaktioner(db, { vardenhet: e.id, fran, till, nu })) {
+      const m = per.get(r.datum.slice(0, 7));
+      if (!m) continue;
+      if (KOSTNADSTYPER.includes(r.typ)) { m.kostnad += r.belopp; m.perTyp[r.typ] += r.belopp; }
+      else if (r.typ === 'drg') m.drg += r.belopp;
+      else if (r.typ === 'patientavgift') m.avgifter += r.belopp;
+    }
+    const manadsrader = perioder.map(p => ({ manad: p.manad, ...per.get(p.manad) }));
+    return { vardenhet: { id: e.id, hsaId: e.hsa_id, namn: e.namn }, manader: manadsrader, summa: manadsrader.reduce((s, x) => s + x.kostnad, 0) };
+  });
+  const totalt = perioder.map((p, i) => ({ manad: p.manad, kostnad: vardenheter.reduce((s, v) => s + v.manader[i].kostnad, 0), drg: vardenheter.reduce((s, v) => s + v.manader[i].drg, 0), avgifter: vardenheter.reduce((s, v) => s + v.manader[i].avgifter, 0) }));
+  loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, handling: 'ekonomi_oversikt', resurs: `ekonomi:kostnader:${perioder[0].manad}:${perioder.at(-1).manad}`, grund: 'ekonomi' });
+  return {
+    perioder, vardenheter, totalt, typer: KOSTNADSTYPER.map(t => ({ typ: t, text: TYPTEXT[t] })),
+    text: 'Kostnaden enligt prislistan för det som har hänt på vårdenheten: vårdkontakter, vårddygn, läkemedel som gavs, material, åtgärder och hjälpmedel. Ersättningen enligt DRG och patientavgifterna står för sig. Den pågående månaden är preliminär.',
+    demo: DEMO,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 18, r3 (Sussa 7.1.1.2): avtal med betalningsmottagare. Ekonomen registrerar ett avtal med en annan region om rabatt
+// på utomlänsvården eller med en kommun om priset per vårddygn för utskrivningsklara patienter. Avtalet gäller från ett
+// datum som inte har passerat, så att underlag som redan har tagits fram aldrig räknas om.
+export const REGIONER = { '01': 'Region Stockholm', '03': 'Region Uppsala', '04': 'Region Sörmland', '05': 'Region Östergötland', '06': 'Region Jönköpings län', '07': 'Region Kronoberg',
+  '08': 'Region Kalmar län', '09': 'Region Gotland', 10: 'Region Blekinge', 12: 'Region Skåne', 13: 'Region Halland', 14: 'Västra Götalandsregionen', 17: 'Region Värmland',
+  19: 'Region Västmanland', 20: 'Region Dalarna', 21: 'Region Gävleborg', 22: 'Region Västernorrland', 23: 'Region Jämtland Härjedalen', 24: 'Region Västerbotten', 25: 'Region Norrbotten' };
+export const KOMMUNER = ['Askersund', 'Degerfors', 'Hallsberg', 'Hällefors', 'Karlskoga', 'Kumla', 'Laxå', 'Lekeberg', 'Lindesberg', 'Ljusnarsberg', 'Nora', 'Örebro'];
+
+export function avtalLista(db) {
+  if (!finns(db, 'ekonomiavtal')) return [];
+  const dag = idag();
+  return db.query('SELECT * FROM ekonomiavtal ORDER BY motpart_typ, motpart_namn, giltig_fran DESC, id DESC').all().map(a => {
+    const galler = avtalFor(db, a.motpart_typ, a.motpart, dag)?.id === a.id;
+    return { ...avtalKort(a), motpartTyp: a.motpart_typ, skapad: a.skapad, skapadAv: personKort(db, a.skapad_av),
+      status: galler ? 'galler' : a.giltig_fran > dag ? 'kommande' : 'avslutat',
+      villkor: a.rabatt_procent ? `${String(a.rabatt_procent).replace('.', ',')} procents rabatt på utomlänsvården` : `${a.dygnspris} kr per vårddygn för utskrivningsklara patienter` };
+  });
+}
+
+export function registreraAvtal(db, personal, body = {}) {
+  const typ = body.motpartTyp;
+  if (!['region', 'kommun'].includes(typ)) throw new Fel(400, 'Välj om avtalet gäller en region eller en kommun.', 'ogiltig', { falt: ['motpartTyp'] });
+  let motpart;
+  let namn;
+  if (typ === 'region') {
+    motpart = String(body.motpart ?? '').padStart(2, '0');
+    if (!Object.hasOwn(REGIONER, motpart) && !Object.hasOwn(REGIONER, Number(motpart))) throw new Fel(400, 'Välj regionen som avtalet gäller.', 'ogiltig', { falt: ['motpart'] });
+    namn = REGIONER[motpart] ?? REGIONER[Number(motpart)];
+  } else {
+    motpart = KOMMUNER.find(k => k === body.motpart) ?? null;
+    if (!motpart) throw new Fel(400, 'Välj kommunen som avtalet gäller.', 'ogiltig', { falt: ['motpart'] });
+    namn = `${motpart} kommun`;
+  }
+  const fran = body.giltigFran ?? null;
+  if (!giltigtDatum(fran)) throw new Fel(400, 'Ange från vilket datum avtalet gäller.', 'ogiltig', { falt: ['giltigFran'] });
+  if (fran < idag()) throw new Fel(400, 'Ett avtal kan inte gälla bakåt i tiden, eftersom underlag som redan har tagits fram då skulle räknas om. Välj i dag eller ett senare datum.', 'ogiltig', { falt: ['giltigFran'] });
+  const tillDatum = body.giltigTill || null;
+  if (tillDatum && (!giltigtDatum(tillDatum) || tillDatum < fran)) throw new Fel(400, 'Slutdatumet ska vara samma dag som startdatumet eller senare.', 'ogiltig', { falt: ['giltigTill'] });
+  const t = text(body.text, 200);
+  if (t.length < 3) throw new Fel(400, 'Skriv vad avtalet heter, till exempel samverkansavtal eller överenskommelse.', 'ogiltig', { falt: ['text'] });
+  let rabatt = null;
+  let dygnspris = null;
+  if (typ === 'region') {
+    rabatt = Number(body.rabattProcent);
+    if (!Number.isFinite(rabatt) || rabatt <= 0 || rabatt >= 100) throw new Fel(400, 'Ange rabatten i procent, mer än 0 och mindre än 100.', 'ogiltig', { falt: ['rabattProcent'] });
+    rabatt = Math.round(rabatt * 10) / 10;
+  } else {
+    dygnspris = body.dygnspris;
+    if (!Number.isInteger(dygnspris) || dygnspris <= 0 || dygnspris > 100_000) throw new Fel(400, 'Ange priset per vårddygn i hela kronor.', 'ogiltig', { falt: ['dygnspris'] });
+  }
+  const id = Number(db.query('INSERT INTO ekonomiavtal (motpart_typ, motpart, motpart_namn, giltig_fran, giltig_till, rabatt_procent, dygnspris, text, skapad, skapad_av) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(typ, motpart, namn, fran, tillDatum, rabatt, dygnspris, t, iso(), personal.id).lastInsertRowid);
+  loggaRad(db, { personal_id: personal.id, enhet_id: personal.enhet_id, handling: 'prislista', resurs: `ekonomiavtal:${id}`, grund: 'ekonomi', syfte: `${t}, ${namn}` });
+  return avtalLista(db).find(a => a.id === id);
+}
+
 const KOLUMNER = [['id', 'Post-id'], ['sammanhallandeId', 'Sammanhållande id'], ['vardkontaktId', 'Vårdkontakt'], ['vardtillfalleId', 'Vårdtillfälle'], ['typ', 'Typ'], ['datum', 'Datum'],
   ['vardenhetHsa', 'Vårdenhetens HSA-id'], ['vardenhet', 'Vårdenhet'], ['kod', 'Kod'], ['text', 'Text'], ['antal', 'Antal'], ['aPris', 'À-pris'], ['belopp', 'Belopp'],
   ['debiteras', 'Debiteras'], ['status', 'Status'], ['betalareTyp', 'Betalningsmottagare, typ'], ['betalare', 'Betalningsmottagare'], ['betalareIdentitet', 'Betalningsmottagarens identitet'],
   ['lanKod', 'Hemregionens länskod'], ['lmaKort', 'LMA-kort'], ['patientIdentitet', 'Patientens identitet'], ['identitetstyp', 'Identitetstyp'], ['patientNamn', 'Patientens namn'],
   ['adress', 'Adress'], ['postnr', 'Postnummer'], ['ort', 'Ort'], ['forsandelse', 'Försändelse'], ['drgKod', 'DRG'], ['drgVikt', 'DRG-vikt'],
-  ['fardigbehandlad', 'Medicinskt färdigbehandlad'], ['prislista', 'Prislistans version'], ['demo', 'Demo']];
+  ['fardigbehandlad', 'Medicinskt färdigbehandlad'], ['prislista', 'Prislistans version'],
+  // Runda 18, r3 (Sussa 7.1.1.2): avtalet med betalningsmottagaren, beloppet före avtalets rabatt och kvittot från kassan.
+  ['avtal', 'Avtal'], ['ordinarie', 'Belopp före avtalets rabatt'], ['kvitto', 'Kvitto'], ['demo', 'Demo']];
 const csvCell = (v) => {
   let s = v == null ? '' : String(v);
   if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
@@ -558,7 +699,7 @@ const platt = (r) => ({
   debiteras: r.debiteras ? 'ja' : 'nej', status: r.status, betalareTyp: r.betalare.typ, betalare: r.betalare.namn ?? '', betalareIdentitet: r.betalare.identitet ?? '',
   lanKod: r.betalare.lanKod ?? '', lmaKort: r.betalare.lmaKort ?? '', patientIdentitet: r.patient.identitet, identitetstyp: r.patient.identitetstyp, patientNamn: r.patient.namn,
   adress: r.patient.adress, postnr: r.patient.postnr, ort: r.patient.ort, forsandelse: r.patient.forsandelse, drgKod: r.drg?.kod ?? '', drgVikt: r.drg?.vikt ?? '',
-  fardigbehandlad: r.fardigbehandlad ?? '', prislista: r.prislista?.version ?? '', demo: 'ja',
+  fardigbehandlad: r.fardigbehandlad ?? '', prislista: r.prislista?.version ?? '', avtal: r.avtal ? `${r.avtal.text}, ${r.avtal.rabattProcent} procent` : '', ordinarie: r.avtal?.ordinarie ?? '', kvitto: r.kvitto ?? '', demo: 'ja',
 });
 // Underlaget innehåller inga diagnoskoder utöver DRG-gruppen och inga interna fält.
 const utan = (r) => { const { tid, enhet, tidigareHuvuddiagnos, ...rest } = r; return rest; };
@@ -620,7 +761,7 @@ function posterForKontakter(c, kontakter) {
     ...db.query("SELECT * FROM atgarder WHERE patient_id = ? AND kalla = 'vardkallan'").all(pid).map(a => ['a', a]),
     ...(finns(db, 'lakemedelsgenomgangar') ? db.query("SELECT *, 'XV015' AS kod, 1 AS lg, NULL AS vardkontakt_id FROM lakemedelsgenomgangar WHERE patient_id = ? AND kalla = 'vardkallan'").all(pid).map(a => ['a', a]) : []),
     ...db.query("SELECT * FROM administreringar WHERE patient_id = ? AND status IN ('given', 'overlamnad') AND kalla = 'vardkallan'").all(pid).map(a => ['l', a]),
-    ...db.query('SELECT * FROM hjalpmedel_utlamnade WHERE patient_id = ?').all(pid).map(a => ['h', a]),
+    ...hjalpmedelUrval(db, 'patient_id = ?', pid).map(a => ['h', a]),
   ];
   for (const [typ, a] of objekt) {
     if (Date.parse(a.tid) > c.nu) continue;
@@ -722,9 +863,11 @@ export function kostnader(atk, q = {}, nu = Date.now()) {
   // Bara de kontakter användaren får se räknas, så att beloppet inte röjer ett besök på en spärrad eller annan vårdenhet.
   const synligaBesok = (rader) => atk.filtrera(rader, 'las_admin');
   const hog = hogkostnadText(hogkostnadsskyddet(db, p, nu, { synliga: synligaBesok }));
+  // Runda 18, r3 (Sussa B1): hjälpmedel som väntar på uthämtning eller betalning på användarens vårdenhet.
+  const attHamta = hjalpmedelAttHamta(atk);
   if (!typ) {
     atk.logga('las_kostnader', atk.grund(), 'kostnader:ingen');
-    return { aktuell: null, hogkostnadsskydd: hog, demo: full ? DEMO : DEMO_AVGIFT };
+    return { aktuell: null, hogkostnadsskydd: hog, hjalpmedelAttHamta: attHamta, demo: full ? DEMO : DEMO_AVGIFT };
   }
   const c = sammanhang(db, nu);
   const alla = posterForKontakter(c, synliga);
@@ -744,6 +887,11 @@ export function kostnader(atk, q = {}, nu = Date.now()) {
     ut.atgarder = summera(kost.filter(r => r.typ === 'atgard'));
     ut.hjalpmedel = summera(kost.filter(r => r.typ === 'hjalpmedel'));
     ut.vistelser = synliga.map(v => ({ id: v.id, vardenhet: enhetKort(db, v.enhet_id), start: v.start, slut: v.slut, dygn: v.typ === 'slutenvard' ? vardtid(v.start, v.slut, nu) : null }));
+    // Runda 18, r3 (Sussa B5 och 7.1.2.1): prover och undersökningar, källan för varje belopp och jämförelsen.
+    const { kategorierTillagg, kallaPerTyp, ...r18 } = r18Kostnad(atk, synliga, kost, nu);
+    Object.assign(ut, r18);
+    ut.kategorier = [...ut.kategorier, ...kategorierTillagg].map(k => ({ ...k, kalla: kallaPerTyp[k.typ] ?? null }));
+    ut.totalt = ut.kategorier.reduce((s, k) => s + k.belopp, 0);
     if (typ === 'vardtillfalle') {
       const dygn = synliga.filter(v => v.typ === 'slutenvard').reduce((s, v) => s + vardtid(v.start, v.slut, nu), 0);
       // DRG bygger på den ansvariga vårdenhetens diagnoser och visas bara för den som får läsa dem.
@@ -754,9 +902,58 @@ export function kostnader(atk, q = {}, nu = Date.now()) {
       const fb = fardigbehandlad(db, mal, { nu });
       ut.fardigbehandlad = { ...fb, kanRegistreras: fb.kanRegistreras && kanRoll(pers, 'fardigbehandlad') };
     }
+    // Runda 18, r3: jämförelsen med en jämförbar process, när det finns underlag (DRG-gruppen).
+    ut.jamforelse = jamforelse(ut);
   }
+
   atk.logga('las_kostnader', atk.grund(), `kostnader:${typ}:${mal.id}`);
-  return { aktuell: ut, hogkostnadsskydd: hog, demo: full ? DEMO : DEMO_AVGIFT };
+  return { aktuell: ut, hogkostnadsskydd: hog, hjalpmedelAttHamta: attHamta, demo: full ? DEMO : DEMO_AVGIFT };
+}
+
+// Runda 18, r3 (Sussa B5 och 7.1.2.1). Prover och undersökningar i de synliga vårdkontakterna, med demopriset från det
+// utförande laboratoriet eller röntgen, bara för den som får läsa beställningarna. Kategorierna får sin källa, och rutan
+// listar de prislistor och regler som beloppen kommer ur, så att varje belopp går att följa tillbaka.
+function r18Kostnad(atk, synliga, kost, nu) {
+  const db = atk.db;
+  const ids = new Set(synliga.map(v => v.id));
+  let analyser = [];
+  if (kanRoll(atk.personal, 'las_prover') && finns(db, 'labb_bestallningar')) {
+    const best = atk.filtrera(db.query('SELECT * FROM labb_bestallningar WHERE patient_id = ? AND makulerad_tid IS NULL').all(atk.patientId), 'las_prover')
+      .filter(b => b.vardkontakt_id && ids.has(b.vardkontakt_id) && Date.parse(b.skapad) <= nu);
+    for (const b of best) {
+      for (const a of db.query('SELECT * FROM labb_analyser WHERE bestallning_id = ? AND borttagen_tid IS NULL').all(b.id)) {
+        const p = analyspris(a.analys);
+        if (p) analyser.push({ kod: a.analys, text: require('./labb-katalog.js').ANALYS[a.analys]?.namn ?? a.analys, antal: 1, belopp: p.belopp });
+      }
+    }
+  }
+  analyser = summera(analyser);
+  const undersokning = analyser.reduce((s, a) => s + a.belopp, 0);
+  const kategorier = undersokning ? [{ typ: 'undersokning', text: 'Prover och undersökningar', antal: analyser.reduce((s, a) => s + a.antal, 0), belopp: undersokning }] : [];
+  // Källorna: prislistorna som beloppen kommer ur, med version och giltighet, och de regler som räknar resten.
+  const pl = new Map();
+  for (const r of kost) if (r.prislista && r.vardenhet) pl.set(`${r.vardenhet.id}|${r.prislista.version}`, `Prislistan för ${r.vardenhet.namn}, version ${r.prislista.version} från ${r.prislista.giltigFran}`);
+  const kallor = [...pl.values()].map(text => ({ typ: 'prislista', text }));
+  if (kost.some(r => r.typ === 'material')) kallor.push({ typ: 'schablon', text: 'Material räknas med prislistans schabloner per vårddygn, akutbesök, injektion och övervakning.' });
+  if (undersokning) kallor.push({ typ: 'laboratorium', text: `Prover och undersökningar: priset hos det utförande laboratoriet eller röntgen. ${DEMO_PRISER}` });
+  kallor.push({ typ: 'demo', text: DEMO });
+  const KALLA_TYP = { vardkontakt: 'Prislistan, per kontakt', varddygn: 'Prislistan, per vårddygn', lakemedel: 'Prislistan, per given dos', material: 'Prislistan, schablon', atgard: 'Prislistan, per åtgärd (KVÅ)', hjalpmedel: 'Prislistan, per hjälpmedel', undersokning: 'Laboratoriets och röntgens demopriser' };
+  return { undersokningar: analyser, kategorierTillagg: kategorier, kallor, kallaPerTyp: KALLA_TYP };
+}
+
+// Jämförelsen med en jämförbar process: ersättningen för ett vårdtillfälle i samma DRG-grupp, och vårddygnen mot gruppens
+// trimgräns. Utan DRG-grupp finns inget underlag, och då säger rutan det.
+function jamforelse(ut) {
+  if (!ut.drg || ut.drg.kod === DRG_OGRUPPERAD.kod) {
+    return ut.typ === 'vardtillfalle' ? { finns: false, text: 'Det finns inget underlag för en jämförelse förrän vårdtillfället har en huvuddiagnos och en DRG-grupp.' } : null;
+  }
+  const skillnad = ut.totalt - ut.drg.belopp;
+  const g = DRG_DEMO.find(x => x.kod === ut.drg.kod);
+  const dygnText = g ? ` Patienten har vårdats ${ut.drg.vardtid} ${ut.drg.vardtid === 1 ? 'dygn' : 'dygn'}, och gruppens trimgräns är ${g.trimgrans} dygn.` : '';
+  return {
+    finns: true, drg: ut.drg.belopp, totalt: ut.totalt, skillnad, procent: ut.drg.belopp ? Math.round((ut.totalt / ut.drg.belopp) * 100) : null,
+    text: `Ett jämförbart vårdtillfälle i samma DRG-grupp ersätts med ${ut.drg.belopp} kr. Kostnaden hittills är ${Math.abs(skillnad)} kr ${skillnad > 0 ? 'högre' : 'lägre'} än ersättningen.${dygnText} Demogruppering, inte NordDRG.`,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -771,16 +968,120 @@ export function registreraHjalpmedel(atk, body = {}) {
   const pr = pl && Object.hasOwn(pl.poster.hjalpmedel, artikel) ? pl.poster.hjalpmedel[artikel] : null;
   if (!pr) throw new Fel(400, 'Välj ett hjälpmedel ur vårdenhetens prislista.', 'ogiltig', { falt: ['artikel'] });
   const v = pagandeFor(db, pers, atk.patientId);
-  const r = db.query('INSERT INTO hjalpmedel_utlamnade (patient_id, enhet_id, vardkontakt_id, artikel, antal, tid, av) VALUES (?, ?, ?, ?, 1, ?, ?)')
-    .run(atk.patientId, pers.enhet_id, v?.id ?? null, artikel, iso(), pers.id);
+  // Runda 18, r3 (Sussa B1): ett hjälpmedel som hämtas ut i receptionen är förskrivet tills patienten har hämtat det.
+  // Systemet avgör det ur artikeln.
+  const uthamtning = UTHAMTNING.has(artikel);
+  const r = db.query('INSERT INTO hjalpmedel_utlamnade (patient_id, enhet_id, vardkontakt_id, artikel, antal, tid, av, status) VALUES (?, ?, ?, ?, 1, ?, ?, ?)')
+    .run(atk.patientId, pers.enhet_id, v?.id ?? null, artikel, iso(), pers.id, uthamtning ? 'forskriven' : 'utlamnad');
   const id = Number(r.lastInsertRowid);
   atk.logga('hjalpmedel', atk.grund(), `hjalpmedel:${id}`);
-  return [201, { id, artikel, text: pr.text, avgift: pr.avgift, vardkontaktId: v?.id ?? null, demo: DEMO_AVGIFT }];
+  return [201, { id, artikel, text: pr.text, avgift: pr.avgift, vardkontaktId: v?.id ?? null, uthamtning, demo: DEMO_AVGIFT,
+    ...(uthamtning ? { besked: `${pr.text} är förskrivet. Patienten hämtar ut det i receptionen${pr.avgift ? ` och betalar avgiften ${pr.avgift} kr där` : ''}.` } : {}) }];
 }
 
 export function hjalpmedelLista(db, personal) {
   const pl = prislistaFor(db, personal.enhet_id, idag());
-  return Object.entries(pl?.poster.hjalpmedel ?? {}).map(([kod, p]) => ({ kod, text: p.text, avgift: p.avgift }));
+  // Runda 18, r3 (Sussa B4): priset och ett likvärdigt billigare alternativ ur sortimentet för den som ser priser, och om
+  // hjälpmedlet hämtas ut i receptionen.
+  const priser = require('./ekonomi-priser.js');
+  const visa = priser.visarPriser(personal);
+  return Object.entries(pl?.poster.hjalpmedel ?? {}).map(([kod, p]) => {
+    const hp = priser.hjalpmedelspris(pl.poster.hjalpmedel, kod);
+    return { kod, text: p.text, avgift: p.avgift, uthamtning: hp.uthamtning, ...(visa ? { pris: p.pris, alternativ: hp.alternativ } : {}) };
+  });
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 18, r3 (Sussa B1): uthämtning och betalning av hjälpmedel i kassan, med kvitto.
+//
+// Patienten hämtar ut ett förskrivet hjälpmedel i receptionen på vårdenheten som förskrev det, och betalar
+// hjälpmedelsavgiften med kort i den simulerade terminalen eller med faktura. Ett hjälpmedel som lämnades ut direkt och
+// har en avgift betalas på samma sätt. Betalningen hamnar i kassan och dagsavslutet (kassa.js) och i
+// faktureringsunderlaget med kvittot. Kassören väljer bara betalsättet: systemet vet vad som ska hämtas ut och vad det kostar.
+const kvittoNummer = (db) => `VK-DEMO-H-${String(db.query('SELECT count(*) AS n FROM hjalpmedel_betalningar').get().n + 1).padStart(5, '0')}`;
+const BETALSATT = { kort: 'Kort', faktura: 'Faktura' };
+
+function hjalpmedelUt(db, h, pers) {
+  const pl = prislistaFor(db, h.enhet_id, datumI(h.tid));
+  const pr = pl?.poster.hjalpmedel[h.artikel];
+  const bet = hjalpmedelBetalning(db, h.id);
+  const avgift = (pr?.avgift ?? 0) * h.antal;
+  const forskriven = (h.status ?? 'utlamnad') === 'forskriven';
+  const kanBetala = kanRoll(pers, 'kassa') && !bet && (forskriven || avgift > 0);
+  const kanHamta = forskriven && (kanBetala || (avgift === 0 && (kanRoll(pers, 'kassa') || kanRoll(pers, 'hjalpmedel'))));
+  return {
+    id: h.id, artikel: h.artikel, text: pr?.text ?? h.artikel, avgift, status: forskriven ? 'forskriven' : bet ? 'betald' : avgift > 0 ? 'att_betala' : 'utlamnad',
+    statusText: forskriven ? 'Förskrivet, väntar på uthämtning' : bet ? `${bet.satt === 'kort' ? 'Betald med kort' : 'Faktura vald'}, kvitto ${bet.kvitto}` : avgift > 0 ? 'Utlämnat, avgiften är inte betald' : 'Utlämnat',
+    forskrivet: h.tid, uthamtad: h.uthamtad ?? null, kvitto: bet?.kvitto ?? null, kanHamta, kanBetala: kanBetala && avgift > 0,
+  };
+}
+
+// Hjälpmedlen som väntar på uthämtning eller betalning på användarens vårdenhet, för patienten.
+export function hjalpmedelAttHamta(atk) {
+  const db = atk.db;
+  const pers = atk.personal;
+  if (!kanRoll(pers, 'kassa') && !kanRoll(pers, 'hjalpmedel')) return [];
+  const ve = vardenhetFor(db, pers.enhet_id);
+  return db.query('SELECT * FROM hjalpmedel_utlamnade WHERE patient_id = ? ORDER BY id DESC').all(atk.patientId)
+    .filter(h => vardenhetFor(db, h.enhet_id) === ve && atk.prova('las_kostnader', { enhet_id: h.enhet_id }).tillaten)
+    .map(h => hjalpmedelUt(db, h, pers)).filter(h => h.kanHamta || h.kanBetala);
+}
+
+function kvittoUt(db, bet, h) {
+  const pr = prislistaFor(db, h.enhet_id, datumI(h.tid))?.poster.hjalpmedel[h.artikel];
+  return {
+    kvitto: bet.kvitto, tid: bet.tid, belopp: bet.belopp, satt: bet.satt, sattText: BETALSATT[bet.satt], text: bet.text,
+    rader: [{ text: `Hjälpmedelsavgift för ${(pr?.text ?? h.artikel).toLowerCase()}`, antal: h.antal, belopp: bet.belopp }],
+    vardenhet: enhetKort(db, vardenhetFor(db, bet.enhet_id))?.namn ?? null, kassor: personKort(db, bet.av)?.namn ?? null,
+    demo: 'Demokvitto. Betalterminalen och fakturan är simulerade: inga pengar dras och ingen faktura skickas.',
+  };
+}
+
+// POST /api/patient/:id/hjalpmedel/:hid/uthamta { satt }: hämtar ut och betalar, eller betalar ett utlämnat hjälpmedel.
+export function uthamta(atk, hid, body = {}) {
+  const db = atk.db;
+  const pers = atk.personal;
+  const h = db.query('SELECT * FROM hjalpmedel_utlamnade WHERE id = ? AND patient_id = ?').get(Number(hid) || 0, atk.patientId);
+  // Samma svar oavsett om hjälpmedlet saknas, hör till en annan vårdenhet eller inte får ses.
+  const ve = vardenhetFor(db, pers.enhet_id);
+  if (!h || vardenhetFor(db, h.enhet_id) !== ve || !atk.prova('las_kostnader', { enhet_id: h.enhet_id }).tillaten) throw new Fel(404, 'Hjälpmedlet finns inte bland det som väntar på uthämtning eller betalning på din vårdenhet.', 'saknas');
+  const ut = hjalpmedelUt(db, h, pers);
+  if (!ut.kanHamta && !ut.kanBetala) {
+    if (ut.status === 'betald') throw new Fel(400, `Hjälpmedlet är redan betalt, kvitto ${ut.kvitto}.`, 'ogiltig');
+    if (ut.avgift > 0 && !kanRoll(pers, 'kassa')) throw new Fel(403, 'Avgiften betalas i kassan. Vårdadministratören tar betalt.', 'nekad');
+    throw new Fel(400, 'Hjälpmedlet är redan utlämnat och har ingen avgift att betala.', 'ogiltig');
+  }
+  if (ut.avgift > 0) atk.krav('checka_in');
+  else atk.krav(kanRoll(pers, 'kassa') ? 'checka_in' : 'hjalpmedel');
+  const satt = ut.avgift > 0 ? body.satt : null;
+  if (ut.avgift > 0 && !Object.hasOwn(BETALSATT, satt ?? '')) throw new Fel(400, 'Välj kort eller faktura.', 'ogiltig', { falt: ['satt'] });
+  const tid = iso();
+  let bet = null;
+  db.transaction(() => {
+    if (ut.status === 'forskriven') db.query("UPDATE hjalpmedel_utlamnade SET status = 'uthamtad', uthamtad = ?, uthamtad_av = ? WHERE id = ? AND status = 'forskriven'").run(tid, pers.id, h.id);
+    if (ut.avgift > 0) {
+      const terminal = satt === 'kort' ? `TERMINAL-DEMO-HM-${String(db.query('SELECT count(*) AS n FROM hjalpmedel_betalningar').get().n + 1).padStart(5, '0')}` : null;
+      const text = satt === 'kort' ? `Kortbetalning i den simulerade betalterminalen, referens ${terminal}. Inga pengar dras.` : `Faktura på ${ut.avgift} kr till ${avgiftsbetalare(db, db.query('SELECT * FROM patienter WHERE id = ?').get(h.patient_id), idag()).typ === 'vardnadshavare' ? 'vårdnadshavaren' : 'patienten'}, simulerad. Ingen faktura skickas.`;
+      const id = Number(db.query('INSERT INTO hjalpmedel_betalningar (hjalpmedel_id, patient_id, enhet_id, belopp, satt, tid, av, kvitto, terminal, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(h.id, h.patient_id, ve, ut.avgift, satt, tid, pers.id, kvittoNummer(db), terminal, text).lastInsertRowid);
+      bet = db.query('SELECT * FROM hjalpmedel_betalningar WHERE id = ?').get(id);
+    }
+  })();
+  atk.logga(ut.avgift > 0 ? 'checka_in' : (kanRoll(pers, 'kassa') ? 'checka_in' : 'hjalpmedel'), atk.grund(), `hjalpmedel:${h.id}:${ut.status === 'forskriven' ? 'uthamtning' : 'betalning'}`);
+  const efter = db.query('SELECT * FROM hjalpmedel_utlamnade WHERE id = ?').get(h.id);
+  return [201, { hjalpmedel: hjalpmedelUt(db, efter, pers), kvitto: bet ? kvittoUt(db, bet, efter) : null,
+    text: `${ut.text} är ${ut.status === 'forskriven' ? 'uthämtat' : 'betalt'}${bet ? `, kvitto ${bet.kvitto}` : ''}.` }];
+}
+
+// GET /api/patient/:id/hjalpmedel/:hid/kvitto: kvittot igen, för kassören på samma vårdenhet.
+export function hjalpmedelKvitto(atk, hid) {
+  const db = atk.db;
+  const h = db.query('SELECT * FROM hjalpmedel_utlamnade WHERE id = ? AND patient_id = ?').get(Number(hid) || 0, atk.patientId);
+  const bet = h && hjalpmedelBetalning(db, h.id);
+  if (!bet || bet.enhet_id !== vardenhetFor(db, atk.personal.enhet_id) || !kanRoll(atk.personal, 'kassa')) throw new Fel(404, 'Kvittot finns inte.', 'saknas');
+  atk.krav('checka_in');
+  atk.logga('checka_in', atk.grund(), `hjalpmedel:${h.id}:kvitto`);
+  return kvittoUt(db, bet, h);
 }
 
 export function registreraLma(atk, body = {}) {

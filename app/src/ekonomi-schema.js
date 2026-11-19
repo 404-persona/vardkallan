@@ -50,6 +50,50 @@ CREATE TABLE IF NOT EXISTS lma_kort (
 );
 `;
 
+// Runda 18, r3 (Sussa B1, B3 och 7.1.1.2). hjalpmedel_betalningar är patientens betalning av hjälpmedelsavgiften i
+// kassan, med kvitto, och ändras aldrig. ekonomiavtal är vårdgivarens avtal med betalningsmottagare: en annan region
+// (utomlänsvård med rabatt i procent) eller en kommun (överenskommet pris per vårddygn för utskrivningsklara patienter).
+// Ett avtal ändras aldrig. Det avslutas med ett slutdatum när det registreras, och ett nytt avtal gäller därefter.
+export const SCHEMA_EKONOMI_R18 = `
+CREATE TABLE IF NOT EXISTS hjalpmedel_betalningar (
+  id INTEGER PRIMARY KEY, hjalpmedel_id INTEGER NOT NULL, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, belopp INTEGER NOT NULL, satt TEXT NOT NULL,
+  tid TEXT NOT NULL, av TEXT NOT NULL, kvitto TEXT NOT NULL UNIQUE, terminal TEXT, text TEXT NOT NULL,
+  CHECK (satt IN ('kort', 'faktura')), CHECK (belopp >= 0)
+);
+CREATE TRIGGER IF NOT EXISTS hjalpmedel_betalning_andras_ej BEFORE UPDATE OF hjalpmedel_id, enhet_id, belopp, satt, tid, av, kvitto, terminal, text ON hjalpmedel_betalningar
+  BEGIN SELECT RAISE(ABORT, 'En betalning ändras inte'); END;
+CREATE TRIGGER IF NOT EXISTS hjalpmedel_betalning_raderas_ej BEFORE DELETE ON hjalpmedel_betalningar BEGIN SELECT RAISE(ABORT, 'En betalning raderas inte'); END;
+CREATE TABLE IF NOT EXISTS ekonomiavtal (
+  id INTEGER PRIMARY KEY, motpart_typ TEXT NOT NULL, motpart TEXT NOT NULL, motpart_namn TEXT NOT NULL, giltig_fran TEXT NOT NULL, giltig_till TEXT,
+  rabatt_procent REAL, dygnspris INTEGER, text TEXT NOT NULL, skapad TEXT NOT NULL, skapad_av TEXT,
+  CHECK (motpart_typ IN ('region', 'kommun')), CHECK (rabatt_procent IS NULL OR (rabatt_procent > 0 AND rabatt_procent < 100)), CHECK (dygnspris IS NULL OR dygnspris > 0)
+);
+CREATE TRIGGER IF NOT EXISTS ekonomiavtal_andras_ej BEFORE UPDATE ON ekonomiavtal BEGIN SELECT RAISE(ABORT, 'Ett avtal ändras inte. Registrera ett nytt.'); END;
+CREATE TRIGGER IF NOT EXISTS ekonomiavtal_raderas_ej BEFORE DELETE ON ekonomiavtal BEGIN SELECT RAISE(ABORT, 'Ett avtal raderas inte'); END;
+`;
+// Uthämtningen: ett hjälpmedel som ska hämtas ut är förskrivet tills det har hämtats ut (status forskriven och uthamtad).
+function sakraR18(db, bas = new Date()) {
+  const kol = db.query('PRAGMA table_info(hjalpmedel_utlamnade)').all().map(k => k.name);
+  const nyKolumn = !kol.includes('status');
+  if (nyKolumn) db.exec("ALTER TABLE hjalpmedel_utlamnade ADD COLUMN status TEXT NOT NULL DEFAULT 'utlamnad'");
+  if (!kol.includes('uthamtad')) db.exec('ALTER TABLE hjalpmedel_utlamnade ADD COLUMN uthamtad TEXT');
+  if (!kol.includes('uthamtad_av')) db.exec('ALTER TABLE hjalpmedel_utlamnade ADD COLUMN uthamtad_av TEXT');
+  const fanns = db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ekonomiavtal'").get();
+  db.exec(SCHEMA_EKONOMI_R18);
+  // Demon: ett påhittat samverkansavtal med Region Värmland om fem procents rabatt på utomlänsvården.
+  if (!fanns) {
+    db.query('INSERT INTO ekonomiavtal (motpart_typ, motpart, motpart_namn, giltig_fran, giltig_till, rabatt_procent, dygnspris, text, skapad, skapad_av) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run('region', '17', 'Region Värmland', '2024-01-01', null, 5, null, 'Samverkansavtal om vård inom sjukvårdsregionen (påhittat demoavtal)', '2023-12-01T09:00:00.000Z', null);
+  }
+  // Demon: läkaren på kardiologen förskrev i går en blodtrycksmätare till Gunnar Åkesson, som han hämtar ut i receptionen
+  // och betalar avgiften för. Bara när prislistan har artikeln (en ny sandlåda).
+  const pl = db.query("SELECT poster FROM prislistor WHERE enhet_id = 'uso-kard' ORDER BY version DESC LIMIT 1").get();
+  if (nyKolumn && pl && JSON.parse(pl.poster).hjalpmedel?.['HM-BT-MATARE'] && db.query("SELECT 1 FROM patienter WHERE id = 'p01'").get()) {
+    const tid = new Date(bas.getTime() - 86400_000).toISOString();
+    db.query("INSERT INTO hjalpmedel_utlamnade (patient_id, enhet_id, vardkontakt_id, artikel, antal, tid, av, status) VALUES ('p01', 'uso-kard', NULL, 'HM-BT-MATARE', 1, ?, 'lak-kard', 'forskriven')").run(tid);
+  }
+}
+
 export const DEMO = 'Demopriser och demoregler, inte några verkliga regionpriser. DRG-grupperna är en egen demogruppering: NordDRG är licensierad och används inte.';
 
 // Kategorierna i prislistan, i den ordning de visas.
@@ -91,6 +135,10 @@ export const BASPRISER = {
   hjalpmedel: {
     'HM-KRYCK': { text: 'Kryckkäppar, ett par', pris: 450, avgift: 0 }, 'HM-ORTOS-KNA': { text: 'Knäortos', pris: 1800, avgift: 300 },
     'HM-SPACER': { text: 'Andningsbehållare för inhalation', pris: 260, avgift: 0 }, 'HM-ROLLATOR': { text: 'Rollator', pris: 2900, avgift: 0 },
+    // Runda 18, r3 (Sussa B1 och B4): basmodellen ur sortimentet är det likvärdiga billigare alternativet till rollatorn,
+    // och knäortosen hämtas ut och betalas i receptionen (uthamtning).
+    'HM-ROLLATOR-BAS': { text: 'Rollator, basmodell ur sortimentet', pris: 1900, avgift: 0 },
+    'HM-BT-MATARE': { text: 'Blodtrycksmätare för mätning hemma', pris: 650, avgift: 200 },
   },
   lakemedel: Object.fromEntries(KATALOG.map(k => [k.id, { text: `${k.namn} ${k.styrka}, per dos`, pris: dosPris(k.form) }])),
 };
@@ -115,6 +163,24 @@ export const DRG_DEMO = [
   { kod: 'VK-DRG-19A', text: 'Depression och andra förstämningssyndrom (demogrupp)', icd: /^F3/, vikt: 1.2, trimgrans: 30 },
   { kod: 'VK-DRG-99', text: 'Övriga sjukdomar (demogrupp)', icd: /^[A-Z]/, vikt: 0.8, trimgrans: 7 },
 ];
+// Runda 18, r3 (Sussa B1 och B4): hjälpmedel som hämtas ut och betalas i receptionen efter förskrivningen, och likvärdiga
+// billigare alternativ ur sortimentet. Systemet avgör det ur artikeln, så att den som förskriver aldrig behöver välja.
+export const UTHAMTNING = new Set(['HM-ORTOS-KNA', 'HM-BT-MATARE']);
+export const LIKVARDIGA = { 'HM-ROLLATOR': 'HM-ROLLATOR-BAS' };
+
+// Runda 18, r3 (Sussa 7.1.1.2): kommunens ersättning för vårddygn när patienten är utskrivningsklar. Finns ingen
+// överenskommelse (ekonomiavtal med kommunen) betalar kommunen enligt 5 kap. 6 § lag (2017:612) om samverkan vid
+// utskrivning från sluten hälso- och sjukvård det belopp som motsvarar genomsnittskostnaden i riket för ett vårddygn i
+// den slutna vården. Beloppen här är demovärden och inte de belopp som gäller.
+export const KOMMUN_DYGN_RIKS = { 2025: 9100, 2026: 9300, 2027: 9500 };
+export const LAGRUM_KOMMUN = '5 kap. 6 § lag (2017:612) om samverkan vid utskrivning från sluten hälso- och sjukvård';
+export function kommunDygnRiks(datum) {
+  const ar = Number(String(datum).slice(0, 4));
+  const kanda = Object.keys(KOMMUN_DYGN_RIKS).map(Number).sort((a, b) => a - b);
+  const x = Object.hasOwn(KOMMUN_DYGN_RIKS, ar) ? ar : ar > kanda.at(-1) ? kanda.at(-1) : kanda[0];
+  return { ar: x, belopp: KOMMUN_DYGN_RIKS[x] };
+}
+
 export const DRG_OGRUPPERAD = { kod: 'VK-DRG-00', text: 'Kan inte grupperas (demogrupp)', vikt: 0, trimgrans: 0 };
 
 // Patientavgift för asylsökande med LMA-kort (demoregel): 50 kronor för besök och akutbesök för vuxna, inget för barn och
@@ -203,4 +269,6 @@ export function sakraEkonomi(db, bas = new Date()) {
   sakraPersonal(db);
   if (!fanns) seedaPrislistor(db, bas);
   if (!fannsHandelser) seedaHandelser(db, bas);
+  // Runda 18, r3: uthämtning och betalning av hjälpmedel och avtal med betalningsmottagare.
+  sakraR18(db, bas);
 }
