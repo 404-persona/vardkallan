@@ -1,5 +1,5 @@
 {
-  "tid": "2026-11-19T14:50:57.177Z",
+  "tid": "2026-11-19T15:12:29.115Z",
   "bas": "http://127.0.0.1:18282",
   "webblasare": "Chromium 147.0.7727.15",
   "gransnittHash": "ea3aeca33e325b0867bc39b4bb6fcdd47699d3de584716a28d031a6544dd9387",
@@ -44,7 +44,7 @@
       "tecken": 260,
       "uppmatt": 23,
       "inomBudget": true,
-      "skriptetsTidMs": 3346,
+      "skriptetsTidMs": 3379,
       "uppskattadTidS": 136.6,
       "klmDelar": {
         "klick": 42.4,
@@ -52,7 +52,7 @@
         "faltbyten": 13.8,
         "tecken": 72.8,
         "tangenter": 0.3,
-        "svarstid": 3.3
+        "svarstid": 3.4
       },
       "steg": [
         "klick: Gerda Ström i arbetslistan",
@@ -113,15 +113,15 @@
       "tecken": 152,
       "uppmatt": 16,
       "inomBudget": true,
-      "skriptetsTidMs": 2968,
-      "uppskattadTidS": 88,
+      "skriptetsTidMs": 2901,
+      "uppskattadTidS": 87.9,
       "klmDelar": {
         "klick": 31.8,
         "listval": 0,
         "faltbyten": 10.4,
         "tecken": 42.6,
         "tangenter": 0.3,
-        "svarstid": 3
+        "svarstid": 2.9
       },
       "steg": [
         "klick: Elin Arnström i arbetslistan",
@@ -175,15 +175,15 @@
       "tecken": 50,
       "uppmatt": 18,
       "inomBudget": true,
-      "skriptetsTidMs": 2153,
-      "uppskattadTidS": 61.2,
+      "skriptetsTidMs": 2070,
+      "uppskattadTidS": 61.1,
       "klmDelar": {
         "klick": 26.5,
         "listval": 7.9,
         "faltbyten": 10.4,
         "tecken": 14,
         "tangenter": 0.3,
-        "svarstid": 2.2
+        "svarstid": 2.1
       },
       "steg": [
         "klick: Trevis Ljung i arbetslistan",
@@ -233,7 +233,7 @@
       "tecken": 78,
       "uppmatt": 14,
       "inomBudget": true,
-      "skriptetsTidMs": 2989,
+      "skriptetsTidMs": 2911,
       "uppskattadTidS": 61.9,
       "klmDelar": {
         "klick": 37.1,
@@ -241,7 +241,7 @@
         "faltbyten": 0,
         "tecken": 21.8,
         "tangenter": 0,
-        "svarstid": 3
+        "svarstid": 2.9
       },
       "steg": [
         "klick: Läkemedel att ge i menyn",
@@ -280,10 +280,35 @@
         "Mottagaren är Medicinska kliniken USÖ, eftersom demon inte har någon hudklinik."
       ],
       "slut": "Vårdbegäran är skickad.",
-      "uppnatt": false,
-      "fel": "page.waitForLoadState: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 0,
+      "tecken": 99,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 405,
+      "uppskattadTidS": 46.9,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 27.7,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Mira Axelsson i arbetslistan",
+        "klick: Skicka remiss",
+        "lista (2 klick): mottagare Medicinska kliniken USÖ",
+        "fältbyte: frågeställning",
+        "fältbyte: anamnes",
+        "klick: Skicka remissen"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.1",
@@ -299,10 +324,35 @@
         "Mottagaren är Medicinska kliniken USÖ, eftersom demon inte har någon hudklinik."
       ],
       "slut": "Vårdbegäran är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 0,
+      "tecken": 99,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 388,
+      "uppskattadTidS": 46.9,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 27.7,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Mira Axelsson i arbetslistan",
+        "klick: Skicka remiss",
+        "lista (2 klick): mottagare Medicinska kliniken USÖ",
+        "fältbyte: frågeställning",
+        "fältbyte: anamnes",
+        "klick: Skicka remissen"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.1",
@@ -318,10 +368,35 @@
         "Mottagaren är Medicinska kliniken USÖ, eftersom demon inte har någon hudklinik."
       ],
       "slut": "Vårdbegäran är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 0,
+      "tecken": 99,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 400,
+      "uppskattadTidS": 46.9,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 27.7,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Mira Axelsson i arbetslistan",
+        "klick: Skicka remiss",
+        "lista (2 klick): mottagare Medicinska kliniken USÖ",
+        "fältbyte: frågeställning",
+        "fältbyte: anamnes",
+        "klick: Skicka remissen"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.2",
@@ -338,10 +413,38 @@
         "Remissen skickas när läkaren har signerat den i sin inkorg, med läkaren som remittent. Testfallet slutar när remissen väntar på signering."
       ],
       "slut": "Vårdbegäran är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 6,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 1,
+      "tecken": 103,
+      "uppmatt": 9,
+      "inomBudget": true,
+      "skriptetsTidMs": 537,
+      "uppskattadTidS": 51.1,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 28.8,
+        "tangenter": 0.3,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Sök patient i menyn",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök",
+        "klick: träffen Mira Axelsson",
+        "klick: Remiss på uppdrag",
+        "lista (2 klick): mottagare Ortopediska kliniken USÖ",
+        "fältbyte: frågeställning",
+        "fältbyte: anamnes",
+        "klick: Skicka till läkaren för signering"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.3",
@@ -359,10 +462,43 @@
         "Väntelistan för besök om två månader är tidsramen Inom två månader när remissen accepteras. Psykiatriska kliniken är Allmänpsykiatriska kliniken USÖ, och vidarebefordran har en motivering som avsändaren ser."
       ],
       "slut": "De fyra remisserna är fördelade, prioriterade, avvisade eller vidareskickade.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 13,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 0,
+      "tecken": 172,
+      "uppmatt": 15,
+      "inomBudget": true,
+      "skriptetsTidMs": 908,
+      "uppskattadTidS": 89.1,
+      "klmDelar": {
+        "klick": 29.2,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 48.2,
+        "tangenter": 0,
+        "svarstid": 0.9
+      },
+      "steg": [
+        "klick: Remisser i menyn",
+        "klick: Fördela för Berit Strandhall",
+        "klick: bakjouren Göran Malm",
+        "klick: Bedöm för Gerda Ström",
+        "klick: Inom två månader",
+        "klick: Spara bedömningen",
+        "klick: Bedöm för Elin Arnström",
+        "klick: Avvisa",
+        "fältbyte: svarstexten",
+        "klick: Spara bedömningen",
+        "klick: Skicka vidare för Trevis Ljung",
+        "lista (2 klick): Allmänpsykiatriska kliniken USÖ",
+        "fältbyte: motiveringen",
+        "klick: Skicka vidare"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.3",
@@ -380,10 +516,43 @@
         "Väntelistan för besök om två månader är tidsramen Inom två månader när remissen accepteras. Psykiatriska kliniken är Allmänpsykiatriska kliniken USÖ, och vidarebefordran har en motivering som avsändaren ser."
       ],
       "slut": "De fyra remisserna är fördelade, prioriterade, avvisade eller vidareskickade.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 13,
+      "listval": 1,
+      "faltbyten": 2,
+      "tangenter": 0,
+      "tecken": 172,
+      "uppmatt": 15,
+      "inomBudget": true,
+      "skriptetsTidMs": 1021,
+      "uppskattadTidS": 89.2,
+      "klmDelar": {
+        "klick": 29.2,
+        "listval": 4,
+        "faltbyten": 6.9,
+        "tecken": 48.2,
+        "tangenter": 0,
+        "svarstid": 1
+      },
+      "steg": [
+        "klick: Remisser i menyn",
+        "klick: Fördela för Berit Strandhall",
+        "klick: bakjouren Göran Malm",
+        "klick: Bedöm för Gerda Ström",
+        "klick: Inom två månader",
+        "klick: Spara bedömningen",
+        "klick: Bedöm för Elin Arnström",
+        "klick: Avvisa",
+        "fältbyte: svarstexten",
+        "klick: Spara bedömningen",
+        "klick: Skicka vidare för Trevis Ljung",
+        "lista (2 klick): Allmänpsykiatriska kliniken USÖ",
+        "fältbyte: motiveringen",
+        "klick: Skicka vidare"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.4",
@@ -400,10 +569,35 @@
         "På konferensen bedömer läkarna remisserna i följd med ett klick per beslut, och vårdadministratören kan registrera besluten på uppdrag med läkaren som ansvarig. Det ingår inte i testfallet."
       ],
       "slut": "En remiss är fördelad till bakjouren och de övriga står på remisskonferens.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 6,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 6,
+      "inomBudget": true,
+      "skriptetsTidMs": 474,
+      "uppskattadTidS": 16.4,
+      "klmDelar": {
+        "klick": 15.9,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Remisser i menyn",
+        "klick: Fördela för Bertil Danielsson",
+        "klick: bakjouren Göran Malm",
+        "klick: Till remisskonferens för Sara Sandmark",
+        "klick: Till remisskonferens för Anna Karlsson",
+        "klick: Till remisskonferens för Sven Markström"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.5",
@@ -420,10 +614,37 @@
         "Behandlingshemmet Löparen finns i den simulerade HSA-katalogen."
       ],
       "slut": "Remissen är inregistrerad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 4,
+      "tangenter": 0,
+      "tecken": 158,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 759,
+      "uppskattadTidS": 66.7,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 13.8,
+        "tecken": 44.2,
+        "tangenter": 0,
+        "svarstid": 0.8
+      },
+      "steg": [
+        "klick: Remisser i menyn",
+        "klick: Registrera vid den inskannade remissen",
+        "har redan fokus: patienten",
+        "fältbyte: avsändande enhet",
+        "fältbyte: remissdatum",
+        "fältbyte: frågeställning",
+        "fältbyte: anamnes",
+        "klick: Registrera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.6",
@@ -439,10 +660,34 @@
         "Remissen kommer från Vårdcentralen Tybble till Kardiologiska kliniken USÖ, som motsvarar Medicinkliniken."
       ],
       "slut": "Remissvaret är skickat.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 70,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 359,
+      "uppskattadTidS": 30.6,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 19.6,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Sara Sandmark i arbetslistan",
+        "klick: fliken Remisser",
+        "klick: Svara",
+        "har redan fokus: svaret",
+        "klick: Skicka svaret"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "2.6",
@@ -458,10 +703,34 @@
         "Remissen kommer från Vårdcentralen Tybble till Kardiologiska kliniken USÖ, som motsvarar Medicinkliniken."
       ],
       "slut": "Remissvaret är skickat.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 70,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 360,
+      "uppskattadTidS": 30.6,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 19.6,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Sara Sandmark i arbetslistan",
+        "klick: fliken Remisser",
+        "klick: Svara",
+        "har redan fokus: svaret",
+        "klick: Skicka svaret"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.1",
@@ -479,10 +748,32 @@
         "Anamnesen skrivs inte: systemet hämtar den ur vårdkontakten, Inkommen med feber och frossa."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 359,
+      "uppskattadTidS": 8.3,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Hamid Burvall i arbetslistan",
+        "klick: Beställ prover",
+        "klick: Beställ vid paketet Feber och frossa"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.1",
@@ -500,10 +791,32 @@
         "Anamnesen skrivs inte: systemet hämtar den ur vårdkontakten, Inkommen med feber och frossa."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 360,
+      "uppskattadTidS": 8.3,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Hamid Burvall i arbetslistan",
+        "klick: Beställ prover",
+        "klick: Beställ vid paketet Feber och frossa"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.2",
@@ -520,10 +833,33 @@
         "Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 355,
+      "uppskattadTidS": 12.3,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Laura August i arbetslistan",
+        "klick: Beställ prover",
+        "lista (2 klick): läkaren Sara Lindqvist",
+        "klick: Beställ vid paketet Feber och frossa"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.2",
@@ -540,10 +876,33 @@
         "Beställningen kan tas och skickas direkt, och läkaren signerar den i inkorgen."
       ],
       "slut": "Beställningen är sparad, skickad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 279,
+      "uppskattadTidS": 12.2,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Laura August i arbetslistan",
+        "klick: Beställ prover",
+        "lista (2 klick): läkaren Sara Lindqvist",
+        "klick: Beställ vid paketet Feber och frossa"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.3",
@@ -559,10 +918,33 @@
         "Beställningen gjordes dagen före testet i stället för 2017-11-26, så att den syns i demon. Proverna skickas av systemet när det sista röret är taget, och det finns ingen knapp att skicka med."
       ],
       "slut": "Beställningen är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 460,
+      "uppskattadTidS": 11.1,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Prover och kontroller i menyn",
+        "klick: Tagen för rör 1",
+        "klick: Tagen för rör 2",
+        "klick: Tagen för rör 3"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.3",
@@ -578,10 +960,33 @@
         "Beställningen gjordes dagen före testet i stället för 2017-11-26, så att den syns i demon. Proverna skickas av systemet när det sista röret är taget, och det finns ingen knapp att skicka med."
       ],
       "slut": "Beställningen är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 478,
+      "uppskattadTidS": 11.1,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Prover och kontroller i menyn",
+        "klick: Tagen för rör 1",
+        "klick: Tagen för rör 2",
+        "klick: Tagen för rör 3"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.4",
@@ -597,10 +1002,34 @@
         "Provsvaren är tagna fem dagar till en vecka före testet i stället för i oktober 2017, så att de syns i demon. Svaren från vårdcentralen visar beställande läkare (runda 8), läkaren på vårdcentralen, och svaren från ortopeden visar vårdenheten och tiden."
       ],
       "slut": "Resultatet är uppläst. Rätt svar är PK 0,9 INR.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 515,
+      "uppskattadTidS": 13.8,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Bertil Danielsson i arbetslistan",
+        "klick: fliken Mätvärden",
+        "klick: Visa uppgifter från andra vårdenheter",
+        "klick: syftet som systemet föreslår",
+        "klick: Visa uppgifterna"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.4",
@@ -616,10 +1045,34 @@
         "Provsvaren är tagna fem dagar till en vecka före testet i stället för i oktober 2017, så att de syns i demon. Svaren från vårdcentralen visar beställande läkare (runda 8), läkaren på vårdcentralen, och svaren från ortopeden visar vårdenheten och tiden."
       ],
       "slut": "Resultatet är uppläst. Rätt svar är PK 0,9 INR.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 338,
+      "uppskattadTidS": 13.6,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Bertil Danielsson i arbetslistan",
+        "klick: fliken Mätvärden",
+        "klick: Visa uppgifter från andra vårdenheter",
+        "klick: syftet som systemet föreslår",
+        "klick: Visa uppgifterna"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.4",
@@ -635,10 +1088,34 @@
         "Provsvaren är tagna fem dagar till en vecka före testet i stället för i oktober 2017, så att de syns i demon. Svaren från vårdcentralen visar beställande läkare (runda 8), läkaren på vårdcentralen, och svaren från ortopeden visar vårdenheten och tiden."
       ],
       "slut": "Resultatet är uppläst. Rätt svar är PK 0,9 INR.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 341,
+      "uppskattadTidS": 13.6,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Bertil Danielsson i arbetslistan",
+        "klick: fliken Mätvärden",
+        "klick: Visa uppgifter från andra vårdenheter",
+        "klick: syftet som systemet föreslår",
+        "klick: Visa uppgifterna"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.5",
@@ -654,10 +1131,38 @@
         "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs i läkemedelsprocessens vätskebalans."
       ],
       "slut": "Beställningen är sparad, signerad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 9,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 9,
+      "inomBudget": true,
+      "skriptetsTidMs": 494,
+      "uppskattadTidS": 24.3,
+      "klmDelar": {
+        "klick": 23.9,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Inga Strand i arbetslistan",
+        "klick: Kontroller i översikten",
+        "klick: Puls",
+        "klick: Blodtryck",
+        "klick: SR",
+        "klick: Temperatur",
+        "klick: Vikt",
+        "klick: Vätskebalans",
+        "klick: Ordinera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "3.5",
@@ -673,10 +1178,38 @@
         "SR är en intern analys som tas på avdelningen och registreras som mätvärde, och vätskebalansen följs i läkemedelsprocessens vätskebalans."
       ],
       "slut": "Beställningen är sparad, signerad eller verkställd.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 9,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 9,
+      "inomBudget": true,
+      "skriptetsTidMs": 488,
+      "uppskattadTidS": 24.3,
+      "klmDelar": {
+        "klick": 23.9,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Inga Strand i arbetslistan",
+        "klick: Kontroller i översikten",
+        "klick: Puls",
+        "klick: Blodtryck",
+        "klick: SR",
+        "klick: Temperatur",
+        "klick: Vikt",
+        "klick: Vätskebalans",
+        "klick: Ordinera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.1",
@@ -694,10 +1227,36 @@
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 68,
+      "uppmatt": 6,
+      "inomBudget": true,
+      "skriptetsTidMs": 601,
+      "uppskattadTidS": 36.3,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 19,
+        "tangenter": 0,
+        "svarstid": 0.6
+      },
+      "steg": [
+        "klick: Berit Strandhall i arbetslistan",
+        "klick: Dokumentera tobaksvanor",
+        "klick: Dagligen för cigaretter",
+        "har redan fokus: antalet cigaretter per dag",
+        "klick: Erbjudet och accepterat",
+        "fältbyte: kommentaren",
+        "klick: Signera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.1",
@@ -715,10 +1274,36 @@
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 68,
+      "uppmatt": 6,
+      "inomBudget": true,
+      "skriptetsTidMs": 549,
+      "uppskattadTidS": 36.3,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 19,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Berit Strandhall i arbetslistan",
+        "klick: Dokumentera tobaksvanor",
+        "klick: Dagligen för cigaretter",
+        "har redan fokus: antalet cigaretter per dag",
+        "klick: Erbjudet och accepterat",
+        "fältbyte: kommentaren",
+        "klick: Signera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.1",
@@ -736,10 +1321,36 @@
         "Sussas fråga om rökare ja eller nej följer den nationella vägledningen: om patienten använder tobak eller nikotin, och per produkt dagligen, ibland eller slutat. Erbjuden och accepterad rökavvänjning är ett val, Erbjudet och accepterat."
       ],
       "slut": "Informationen är inmatad på ett strukturerat sätt i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 68,
+      "uppmatt": 6,
+      "inomBudget": true,
+      "skriptetsTidMs": 453,
+      "uppskattadTidS": 36.2,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 19,
+        "tangenter": 0,
+        "svarstid": 0.5
+      },
+      "steg": [
+        "klick: Berit Strandhall i arbetslistan",
+        "klick: Dokumentera tobaksvanor",
+        "klick: Dagligen för cigaretter",
+        "har redan fokus: antalet cigaretter per dag",
+        "klick: Erbjudet och accepterat",
+        "fältbyte: kommentaren",
+        "klick: Signera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.2",
@@ -756,10 +1367,37 @@
         "Formuläret för flera värden byggdes i runda 8 för testfallet. I runda 7 krävde testfallet 15 steg, med ett val i listan för varje mätvärde."
       ],
       "slut": "Mätvärdena är inmatade i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 3,
+      "tangenter": 0,
+      "tecken": 13,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 401,
+      "uppskattadTidS": 25,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 10.4,
+        "tecken": 3.6,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Sara Sandmark i arbetslistan",
+        "klick: Registrera mätvärde",
+        "klick: Längd, vikt, blodtryck och puls på en gång",
+        "har redan fokus: längden",
+        "fältbyte: vikten",
+        "fältbyte: blodtrycket",
+        "fältbyte: pulsen",
+        "klick: Registrera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.2",
@@ -776,10 +1414,37 @@
         "Formuläret för flera värden byggdes i runda 8 för testfallet. I runda 7 krävde testfallet 15 steg, med ett val i listan för varje mätvärde."
       ],
       "slut": "Mätvärdena är inmatade i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 3,
+      "tangenter": 0,
+      "tecken": 13,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 412,
+      "uppskattadTidS": 25,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 10.4,
+        "tecken": 3.6,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Sara Sandmark i arbetslistan",
+        "klick: Registrera mätvärde",
+        "klick: Längd, vikt, blodtryck och puls på en gång",
+        "har redan fokus: längden",
+        "fältbyte: vikten",
+        "fältbyte: blodtrycket",
+        "fältbyte: pulsen",
+        "klick: Registrera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.2",
@@ -796,10 +1461,37 @@
         "Formuläret för flera värden byggdes i runda 8 för testfallet. I runda 7 krävde testfallet 15 steg, med ett val i listan för varje mätvärde."
       ],
       "slut": "Mätvärdena är inmatade i journalen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 3,
+      "tangenter": 0,
+      "tecken": 13,
+      "uppmatt": 7,
+      "inomBudget": true,
+      "skriptetsTidMs": 416,
+      "uppskattadTidS": 25,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 10.4,
+        "tecken": 3.6,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Sara Sandmark i arbetslistan",
+        "klick: Registrera mätvärde",
+        "klick: Längd, vikt, blodtryck och puls på en gång",
+        "har redan fokus: längden",
+        "fältbyte: vikten",
+        "fältbyte: blodtrycket",
+        "fältbyte: pulsen",
+        "klick: Registrera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.3",
@@ -817,10 +1509,34 @@
         "Förslaget till epikrisen byggdes i runda 8. I runda 7 krävde testfallet 8 steg."
       ],
       "slut": "Informationen är inmatad och anteckningen är signerad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 308,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 681,
+      "uppskattadTidS": 98.3,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 86.2,
+        "tangenter": 0,
+        "svarstid": 0.7
+      },
+      "steg": [
+        "klick: Anna Karlsson i arbetslistan",
+        "klick: Skriv epikris",
+        "har redan fokus: Förlopp",
+        "fältbyte: Uppföljning",
+        "klick: Signera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "4.4",
@@ -837,10 +1553,32 @@
         "Granska och signera alla i inkorgen byggdes i runda 7 för testfallet."
       ],
       "slut": "Alla osignerade poster är signerade.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 754,
+      "uppskattadTidS": 8.7,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.8
+      },
+      "steg": [
+        "klick: Inkorg i menyn",
+        "klick: Granska och signera alla",
+        "klick: Signera alla"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.1",
@@ -858,10 +1596,33 @@
         "Kallelsen skickas som brev till en påhittad adress, och breven är simulerade."
       ],
       "slut": "Helene Lund är bokad till ett besök och en kallelse är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 1,
+      "tecken": 11,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 173,
+      "uppskattadTidS": 8.8,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 3.1,
+        "tangenter": 0.3,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Boka besök i Dagens arbete",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök",
+        "klick: den första föreslagna tiden"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.2",
@@ -878,10 +1639,33 @@
         "Systemet föreslår tiden, så användaren väljer inte klockslaget 10.45. Kallelsen skickas som brev till en påhittad adress, och breven är simulerade."
       ],
       "slut": "Sven Markström är bokad till ett teambesök och en kallelse är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 1,
+      "tecken": 14,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 128,
+      "uppskattadTidS": 9.6,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 3.9,
+        "tangenter": 0.3,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Boka teambesök i Dagens arbete",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök",
+        "klick: den första föreslagna tiden"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.3",
@@ -898,10 +1682,48 @@
         "Gruppträffen ligger tre arbetsdagar efter testet klockan 11.45, eftersom Sussas datum ligger före testet. Kallelserna skickas som brev till påhittade adresser, och breven är simulerade."
       ],
       "slut": "De fem patienterna är bokade och en kallelse är skickad till alla.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 9,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 5,
+      "tecken": 61,
+      "uppmatt": 14,
+      "inomBudget": true,
+      "skriptetsTidMs": 713,
+      "uppskattadTidS": 43,
+      "klmDelar": {
+        "klick": 23.9,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 17.1,
+        "tangenter": 1.4,
+        "svarstid": 0.7
+      },
+      "steg": [
+        "klick: Lägg till patient vid gruppträffen",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök Sven Markström",
+        "klick: träffen Sven Markström",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök Henrik Lundin",
+        "klick: träffen Henrik Lundin",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök Hanna Korlen",
+        "klick: träffen Hanna Korlen",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök Anton Ekrot",
+        "klick: träffen Anton Ekrot",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök Helene Lund",
+        "klick: träffen Helene Lund",
+        "klick: Klar",
+        "klick: Skicka kallelser vid gruppen",
+        "klick: bekräfta"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.4",
@@ -917,10 +1739,36 @@
         "Väntelistan har prioriteten hög, normal eller låg och ett måldatum. Patienten får tillbaka sitt måldatum, som är 6 månader efter att hon sattes upp, i stället för att användaren skriver 6 månader."
       ],
       "slut": "Det planerade besöket är avbokat och patienten står på väntelistan.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 1,
+      "tecken": 37,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 340,
+      "uppskattadTidS": 21.6,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 10.4,
+        "tangenter": 0.3,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Sök patient i menyn",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök",
+        "klick: träffen Susanne Svedin",
+        "klick: Avboka",
+        "har redan fokus: orsaken",
+        "klick: Avboka"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.5",
@@ -936,10 +1784,30 @@
         "Mottagningen är Kardiologiska mottagningen och läkaren Sara Lindqvist."
       ],
       "slut": "Sofia Andersson är ankomstregistrerad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 48,
+      "uppskattadTidS": 2.7,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0
+      },
+      "steg": [
+        "klick: Checka in för Sofia Andersson"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.6",
@@ -955,10 +1823,30 @@
         "Läkaren är Per Holm på Vårdcentralen Tybble. Patienterna är de fem i Sussas testdata för läkaren."
       ],
       "slut": "Användaren har räknat till fem ankomstregistreringar.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 91,
+      "uppskattadTidS": 2.7,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Min tidbok i arbetslistan"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.7",
@@ -975,10 +1863,35 @@
         "Gerda Ström har en remiss till kardiologen i testdatan för testfall 2.3 (runda 8), så systemet föreslår orsaken ur remissen."
       ],
       "slut": "Gerda Ström är ankomstregistrerad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 4,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 1,
+      "tecken": 5,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 324,
+      "uppskattadTidS": 12.6,
+      "klmDelar": {
+        "klick": 10.6,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 1.4,
+        "tangenter": 0.3,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Sök patient i menyn",
+        "har redan fokus: sökfältet",
+        "tangent Enter: sök",
+        "klick: träffen Gerda Ström",
+        "klick: Registrera vårdkontakt",
+        "klick: Registrera"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "5.8",
@@ -994,10 +1907,32 @@
         "Systemet föreslår tiden hos den vårdgivare som har lediga tider av rätt typ, så användaren väljer inte klockslaget. Vårdgivaren är en läkare på Kardiologiska mottagningen, eftersom fysioterapeuten inte har någon tidbok."
       ],
       "slut": "Jonas Brun är bokad till ett besök och en kallelse är skickad.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 3,
+      "inomBudget": true,
+      "skriptetsTidMs": 266,
+      "uppskattadTidS": 8.2,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.3
+      },
+      "steg": [
+        "klick: Väntelista i menyn",
+        "klick: Boka tid för Jonas Brun",
+        "klick: den första föreslagna tiden"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.1",
@@ -1013,10 +1948,34 @@
         "Avdelningen är Avdelning 72, kardiologi, där sjuksköterskan arbetar."
       ],
       "slut": "Mira Axelsson finns på en sängplats på avdelningen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 37,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 361,
+      "uppskattadTidS": 22.1,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 10.4,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Mira Axelsson i arbetslistan",
+        "klick: Skriv in",
+        "har redan fokus: orsaken",
+        "fältbyte: sal och säng",
+        "klick: Skriv in"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.1",
@@ -1032,10 +1991,34 @@
         "Avdelningen är Avdelning 72, kardiologi, där sjuksköterskan arbetar."
       ],
       "slut": "Mira Axelsson finns på en sängplats på avdelningen.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 3,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 0,
+      "tecken": 37,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 350,
+      "uppskattadTidS": 22.1,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 10.4,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Mira Axelsson i arbetslistan",
+        "klick: Skriv in",
+        "har redan fokus: orsaken",
+        "fältbyte: sal och säng",
+        "klick: Skriv in"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.2",
@@ -1051,10 +2034,33 @@
         "Flytten går från Avdelning 72, kardiologi, till Ortopediska kliniken USÖ."
       ],
       "slut": "Fatima Baskar finns på den nya avdelningen utan sängplats.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 236,
+      "uppskattadTidS": 12.1,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Fatima Baskar i arbetslistan",
+        "klick: Flytta",
+        "lista (2 klick): Ortopediska kliniken USÖ",
+        "klick: Flytta"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.2",
@@ -1070,10 +2076,33 @@
         "Flytten går från Avdelning 72, kardiologi, till Ortopediska kliniken USÖ."
       ],
       "slut": "Fatima Baskar finns på den nya avdelningen utan sängplats.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 231,
+      "uppskattadTidS": 12.1,
+      "klmDelar": {
+        "klick": 8,
+        "listval": 4,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Fatima Baskar i arbetslistan",
+        "klick: Flytta",
+        "lista (2 klick): Ortopediska kliniken USÖ",
+        "klick: Flytta"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.3",
@@ -1089,10 +2118,33 @@
         "Vårdtillfället var på Avdelning 72, kardiologi."
       ],
       "slut": "Epikrisen är öppen och huvuddiagnosen är funnen. Rätt svar är sepsis.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 1,
+      "tecken": 7,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 364,
+      "uppskattadTidS": 11.4,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 2,
+        "tangenter": 0.3,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Bertil Danielsson i arbetslistan",
+        "fältbyte: sökfältet i journalen",
+        "tangent Enter: sök",
+        "klick: träffen Epikris"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "6.3",
@@ -1108,10 +2160,33 @@
         "Vårdtillfället var på Avdelning 72, kardiologi."
       ],
       "slut": "Epikrisen är öppen och huvuddiagnosen är funnen. Rätt svar är sepsis.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 1,
+      "tangenter": 1,
+      "tecken": 7,
+      "uppmatt": 4,
+      "inomBudget": true,
+      "skriptetsTidMs": 430,
+      "uppskattadTidS": 11.4,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 3.5,
+        "tecken": 2,
+        "tangenter": 0.3,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Bertil Danielsson i arbetslistan",
+        "fältbyte: sökfältet i journalen",
+        "tangent Enter: sök",
+        "klick: träffen Epikris"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.1",
@@ -1128,10 +2203,30 @@
         "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
       ],
       "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 130,
+      "uppskattadTidS": 2.8,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.1",
@@ -1148,10 +2243,30 @@
         "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
       ],
       "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 105,
+      "uppskattadTidS": 2.8,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.1",
@@ -1168,10 +2283,30 @@
         "Kontrollerna i Sussas testdata (temperatur, puls, blodtryck och blodsocker) är planerade uppgifter här. Ordinerade kontroller ansluts när de finns."
       ],
       "slut": "Händelserna klockan 11 är funna: provtagning för en patient och sjukgymnastik för en annan.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 1,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "skriptetsTidMs": 95,
+      "uppskattadTidS": 2.7,
+      "klmDelar": {
+        "klick": 2.7,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.1
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.2",
@@ -1187,10 +2322,34 @@
         "Avdelningen är Avdelning 72, kardiologi."
       ],
       "slut": "Händelserna klockan 11 är funna för de fyra patienterna.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 392,
+      "uppskattadTidS": 13.6,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: markera Gerda Ström",
+        "klick: markera Elin Arnström",
+        "klick: markera Trevis Ljung",
+        "klick: markera Berit Strandhall"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.2",
@@ -1206,10 +2365,34 @@
         "Avdelningen är Avdelning 72, kardiologi."
       ],
       "slut": "Händelserna klockan 11 är funna för de fyra patienterna.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 5,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 5,
+      "inomBudget": true,
+      "skriptetsTidMs": 407,
+      "uppskattadTidS": 13.7,
+      "klmDelar": {
+        "klick": 13.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.4
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: markera Gerda Ström",
+        "klick: markera Elin Arnström",
+        "klick: markera Trevis Ljung",
+        "klick: markera Berit Strandhall"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.3",
@@ -1225,10 +2408,31 @@
         "Avdelningen är Avdelning 72, kardiologi."
       ],
       "slut": "Händelsen klockan 15 är funnen. Rätt svar är EKG.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "skriptetsTidMs": 197,
+      "uppskattadTidS": 5.5,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: Planering för Bertil Danielsson"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.3",
@@ -1244,10 +2448,31 @@
         "Avdelningen är Avdelning 72, kardiologi."
       ],
       "slut": "Händelsen klockan 15 är funnen. Rätt svar är EKG.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "skriptetsTidMs": 223,
+      "uppskattadTidS": 5.5,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: Planering för Bertil Danielsson"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.4",
@@ -1263,10 +2488,31 @@
         "Läkaren är överläkaren Göran Malm på kardiologen, och perioden är veckan med testdagen i stället för Sussas datum i november 2017."
       ],
       "slut": "Läkarens händelse är funnen. Rätt svar är infektionskonsult.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "skriptetsTidMs": 186,
+      "uppskattadTidS": 5.5,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: Göran Malm vid en händelse"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     },
     {
       "nr": "7.4",
@@ -1282,10 +2528,31 @@
         "Läkaren är överläkaren Göran Malm på kardiologen, och perioden är veckan med testdagen i stället för Sussas datum i november 2017."
       ],
       "slut": "Läkarens händelse är funnen. Rätt svar är infektionskonsult.",
-      "uppnatt": false,
-      "fel": "page.goto: Target page, context or browser has been closed",
-      "malpoang": 0,
-      "tidspoang": 0
+      "uppnatt": true,
+      "klick": 2,
+      "listval": 0,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "tecken": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "skriptetsTidMs": 219,
+      "uppskattadTidS": 5.5,
+      "klmDelar": {
+        "klick": 5.3,
+        "listval": 0,
+        "faltbyten": 0,
+        "tecken": 0,
+        "tangenter": 0,
+        "svarstid": 0.2
+      },
+      "steg": [
+        "klick: Avdelningens planering i arbetslistan",
+        "klick: Göran Malm vid en händelse"
+      ],
+      "brister": [],
+      "malpoang": 10,
+      "tidspoang": 10
     }
   ],
   "ejGenomforbara": [],
@@ -1308,225 +2575,216 @@
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.1 Upprätta och skicka vårdbegäran (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.1 Upprätta och skicka vårdbegäran (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.1 Upprätta och skicka vårdbegäran (paramedicinare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.2 Upprätta och skicka vårdbegäran på uppdrag (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.3 Ta emot vårdbegäran (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.3 Ta emot vårdbegäran (paramedicinare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.4 Ta emot vårdbegäran på uppdrag (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.5 Registrera en extern vårdbegäran (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.6 Besvara en vårdbegäran (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 2.6 Besvara en vårdbegäran (paramedicinare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.1 Upprätta en labbeställning (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.1 Upprätta en labbeställning (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.2 Upprätta en labbeställning på uppdrag (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.2 Upprätta en labbeställning på uppdrag (undersköterska) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.3 Registrera provtagning (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.3 Registrera provtagning (undersköterska) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.4 Överblicka provsvar (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.4 Överblicka provsvar (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.4 Överblicka provsvar (undersköterska) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.5 Upprätta en beställning eller ordination på intern analys eller mätvärde (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 3.5 Upprätta en beställning eller ordination på intern analys eller mätvärde (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.1 Skapa anteckning (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.1 Skapa anteckning (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.1 Skapa anteckning (paramedicinare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.2 Registrera mätvärden (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.2 Registrera mätvärden (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.2 Registrera mätvärden (undersköterska) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.3 Skapa slutanteckning eller epikris (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 4.4 Signera (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.1 Boka patient till ett besök (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.2 Boka ett teambesök (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.3 Boka ett gruppbesök (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.4 Omboka besök (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.5 Ankomstregistrering (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.6 Överblicka ankomstregistrering (läkare öppenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.7 Oplanerad ankomstregistrering (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 5.8 Väntelista (medicinsk sekreterare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.1 Akut inskrivning av patient på vårdavdelning (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.1 Akut inskrivning av patient på vårdavdelning (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.2 Överflyttning av patient mellan avdelningar med olika medicinsk specialitet (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.2 Överflyttning av patient mellan avdelningar med olika medicinsk specialitet (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.3 Hitta information från tidigare slutenvårdstillfälle (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 6.3 Hitta information från tidigare slutenvårdstillfälle (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.1 Överblicka dagens arbete för din arbetsplats (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.1 Överblicka dagens arbete för din arbetsplats (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.1 Överblicka dagens arbete för din arbetsplats (paramedicinare) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.2 Överblicka dagens händelser för en grupp patienter (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.2 Överblicka dagens händelser för en grupp patienter (undersköterska) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.3 Överblicka patientens planering (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.3 Överblicka patientens planering (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.4 Visualisera en specifik resurs arbetsplanering (läkare slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     },
     {
       "namn": "Gränssnitt > Sussas testfall > 7.4 Visualisera en specifik resurs arbetsplanering (sjuksköterska slutenvård) når slutvillkoret inom klickbudgeten",
-      "status": "röd"
+      "status": "grön"
     }
   ],
   "sammanstallning": {
     "alla": {
       "antal": 34,
-      "malupfyllelse": 1.18,
-      "effektivitet": 1.18,
-      "poang": {
-        "malupfyllelse": 0,
-        "effektivitet": 0
-      }
-    },
-    "genomforda": {
-      "antal": 4,
       "malupfyllelse": 10,
       "effektivitet": 10,
       "poang": {
@@ -1534,7 +2792,16 @@
         "effektivitet": 10
       }
     },
-    "antalGenomforda": 4,
+    "genomforda": {
+      "antal": 34,
+      "malupfyllelse": 10,
+      "effektivitet": 10,
+      "poang": {
+        "malupfyllelse": 10,
+        "effektivitet": 10
+      }
+    },
+    "antalGenomforda": 34,
     "antal": 34,
     "korningar": 56
   }
