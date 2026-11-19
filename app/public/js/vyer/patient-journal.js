@@ -495,7 +495,8 @@ async function skrivForm(las, ctx, egnaMallar, { mall: forval, varden = {}, info
       ctrl?.stopp();
       notis(signera ? 'Anteckningen är signerad.' : 'Utkastet är sparat. Det syns bara för dig tills du signerar.');
       kontaktNotis(ny);
-      await uppdateraInkorg();
+      // Runda 18, r5: räknaren för inkorgen uppdateras medan journalen ritas om, så att anteckningen syns direkt.
+      uppdateraInkorg().catch(() => {});
       // Adressen kan redan vara utkastets (efter Spara utkast), och då ritas vyn om från adressen.
       if (location.hash === dit) rita(); else location.hash = dit;
     } catch { /* felet visas i formuläret */ }
@@ -574,7 +575,8 @@ function strukturForm(las, ctx, a, lage) {
         return null;
       }, form);
       notis(ratta ? 'Rättelsen är signerad. Den tidigare versionen finns kvar, överstruken.' : signera ? 'Anteckningen är signerad.' : 'Utkastet är sparat.');
-      await uppdateraInkorg();
+      // Runda 18, r5: räknaren för inkorgen uppdateras medan journalen ritas om.
+      uppdateraInkorg().catch(() => {});
       if (ny) location.hash = ctx.href('journal', ny.id); else ctx.ladda();
     } catch { /* felet visas i formuläret */ }
   };

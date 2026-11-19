@@ -1,0 +1,133 @@
+{
+  "tid": "2026-11-19T14:21:10.952Z",
+  "bas": "http://127.0.0.1:18282",
+  "webblasare": "Chromium 147.0.7727.15",
+  "gransnittHash": "d662a8ed48268ab642a623946a455ccd7bc105d0966a30a3a243bad418245b64",
+  "mal": {
+    "aterkopplingMs": 100,
+    "resultatMs": 500,
+    "resultatStryptMs": 1000,
+    "andel": 0.95,
+    "strypning": 4
+  },
+  "lagen": {
+    "vanlig": {
+      "antal": 368,
+      "p50Aterkoppling": 1,
+      "p95Aterkoppling": 3,
+      "p50Resultat": 45,
+      "p95Resultat": 150,
+      "andelAterkoppling": 1,
+      "andelResultat": 0.9972826086956522,
+      "langsammaste": [
+        {
+          "flode": "Sätta ut ett läkemedel",
+          "steg": "Sätt ut för Alvedon",
+          "aterkoppling": 1,
+          "resultat": 547
+        },
+        {
+          "flode": "Skriva ut läkemedelslistan vid utskrivning",
+          "steg": "Skriv ut i dialogen",
+          "aterkoppling": 4,
+          "resultat": 431
+        },
+        {
+          "flode": "Godkänna en ändrad läkemedelsmall",
+          "steg": "Godkänn",
+          "aterkoppling": 4,
+          "resultat": 321
+        },
+        {
+          "flode": "Avsluta behandlingen efter ett uppehåll",
+          "steg": "Avsluta behandlingen",
+          "aterkoppling": 5,
+          "resultat": 318
+        },
+        {
+          "flode": "Läsa in loggen från reservservern",
+          "steg": "Läs in",
+          "aterkoppling": 1,
+          "resultat": 293
+        },
+        {
+          "flode": "Diktera och signera en daganteckning",
+          "steg": "Diktera",
+          "aterkoppling": 1,
+          "resultat": 245
+        },
+        {
+          "flode": "Välja yrkesroll och starta första uppdraget",
+          "steg": "Läkare på sjukhus",
+          "aterkoppling": 1,
+          "resultat": 245
+        },
+        {
+          "flode": "Boka provtagning före läkarbesök",
+          "steg": "Boka tid vid återbesöket",
+          "aterkoppling": 0,
+          "resultat": 210
+        }
+      ]
+    },
+    "strypt": {
+      "antal": 368,
+      "p50Aterkoppling": 2,
+      "p95Aterkoppling": 11,
+      "p50Resultat": 72,
+      "p95Resultat": 338,
+      "andelAterkoppling": 1,
+      "andelResultat": 0.9836956521739131,
+      "langsammaste": [
+        {
+          "flode": "Skriva och signera en epikris",
+          "steg": "Signera",
+          "aterkoppling": 2,
+          "resultat": 8956
+        },
+        {
+          "flode": "Fylla i tobaksmallen i en anteckning",
+          "steg": "Dokumentera tobaksvanor i översikten",
+          "aterkoppling": 3,
+          "resultat": 4909
+        },
+        {
+          "flode": "Koppla en patientmonitor till patienten",
+          "steg": "Patientmonitor DEMO-MON-0001 i listan, i stället för att skanna",
+          "aterkoppling": 3,
+          "resultat": 2732
+        },
+        {
+          "flode": "Rätta en felstavad medicinsk term i en anteckning",
+          "steg": "Byt till pneumoni",
+          "aterkoppling": 4,
+          "resultat": 1565
+        },
+        {
+          "flode": "Godkänna värden från monitorn",
+          "steg": "Godkänn vid värdena från monitorn",
+          "aterkoppling": 2,
+          "resultat": 1039
+        },
+        {
+          "flode": "Registrera längd, vikt, blodtryck och puls",
+          "steg": "Längd, vikt, blodtryck och puls på en gång",
+          "aterkoppling": 3,
+          "resultat": 1012
+        },
+        {
+          "flode": "Visa en färdig patientgrupp",
+          "steg": "Visa gruppen",
+          "aterkoppling": 3,
+          "resultat": 944
+        },
+        {
+          "flode": "Sätta ut Waran med plan",
+          "steg": "Jag har en plan",
+          "aterkoppling": 2,
+          "resultat": 920
+        }
+      ]
+    }
+  }
+}

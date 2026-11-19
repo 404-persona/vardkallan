@@ -35,13 +35,20 @@ async function matISidan(ctx) {
     window.__steg = null;
     window.__pagaende = 0;
     const markera = () => { const s = window.__steg; if (!s) return; const t = nu(); if (s.aterkoppling == null) s.aterkoppling = t; s.sista = t; };
-    new MutationObserver(markera).observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
+    // Det som gränssnittet gör av sig självt räknas inte till steget: svarstiden i sidhuvudet, läskopians markering och
+    // ett meddelande som försvinner efter en stund.
+    const egen = (r) => r.target.closest?.('#svarstid') || r.target.parentElement?.closest?.('#svarstid') || (r.type === 'attributes' && r.target === document.documentElement)
+      || (r.type === 'childList' && r.target.id === 'notiser' && !r.addedNodes.length);
+    new MutationObserver((l) => { if (l.some(r => !egen(r))) markera(); }).observe(document, { childList: true, subtree: true, attributes: true, characterData: true });
     const borja = (e) => { if (!e.isTrusted || (e.type === 'keydown' && e.key.length === 1)) return; window.__steg = { t0: e.timeStamp, aterkoppling: null, sista: null }; };
     document.addEventListener('pointerdown', borja, true);
     document.addEventListener('keydown', borja, true);
     for (const t of ['focusin', 'change', 'input']) document.addEventListener(t, markera, true);
     const f = window.fetch;
+    // Anrop i bakgrunden (läskopian, listorna som uppdaterar sig själva) hör inte till steget.
+    const bakgrund = (a) => { try { const h = a[1]?.headers; return Boolean(h && (h['X-Vk-Bakgrund'] === '1' || h.get?.('X-Vk-Bakgrund') === '1')); } catch { return false; } };
     window.fetch = async (...a) => {
+      if (bakgrund(a)) return f(...a);
       window.__pagaende++;
       try { return await f(...a); } finally { window.__pagaende--; markera(); }
     };
