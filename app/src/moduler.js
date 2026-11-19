@@ -598,6 +598,8 @@ export function lasGransnitt({ rot = APP, text = null } = {}) {
 // Nås från med de här namnen, inte med modulens namn för varje sida.
 export const SIDNAMN = {
   '#/testa': 'Testa Vårdkällan', '#/om': 'Om demon och testet', '#/testledare': 'Synpunkter och jämförelser',
+  // Sammanslagningen av runda 18: r2:s ordlista är en offentlig sida utan rad i menyn.
+  '#/ordlista': 'Jag letar efter',
   '#/testprotokoll': 'Testprotokoll', '#/tillganglighet': 'Tillgänglighet', '#/anvandartest': 'Användartest',
   '#/inloggning/extern': 'Inloggning genom en extern tjänst',
 };
