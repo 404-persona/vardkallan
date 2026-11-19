@@ -10,11 +10,9 @@ import { TESTROLLER } from '../src/testinbjudan.js';
 import { PASS_STEG } from '../public/js/forsta-pass-steg.js';
 
 const KATALOG = fileURLToPath(new URL('../public/js/uppdrag-steg/', import.meta.url));
-// Rollerna vars steg skrivs i en annan del av runda 19 (r2 och r3). Deras filer kommer in vid sammanslagningen, och då
-// ska listan vara tom: testet fallerar för en roll som står här men redan har en fil.
-const I_ANNAN_DEL = new Set(['sjukskoterska', 'underskoterska', 'barnmorska', 'vardadministrator', 'fysioterapeut', 'systemforvaltare', 'patient']);
-// Runda 19, r2: stegen för sjuksköterskan, undersköterskan och barnmorskan finns.
-for (const r of ['sjukskoterska', 'underskoterska', 'barnmorska']) I_ANNAN_DEL.delete(r);
+// Alla nio testrollers steg finns efter sammanslagningen av runda 19. Listan är tom och står kvar för en roll som
+// läggs till senare: testet fallerar för en roll som står här men redan har en fil.
+const I_ANNAN_DEL = new Set([]);
 
 const NYCKLAR = new Set(['id', 'text', 'mal', 'hash', 'klar', 'gor', 'nar']);
 const MAL_NYCKLAR = new Set(['sel', 'innehaller', 'text', 'rad']);
