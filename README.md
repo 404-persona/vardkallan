@@ -157,6 +157,25 @@ docker run --rm -v "$PWD/app:/app" -w /app oven/bun:1.3.14-alpine bun test
 
 ## Licens
 
-EUPL 1.2, Europeiska unionens licens för öppen källkod. Se `LICENSE`.
+EUPL 1.2, Europeiska unionens licens för öppen källkod. Se `LICENSE`. Licensen finns på alla EU:s officiella språk, och den svenska versionen gäller lika mycket som den engelska.
+
+### Vad licensen betyder
+
+Vårdkällan är öppen källkod och ska förbli det. Det här är en sammanfattning på vanlig svenska. Det är licenstexten som gäller.
+
+- Du får använda, kopiera, ändra och förbättra Vårdkällan, för vilket syfte som helst, och dela med dig av det. Forka gärna.
+- Den som ger ut en ändrad version, eller låter andra använda den över nätet, till exempel som en molntjänst, ska ge ut hela källkoden till den ändrade versionen under EUPL 1.2. Det går alltså inte att göra Vårdkällan, eller en version som bygger på Vårdkällan, till stängd programvara genom att lägga till egen stängd kod.
+- Koden finns alltid gratis här, och den som får en kopia får alltid dela den vidare fritt. Licensen hindrar inte att någon tar betalt för arbete runt systemet, som drift, support, utbildning och anpassning. Det är så en region kan anlita någon som driver systemet. Den kod som skrivs i det arbetet ska publiceras öppet på samma villkor när den ges ut eller används över nätet.
+- En version som har getts ut under EUPL 1.2 förblir fri, och bidrag lämnas under EUPL 1.2 (se `CONTRIBUTING.md`). Ingen kan därför göra om koden med andras bidrag till stängd kod.
+- Ett program som bara utbyter information med Vårdkällan genom de öppna gränssnitten (FHIR, tjänstekontrakten i RIVTA och API:t) är ett eget verk och omfattas inte av Vårdkällans licens.
+- Licensen ger inga garantier. Vårdkällan levereras i befintligt skick, och version 1.0 betyder inte att systemet kan användas i vården (se ovan).
+
+### Namnet Vårdkällan
+
+Licensen gäller koden, inte namnet.
+
+- Du får gärna skriva att din version bygger på Vårdkällan och länka hit.
+- En ändrad version ska ha ett eget namn som inte kan förväxlas med Vårdkällan, och den får inte ges ut som projektets version eller som en officiell eller godkänd version av Vårdkällan.
+- Namnet får inte användas så att det ser ut som att projektet står bakom en produkt eller tjänst, eller som att Vårdkällan är godkänd för användning i vården.
 
 Undantag: filerna `app/src/seed/who-tillvaxt.js` och `app/src/seed/who2007-tillvaxt.js` med WHO:s tillväxtstandard och tillväxtreferens omfattas inte av EUPL. De har licensen CC BY-NC-SA 3.0 IGO med WHO som källa, och licenstexten står i `app/src/seed/LICENS-who-tillvaxt.txt`. De får inte användas kommersiellt utan tillstånd från WHO.

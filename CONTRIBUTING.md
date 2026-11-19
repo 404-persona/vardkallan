@@ -106,6 +106,6 @@ Rapportera inte en säkerhetsbrist i ett öppet ärende, ett ändringsförslag e
 
 ## Licens
 
-Vårdkällan har licensen EUPL 1.2, Europeiska unionens licens för öppen källkod. Se `LICENSE`. När du lämnar ett bidrag lämnar du det under EUPL 1.2.
+Vårdkällan har licensen EUPL 1.2, Europeiska unionens licens för öppen källkod. Se `LICENSE`. När du lämnar ett bidrag lämnar du det under EUPL 1.2. Projektet ber inte om något avtal som överlåter upphovsrätten, så ditt bidrag förblir ditt och kan inte göras om till stängd kod. Vad licensen och namnet Vårdkällan betyder står i `README.md` under Licens.
 
 Undantag: filerna med WHO:s tillväxtstandard och tillväxtreferens i `app/src/seed/` har licensen CC BY-NC-SA 3.0 IGO, som beskrivs i `README.md`.
