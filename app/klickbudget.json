@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T09:08:15.372Z",
-  "bas": "http://127.0.0.1:18230",
+  "tid": "2026-11-19T13:18:26.330Z",
+  "bas": "http://127.0.0.1:18283",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7034cc5c8028432fef72b1daa0fcd9184e86566bb344253caa7934e4f1240540",
+  "gransnittHash": "7e48de36f03d7c8ede5080306d64f868d7901712974f702d63e0da2137ff4d4d",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -3045,6 +3045,45 @@
       "teckenSkrivna": 0,
       "teckenSystemet": 0,
       "teckenKundeSystemet": 0
+    },
+    {
+      "id": "hamta-ut-hjalpmedel",
+      "namn": "Lämna ut ett förskrivet hjälpmedel och ta betalt i kassan",
+      "roll": "adm-kard",
+      "start": "Patientens översikt",
+      "budget": 3,
+      "motivering": "Sussa bör-krav B1 och 3.4.4.4. Ett klick på hur patienten betalar vid hjälpmedlet i rutan Avgifter och högkostnadsskydd och ett för att stänga kvittot. Systemet vet vad som är förskrivet och vad avgiften är, registrerar uthämtningen och betalningen och lägger den i kassan och faktureringsunderlaget. Budgeten har plats för att skriva ut kvittot.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Hämtas ut, betalt med kort",
+        "klick: Stäng kvittot"
+      ],
+      "teckenSkrivna": 0,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "kostnader-vardenhet",
+      "namn": "Se vårdenhetens kostnader per månad",
+      "roll": "vch-kard",
+      "start": "Verksamhetschefens startsida",
+      "budget": 2,
+      "motivering": "Sussa bör-krav B2 och 7.1.2.1. Ett klick på Kostnader per vårdenhet i menyn. Systemet har räknat kostnaderna ur det som har hänt och visar de vårdenheter verksamhetschefen ansvarar för, som diagram och tabell. Budgeten har plats för att öppna tabellen.",
+      "klick": 1,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 1,
+      "inomBudget": true,
+      "steg": [
+        "klick: Kostnader per vårdenhet"
+      ],
+      "teckenSkrivna": 0,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
     }
   ],
   "tester": [
@@ -3618,6 +3657,14 @@
     },
     {
       "namn": "Gränssnitt > Klickbudget > Förskriva preventivmedel som barnmorska inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Lämna ut ett förskrivet hjälpmedel och ta betalt i kassan inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Se vårdenhetens kostnader per månad inom budget",
       "status": "grön"
     }
   ]
