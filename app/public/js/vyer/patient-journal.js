@@ -85,7 +85,7 @@ export async function visa(el, ctx) {
           <span class="j-rad1"><span class="j-typ">${esc(a.typ)}</span><time>${esc(datum(a.signerad?.tid ?? a.skapad))}</time></span>
           <span class="j-rad2">${esc(a.forfattare?.namn ?? '')}${a.status === 'utkast' ? ' <span class="tagg tagg-utkast">Utkast</span>' : ''}${a.version > 1 ? ` <span class="tagg">Rättad, version ${a.version}</span>` : ''}</span>
           ${a.kallaEtikett ? `<span class="j-rad2">${migreradEtikett(a)}</span>` : ''}
-        </a></li>`).join('')}</ul></section>`).join('') : '<p class="tom">Inga anteckningar matchar urvalet.</p>';
+        </a></li>`).join('')}</ul></section>`).join('') : '<p class="tom">Inga anteckningar matchar urvalet. Ändra urvalet för att se fler.</p>';
   };
   ritaLista();
   el.querySelector('#j-enhet').addEventListener('change', e => { filter.enhet = e.target.value; ritaLista(); });
@@ -106,7 +106,7 @@ export async function visa(el, ctx) {
   if (ctx.sub === 'levnadsvanor') return nyForm(las, ctx, egnaMallar, { typ: 'Levnadsvanor' });
   if (ctx.sub === 'epikris') return nyEpikris(las, ctx, egnaMallar);
   const id = ctx.sub ?? ant.find(a => a.status === 'signerad')?.id ?? ant[0]?.id;
-  if (!id) { las.innerHTML = '<p class="tom">Det finns inga anteckningar än.</p>'; return; }
+  if (!id) { las.innerHTML = '<p class="tom">Det finns inga anteckningar än. En anteckning hamnar här när den har sparats.</p>'; return; }
   // Runda 14, r4.
   if (String(id).startsWith('ma-')) return lasMellanarkiv(las, ctx, String(id).slice(3));
   await lasAnteckning(las, ctx, id);

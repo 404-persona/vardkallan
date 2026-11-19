@@ -78,7 +78,7 @@ export async function visa(main, { manad = null } = {}) {
   if (!el) return;
   el.innerHTML = `${formular(l.val)}
     <section class="inkorg-sektion" aria-labelledby="sn-lista-rubrik"><h2 id="sn-lista-rubrik">Incidenter${l.pagar ? `, ${l.pagar} pågår` : ''}</h2>
-      ${l.incidenter.length ? `<ul class="sn-lista" id="sn-lista">${l.incidenter.slice(0, 20).map(incident).join('')}</ul>` : '<p class="tom" id="sn-lista">Inga incidenter är registrerade i den här sandlådan.</p>'}
+      ${l.incidenter.length ? `<ul class="sn-lista" id="sn-lista">${l.incidenter.slice(0, 20).map(incident).join('')}</ul>` : '<p class="tom" id="sn-lista">Inga incidenter är registrerade i den här sandlådan. En incident hamnar här när du registrerar den.</p>'}
     </section>
     ${rapport(r)}
     <section class="lm-sektion" aria-labelledby="sn-export-rubrik"><h2 id="sn-export-rubrik">Incidentrapport till beställaren</h2>

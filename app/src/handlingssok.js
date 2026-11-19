@@ -93,7 +93,7 @@ export const KATALOG = [
   { id: 'forlang-sjukskrivning', namn: 'Förlänga en sjukskrivning', vy: 'Förläng sjukskrivningen under fliken Sjukskrivning', mal: { flik: 'sjukskrivning' }, kraver: ['las_intyg', 'las_diagnoser', 'skriv_intyg'], alder: [16, 70],
     ord: ['förlänga sjukskrivning', 'förläng', 'sjukskrivning', 'sjukfall', 'fortsatt sjukskrivning'] },
   { id: 'aterbesok', namn: 'Planera ett återbesök', vy: 'Återbesök i översikten', mal: { flik: 'oversikt' }, klicka: ['[data-aterbesok]'], kraver: ['skriv_journal'],
-    ord: ['återbesök', 'boka återbesök', 'ny tid', 'uppföljning', 'kalla tillbaka'] },
+    ord: ['återbesök', 'boka återbesök', 'ny tid', 'uppföljning', 'nytt besök'] },
   { id: 'utskrift', namn: 'Skriva ut journalen', vy: 'Skriv ut i översikten. Systemet föreslår syftet och delarna', mal: { flik: 'oversikt' }, klicka: ['[data-utskrift]'], kraver: ['skriv_ut'],
     ord: ['skriva ut', 'utskrift', 'journalkopia', 'kopia av journalen', 'pdf', 'utlämnande'] },
   { id: 'overkanslighet', namn: 'Registrera en överkänslighet', vy: 'Uppmärksamhetsinformationen i patienthuvudet', mal: { flik: 'oversikt' }, klicka: ['.patientband .signal-um summary', '[data-ok-ny]'], kraver: ['registrera_overkanslighet'],

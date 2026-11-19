@@ -28,7 +28,7 @@ export async function visa(main) {
   if (!el) return;
   el.innerHTML = `
     <section class="inkorg-sektion" aria-labelledby="kv-att-godkanna"><h2 id="kv-att-godkanna">Att godkänna <span class="antal${o.attGodkanna.length ? ' antal-aktiv' : ''}">${o.attGodkanna.length}</span></h2>
-      ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(utgavaRad).join('')}</ul>` : '<p class="tom liten">Inga utgåvor väntar på ditt godkännande.</p>'}</section>
+      ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(utgavaRad).join('')}</ul>` : '<p class="tom liten">Inga utgåvor väntar på ditt godkännande. En utgåva hamnar här när en annan systemförvaltare har lagt in den.</p>'}</section>
     ${o.mina.length ? `<section class="inkorg-sektion" aria-labelledby="kv-mina"><h2 id="kv-mina">Mina utgåvor</h2><p class="liten">Väntar på att en annan systemförvaltare godkänner dem.</p><ul class="inkorg-lista">${o.mina.map(utgavaRad).join('')}</ul></section>` : ''}
     <section class="lm-sektion" aria-labelledby="kv-kodverk"><h2 id="kv-kodverk">Kodverk</h2>
       <div class="knapprad"><button type="button" class="knapp" data-ny-utgava="">Lägg in en ny utgåva</button><button type="button" class="knapp sekundar" data-nytt-lokalt>Nytt lokalt kodverk</button></div>

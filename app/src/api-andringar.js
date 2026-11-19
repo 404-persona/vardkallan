@@ -17,7 +17,7 @@ export const ANDRINGAR = [
     text: 'Den som testar Vårdkällan för första gången.',
     resurser: [], skrivning: [], annat: [
       // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (docs/api-avvikelser.md).
-      'Nya rutter i det interna API:t: GET /api/handlingar/sok med q och patient, som ger de handlingar som den inloggade får och vilken roll som gör det som saknas, och GET /api/handlingar/ordlista, som är öppen utan inloggning',
+      'Nya rutter i det interna API:t för sökrutan Vad vill du göra?, som ger de handlingar som den inloggade får och vilken roll som gör det som saknas, och för ordlistan Jag letar efter, som är öppen utan inloggning (docs/api-avvikelser.md)',
     ],
   },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.

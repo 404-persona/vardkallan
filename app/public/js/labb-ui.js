@@ -195,7 +195,7 @@ export function inkorgSektioner(d, sektion, ar) {
   return [
     rattade.length ? sektion('labbrattade', 'Rättade svar', rattade, '', 'Svar som laboratoriet eller röntgen har rättat efter att du läste dem. Den tidigare versionen finns kvar i beställningen.') : '',
     kritiska.length ? sektion('labbkritisk', 'Kritiska provsvar', kritiska, '', 'Svar som ligger utanför demons gränser för kritiska värden. De larmar den ansvariga läkaren och sjuksköterskorna på vårdenheten tills läkaren har vidimerat dem. Demoregel.') : '',
-    ar('vidimera_provsvar') ? sektion('labbvid', 'Provsvar att vidimera', vid, 'Inga provsvar väntar på din vidimering.', 'Svar på beställningar där du är ansvarig läkare. Avvikande och kritiska svar står först.') : '',
+    ar('vidimera_provsvar') ? sektion('labbvid', 'Provsvar att vidimera', vid, 'Inga provsvar väntar på din vidimering. Ett svar hamnar här när ett prov som du har beställt är klart.', 'Svar på beställningar där du är ansvarig läkare. Avvikande och kritiska svar står först.') : '',
     sign.length ? sektion('labbsign', 'Labbeställningar att signera', sign, '', 'Beställningar som en sjuksköterska eller undersköterska har gjort på ditt uppdrag.') : '',
   ].join('');
 }

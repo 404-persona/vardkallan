@@ -31,7 +31,7 @@ export async function visa(main) {
   main.innerHTML = vyRubrik('Arbetslista', `Patienter med vårdrelation på ${esc(S.session.enhet.vardenhet?.namn ?? S.session.enhet.namn)}.`) + `${hjalpRuta('oppna-patient')}${tidbok}<div id="lista"><p class="tom">Hämtar arbetslistan.</p></div>`;
   const rader = await api('/api/arbetslista');
   const el = main.querySelector('#lista');
-  if (!rader.length) { el.innerHTML = tom('Det finns inga patienter med vårdrelation på din enhet just nu.'); return; }
+  if (!rader.length) { el.innerHTML = tom('Det finns inga patienter med vårdrelation på din enhet just nu. Sök patient i menyn för att hitta en patient i hela regionen.'); return; }
   // Runda 13, r4: öppenvården delas i dagens besök och kontakter som har pågått sedan tidigare.
   const grupper = [
     ['slutenvard', 'Inskrivna'], ['akut', 'På akuten'], ['oppenvard', 'Öppenvård i dag'], ['oppenvard-pagaende', 'Pågående kontakter i öppenvården'],

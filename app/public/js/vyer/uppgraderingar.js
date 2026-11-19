@@ -51,7 +51,7 @@ export async function visa(main) {
     ${o.i_drift && !v ? versionsInnehall(o.i_drift) : ''}
     <section class="lm-sektion" aria-labelledby="uppg-hist"><h2 id="uppg-hist">Historik</h2>
       ${o.historik.length ? `<ul class="inkorg-lista">${o.historik.map(h => `<li class="ik-ater"><div class="ik-text"><span class="ik-rubrik">${esc(TYPTEXT[h.typ] ?? h.typ)} från ${esc(h.fran)} till ${esc(h.till)}</span>
-        <span class="under-text">${esc(STATUSTEXT[h.status] ?? h.status)}. ${h.typ === 'atergang' ? `Gjord av ${esc(h.skapadAv)} ${esc(tidpunkt(h.skapad))}.` : `${h.godkand1Av ? `Godkänd av ${esc(h.godkand1Av)}` : ''}${h.godkand2Av ? ` och ${esc(h.godkand2Av)}` : ''}${h.genomford ? `, används sedan ${esc(tidpunkt(h.genomford))}` : ''}.`}</span></div></li>`).join('')}</ul>` : '<p class="tom liten">Ingen uppgradering eller återgång är gjord i den här sandlådan.</p>'}
+        <span class="under-text">${esc(STATUSTEXT[h.status] ?? h.status)}. ${h.typ === 'atergang' ? `Gjord av ${esc(h.skapadAv)} ${esc(tidpunkt(h.skapad))}.` : `${h.godkand1Av ? `Godkänd av ${esc(h.godkand1Av)}` : ''}${h.godkand2Av ? ` och ${esc(h.godkand2Av)}` : ''}${h.genomford ? `, används sedan ${esc(tidpunkt(h.genomford))}` : ''}.`}</span></div></li>`).join('')}</ul>` : '<p class="tom liten">Ingen uppgradering eller återgång är gjord i den här sandlådan. En uppgradering hamnar här när den har gjorts.</p>'}
       <p class="demoregel">Simulerat: i demon byts bara databasen i sandlådan, och programmet är detsamma för alla sandlådor. I driften är varje version en egen avbildning, och vid en återgång startas den förra avbildningen, som själv backar databasen när den startar.</p>
     </section>`;
   el.addEventListener('click', async (e) => {

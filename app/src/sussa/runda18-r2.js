@@ -38,8 +38,7 @@ const SOKRUTAN = 'Sökrutan Vad vill du göra? i sidhuvudet (och Ctrl K) tar emo
 const POSTER = {
   '3.1.8.1': {
     tester: [T.matcha, T.roll, T.patient, T.skyddad, T.loggar],
-    losningTillagg: SOKRUTAN,
-    expertTillagg: 'Sökrutan tål stavfel, böjningar och sammansatta ord, förstår ord från andra journalsystem och säger vilken roll som gör det som rollen inte får.',
+    losningTillagg: `${SOKRUTAN} Sökrutan tål stavfel, böjningar och sammansatta ord, förstår ord från andra journalsystem och säger vilken roll som gör det som rollen inte får.`,
   },
   '3.1.8.2': {
     tester: [T.matcha, T.fraga, T.ordlista],

@@ -303,7 +303,7 @@ export async function visa(main) {
         <td>${esc(x.dosering)}<span class="under-text">${esc(x.maxdosText ?? '')}. Högst ${x.maxTillfallen} ${x.maxTillfallen === 1 ? 'tillfälle' : 'tillfällen'} utan läkarkontakt.</span></td>
         <td>${x.kontraindikationer.map(k => esc(k.text)).join('; ')}</td>
         <td>${esc(x.vardenhet.namn)}<span class="under-text">Fastställt av ${esc(x.faststalltAv)}, till ${esc(x.giltigtTill)}${x.upphavt ? `. Upphävt ${esc(datum(x.upphavt.tid))} av ${esc(x.upphavt.av)}: ${esc(x.upphavt.orsak)}` : ''}</span></td>
-        ${d.kanFaststalla ? `<td class="atgarder">${x.giltigt ? `<button type="button" class="knapp liten sekundar" data-upphav="${x.id}">Upphäv</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : tom('Inga generella direktiv.')}
+        ${d.kanFaststalla ? `<td class="atgarder">${x.giltigt ? `<button type="button" class="knapp liten sekundar" data-upphav="${x.id}">Upphäv</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>` : tom('Inga generella direktiv. Ett direktiv hamnar här när en läkare fastställer det.')}
       ${d.kanFaststalla ? '<button type="button" class="knapp" data-nytt-direktiv>Fastställ ett direktiv</button>' : ''}
       ${d.kanFaststallaVardgivare ? '<button type="button" class="knapp sekundar" data-nytt-direktiv="vardgivare">Fastställ för hela vårdgivaren</button>' : ''}
       ${!d.kanFaststalla && d.faststallaText ? `<p class="ruta ruta-info liten">${esc(d.faststallaText)}</p>` : ''}

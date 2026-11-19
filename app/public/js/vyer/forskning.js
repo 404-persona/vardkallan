@@ -38,7 +38,7 @@ export async function visa(main) {
         <label class="kryss"><input type="checkbox" name="aterkommande"> Återkommande uttag i en löpande studie</label>
         <div class="knapprad"><button type="submit" class="knapp">Registrera</button></div>
       </form></details>` : ''}
-    ${d.bestallningar.length ? d.bestallningar.map(b => kort(b, kan)).join('') : tom('Inga beställningar.')}`;
+    ${d.bestallningar.length ? d.bestallningar.map(b => kort(b, kan)).join('') : tom('Inga beställningar. En beställning hamnar här när uppföljningen beställer ett forskningsuttag.')}`;
   el.querySelector('[data-ny]')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = new FormData(e.currentTarget);

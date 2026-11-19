@@ -52,5 +52,5 @@ export async function visa(main) {
     <section aria-labelledby="sjk-forst"><h2 id="sjk-forst">Behöver ses över (${esc(forst.length)})</h2>
       ${forst.length ? `<ul class="enkel-lista">${forst.map(rad).join('')}</ul>` : '<p class="tom">Inget intyg går ut inom en vecka, och ingen patient närmar sig en gräns i rehabiliteringskedjan. En patient hamnar här en vecka innan intyget går ut eller när en gräns närmar sig.</p>'}</section>
     <section aria-labelledby="sjk-ovriga"><h2 id="sjk-ovriga">Övriga pågående sjukfall (${esc(ovriga.length)})</h2>
-      ${ovriga.length ? `<ul class="enkel-lista">${ovriga.map(rad).join('')}</ul>` : '<p class="tom">Inga fler pågående sjukfall.</p>'}</section>`;
+      ${ovriga.length ? `<ul class="enkel-lista">${ovriga.map(rad).join('')}</ul>` : '<p class="tom">Inga fler pågående sjukfall. Ett sjukfall hamnar här när du skriver ett läkarintyg för sjukpenning.</p>'}</section>`;
 }

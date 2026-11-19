@@ -41,7 +41,7 @@ export async function visa(main) {
   if (!el) return;
   el.innerHTML = `
     <section class="inkorg-sektion" aria-labelledby="js-att-godkanna"><h2 id="js-att-godkanna">Att godkänna <span class="antal${o.attGodkanna.length ? ' antal-aktiv' : ''}">${o.attGodkanna.length}</span></h2>
-      ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(versionRad).join('')}</ul>` : '<p class="tom liten">Inga versioner väntar på ditt godkännande.</p>'}</section>
+      ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(versionRad).join('')}</ul>` : '<p class="tom liten">Inga versioner väntar på ditt godkännande. En version hamnar här när en annan systemförvaltare har sparat den.</p>'}</section>
     ${o.mina.length ? `<section class="inkorg-sektion" aria-labelledby="js-mina"><h2 id="js-mina">Mina förslag</h2><p class="liten">Väntar på att en annan systemförvaltare godkänner dem.</p><ul class="inkorg-lista">${o.mina.map(versionRad).join('')}</ul></section>` : ''}
     <section class="lm-sektion" aria-labelledby="js-mallar"><h2 id="js-mallar">Mallar</h2>
       <div class="knapprad"><button type="button" class="knapp" data-ny="mall">Ny mall</button></div>

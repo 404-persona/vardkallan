@@ -250,7 +250,7 @@ export async function visa(main, _p, q) {
     lista = d.remisser;
     const pagaende = lista.filter(r => r.status !== 'svar_kvitterat' && !['avvisad', 'vidarebefordrad'].includes(r.beslut));
     const avslutade = lista.filter(r => !pagaende.includes(r));
-    el.innerHTML = !lista.length && !d.antal?.totalt ? tom(riktning === 'inkommande' ? 'Inga remisser till din vårdenhet.' : 'Inga remisser från din vårdenhet.') : `
+    el.innerHTML = !lista.length && !d.antal?.totalt ? tom(riktning === 'inkommande' ? 'Inga remisser till din vårdenhet. En remiss hamnar här när en annan vårdenhet skickar den till er.' : 'Inga remisser från din vårdenhet.') : `
       ${r10.urvalHtml(d, riktning)}
       <section aria-labelledby="rp"><h2 id="rp">Pågående <span class="antal">${pagaende.length}</span></h2>${pagaende.map(r => remissKort(r, { visaPatient: true, markerad: String(r.id) === markerad })).join('') || tom('Inga pågående.')}</section>
       ${avslutade.length ? `<section aria-labelledby="ra"><h2 id="ra">Avslutade <span class="antal">${avslutade.length}</span></h2>${avslutade.map(r => remissKort(r, { visaPatient: true, markerad: String(r.id) === markerad })).join('')}</section>` : ''}`;

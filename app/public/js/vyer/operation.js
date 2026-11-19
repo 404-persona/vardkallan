@@ -42,7 +42,7 @@ function programHtml(o) {
           : `<tr${x.forsenad ? ' class="rad-larm"' : ''}><th scope="row">${esc(klockslag(x.start))} till ${esc(klockslag(x.slut))}</th><td>${patientLank(x.patient)}</td><td>${esc(x.ingrepp)}</td>
             <td><span class="under-text">${esc([x.team.operator, x.team.opssk, x.team.anestesilakare, x.team.anestesissk].filter(Boolean).join(', '))}</span></td>
             <td>${esc(STATUS[x.status] ?? x.status)}${x.senaste ? `, ${esc(x.senaste.toLocaleLowerCase('sv'))}` : ''}${x.avvikelse ? `<span class="under-text text-larm">${esc(x.avvikelse)}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`
-        : '<p class="tom liten">Inga operationer planerade.</p>'}</section>`).join('')}
+        : '<p class="tom liten">Inga operationer planerade. En operation hamnar här när den planeras från väntelistan.</p>'}</section>`).join('')}
     <p class="dampad liten">${esc(o.demoregel)}</p>`;
 }
 

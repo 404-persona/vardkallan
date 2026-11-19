@@ -348,7 +348,7 @@ export async function visa(main) {
   // varandra), ritar den senaste omritningen själv. Annars kopplades knapparna två gånger till samma lista, och ett
   // klick på Ge registrerade dosen två gånger (testfall 1.4 föll ibland på varningen för dubbel dos).
   if (!el.isConnected) return;
-  if (!d.patienter.length) { el.innerHTML = tom(`Det finns inga inneliggande patienter på ${d.vardenhet?.namn ?? 'din vårdenhet'} som du har vårdrelation till.`); return; }
+  if (!d.patienter.length) { el.innerHTML = tom(`Det finns inga inneliggande patienter på ${d.vardenhet?.namn ?? 'din vårdenhet'} som du har vårdrelation till. Doserna visas här när en patient är inskriven på vårdenheten.`); return; }
   // Undersköterskan ser vad hennes delegering omfattar och hur länge den gäller (runda 5).
   const deleg = d.delegering ? `<p class="ruta ruta-info liten adm-delegering">${ikon.info}<span>${d.delegering.giltig
     ? `Du ger läkemedel med delegering: ${esc(d.delegering.omfattning.toLowerCase())}, till och med ${esc(datum(d.delegering.till))}. Knappen Ge visas bara för doser som delegeringen omfattar.`

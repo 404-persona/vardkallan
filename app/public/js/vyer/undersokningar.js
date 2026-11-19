@@ -43,7 +43,7 @@ export async function visa(main, _p, _q, ctx = {}) {
   el.innerHTML = `<p class="liten">${esc(d.vardenhet.namn)}: ${esc(d.laboratorier.map(l => l.kort).join(' och '))}.</p>
     ${grupp('Att boka', 'us-boka', d.rader.filter(r => !r.bokad && !r.besvarad), 'Inga undersökningar väntar på tid.')}
     ${grupp('Bokade', 'us-bokade', d.rader.filter(r => r.bokad && !r.utford && !r.besvarad), 'Inga bokade undersökningar.')}
-    ${grupp('Gjorda i dag', 'us-gjorda', d.rader.filter(r => r.utford || r.besvarad), 'Inga undersökningar är gjorda i dag.')}
+    ${grupp('Gjorda i dag', 'us-gjorda', d.rader.filter(r => r.utford || r.besvarad), 'Inga undersökningar är gjorda i dag. En undersökning hamnar här när den är utförd.')}
     <p class="dampad liten">${esc(d.simulerat)} ${esc(d.demoregel)}</p>`;
   el.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-boka], [data-utford], [data-utlatande]');

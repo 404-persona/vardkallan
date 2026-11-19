@@ -34,7 +34,7 @@ function tjanstRad(t) {
 }
 
 function historik(rader) {
-  if (!rader.length) return '<p class="tom liten">Inga beslutade ändringar ännu.</p>';
+  if (!rader.length) return '<p class="tom liten">Inga beslutade ändringar ännu. En ändring hamnar här när den har godkänts.</p>';
   return `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Ändring</th><th scope="col">Föreslagen av</th><th scope="col">Beslut</th></tr></thead><tbody>
     ${rader.map(a => `<tr><th scope="row">${esc(a.atgardText)}: ${esc(a.namn)}<br><span class="dampad liten">${esc(a.motivering)}</span></th><td>${esc(a.foreslagenAv)}, ${esc(tidpunkt(a.foreslagen))}</td>
       <td>${esc(a.statusText)} av ${esc(a.beslutadAv ?? '')}, ${esc(tidpunkt(a.beslutad))}${a.kommentar ? `<br><span class="dampad liten">${esc(a.kommentar)}</span>` : ''}</td></tr>`).join('')}
@@ -57,7 +57,7 @@ export const tjanster = {
     if (!el) return;
     el.innerHTML = `
       <section class="inkorg-sektion" aria-labelledby="it-att-godkanna"><h2 id="it-att-godkanna">Att godkänna <span class="antal${o.attGodkanna.length ? ' antal-aktiv' : ''}">${o.attGodkanna.length}</span></h2>
-        ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(andringRad).join('')}</ul>` : '<p class="tom liten">Inga ändringar väntar på ditt godkännande.</p>'}</section>
+        ${o.attGodkanna.length ? `<ul class="inkorg-lista">${o.attGodkanna.map(andringRad).join('')}</ul>` : '<p class="tom liten">Inga ändringar väntar på ditt godkännande. En ändring hamnar här när en annan systemförvaltare har gjort den.</p>'}</section>
       ${o.mina.length ? `<section class="inkorg-sektion" aria-labelledby="it-mina"><h2 id="it-mina">Mina förslag</h2><p class="liten">Väntar på att en annan systemförvaltare godkänner dem.</p><ul class="inkorg-lista">${o.mina.map(andringRad).join('')}</ul></section>` : ''}
       <section class="lm-sektion" aria-labelledby="it-inkopplade"><h2 id="it-inkopplade">Inkopplade tjänster</h2>
         ${o.tjanster.length ? `<ul class="inkorg-lista">${o.tjanster.map(tjanstRad).join('')}</ul>` : '<p class="tom liten">Ingen tjänst är inkopplad. Personalen loggar in med den simulerade autentiseringstjänsten och demorollerna.</p>'}

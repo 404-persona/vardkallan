@@ -78,7 +78,10 @@ async function sok(page, text) {
 
 // Hittar tomma lägen och fel utan förklaring i huvudinnehållet. Körs i sidan.
 function oforklarade() {
-  const UPPMANING = /(^|[.!?:]\s+)(Välj|Skriv|Sök|Registrera|Lägg|Öppna|Gå|Klicka|Boka|Använd|Pröva|Skicka|Beställ|Ordinera|Fyll|Ange|Kontakta|Be|Logga|Starta|Skapa|Markera|Vänta|Läs|Byt|Ändra|Ta|Gör|Kryssa|Ladda|Hämta|Tryck|Kontrollera|Ring|Sätt|Bekräfta|Signera|Kvittera|Planera|Dokumentera|Utse|Godkänn|Ladda upp|Koppla|Fråga|Spara|Inkludera|Lämna|Följ|Visa|Avsluta|Förläng|Hoppa|Svara|Rapportera|Mät|Ge|Lägg till)\b/;
+  // Varningen på sidan Lagring om tabeller som inte är klassade riktar sig till den som utvecklar och har ingen
+  // handling i gränssnittet.
+  const KANDA = ['går inte att knyta till en huvudman'];
+  const UPPMANING = /(^|[.!?:]\s+)(Välj|Skriv|Sök|Registrera|Lägg|Öppna|Gå|Klicka|Boka|Använd|Pröva|Skicka|Beställ|Ordinera|Fyll|Ange|Kontakta|Be|Logga|Starta|Skapa|Markera|Vänta|Läs|Byt|Ändra|Ta|Gör|Kryssa|Ladda|Hämta|Tryck|Kontrollera|Ring|Sätt|Bekräfta|Signera|Kvittera|Planera|Dokumentera|Utse|Godkänn|Ladda upp|Koppla|Fråga|Spara|Inkludera|Lämna|Följ|Visa|Avsluta|Förläng|Hoppa|Svara|Rapportera|Mät|Ge|Lägg till|Se)(?=[\s,.:]|$)/;
   const NAR = /\b(visas|hamnar|kommer|syns|dyker upp|läggs till|läggs|blir|fylls|räknas|står)\b[^.]*\b(när|så snart|efter)\b|\b(när|så snart)\b[^.]*\b(visas|hamnar|kommer|syns|läggs|registreras|registrerar|skickar|skickas|bokas|signeras|ordineras|beställs|finns)\b|\b(görs|registreras|finns|sköts|bokas|skrivs|väljs|beställs|ordineras|nås|ändras|läggs in)\b[^.]*\b(under|från|i menyn|i journalen|på fliken|i översikten|av)\b|\bkan du\b|\bgår att\b/i;
   const synlig = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
   const harAtgard = (e) => Boolean(e?.matches?.('a[href], button, form, input, select, textarea, .knapprad, details') || e?.querySelector?.('a[href], button:not([disabled]), form, input, select'));
@@ -87,7 +90,8 @@ function oforklarade() {
   for (const e of kandidater) {
     if (!synlig(e)) continue;
     const text = e.textContent.replace(/\s+/g, ' ').trim();
-    if (!text || /^(Hämtar|Öppnar|Laddar|Söker)/.test(text)) continue;
+    if (!text || /^(Hämtar|Öppnar|Laddar|Söker|Sammanställer)/.test(text)) continue;
+    if (KANDA.some(k => text.includes(k))) continue;
     if (e.querySelector('a[href], button')) continue;
     if (UPPMANING.test(text) || NAR.test(text)) continue;
     if (harAtgard(e.nextElementSibling) || harAtgard(e.previousElementSibling)) continue;

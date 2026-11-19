@@ -421,6 +421,12 @@ Börjar i: Journalen för Mikael Svensson på vårdcentralen. Klickbudget: högs
 
 Sussa 2.2.1.9 och 3.1.4.2. Ett klick på fliken Intyg och ett på Skriv TS 8071 i stället vid det ersatta läkarintyget för högre körkortsbehörigheter. Systemet vet att TSTRK1007 ersattes av TS8071, skapar det nya utkastet med de svar som får följa med och öppnar det. Ingen behöver veta vilken blankett som gäller.
 
+### Skicka remiss via Vad vill du göra?
+
+Börjar i: Patientens översikt. Klickbudget: högst 7 steg. I demon gör Per Holm flödet.
+
+Ett klick på Vad vill du göra?, där fältet får fokus, orden skriv remiss och Enter, som öppnar remissformuläret för den öppna patienten. Sedan som i snabbvalet: två klick för mottagaren, ett fältbyte vardera för frågeställning och anamnes och ett klick för att skicka. Prioritet och sista svarsdatum är förvalda. Samma budget som från översikten, för den som inte vet var snabbvalet finns.
+
 ## Instruktionsfilmer
 
 Filmerna visar ett arbetsflöde från början till slut med textade steg på svenska. De spelas in på nytt efter varje ändring i gränssnittet, så att de alltid visar det gränssnitt som finns.

@@ -65,7 +65,7 @@ export async function visa(main, _p, q) {
     const lista = el.querySelector('#ek-exporter');
     if (lista) {
       lista.innerHTML = ex.exporter.length ? `<ul class="enkel-lista">${ex.exporter.slice(0, 10).map(x => `<li><strong>${esc(x.vardenhet?.namn ?? '')}, ${esc(x.period.text)}</strong>
-          <span class="under-text">${esc(tidpunkt(x.tid))}, ${esc(x.format.toUpperCase())}, ${x.antal} poster, ${esc(kr(x.summa))}. ${esc(x.av?.namn ?? '')}.</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga exporter än.</p>';
+          <span class="under-text">${esc(tidpunkt(x.tid))}, ${esc(x.format.toUpperCase())}, ${x.antal} poster, ${esc(kr(x.summa))}. ${esc(x.av?.namn ?? '')}.</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga exporter än. En export hamnar här när du exporterar faktureringsunderlaget.</p>';
     }
     // Runda 10, r7: det patienterna har betalat i Min journal eller med faktura, per vårdenhet. Inga uppgifter per patient.
     const tj = await api('/api/ekonomi/tjanstavgifter');
@@ -73,7 +73,7 @@ export async function visa(main, _p, q) {
     if (tl) {
       tl.innerHTML = tj.vardenheter.length ? `<div class="tabellrulle"><table class="tabell siffertabell"><thead><tr><th scope="col">Vårdenhet</th><th scope="col" class="tal">Kort</th><th scope="col" class="tal">Faktura</th><th scope="col" class="tal">Summa</th></tr></thead>
           <tbody>${tj.vardenheter.map(v => `<tr><th scope="row">${esc(v.vardenhet.namn)}</th><td class="tal">${esc(kr(v.kort))}</td><td class="tal">${esc(kr(v.faktura))}</td><td class="tal">${esc(kr(v.summa))}</td></tr>`).join('')}</tbody></table></div>`
-        : '<p class="tom liten">Inga betalda avgifter för recept eller intyg i dag.</p>';
+        : '<p class="tom liten">Inga betalda avgifter för recept eller intyg i dag. En avgift hamnar här när en invånare betalar i Min journal.</p>';
     }
     return p;
   };
