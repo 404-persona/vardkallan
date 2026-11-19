@@ -8,7 +8,8 @@ import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT } from '../synp
 export const namn = 'om';
 const GITHUB = 'https://github.com/404-persona/vardkallan';
 
-// Runda 18, r4: talen på sidan räknas ur koden och kommer från servern (GET /api/krav/version, fakta). Utan svar från
+// Runda 18, r4: avsnittet Kostnad och licens sammanfattar avsnitten Vad licensen betyder och Namnet Vårdkällan i README
+// och länkar dit. Talen på sidan räknas ur koden och kommer från servern (GET /api/krav/version, fakta). Utan svar från
 // servern står meningarna utan tal, så att sidan aldrig säger ett tal som inte stämmer.
 const ORD = ['noll', 'en', 'två', 'tre', 'fyra', 'fem', 'sex', 'sju', 'åtta', 'nio', 'tio', 'elva', 'tolv'];
 const iOrd = (n) => (Number.isInteger(n) && n >= 0 && n < ORD.length ? ORD[n] : String(n));
@@ -34,6 +35,7 @@ export async function visa(main, _p, _q, { aktuell = () => true } = {}) {
     <section class="ruta" aria-labelledby="om-kostnad">
       <h2 id="om-kostnad">Kostnad och licens</h2>
       <p>Systemet är gratis. Källkoden har licensen EUPL 1.2, och vem som helst, till exempel en region, får använda, ändra och anpassa systemet efter sina egna behov, utan kostnad för själva systemet.</p>
+      <p>Koden förblir öppen. Den som ger ut en ändrad version, eller låter andra använda den över nätet, ska publicera hela källkoden till den under EUPL 1.2. Licensen hindrar inte att någon tar betalt för arbete runt systemet, som drift, support, utbildning och anpassning. En ändrad version ska ha ett eget namn som inte kan förväxlas med Vårdkällan. Hela texten om licensen och namnet finns i <a href="${GITHUB}#licens">README på GitHub</a>, och det är licenstexten som gäller.</p>
       ${inteVarden ? `<p>${esc(inteVarden)}</p>` : ''}
     </section>
     <section class="ruta" aria-labelledby="om-anonymt">

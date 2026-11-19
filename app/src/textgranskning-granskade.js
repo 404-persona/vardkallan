@@ -13,7 +13,7 @@ export const GRANSKADE = {
   // Vad som sparas och hur länge (public/js/synpunkt-regler.js).
   'synpunkter': { granskad: '1.8', texter: '3660df20c6 9d51cea6b8 5bb1206529 69beb7e197 595c56b584 05620f4a77 4e6754a6de 9198f6bce3 1f8203f08f a28debef1d 0aa96b16c7' },
   // Om demon och testet (public/js/vyer/om.js).
-  'om-vy': { granskad: '1.8', texter: '5be7117059 ed9613f484 49f137a2cb 1e83bd59ce 67ca387615 9fb06a5531 9e36d86eda 0fdbefe452 4ff2f83ac5 bba784fe19 2cda4c8e0f be33b19edd 7ebe45c2f1 bb4cb4d57c 3ff4857588 de219154c8 ec51b22011 fa7495b171 b0d2678607' },
+  'om-vy': { granskad: '1.8', texter: '5be7117059 ed9613f484 49f137a2cb 1e83bd59ce 67ca387615 9fb06a5531 3d38d311ab 96fe6fc49d 967f11e635 9e36d86eda 0fdbefe452 4ff2f83ac5 bba784fe19 2cda4c8e0f be33b19edd 7ebe45c2f1 bb4cb4d57c 3ff4857588 de219154c8 ec51b22011 fa7495b171 b0d2678607' },
   // Versionsprincipen och vad 1.0 inte betyder (src/version.js).
   'version': { granskad: '1.8', texter: '26c8fb9d58 83f89811c0' },
   // Kravsidan (public/js/vyer/krav.js).
