@@ -272,6 +272,8 @@ export function samtycke(db, body = {}, { nu = new Date(), passRad = null } = {}
   const { t, r, pass } = aktivtPass(db);
   if (!['ja', 'nej'].includes(body.matning)) throw new Fel(400, 'Svara ja eller nej på frågan om mätning.', 'ogiltig', { falt: ['matning'] });
   if (t.matning) throw new Fel(409, 'Du har redan svarat på frågan om mätning.', 'ogiltig');
+  // Runda 19, r1: passet är redan gjort eller avbrutet, så det finns inget kvar att mäta.
+  if (db.query('SELECT 1 FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass)) throw new Fel(409, 'Passet är redan klart, så det finns inget att mäta.', 'ogiltig');
   const rad = body.matning === 'ja' && passRad ? passRad({ testroll: r.id, pass, profil: profilFor(db) }) : null;
   db.query('UPDATE testare SET matning = ?, pass_start = ?, pass_rad = ? WHERE id = 1').run(body.matning, nu.toISOString(), rad);
   return tillstand(db, { nu });
@@ -349,11 +351,13 @@ export function vidare(db, { nu = new Date() } = {}) {
 function passUt(t, r, status) {
   if (!t.pass) return null;
   const p = forstaPass.passFor(r.id, r.demoroll);
-  const fas = !t.matning ? 'samtycke' : status === 'kvar' ? 'pagar' : t.pass_vidare ? 'klar' : 'aterkoppling';
+  // Runda 19, r1: vägledningen visas direkt, så uppgiften kan bli gjord (eller passet avbrutet) innan testaren har svarat
+  // på frågan om mätning. Då går passet vidare till återkopplingen utan mätning, och frågan ställs inte längre.
+  const fas = status !== 'kvar' ? (t.pass_vidare ? 'klar' : 'aterkoppling') : !t.matning ? 'samtycke' : 'pagar';
   let res = null;
   try { res = t.pass_resultat ? JSON.parse(t.pass_resultat) : null; } catch { res = null; }
   // Utan mätning finns bara Sussas budget och tidsklass att visa.
-  if (!res && t.matning === 'nej' && status !== 'kvar') res = forstaPass.resultat(p, { status: status === 'klar' ? 'klar' : 'avbruten' });
+  if (!res && t.matning !== 'ja' && status !== 'kvar') res = forstaPass.resultat(p, { status: status === 'klar' ? 'klar' : 'avbruten' });
   return { uppdrag: p.uppdrag, sussa: p.sussa ?? null, titel: p.titel, text: p.text, budget: p.budget, tidsklass: p.tidsklass, matning: t.matning || null, fas, resultat: res, sus: t.pass_sus || null };
 }
 
@@ -450,7 +454,9 @@ export function jamfor(db, id, body, spara, { nu = new Date() } = {}) {
   }
   // Runda 18, r1: den som har sagt nej till mätning får ingen tid sparad.
   const t = lasTillstand(db);
-  const ut = spara({ testroll: r.id, uppdrag: up.id, sussa: up.sussa ?? '', status: s.status, tidS: t?.matning === 'nej' ? null : s.tid_s, profil: profilFor(db) });
+  // Runda 19, r1: passets uppdrag som blev gjort innan frågan om mätning var besvarad får inte heller någon tid.
+  const utanTid = t?.matning === 'nej' || (t?.pass && !t.matning && up.id === t.pass);
+  const ut = spara({ testroll: r.id, uppdrag: up.id, sussa: up.sussa ?? '', status: s.status, tidS: utanTid ? null : s.tid_s, profil: profilFor(db) });
   db.query('UPDATE testare_uppdrag SET besvarad = 1 WHERE uppdrag = ?').run(id);
   return { ...ut, tillstand: tillstand(db, { nu }) };
 }

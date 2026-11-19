@@ -7,18 +7,25 @@
 //   text   en kort mening om vad som ska göras, som läses upp för skärmläsare.
 //   mal    elementet som pekas ut, som alternativ: det första som syns används. innehaller kräver att elementet har
 //          texten. Ett alternativ med egen text ersätter stegets text, till exempel när menyn är ihopfälld på en smal skärm.
+//          rad (runda 19) är en väljare för det närmaste elementet runt målet som ska ha texten i innehaller, till exempel
+//          { sel: '[data-remiss-atgard="fordela"]', rad: 'article.remiss', innehaller: 'Berit Strandhall' }.
 //   hash   (frivilligt) steget gäller bara när adressen börjar så, till exempel journalen för rätt patient.
 //   klar   (frivilligt) ett fält eller val som är gjort: varde (fältet har ett värde), andrat (fältet har ändrats från
 //          det systemet fyllde i) eller valt (rutan eller valet är markerat).
 //   gor    (frivilligt) vad testet av passet gör i steget: skriv och tangent. Utan gor klickar testet på elementet.
+//   nar    (frivilligt, runda 19) ett element i sidan, { sel, innehaller }, eller en lista med sådana, som alla måste
+//          synas för att steget ska gälla. Steget som pekar på svarsfältet i panelen (#tp-svar) har alltid nar: elementet
+//          där svaret står att läsa. nar skiljer också två varv i samma formulär åt, till exempel den andra ordinationen
+//          som gäller först när den första står i listan.
 //
 // Vilket steg som gäller räknas fram ur det som syns: det sista steget vars element syns, och före det det första
-// fältet i samma formulär som inte är klart. Gör testaren något annat som också leder fram, följer vägledningen med.
-
-const meny = (href, namn) => [
-  { sel: `#meny-lista a[href="${href}"]` },
-  { sel: '.menyknapp', text: `Öppna Meny och välj ${namn}.` },
-];
+// fältet i samma formulär som inte är klart (fälten mellan steget och närmaste steg före det som syns och inte är ett
+// fält). Gör testaren något annat som också leder fram, följer vägledningen med. För en lista (select) med klar andrat
+// räknas ett annat alternativ än det förvalda, och testet väljer alternativet med texten eller värdet i gor.skriv.
+//
+// Runda 19, r1: samma format gäller stegen för uppdragen i uppdrag-steg/<testroll>.js, och hjälparna (meny med flera)
+// ligger i uppdrag-steg/hjalp.js.
+import { meny } from './uppdrag-steg/hjalp.js';
 
 export const PASS_STEG = {
   'lakare-sjukhus': [

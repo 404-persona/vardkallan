@@ -8,7 +8,7 @@
 // filen. Så får alla en ny version direkt när servern svarar, och den gamla versionen bara under ett avbrott.
 //
 // Listan måste ha med varje fil i public/. Ett test (Läskopia > service workern cachar alla statiska filer) jämför.
-const CACHE = 'vardkallan-v3';
+const CACHE = 'vardkallan-v4';
 // Runda 13, r4: vaccination-ui.js sist, fälten för en dos som ges, gemensamma för Tillväxt och Vaccinationer.
 // Runda 18, r1: listan har första passet, inbjudan och bilden för förhandsvisningen när länken delas (först i listan).
 const FILER = [
@@ -74,7 +74,10 @@ const FILER = [
   '/js/vyer/patient-sjukskrivning.js', '/js/vyer/sjukskrivningar.js', '/js/vyer/rehabkoordinator.js', '/js/beslutsstod-fmb-ui.js',
   '/js/handlingssok.js', '/js/vyer/ordlista.js',
   '/js/levande-listor.js', '/js/osparad-text.js', '/js/listsok.js',
+  '/js/uppdrag-steg/hjalp.js', '/js/uppdrag-steg/lakare-sjukhus.js', '/js/uppdrag-steg/lakare-primarvard.js',
 ];
+// Runda 19, r1: listan har vägledningens steg för uppdragen, en fil per testroll i js/uppdrag-steg/ och hjälparna.
+// Varje ny stegfil läggs till här (testet Läskopia > service workern cachar alla statiska filer jämför).
 // Runda 18, r5: listan har listorna som uppdaterar sig själva, den osparade texten och sökningen i listor.
 // Runda 18, r2: listan har sökrutan Vad vill du göra? (handlingssok.js) och ordlistan Jag letar efter (vyer/ordlista.js).
 // Runda 16, r3: listan har handledningen av studenter (vyer/handledning.js) och barnmorskans förskrivning av preventivmedel (preventivmedel-ui.js).
