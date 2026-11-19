@@ -16,7 +16,7 @@ const I_ANNAN_DEL = new Set(['sjukskoterska', 'underskoterska', 'barnmorska', 'v
 
 const NYCKLAR = new Set(['id', 'text', 'mal', 'hash', 'klar', 'gor', 'nar']);
 const MAL_NYCKLAR = new Set(['sel', 'innehaller', 'text', 'rad']);
-const KLAR = new Set(['varde', 'andrat', 'valt']);
+const KLAR = new Set(['varde', 'andrat', 'valt', 'klickad']);
 const GOR_NYCKLAR = new Set(['skriv', 'tangent']);
 const TANGENTER = new Set(['Enter', 'Tab', 'Escape', 'ArrowDown', 'ArrowUp', ' ']);
 

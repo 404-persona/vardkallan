@@ -12,7 +12,8 @@
 //   hash   (frivilligt) steget gäller bara när adressen börjar så, till exempel journalen för rätt patient. '#/patient/sus01'
 //          gäller den adressen och allt under den; '#/patient/' med snedstreck sist gäller vilken patient som helst.
 //   klar   (frivilligt) ett fält eller val som är gjort: varde (fältet har ett värde), andrat (fältet har ändrats från
-//          det systemet fyllde i) eller valt (rutan eller valet är markerat).
+//          det systemet fyllde i) eller valt (rutan eller valet är markerat). Runda 19: klickad, testaren har klickat på
+//          målet medan steget var aktuellt, för en knapp som ligger kvar efter klicket (till exempel Engångsdos).
 //   gor    (frivilligt) vad testet av passet gör i steget: skriv och tangent. Utan gor klickar testet på elementet.
 //   nar    (frivilligt, runda 19) ett element i sidan, { sel, innehaller }, eller en lista med sådana, som alla måste
 //          synas för att steget ska gälla. Steget som pekar på svarsfältet i panelen (#tp-svar) har alltid nar: elementet

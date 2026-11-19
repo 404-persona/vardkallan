@@ -54,6 +54,8 @@ async function lasLaget(p) {
       ram: ram ? ram.left <= r.left + 1 && ram.top <= r.top + 1 && ram.right >= r.right - 1 && ram.bottom >= r.bottom - 1 : false,
       etikett: etikett && getComputedStyle(etikett).display !== 'none' ? etikett.textContent : null,
       tagg: n.el.tagName.toLowerCase(), typ: n.el.getAttribute('type') ?? '',
+      // Panelen, meningen eller något annat får inte skymma målet.
+      oskymt: (() => { const mitt = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 12)); return Boolean(mitt) && (n.el === mitt || n.el.contains(mitt) || [...(n.el.labels ?? [])].some(x => x === mitt || x.contains(mitt))); })(),
     };
   });
 }
@@ -75,9 +77,9 @@ async function folj(p, namn, steg, klart) {
     }
     utanMal = Date.now();
     // Ramen följer med när sidan rullar fram elementet. Den får en stund på sig innan testet säger att den ligger fel.
-    if (!l.ram) {
+    if (!l.ram || !l.oskymt) {
       ramFel = ramFel ?? Date.now();
-      anta(Date.now() - ramFel < 3000, `${namn}, steget ${l.id}: ramen ligger inte runt elementet`);
+      anta(Date.now() - ramFel < (l.ram ? 8000 : 3000), `${namn}, steget ${l.id}: ${l.ram ? 'elementet är skymt, till exempel av panelen' : 'ramen ligger inte runt elementet'}`);
       continue;
     }
     ramFel = null;

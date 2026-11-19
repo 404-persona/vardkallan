@@ -39,6 +39,9 @@ let etikett = null;
 // Runda 19, r1: vad vägledningen följer just nu: { typ: 'pass' | 'uppdrag', nyckel }. Stegfilerna per testroll.
 let lage = null;
 const stegFiler = new Map();
+// Runda 19, r1: stegen med klar klickad som testaren har klickat på medan de var aktuella, för det läge som gäller.
+const klickade = new Set();
+const nollstall = () => { klickade.clear(); };
 
 const spara = () => { if (P) satt(NYCKEL, JSON.stringify(P)); };
 export const vagledningPa = () => las(AV, localStorage) !== '1';
@@ -67,6 +70,7 @@ function aktiveraUppdrag(T, id) {
   if (lage?.nyckel === nyckel) { if (lyssnar) berakna(); return; }
   if (lage?.typ === 'pass') stoppa();
   lage = { typ: 'uppdrag', nyckel, laddar: true };
+  nollstall();
   steg = [];
   nu = null;
   forraId = null;
@@ -84,6 +88,7 @@ function aktiveraPass(T) {
   const p = T.pass;
   const nyckel = `pass|${T.testroll}|${T.start}`;
   if (lage && lage.nyckel !== nyckel) stoppa();
+  if (lage?.nyckel !== nyckel) nollstall();
   lage = { typ: 'pass', nyckel };
   if (!P || P.testroll !== T.testroll || P.start !== T.start) {
     let sparat = null;
@@ -111,6 +116,7 @@ function borja() {
   if (lyssnar) return;
   lyssnar = true;
   for (const typ of ['pointerdown', 'click', 'focusin', 'keydown', 'change']) document.addEventListener(typ, lyssna, true);
+  document.addEventListener('click', klickat, true);
   document.addEventListener('toggle', hjalpOppnad, true);
   window.addEventListener('hashchange', planera);
   window.addEventListener('resize', placera);
@@ -126,6 +132,7 @@ export function stoppa() {
   if (lyssnar) {
     lyssnar = false;
     for (const typ of ['pointerdown', 'click', 'focusin', 'keydown', 'change']) document.removeEventListener(typ, lyssna, true);
+    document.removeEventListener('click', klickat, true);
     document.removeEventListener('toggle', hjalpOppnad, true);
     window.removeEventListener('hashchange', planera);
     window.removeEventListener('resize', placera);
@@ -140,6 +147,14 @@ export function stoppa() {
   nu = null;
   lage = null;
   forraId = null;
+  nollstall();
+}
+// Runda 19, r1: ett klick på målet för ett steg med klar klickad gör steget klart, till exempel en knapp som ligger
+// kvar efter klicket (Engångsdos). Klick med tangentbordet räknas också, eftersom de ger ett click.
+function klickat(e) {
+  if (!nu || !(e.target instanceof Node) || !nu.el.contains(e.target)) return;
+  const s = steg[nu.index];
+  if (s?.klar === 'klickad') { klickade.add(s.id); planera(); }
 }
 export const pagar = () => lyssnar;
 
@@ -206,6 +221,7 @@ function malForSteg(s) {
   return null;
 }
 function arKlar(s, el) {
+  if (s.klar === 'klickad') return klickade.has(s.id);
   if (s.klar === 'valt') return el.checked === true || el.getAttribute('aria-pressed') === 'true' || el.getAttribute('aria-checked') === 'true';
   if (s.klar === 'varde') return String(el.value ?? '').trim() !== '';
   // Runda 19, r1: en lista räknas som ändrad när ett annat alternativ än det förvalda är valt.
@@ -236,6 +252,7 @@ function berakna() {
   // Runda 19, r1: i ett uppdrag finns ingen mätning, bara steget.
   if (lage.typ === 'uppdrag' || !P) {
     if (id !== forraId) { forraId = id; paSteg?.(stegInfo()); if (nu && vagledningPa()) synligGor(nu.el); } else if (forra?.el !== nu?.el) paSteg?.(stegInfo());
+    else if (nu && vagledningPa() && underPanelen(nu.el)) synligGor(nu.el);
     placera();
     return;
   }
@@ -254,6 +271,7 @@ function berakna() {
     paSteg?.(stegInfo());
     if (nu && vagledningPa()) synligGor(nu.el);
   } else if (forra?.el !== nu?.el) paSteg?.(stegInfo());
+  else if (nu && vagledningPa() && underPanelen(nu.el)) synligGor(nu.el);
   placera();
 }
 // Det som panelen visar: stegets text och nummer, eller vad testaren kan göra när inget steg syns.
@@ -308,6 +326,13 @@ function friYta(r) {
   const hinder = [...document.querySelectorAll('header, .patientband, .topp')].filter(e => ['sticky', 'fixed'].includes(getComputedStyle(e).position))
     .map(e => e.getBoundingClientRect().bottom).filter(b => b > 0 && b < window.innerHeight / 2);
   return { topp: Math.max(8, ...hinder), nere };
+}
+// Runda 19, r1: om panelen ligger över målet, så att vägledningen aldrig pekar på något som panelen skymmer.
+function underPanelen(el) {
+  if (el.closest('#testare, dialog:modal')) return false;
+  const d = document.getElementById('testare')?.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  return Boolean(d && d.height && r.right > d.left && r.left < d.right && r.bottom > d.top && r.top < d.bottom);
 }
 function synligGor(el) {
   const lugnt = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
