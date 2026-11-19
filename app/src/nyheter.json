@@ -2,6 +2,32 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.8.0",
+      "datum": "2026-11-19",
+      "nyheter": [
+        {
+          "id": "vad-vill-du-gora-1-8-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vad vill du göra?",
+          "text": "Knappen Vad vill du göra? högst upp, eller Ctrl K, öppnar en ruta där du skriver med egna ord, till exempel sjukskriv, ge dos eller boka tid. Rutan visar det du får göra, och när en patient är öppen kommer du direkt till rätt ställe i patientens journal med formuläret öppet. Gör en annan roll det du söker säger rutan vilken."
+        },
+        {
+          "id": "jag-letar-efter-1-8-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": "#/ordlista",
+          "rubrik": "Jag letar efter",
+          "text": "Ordlistan Jag letar efter kopplar ord som du kanske använder i andra journalsystem, till exempel läkemedelskurva, labb eller akuttavla, till vad det heter och var det finns här. Samma ord fungerar i Vad vill du göra?."
+        }
+      ]
+    },
+    {
       "version": "1.7.0",
       "datum": "2026-11-17",
       "nyheter": [

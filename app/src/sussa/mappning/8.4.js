@@ -4,6 +4,7 @@
 import { medR7r2 } from '../runda7-r2.js';
 // Runda 15, r4: anteckningsvyn (sussa/runda15-r4.js).
 import { medR15r4 } from '../runda15-r4.js';
+import { medR18r2 } from '../runda18-r2.js';
 // Runda 7, r1: Sussas användbarhetstester (Bilaga F1:2 och F1:4) som automatiska tester (sussa-testfall.js).
 import { TEST, TEST_REGISTER, KORNINGSTESTER } from '../../sussa-testfall.js';
 
@@ -57,4 +58,5 @@ const AVSNITT = [
   { id: '8.4.1.3', kategori: 'system', egna: [], tester: [], avsedd: 'planerat',
     anmarkning: "Användbarhet och tillgänglighet är inte byggt ännu (runda 7)." },
 ];
-export default medR15r4(medR7r2(AVSNITT));
+// Runda 18, r2: att hitta rätt (sussa/runda18-r2.js).
+export default medR18r2(medR15r4(medR7r2(AVSNITT)));

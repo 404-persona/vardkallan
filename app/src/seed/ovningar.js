@@ -298,3 +298,11 @@ OVNINGAR_V1.push(
     ['c', 'Bara rehabkoordinatorn.'],
   ], 'a', 'Statusen gäller sjukfallet på vårdenheten. Bara rehabkoordinatorn sätter den, och varje ändring finns kvar i historiken med vem och när.', '#/sjukskrivningar'),
 );
+// Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter, för all personal.
+OVNINGAR_V1.push(
+  o('vad-vill-du-gora', ALLA, 'Du ska göra något i systemet men vet inte var det finns. Vad gör du?', [
+    ['a', 'Går igenom menyn tills du hittar rätt.'],
+    ['b', 'Väljer Vad vill du göra? högst upp, eller trycker Ctrl K, och skriver med egna ord, till exempel sjukskriv eller ge dos. Systemet visar det du får göra och öppnar rätt ställe.'],
+    ['c', 'Frågar en kollega varje gång.'],
+  ], 'b', 'Sökrutan förstår vardagliga ord, stavfel och ord från andra journalsystem. När en patient är öppen kommer du direkt till rätt flik med formuläret öppet, och gör en annan roll det du söker står det vilken. Ordlistan Jag letar efter finns i hjälpen.', '#/ordlista'),
+);

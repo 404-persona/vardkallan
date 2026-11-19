@@ -19,7 +19,7 @@ export async function visa(el, ctx) {
     ${d.kan.skrivUt ? `<div class="knapprad" data-skriv><button type="button" class="knapp liten" data-utskrift>${ikon.logg}<span>Skriv ut</span></button></div>` : ''}
     <section aria-labelledby="ul-utl"><h3 id="ul-utl">Utlämnade journalhandlingar</h3>
       <p class="dampad liten">Vem som har fått en journalhandling och när (patientdatalagen 3 kap. 11 §). Originalhandlingar som ska tillbaka har ett datum, och en försenad hamnar i vårdenhetens inkorg.</p>
-      ${utl ? `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Utlämnad</th><th scope="col">Mottagare och handling</th><th scope="col">Menprövning</th><th scope="col">Återlämnande</th></tr></thead><tbody>${utl}</tbody></table></div>` : '<p class="tom">Inga utlämnade journalhandlingar.</p>'}
+      ${utl ? `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Utlämnad</th><th scope="col">Mottagare och handling</th><th scope="col">Menprövning</th><th scope="col">Återlämnande</th></tr></thead><tbody>${utl}</tbody></table></div>` : '<p class="tom">Inga utlämnade journalhandlingar. Ett utlämnande hamnar här när det registreras.</p>'}
     </section>
     ${d.kan.utlamna ? `<details class="ruta" data-skriv><summary>Registrera ett utlämnande</summary>
       <form id="utl-form" class="ant-form" novalidate>
@@ -32,7 +32,7 @@ export async function visa(el, ctx) {
       </form></details>` : ''}
     <section aria-labelledby="ul-utsk"><h3 id="ul-utsk">Utskrifter</h3>
       <p class="dampad liten">Varje utskrift har ett utskrifts-id som står på varje sida. Logggranskaren kan söka på id:t.</p>
-      ${utsk ? `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Utskrifts-id</th><th scope="col">Av</th><th scope="col">Syfte och innehåll</th><th scope="col">Fanns inte med</th></tr></thead><tbody>${utsk}</tbody></table></div>` : '<p class="tom">Inga utskrifter.</p>'}
+      ${utsk ? `<div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Utskrifts-id</th><th scope="col">Av</th><th scope="col">Syfte och innehåll</th><th scope="col">Fanns inte med</th></tr></thead><tbody>${utsk}</tbody></table></div>` : '<p class="tom">Inga utskrifter. En utskrift hamnar här när någon skriver ut ur journalen.</p>'}
     </section>`;
   el.querySelector('[data-utskrift]')?.addEventListener('click', async () => { if (await utskrift.skrivUt(ctx.id)) ctx.ladda(); });
   el.querySelectorAll('[data-aterlamna]').forEach(b => b.addEventListener('click', async () => {

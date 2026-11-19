@@ -105,7 +105,7 @@ async function rita(main, aktuell) {
     ${visas('vantelista') ? sektion('vantelista', 'Väntelistan', s.vantelista.length, posterHtml(s.vantelista, false), 'Ingen väntar på tid.') : ''}
     ${visas('kallelser') ? sektion('kallelser', 'Kallelser som behöver gå ut', s.kallelser.length, kallelserHtml(s), 'Alla kallelser är skickade. Påminnelser går ut av sig själva.') : ''}
     ${s.grupper.length ? sektion('grupper', 'Gruppträffar', s.grupper.length, grupperHtml(s.grupper), '') : ''}
-    ${visas('bevakningar') ? sektion('bevakningar', iDag ? 'Bevakningar som har löpt ut' : 'Bevakningar till och med periodens slut', s.bevakningar.length, bevakningarHtml(s), 'Inga bevakningar har löpt ut.') : ''}
+    ${visas('bevakningar') ? sektion('bevakningar', iDag ? 'Bevakningar som har löpt ut' : 'Bevakningar till och med periodens slut', s.bevakningar.length, bevakningarHtml(s), 'Inga bevakningar har löpt ut. En bevakning hamnar här när dess datum har passerat.') : ''}
     ${s.vy?.sektioner && s.vy.sektioner.length < 5 ? '<p class="dampad liten">Vissa delar är dolda. Välj Anpassa vyn för att visa dem.</p>' : ''}
     <p class="hjalp">${esc(s.demoregler)} Patientavgifterna är demoregler.</p></div>`;
   // Runda 6, r4: period, ny bevakning och anpassning av vyn.

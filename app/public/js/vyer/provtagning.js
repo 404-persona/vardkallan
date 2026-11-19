@@ -30,7 +30,7 @@ export async function visa(main, _p, _q, ctx = {}) {
     <section class="ov-sektion" aria-labelledby="pt-kontr"><div class="sektion-huvud"><h2 id="pt-kontr">Kontroller i dag</h2></div>
       ${kontroller.length ? `<ul class="pt-uppgifter">${kontroller.map(u => `<li><span class="pt-tid">${esc(klockslag(u.tid))}</span><span class="pt-text"><a href="${esc(u.href)}">${esc(u.rubrik)}, ${esc(pnamn(u.patient))}</a>
         <span class="under-text">${esc(u.plats ?? u.enhet.namn)}. ${esc(u.text)}${u.utford?.tid ? ` Registrerat ${esc(tidpunkt(u.utford.tid))}${u.utford.av ? ` av ${esc(u.utford.av)}` : ''}.` : ''}</span></span>
-        <span class="tagg ${STATUS_KLASS[u.status] ?? ''}">${esc(u.statusText)}</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga kontroller är ordinerade i dag.</p>'}
+        <span class="tagg ${STATUS_KLASS[u.status] ?? ''}">${esc(u.statusText)}</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga kontroller är ordinerade i dag. Kontroller hamnar här när en läkare ordinerar dem.</p>'}
       <p class="dampad liten">En kontroll bockas av när mätvärdet registreras i tid. ${esc(plan?.demoregel ?? '')}</p>
     </section>
     ${uppf ? `<section class="ov-sektion" aria-labelledby="pt-uppf"><div class="sektion-huvud"><h2 id="pt-uppf">Uppföljning, senaste ${uppf.dagar} dagarna</h2></div>

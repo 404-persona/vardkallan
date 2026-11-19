@@ -822,6 +822,16 @@ UPPGIFTER.push(
     text: 'Du är barnmorska på barnmorskemottagningen. Anna vill börja med p-piller med bara gestagen. Förskriv dem.', kontroll: { notis: 'är förskrivet' } },
 );
 
+// Runda 18, r2: tre vanliga handlingar via sökrutan Vad vill du göra? (klickbudget.js).
+UPPGIFTER.push(
+  { id: 'sokrutan-remiss', namn: 'Skicka remiss via Vad vill du göra?', roll: 'lak-vc', start: 'Patientens översikt',
+    text: 'Du är distriktsläkare och vill att kardiologen bedömer Gunnar inför en elkonvertering. Använd Vad vill du göra? högst upp och skicka en remiss till kardiologiska kliniken.', kontroll: { notis: 'Remissen är skickad' } },
+  { id: 'sokrutan-blodtryck', namn: 'Registrera blodtryck via Vad vill du göra?', roll: 'ssk-kard', start: 'Patientens översikt',
+    text: 'Du är sjuksköterska och har mätt Gunnar Åkessons blodtryck till 128/82. Använd Vad vill du göra? högst upp och dokumentera värdet.', kontroll: { notis: 'Blodtryck 128/82' } },
+  { id: 'sokrutan-ge-dos', namn: 'Ge en dos via Vad vill du göra?', roll: 'ssk-kard', start: 'Arbetslistan efter inloggning',
+    text: 'Du är sjuksköterska och Gunnar Åkesson ber om något mot smärtan. Han har Alvedon vid behov. Använd Vad vill du göra? högst upp, ge honom en dos och dokumentera det.', kontroll: { notis: 'Alvedon är given' } },
+);
+
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [
   ['lakare', 'Läkare'], ['sjukskoterska', 'Sjuksköterska'], ['underskoterska', 'Undersköterska'],

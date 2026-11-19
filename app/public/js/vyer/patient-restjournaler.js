@@ -33,7 +33,7 @@ export async function visa(el, ctx) {
       <div id="rj-forslag" aria-live="polite"></div>
       <p class="form-fel" role="alert" hidden></p>
     </form>` : ''}
-    ${d.kanLasa ? `<section aria-labelledby="rj-lista"><h3 id="rj-lista">Inskannade</h3>${d.dokument.length ? `<ul class="rj-lista">${d.dokument.map(x => dokumentRad(x, x.id === markerad)).join('')}</ul>` : '<p class="tom">Inga skannade restjournaler som du kan se.</p>'}</section>`
+    ${d.kanLasa ? `<section aria-labelledby="rj-lista"><h3 id="rj-lista">Inskannade</h3>${d.dokument.length ? `<ul class="rj-lista">${d.dokument.map(x => dokumentRad(x, x.id === markerad)).join('')}</ul>` : '<p class="tom">Inga skannade restjournaler som du kan se. En restjournal hamnar här när en pappersjournal skannas in.</p>'}</section>`
       : '<p class="under-text">Din yrkesroll skannar in restjournaler men läser dem inte.</p>'}`;
   if (markerad) el.querySelector(`#rj-${markerad}`)?.scrollIntoView({ block: 'center' });
 

@@ -218,7 +218,7 @@ function levnadsvanorHtml(d, ctx) {
   const s = d.levnadsvanor.senaste;
   const rek = (d.folkhalsa ?? []).map(f => `<p class="ruta ruta-info liten">${ikon.info}<span>${esc(f.text)}</span></p>`).join('');
   const text = s ? `<p><a href="${ctx.href('journal', s.anteckningId)}">${esc(s.text)}</a></p><p class="under-text">Dokumenterat ${esc(datum(s.tid))}, ${esc(s.enhet?.namn ?? '')}</p>`
-    : tomRad('Alkohol, fysisk aktivitet och matvanor är inte dokumenterade.');
+    : tomRad('Alkohol, fysisk aktivitet och matvanor är inte dokumenterade. De visas här när någon har dokumenterat dem i journalen.');
   const knapp = pa('skriv_omvardnad') ? `<p class="knapprad tat"><a class="knapp liten sekundar" href="${ctx.href('journal', 'levnadsvanor')}" data-levnadsvanor-ny>${ikon.penna}<span>${s ? 'Uppdatera levnadsvanor' : 'Dokumentera levnadsvanor'}</span></a></p>` : '';
   return rek + text + knapp;
 }
@@ -227,7 +227,7 @@ function levnadsvanorHtml(d, ctx) {
 function tobakHtml(t, ctx) {
   const s = t.senaste;
   const text = s ? `<p><a href="${ctx.href('journal', s.anteckningId)}">${esc(s.text)}</a></p><p class="under-text">Dokumenterat ${esc(datum(s.tid))}, ${esc(s.enhet?.namn ?? '')}</p>`
-    : tomRad('Tobaksvanorna är inte dokumenterade.');
+    : tomRad('Tobaksvanorna är inte dokumenterade. De visas här när någon har dokumenterat dem i journalen.');
   const knapp = pa('skriv_omvardnad') ? `<p class="knapprad tat" data-skriv><a class="knapp liten sekundar" href="${ctx.href('journal', 'tobak')}" data-tobak-ny>${ikon.penna}<span>${s ? 'Uppdatera tobaksvanor' : 'Dokumentera tobaksvanor'}</span></a></p>` : '';
   return text + knapp;
 }

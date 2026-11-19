@@ -61,6 +61,8 @@ function bygg() {
   });
   falt.addEventListener('keydown', async (e) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); dialog.querySelector('[data-hs-i]')?.focus(); }
+    // Escape stänger rutan direkt, också när fältet har text (annars tömmer webbläsaren bara fältet).
+    if (e.key === 'Escape') { e.preventDefault(); stang(); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
       clearTimeout(timer);
@@ -87,7 +89,7 @@ function bygg() {
     const t = lage.svar?.traffar?.[Number(a.dataset.hsI)];
     if (t) valj(t);
   });
-  dialog.addEventListener('cancel', () => matSokning(matning(null, { avbruten: true })));
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); stang(); });
 }
 
 const matning = (handling, extra = {}) => {
@@ -106,14 +108,18 @@ export function oppna() {
     : 'En handling i journalen öppnas när du har valt patient i listan.';
   const falt = dialog.querySelector('#hs-falt');
   falt.value = '';
+  // Förra svaret visas aldrig igen, så att inget från en tidigare inloggning eller patient står kvar.
+  dialog.querySelector('#hs-svar').replaceChildren();
+  dialog.querySelector('#hs-status').textContent = '';
   if (!dialog.open) dialog.showModal();
   falt.focus();
   sok('');
 }
 
 function stang() {
+  if (!dialog?.open) return;
   matSokning(matning(null, { avbruten: true }));
-  dialog?.close();
+  dialog.close();
 }
 
 async function sok(text) {
@@ -147,7 +153,7 @@ function traffHtml(t, i, pid) {
     return `<li class="hs-traff hs-ej"><span class="hs-namn">${esc(t.namn)}</span><span class="under-text">${esc(t.forklaring)}</span></li>`;
   }
   const href = t.href ?? (t.kraverPatient ? '#/arbetslista' : location.hash || '#/');
-  return `<li><a class="hs-traff" href="${esc(href)}" data-hs-i="${i}" data-hs-id="${esc(t.id)}"><span class="hs-namn">${esc(t.namn)}</span><span class="under-text">${esc(under)}.</span>${t.via ? `<span class="hs-via">${esc(t.via)}</span>` : ''}</a></li>`;
+  return `<li><a class="hs-traff" href="${esc(href)}" data-hs-i="${i}" data-hs-id="${esc(t.id)}"${t.kraverPatient ? ' data-hs-patient="1"' : ''}><span class="hs-namn">${esc(t.namn)}</span><span class="under-text">${esc(under)}.</span>${t.via ? `<span class="hs-via">${esc(t.via)}</span>` : ''}</a></li>`;
 }
 
 function ritaSvar(svar) {

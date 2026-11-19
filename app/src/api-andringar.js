@@ -11,6 +11,15 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 18: version 1.8. Varje del lägger sina rader i annat i ett eget block.
+  {
+    version: '1.8.0', datum: '2026-11-19',
+    text: 'Den som testar Vårdkällan för första gången.',
+    resurser: [], skrivning: [], annat: [
+      // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (docs/api-avvikelser.md).
+      'Nya rutter i det interna API:t: GET /api/handlingar/sok med q och patient, som ger de handlingar som den inloggade får och vilken roll som gör det som saknas, och GET /api/handlingar/ordlista, som är öppen utan inloggning',
+    ],
+  },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.
   {
     version: '1.7.0', datum: '2026-11-17',

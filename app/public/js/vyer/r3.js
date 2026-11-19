@@ -166,7 +166,7 @@ export const planerFlik = {
       ${v ? `<section aria-labelledby="pl-vp"><div class="sektion-huvud"><h2 id="pl-vp">Vårdplaner</h2></div>
         ${v.forslag.map(f => `<div class="ruta ruta-info liten" data-skriv><p>Systemet föreslår <strong>${esc(f.rubrik)}</strong>. ${esc(f.varfor)}</p><button type="button" class="knapp liten" data-vp-mall="${esc(f.mall)}">Sätt upp vårdplanen</button></div>`).join('')}
         ${v.kan.skapa ? `<div class="knapprad" data-skriv><button type="button" class="knapp liten sekundar" data-vp-ny>Ny individuell vårdplan</button></div>` : ''}
-        ${v.planer.length ? v.planer.map(planHtml).join('') : tom('Inga vårdplaner som du kan se.')}<p class="demoregel">${esc(v.demoregler)}</p></section>` : ''}
+        ${v.planer.length ? v.planer.map(planHtml).join('') : tom('Inga vårdplaner som du kan se. En vårdplan hamnar här när en läkare eller sjuksköterska upprättar den.')}<p class="demoregel">${esc(v.demoregler)}</p></section>` : ''}
       ${s ? `<section aria-labelledby="pl-sam"><div class="sektion-huvud"><h2 id="pl-sam">Samordnad planering</h2></div>
         ${s.forslag.spu ? `<div class="ruta ruta-info liten" data-skriv><p>${esc(s.forslag.spu.varfor.join(' '))} ${esc(s.forslag.spu.forklaring)}</p><button type="button" class="knapp liten" data-sam-spu>Skicka inskrivningsmeddelande</button><p class="demoregel">${esc(s.forslag.spu.demoregel)}</p></div>` : ''}
         ${s.kan.skapa ? `<div class="knapprad" data-skriv><button type="button" class="knapp liten sekundar" data-sam-sip="sip">Ny samordnad individuell plan</button>${S.session?.r3?.tvangsvardsenhet ? '<button type="button" class="knapp liten sekundar" data-sam-sip="lpt7a">Samordnad vårdplan vid öppen tvångsvård</button>' : ''}</div>` : ''}

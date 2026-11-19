@@ -315,7 +315,8 @@ const RUTTER = [
   [/^#\/vantrum$/, vantrum, () => far('vantrum')],
   [/^#\/logg$/, logg, () => far('las_logg')],
   [/^#\/logg\/patient\/([\w-]+)$/, logg.patient, () => far('las_logg')],
-  [/^#\/arkiv$/, arkiv, () => far('registrera_arkivbeslut')],
+  // Runda 18, r2: verksamhetschefen godkänner gallring här (arkiv.js visaGodkannande), som menyn redan visar.
+  [/^#\/arkiv$/, arkiv, () => pa('registrera_arkivbeslut', 'godkanna_gallring')],
   [/^#\/datauttag$/, datauttag, () => far('datauttag')],
   // Runda 6, r3.
   [/^#\/tvangsvard$/, bevakningVy, () => Boolean(S.session?.r3?.tvangsvardsenhet)],

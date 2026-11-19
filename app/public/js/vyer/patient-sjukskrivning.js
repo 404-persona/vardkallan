@@ -62,14 +62,14 @@ export async function visa(el, ctx) {
       <div class="knapprad"><button type="button" class="knapp" data-forlang>Förläng sjukskrivningen</button></div></section>` : ''}
     ${d.dolda?.kraverVal ? `<p class="ruta ruta-info liten">${esc(d.dolda.text)}</p>` : ''}
     <section aria-labelledby="sjk-pagaende"><h3 id="sjk-pagaende">Pågående sjukfall</h3>
-      ${d.pagaende.length ? d.pagaende.map(s => sjukfallKort(s, 'Pågående sjukfall')).join('') : '<p class="tom">Inget pågående sjukfall.</p>'}</section>
+      ${d.pagaende.length ? d.pagaende.map(s => sjukfallKort(s, 'Pågående sjukfall')).join('') : '<p class="tom">Inget pågående sjukfall. Ett sjukfall hamnar här när en läkare skriver ett läkarintyg för sjukpenning under fliken Intyg.</p>'}</section>
     ${b ? `<details class="sjk-fmb"><summary>Socialstyrelsens beslutsstöd: ${esc(b.diagnosrubrik)}</summary>
       <p>${b.rekommenderadMaxText ? `Rekommenderad sjukskrivning som längst: ${esc(b.rekommenderadMaxText)}.` : 'Ingen längsta tid anges.'}</p>
       <h4>Typiska funktionsnedsättningar</h4><p>${esc(b.funktionsnedsattning)}</p>
       <h4>Typiska aktivitetsbegränsningar</h4><p>${esc(b.aktivitetsbegransning)}</p>
       <p class="under-text">${esc(b.kalla)}</p></details>` : ''}
     <section aria-labelledby="sjk-tidigare"><h3 id="sjk-tidigare">Tidigare sjukfall</h3>
-      ${d.tidigare.length ? `<details><summary>Visa tidigare sjukfall (${esc(d.tidigare.length)})</summary>${d.tidigare.map(s => sjukfallKort(s, 'Tidigare sjukfall')).join('')}</details>` : '<p class="tom">Inga tidigare sjukfall.</p>'}</section>`;
+      ${d.tidigare.length ? `<details><summary>Visa tidigare sjukfall (${esc(d.tidigare.length)})</summary>${d.tidigare.map(s => sjukfallKort(s, 'Tidigare sjukfall')).join('')}</details>` : '<p class="tom">Inga tidigare sjukfall. Ett sjukfall hamnar här när sjukskrivningen är avslutad.</p>'}</section>`;
   el.querySelector('[data-forlang]')?.addEventListener('click', async (e) => {
     try {
       const r = await medKnapp(e.currentTarget, () => api(`/api/patient/${pid}/sjukskrivning/forlang`, { metod: 'POST', data: {} }));

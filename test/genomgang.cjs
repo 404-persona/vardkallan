@@ -3131,6 +3131,25 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '.notis', 'Ring mottagningen nu');
     });
 
+    // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (#/ordlista). Hela prövningen per roll finns i
+    // test/hitta-ratt.cjs.
+    await s('Per Holm öppnar Vad vill du göra?, skriver skriv remiss och kommer till remissformuläret för Mikael Svensson, och ordlistan Jag letar efter förklarar läkemedelskurva', async () => {
+      await loggaIn(page, 'lak-vc');
+      await gaTill(page, '#/patient/p14');
+      await page.click('[data-a="vad-vill-du"]');
+      await page.waitForSelector('#hs-dialog[open] a.hs-traff');
+      await page.fill('#hs-falt', 'skriv remiss');
+      await forvanta(page, '#hs-dialog a.hs-traff', 'Skicka en remiss');
+      await bild(page, '130-vad-vill-du-gora');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('#remissform');
+      await gaTill(page, '#/ordlista');
+      await forvanta(page, 'main h1', 'Jag letar efter');
+      await page.fill('#ol-filter', 'läkemedelskurva');
+      await forvanta(page, '.ol-post', 'Läkemedel att ge');
+      await bild(page, '131-jag-letar-efter');
+    });
+
     // Användartestet (D6). Hela testet med enkät och resultatfil testas i test/anvandartest.cjs.
     await s('användartestet startas från inloggningssidan och visar en uppgift i taget i listen', async () => {
       await page.click('[data-a="loggaut"]');
@@ -3199,7 +3218,9 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         'forlang-sjukskrivning',
         // Runda 16: rehabkoordinatorns REKO-status.
         'satt-reko-status',
-        'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning',
+        // Runda 18, r2: tre handlingar via sökrutan Vad vill du göra?.
+        'sokrutan-remiss', 'sokrutan-blodtryck', 'sokrutan-ge-dos']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

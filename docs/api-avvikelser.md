@@ -1041,6 +1041,11 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - En inloggning svarar 403 när legitimationen för rollen saknas eller är återkallad i registret, och alla handlingar utom övningarna nekas för en sådan person.
 - Rapporten från inläsningen av personalkatalogen har `legitimation` (`[{ id, namn, status, text }]`) när någon som fick en roll som kräver legitimation saknar giltig legitimation eller inte gick att slå upp.
 
+## Version 1.8.0: sökrutan Vad vill du göra? och ordlistan Jag letar efter (runda 18, r2)
+
+- Nytt: `GET /api/handlingar/sok?q=&patient=` (personalens inloggning) ger `{ fraga, patient, vanliga, traffar, saknas, inget? }`. Utan `q` är `vanliga` sant och `traffar` det vanligaste för rollen. Varje träff är `{ id, namn, vy, kraverPatient, href, mal?, klicka?, fokus?, via?, forklaring? }`: `href` är adressen i gränssnittet, för en handling i journalen bara när patienten är öppen, annars `null` med `mal` (`{ flik, sub }`). `via` förklarar ett ord ur ordlistan, och `forklaring` att handlingen inte går för den öppna patienten. `saknas` är `[{ id, namn, text }]` med vilken roll som gör det som rollen inte får, utan patientuppgifter. `patient` räknas bara när den har öppnats i sessionen och får ses, annars är svaret detsamma som utan patient. Inget loggas. 400 när `q` är längre än 80 tecken eller `patient` inte är ett giltigt id, 401 utan personalens inloggning.
+- Nytt: `GET /api/handlingar/ordlista` (öppen utan inloggning, skapar ingen sandlåda) ger `{ poster: [{ ord, heter, forklaring, handling, vy, kraverPatient, href }] }`. `href` finns bara för inloggad personal när rollen får handlingen och den inte kräver en patient.
+
 ## Intygen i intygsapplikationen (runda 16, r1)
 
 - `GET /api/patient/:id/intyg`: varje intyg har också `version`, `blankett`, `ersatt` (text när intygstypen har ersatts), `sandning` (`samrad`, `utskrift`, `post` eller `vid_signering`), `relation` (`{ typ, text }` för ett förnyat eller bytt intyg), `kanFornyas` och `fornyasMed` (`{ kod, version, text }`). Varje intygstyp i `typer` har också `version`, `blankett`, `sandning` och `kanSignera`. Listan har bara de intygstyper som den inloggade får skapa eller signera, och ett ersatt intyg står med `mojlig: false` och vad som ersatte det.
