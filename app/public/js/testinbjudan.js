@@ -11,11 +11,15 @@ import { TYPER, ALLVAR, YRKEN, SYSTEM, AR, VARDFORM, JAMFORELSE, SPARAS, VEM_LAS
 import * as fp from './forsta-pass.js';
 import { MATNING_FRAGA, MATNING_TEXT } from './forsta-pass-steg.js';
 import { SUS_PASTAENDEN, SUS_INSTRUKTION, SUS_SKALA, SUS_KALLA } from './sus.js';
+// Tillägg 2026-11-19 (Jonas): bjud in en kollega och dela.
+import { lankFor, inbjudningstext, delningslankar, AMNE, INBJUDAN_SPARAS } from './inbjudan-regler.js';
 
 const AKTIV = 'vk_testare_aktiv';
 const OPPEN = 'vk_testare_oppen';
 // Runda 18, r1: svaret på frågan om mätning, så att frågan ställs en gång.
 export const MATNING = 'vk_testare_matning';
+// Tillägg 2026-11-19: besöket via en inbjudan, i den här fliken.
+export const BESOK_NYCKEL = 'vk_testare_besok';
 const las = (k, s = sessionStorage) => { try { return s.getItem(k); } catch { return null; } };
 const satt = (k, v, s = sessionStorage) => { try { if (v == null) s.removeItem(k); else s.setItem(k, v); } catch { /* utan lagring */ } };
 
@@ -91,7 +95,9 @@ export async function uppdatera({ visa = false } = {}) {
 export async function starta(testroll, profil, knapp) {
   // Runda 18, r1: uppdragen börjar med första passet. Har testaren redan svarat på frågan om mätning följer svaret med.
   const matning = las(MATNING, localStorage);
-  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil, pass: true, ...(['ja', 'nej'].includes(matning) ? { matning } : {}) } });
+  // Tillägg 2026-11-19: ett besök via en inbjudan följer med, så att ett genomfört pass räknas på besöket.
+  const besok = las(BESOK_NYCKEL);
+  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil, pass: true, ...(['ja', 'nej'].includes(matning) ? { matning } : {}), ...(besok ? { besok } : {}) } });
   T = r;
   satt(AKTIV, '1');
   satt(OPPEN, '1', localStorage);
@@ -200,6 +206,7 @@ function aterkopplingHtml(p) {
     <p class="tp-etikett">${passEtikett(p)}</p>
     <h3 id="tp-ak-rubrik" tabindex="-1">${klar ? `${ikon.bock}Klart!` : 'Du avbröt passet'}</h3>
     ${rader.map(x => `<p>${esc(x)}</p>`).join('')}
+    <p class="knapprad"><button type="button" class="knapp sekundar liten" data-tp="bjud-in">Bjud in en kollega</button></p>
   </section>`;
 }
 // Steget i panelen. forsta-pass.js anropar när steget byts.
@@ -266,6 +273,61 @@ function susDialog() {
 }
 // ---------------------------------------------------------------------------------------------------------------------
 
+// ---- Tillägg 2026-11-19 (Jonas): bjud in en kollega och dela. ------------------------------------------------------
+// Systemet skickar aldrig något självt och sparar inga adresser. Dialogen hämtar en slumpad kod för länken och visar en
+// färdig text som testaren skickar själv: Dela (webbläsarens delning där den finns), Kopiera, E-post (testarens eget
+// e-postprogram) och tjänsternas egna delningssidor som vanliga länkar i en ny flik.
+let bjudOppen = false;
+export async function bjudInDialog() {
+  if (bjudOppen) return;
+  bjudOppen = true;
+  const forra = document.activeElement;
+  let kod;
+  try { kod = (await api('/api/inbjudan', { metod: 'POST', data: {}, direkt: true })).kod; } catch (err) { bjudOppen = false; felNotis(err); return; }
+  const origin = location.origin;
+  const text = inbjudningstext(lankFor(origin, kod, 'lank'));
+  const l = delningslankar(origin, kod);
+  const dl = document.createElement('dialog');
+  dl.className = 'dialog dialog-bred bj-dialog';
+  dl.setAttribute('aria-labelledby', 'bj-rubrik');
+  const nyFlik = 'target="_blank" rel="noopener noreferrer"';
+  dl.innerHTML = `<div class="dialog-inre">
+    <h2 id="bj-rubrik">Bjud in en kollega</h2>
+    <p>Här är en färdig text med länken till testet. Du skickar den själv, på det sätt du vill. Vårdkällan skickar ingenting och sparar inga adresser.</p>
+    <div class="falt"><label for="bj-text">Inbjudan</label><textarea id="bj-text" class="bj-text" rows="5" readonly>${esc(text)}</textarea></div>
+    <p class="knapprad bj-knappar">${navigator.share ? '<button type="button" class="knapp" data-bj="dela">Dela</button>' : ''}<button type="button" class="knapp${navigator.share ? ' sekundar' : ''}" data-bj="kopiera">Kopiera texten</button><a class="knapp sekundar" data-bj-kanal="epost" href="${esc(l.epost)}">E-post</a></p>
+    <h3 class="bj-sociala-rubrik">Dela i sociala medier</h3>
+    <p class="liten">Länkarna öppnar tjänstens egen sida för att dela, i en ny flik. Inget publiceras förrän du själv gör det där.</p>
+    <ul class="bj-sociala">
+      <li><a data-bj-kanal="linkedin" href="${esc(l.linkedin)}" ${nyFlik}>Dela på LinkedIn<span class="sr"> (öppnas i en ny flik)</span></a></li>
+      <li><a data-bj-kanal="facebook" href="${esc(l.facebook)}" ${nyFlik}>Dela på Facebook<span class="sr"> (öppnas i en ny flik)</span></a></li>
+      <li><a data-bj-kanal="x" href="${esc(l.x)}" ${nyFlik}>Dela på X<span class="sr"> (öppnas i en ny flik)</span></a></li>
+    </ul>
+    <details class="bj-sparas"><summary>Det här sparas</summary><p>${esc(INBJUDAN_SPARAS)}</p></details>
+    <p class="sr" aria-live="polite" id="bj-meddelande"></p>
+    <div class="knapprad"><button type="button" class="knapp sekundar" data-bj="stang">Stäng</button></div>
+  </div>`;
+  document.body.append(dl);
+  const meddela = (t) => { dl.querySelector('#bj-meddelande').textContent = t; notis(t); };
+  dl.addEventListener('close', () => { bjudOppen = false; setTimeout(() => dl.remove(), 30); if (forra?.isConnected) forra.focus(); });
+  dl.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-bj]');
+    if (!b) return;
+    if (b.dataset.bj === 'stang') return dl.close();
+    if (b.dataset.bj === 'kopiera') {
+      const ta = dl.querySelector('#bj-text');
+      try { await navigator.clipboard.writeText(ta.value); meddela('Inbjudan är kopierad. Klistra in den där du vill skicka den.'); } catch { ta.focus(); ta.select(); meddela('Texten är markerad. Kopiera den med Ctrl+C, eller Cmd+C på Mac.'); }
+    }
+    if (b.dataset.bj === 'dela') {
+      try { await navigator.share({ title: AMNE, text: inbjudningstext(lankFor(origin, kod, 'lank')) }); } catch { /* testaren avbröt delningen */ }
+    }
+  });
+  dl.addEventListener('cancel', (e) => { e.preventDefault(); dl.close(); });
+  dl.showModal();
+  dl.querySelector('#bj-text').focus();
+}
+// ---------------------------------------------------------------------------------------------------------------------
+
 function jamforelseHtml(u) {
   return `<form class="tp-jamforelse" data-tp-form="jamforelse" data-id="${esc(u.id)}" novalidate aria-labelledby="tp-jf-rubrik">
     <p class="tp-etikett">${u.status === 'klar' ? 'Uppdraget är klart' : 'Du hoppade över uppdraget'}</p>
@@ -313,6 +375,7 @@ async function klick(e) {
       return rita({ oppna: true });
     }
     if (a === 'sus') return susDialog();
+    if (a === 'bjud-in') return bjudInDialog();
     if (a === 'sus-hoppa') { T = (await api('/api/testare/pass/sus', { metod: 'POST', data: { hoppa: true }, direkt: true })).tillstand; return rita({ oppna: true }); }
     if (a === 'vidare') { T = await api('/api/testare/pass/vidare', { metod: 'POST', data: {}, direkt: true }); rita({ oppna: true }); rot.querySelector('#tp-aktuellt')?.setAttribute('tabindex', '-1'); rot.querySelector('#tp-aktuellt')?.focus(); return; }
     if (a === 'avsluta-test') {

@@ -9,7 +9,9 @@ import * as sp from './synpunkter.js';
 import * as ti from './testinbjudan.js';
 // Runda 18, r1: första passet.
 import * as fp from './forsta-pass.js';
+import * as ib from './inbjudan.js';
 import { MATNING_FRAGA, MATNING_TEXT, MATNING_SPARAS } from '../public/js/forsta-pass-steg.js';
+import { INBJUDAN_SPARAS } from '../public/js/inbjudan-regler.js';
 import { SPARAS, VARFOR, HUR_LANGE, VEM_LASER, PERSONNUMMER_TEXT, TYPER, ALLVAR, JAMFORELSE, MAX_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM } from '../public/js/synpunkt-regler.js';
 
 const LASKOD_FEL = 'Läskoden gäller inte.';
@@ -52,7 +54,9 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
   rutt('GET', '/api/synpunkter/om', () => ({ sparas: SPARAS, varfor: VARFOR, hurLange: HUR_LANGE, vemLaser: VEM_LASER, personnummer: PERSONNUMMER_TEXT,
     typer: TYPER, allvar: ALLVAR, jamforelse: JAMFORELSE, max: { text: MAX_TEXT, kontakt: MAX_KONTAKT, mittSystem: MAX_MITT_SYSTEM }, ...ti.VAL,
     // Runda 18, r1: frågan om mätning före första passet och det som mätningen sparar.
-    matning: { fraga: MATNING_FRAGA, text: MATNING_TEXT, sparas: MATNING_SPARAS } }));
+    matning: { fraga: MATNING_FRAGA, text: MATNING_TEXT, sparas: MATNING_SPARAS },
+    // Tillägg 2026-11-19: det som sparas om inbjudningar.
+    inbjudan: INBJUDAN_SPARAS }));
   rutt('POST', '/api/synpunkter', (c) => {
     const x = sammanhang(c);
     // Profilen från startsidan fyller i det testaren inte har fyllt i i formuläret.
@@ -64,7 +68,17 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
 
   // Uppdragen.
   rutt('GET', '/api/testare/roller', () => ({ roller: ti.rollerUt(), ...ti.VAL }));
-  rutt('GET', '/api/testare', (c) => (c.db ? ti.tillstand(c.db) : { aktiv: false }));
+  rutt('GET', '/api/testare', (c) => {
+    if (!c.db) return { aktiv: false };
+    const t = ti.tillstand(c.db);
+    // Tillägg 2026-11-19: ett genomfört pass räknas på besöket via inbjudan.
+    try { ti.inbjudanKlar(c.db, (b) => ib.passKlar(db, b)); } catch (e) { console.error('Passet kunde inte räknas på inbjudan:', e.message); }
+    return t;
+  });
+  // Tillägg 2026-11-19: en inbjudan och ett besök via en inbjudan. Ingen kräver en sandlåda, och inget av dem tar emot
+  // eller sparar något om testaren eller besökaren.
+  rutt('POST', '/api/inbjudan', (c) => [201, ib.skapa(db, { session: c.s ?? {}, adress: c.ip })]);
+  rutt('POST', '/api/inbjudan/besok', (c) => ib.besok(db, c.body, { adress: c.ip }));
   // Runda 18, r1: med pass: true börjar uppdragen med första passet. Raden för en mätning skapas med serverns sammanhang.
   const passRad = (c) => (u) => fp.skapaRad(db, { ...sammanhang(c), ...u });
   rutt('POST', '/api/testare/starta', (c) => ti.starta(c.db, c.body, { passRad: passRad(c) }));

@@ -12,6 +12,8 @@ const CACHE = 'vardkallan-v3';
 // Runda 13, r4: vaccination-ui.js sist, fälten för en dos som ges, gemensamma för Tillväxt och Vaccinationer.
 const FILER = [
   '/index.html', '/app.css', '/favicon.svg',
+  // Runda 18, r1: första passet, inbjudan och bilden för förhandsvisningen när länken delas.
+  '/js/forsta-pass.js', '/js/forsta-pass-steg.js', '/js/inbjudan-regler.js', '/og-bild.png',
   '/fonts/OFL.txt', '/fonts/noto-sans-400.woff2', '/fonts/noto-sans-600.woff2', '/fonts/noto-sans-700.woff2',
   '/fonts/noto-sans-c600.woff2', '/fonts/noto-sans-c700.woff2',
   '/js/anvandartest.js', '/js/anvandartest-rakning.js', '/js/anvandartest-uppgifter.js',

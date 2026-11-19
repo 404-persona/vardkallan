@@ -424,6 +424,61 @@ const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
     } finally { await c.close(); }
   });
 
+  // Tillägg 2026-11-19 (Jonas): bjud in en kollega och dela. Länkarna till tjänsterna öppnas, men varje anrop utanför
+  // demon stoppas innan det lämnar webbläsaren, så att inget laddas från tjänsterna och inget publiceras.
+  await tP(G18R1.bjudIn, async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
+    const externa = [];
+    await c.route((u) => !u.href.startsWith(BAS), (r) => { externa.push(r.request().url()); return r.abort(); });
+    await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BAS });
+    const p = await c.newPage();
+    felSida = p;
+    p.on('pageerror', e => sidfel.push(`sidfel: ${e.message}`));
+    try {
+      await p.goto(`${BAS}/#/testa`);
+      await p.click('[data-testa="bjud-in"]');
+      await p.waitForSelector('dialog[open].bj-dialog');
+      anta(await p.locator('dialog[open]').getAttribute('aria-labelledby') === 'bj-rubrik', 'dialogen saknar rubrik för skärmläsare');
+      anta(await p.locator('label[for="bj-text"]').count() === 1, 'texten saknar etikett');
+      const text = await p.locator('#bj-text').inputValue();
+      const m = text.match(/(https?:\/\/[^\s]+\/#\/testa\?i=(I-[A-Z0-9]{6})&k=lank)/);
+      anta(m && m[1].startsWith(BAS), `texten saknar länken: ${text}`);
+      const kod = m[2];
+      anta(text.includes('påhittade patienter') && text.includes('fem minuter'), 'texten säger inte att patienterna är påhittade och att passet tar fem minuter');
+      await p.click('[data-bj="kopiera"]');
+      await p.waitForSelector('.notis:has-text("Inbjudan är kopierad")');
+      anta(await p.evaluate(() => navigator.clipboard.readText()) === text, 'urklippet har inte texten');
+      const epost = await p.locator('[data-bj-kanal="epost"]').getAttribute('href');
+      anta(epost.startsWith('mailto:?subject=') && decodeURIComponent(epost).includes(`i=${kod}&k=epost`), `e-postlänken: ${epost}`);
+      for (const [kanal, vard] of [['linkedin', 'www.linkedin.com'], ['facebook', 'www.facebook.com'], ['x', 'x.com']]) {
+        const l = p.locator(`[data-bj-kanal="${kanal}"]`);
+        anta(await l.getAttribute('target') === '_blank' && (await l.getAttribute('rel')).includes('noopener'), `länken till ${kanal} öppnas inte i en ny flik utan opener`);
+        const fore = externa.length;
+        const [ny] = await Promise.all([c.waitForEvent('page'), l.click()]);
+        await ny.waitForTimeout(500);
+        const adress = externa.slice(fore).find(u => new URL(u).hostname === vard);
+        anta(adress && decodeURIComponent(adress).includes(`${BAS}/#/testa?i=${kod}&k=${kanal}`), `${kanal} öppnade ${externa.slice(fore).join(', ')}`);
+        await ny.close();
+      }
+      const inlasta = await p.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => !n.startsWith(location.origin)));
+      anta(!inlasta.length, `sidan laddade något utanför demon: ${inlasta.join(', ')}`);
+      await p.keyboard.press('Escape');
+      // En besökare via länken räknas per kanal, och besöket följer med när passet startar.
+      const c2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const p2 = await c2.newPage();
+      const starta = [];
+      p2.on('request', r => { if (r.url().endsWith('/api/testare/starta')) starta.push(r.postData() ?? ''); });
+      const [svar] = await Promise.all([p2.waitForResponse(r => r.url().endsWith('/api/inbjudan/besok')), p2.goto(`${BAS}/#/testa?i=${kod}&k=linkedin`)]);
+      const besok = (await svar.json()).besok;
+      anta(/^B-/.test(besok ?? ''), 'besöket räknades inte');
+      await p2.waitForSelector('.testa-rollknapp');
+      await p2.click('[data-testroll="underskoterska"]');
+      await p2.waitForSelector('#testare-panel .tp-samtycke');
+      anta(starta.some(k => JSON.parse(k).besok === besok) && !starta.some(k => k.includes(kod)), 'besöket följde inte med när passet startade, eller koden skickades');
+      await c2.close();
+    } finally { await c.close(); }
+  });
+
   await tP(G18R1.inga, async () => {
     // Allt som skickades till /api/testare under passen ovan.
     const POSTER = ['sus19', 'sus05', 'sus06', 'obs3', 'p01', 'Hamid', 'Burvall', 'Berit', 'Strandhall', 'Sara', 'Sandmark', 'Helene', 'Lund', 'Amanda', 'Lindholm', 'Gunnar', 'Åkesson'];

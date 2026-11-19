@@ -92,9 +92,18 @@ function passHtml(p) {
   </section>`;
 }
 
+// Tillägg 2026-11-19: inbjudningarna, bara antal per kanal och hur många som genomförde ett pass.
+function inbjudanHtml(ib) {
+  if (!ib) return '';
+  return `<section aria-labelledby="tl-inbjudan"><h2 id="tl-inbjudan">Inbjudningar och delning</h2>
+    <p>${ib.koder} inbjudningslänkar är skapade. ${ib.besok} besök kom via dem, och ${ib.pass} av besökarna gjorde klart ett första pass.</p>
+    <div class="tabellrulle"><table class="tabell tl-tabell"><thead><tr><th scope="col">Kanal</th><th scope="col">Besök</th><th scope="col">Genomförde ett pass</th></tr></thead><tbody>
+    ${ib.perKanal.map(k => `<tr><th scope="row">${esc(k.text)}</th><td>${k.besok}</td><td>${k.pass}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+
 function innehall(el, d) {
   const alla = d.perUppdrag.filter(g => g.system === 'alla');
-  el.innerHTML = `${passHtml(d.pass)}
+  el.innerHTML = `${passHtml(d.pass)}${inbjudanHtml(d.inbjudningar)}
     <section aria-labelledby="tl-jf">
       <h2 id="tl-jf">Jämförelse per uppdrag och journalsystem</h2>
       <p class="liten dampad">Andelarna räknas på dem som kunde jämföra. Raden Alla gäller alla journalsystem tillsammans.</p>

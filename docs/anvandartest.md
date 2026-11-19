@@ -170,6 +170,12 @@ D6 räknas som uppfyllt i demon när alla följande villkor gäller:
 
 Skriptet för sammanställningen kontrollerar villkor 1 till 3 och skriver om alla flöden är inom kriterierna. SUS-poängen ingår inte i villkoren för D6, men den redovisas alltid. Om ett flöde inte klarar villkoren rättas gränssnittet, skriptet för klickbudgeten körs igen och flödet testas med nya deltagare.
 
+## Första passet i testinbjudan
+
+Från version 1.8 börjar varje yrkesroll i testinbjudan (#/testa) med ett första pass för den som aldrig har sett Vårdkällan: en patient och en uppgift ur Sussas testfall, eller ett vanligt flöde för de yrken som Sussas testfall saknar, med vägledning som pekar ut nästa steg. Före passet frågar systemet en gång om passet får mätas. Med ja räknas klick, fältbyten och tangenter med samma regler som testläget ovan, tiden till första handlingen, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten. Med nej mäts ingenting. Inga namn, ingen adress, inget som skrivs och inget om demons patienter sparas, och svaren gallras efter 365 dagar som synpunkterna.
+
+Efter passet kan testaren svara på SUS, med samma tio påståenden och samma svenska översättning som enkäten ovan (Åvik Persson m.fl. 2025, CC BY 4.0). Svaret är frivilligt, och poängen räknas av servern med standardformeln. Testledaren ser passen per yrkesroll och uppgift och SUS med medelvärde och spridning i testledarens vy, och skriptet `bun scripts/testinbjudan.js nya` skriver ut de nya passen och SUS-svaren. Passen ersätter inte användartestet med testledare: testarna väljer själva att vara med, ingen observerar dem och ingen frågar varför de fastnade.
+
 ## Källor
 
 - Brooke J. SUS: A "quick and dirty" usability scale. I: Jordan PW, Thomas B, Weerdmeester BA, McClelland IL (red.). Usability Evaluation in Industry. London: Taylor & Francis; 1996. s. 189 till 194.

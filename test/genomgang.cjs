@@ -442,6 +442,18 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.waitForLoadState('networkidle');
       await page.waitForSelector('[data-roll]');
     });
+    // Tillägg 2026-11-19, runda 18, r1: bjud in en kollega från startsidan för testare. Länkarna prövas i test/anvandartest.cjs.
+    await s('testinbjudan: en testare bjuder in en kollega med en färdig text och delningslänkar, utan att något skickas', async () => {
+      await gaTill(page, '#/testa');
+      await page.click('[data-testa="bjud-in"]');
+      await forvanta(page, 'dialog[open].bj-dialog', 'Vårdkällan skickar ingenting');
+      const v = await page.locator('#bj-text').inputValue();
+      if (!/\/#\/testa\?i=I-[A-Z0-9]{6}&k=lank/.test(v)) throw new Error(`texten saknar länken: ${v}`);
+      for (const k of ['linkedin', 'facebook', 'x', 'epost']) await page.waitForSelector(`dialog[open] [data-bj-kanal="${k}"]`);
+      await bild(page, '18r1-bjud-in');
+      await page.click('dialog[open] [data-bj="stang"]');
+      await page.waitForSelector('dialog[open]', { state: 'detached' });
+    });
     await s('testinbjudan: testledarens vy kräver en läskod', async () => {
       await gaTill(page, '#/testledare');
       await forvanta(page, 'main h1', 'Synpunkter och jämförelser');
@@ -3197,6 +3209,8 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         'iva-nems', 'tillvaxt-import',
         // Runda 13, r1: synpunkten och det första uppdraget i testinbjudan.
         'lamna-synpunkt', 'valj-yrkesroll',
+        // Runda 18, r1: inbjudan efter första passet.
+        'bjud-in-kollega',
         // Runda 14, r3: intyget och e-remissen (lades till vid sammanslagningen).
         'skriv-intyg', 'skicka-eremiss',
         // Runda 14, r4: mellanarkivet och reservdatorn för läkemedel.

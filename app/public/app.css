@@ -1896,6 +1896,13 @@ body.testlage-aktivt.har-testare #notiser { bottom: calc(var(--testlage-hojd, 64
 @media (max-width: 640px) { .fp-etikett { display: none; } .tp-pass .tp-etikett, .tp-pass > .dampad { display: none; } .tp-pass h3 { margin-bottom: 2px; } .tp-pass .tp-steg { margin: 6px 0; } }
 body.har-testare.i-forsta-pass { padding-bottom: calc(var(--testare-dock-hojd, 300px) + 20px); }
 .fp-sus-dialog .sus-lista { margin-bottom: 8px; }
+/* Tillägg 2026-11-19: bjud in en kollega och dela. */
+.bj-text { width: 100%; font: inherit; }
+.bj-knappar a.knapp { text-decoration: none; }
+.bj-sociala-rubrik { font-size: var(--f-m); margin: 12px 0 2px; }
+.bj-sociala { list-style: none; padding: 0; margin: 6px 0 10px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.bj-sparas summary { cursor: pointer; font-weight: 600; color: var(--kalla); }
+.testa-bjud h2 { font-size: var(--f-l); margin-bottom: 6px; }
 .tl-fastnar { margin: 0; padding-left: 16px; font-size: var(--f-s); }
 
 @media (max-width: 640px) {

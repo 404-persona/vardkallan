@@ -2683,6 +2683,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
   for (const v of ['/api/testare', '/api/testare/roller', '/api/synpunkter/om']) UTAN_SESSION.add(v);
   // Runda 18, r1: kravsidans sammanfattning av första passen (antal och SUS-medelvärde) kräver ingen sandlåda.
   UTAN_SESSION.add('/api/testare/pass/sammanfattning');
+  // Tillägg 2026-11-19: inbjudan och besök via en inbjudan skapar ingen sandlåda.
+  for (const v of ['/api/inbjudan', '/api/inbjudan/besok']) UTAN_SESSION.add(v);
   // Runda 14, r1: Vårdkällans publika nyckel och övningstjänstens metadata och nycklar.
   for (const v of R14R1_UTAN_SESSION) UTAN_SESSION.add(v);
 

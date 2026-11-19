@@ -3,6 +3,9 @@
 // Källa: rapporten "Cosmic upphandling krav och kritik", avsnitten Kravlista och designchecklista
 // samt Misstag att inte upprepa.
 import { existsSync, readFileSync } from 'node:fs';
+// Runda 18, r1: testerna av första passet som visar D6 med verkliga användare (sussa/runda18-r1.js).
+import { T18R1 as R18R1_T, G18R1 as R18R1_G, PASSROLLER as R18R1_ROLLER } from './sussa/runda18-r1.js';
+const R18R1_D6 = [R18R1_T.matning, R18R1_T.testledare, R18R1_T.krav, ...R18R1_ROLLER.map(R18R1_G.roll)];
 import { FLODEN } from './klickbudget.js';
 // Runda 7, r1: Sussas användbarhetstester (sussa-testfall.js) är användarscenarierna för K4.
 import { KORNINGSTESTER as SUSSA_KORNINGAR, TEST_REGISTER as SUSSA_REGISTERTESTER } from './sussa-testfall.js';
@@ -151,8 +154,10 @@ export const KRAV = [
       'Användartest > uppgifterna följer flödena i klickbudgeten', 'Användartest > sammanställningen ger median, spridning, andel slutförda och SUS per flöde',
       `${GU}testläget räknar klick, fältbyten och tangenter som klickbudgetskriptet för samma flöden`, `${GU}enkäten ger SUS-poäng enligt standardformeln`,
       `${GU}resultatfilen laddas ner med datum, version, deltagarkod, uppgifter och SUS-poäng`, `${GU}inget anrop skickar testresultat till servern`,
-      `${GU}testläget rensas när testet avslutas`],
-    'Klick, fältbyten och tangenttryck mäts i Playwright med ett skript som gör flödena i gränssnittet. För mätningen med verkliga användare finns ett testläge i demon med samma uppgifter och samma räkning, en enkät med SUS och tre öppna frågor, ett testprotokoll för testledaren (docs/anvandartest.md) och ett skript som sammanställer resultatfilerna. Själva mätningen med personer som arbetar i vården återstår. SVT Norrbotten rapporterade 2026-02-19 att det i Cosmic krävs upp till 21 knapptryck för att få fram rätt information. Den siffran är inte mätt här och flödena är inte desamma.'), bilaga: 'klickbudget' },
+      `${GU}testläget rensas när testet avslutas`,
+      // Runda 18, r1: första passet i testinbjudan mäter klick, fältbyten och tangenter med samma regler, med samtycke.
+      ...R18R1_D6],
+    'Klick, fältbyten och tangenttryck mäts i Playwright med ett skript som gör flödena i gränssnittet. För mätningen med verkliga användare finns ett testläge i demon med samma uppgifter och samma räkning, en enkät med SUS och tre öppna frågor, ett testprotokoll för testledaren (docs/anvandartest.md) och ett skript som sammanställer resultatfilerna. Från runda 18 börjar varje yrkesroll i testinbjudan med ett första pass med vägledning, som med testarens samtycke mäter klick, fältbyten, tangenter och tid med samma regler och visar resultatet mot klickbudgeten och Sussas tidsklass, och testledaren ser medianerna mot budgeten per uppgift. Själva mätningen med personer som arbetar i vården återstår. SVT Norrbotten rapporterade 2026-02-19 att det i Cosmic krävs upp till 21 knapptryck för att få fram rätt information. Den siffran är inte mätt här och flödena är inte desamma.'), bilaga: 'klickbudget' },
   k('D7', 'Små releaser med automatiserad regressionstest och återgång', `${RAPPORT}, D7`, 'uppfyllt_demo', '/uppgraderingar',
     [`${KR}status uppfyllt_demo bara när alla tester är gröna`, ...TESTER_RELEASER],
     'Bygget kör alla tester och stoppas om något är rött. Testerna och FHIR-valideringen körs också i GitHub Actions vid varje push och pull request. Från version 1.2 är varje ändring av databasens schema en versionerad migrering med en återställning, som sparas i databasen när migreringen tillämpas. Schemaversionen kontrolleras varje gång servern startar eller läser in en sandlåda: saknade migreringar tillämpas och en nyare versions migreringar backas med de sparade återställningarna, så att en äldre version av programmet backar databasen själv. Det som skrivits i en tabell eller kolumn som backas sparas undan och kommer tillbaka vid nästa uppgradering. En uppgradering används först när vårdgivarens systemförvaltare och en andra systemförvaltare har godkänt den, var och en i sin egen inloggning, och systemet stoppar den när testerna i bygget inte är gröna. Sidan Uppgraderingar visar själv vad uppgraderingen ändrar: nyheterna, API:ts ändringslogg och migreringarna. Simulerat: i demon byter en uppgradering eller återgång bara databasen i sandlådan, och programmet är detsamma för alla sandlådor. I driften är varje version en egen avbildning, och återgången startar den förra.'),

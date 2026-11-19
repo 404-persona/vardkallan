@@ -21,6 +21,16 @@ export const T18R1 = {
   vidare: `${FP}efter passet väljer testaren nästa uppdrag eller avslutar, och vägledningen följer inte med`,
 };
 
+// Tillägg 2026-11-19 (Jonas): bjud in andra och dela (inbjudan.js och public/js/inbjudan-regler.js).
+const IB = 'Inbjudan > ';
+export const T18R1IB = {
+  skapa: `${IB}en inbjudan får en slumpad kod utan något om testaren, och taken per session och timme, per adress och totalt gäller`,
+  besok: `${IB}ett besök via en inbjudan sparar bara kanalen, och en okänd kod eller kanal ger samma svar utan att något sparas`,
+  pass: `${IB}ett genomfört pass räknas på besöket utan koppling till mätningen, svaren eller synpunkterna`,
+  testledare: `${IB}testledaren ser bara antal per kanal och hur många som genomförde ett pass, och inbjudningarna gallras som synpunkterna`,
+  text: `${IB}inbjudningstexten är neutral och delningslänkarna går till tjänsternas egna delningssidor med länken till testinbjudans startsida`,
+};
+
 // Testerna av gränssnittet i test/anvandartest.cjs. Ett test per yrkesroll gör passet med vägledningen.
 export const PASSROLLER = ['lakare-sjukhus', 'lakare-primarvard', 'sjukskoterska', 'underskoterska', 'barnmorska', 'vardadministrator', 'fysioterapeut', 'systemforvaltare', 'patient'];
 export const ROLLTEXT = {
@@ -34,12 +44,13 @@ export const G18R1 = {
   aterkoppling: `${GP}återkopplingen visar tid och steg mot Sussas tidsklass och klickbudget, och SUS efter passet räknas på servern`,
   mobil: `${GP}vägledningen fungerar på 390 px och med tangentbordet, och markeringen skymmer inte det som ska klickas`,
   inga: `${GP}inget som skickas under passet innehåller patientens id, namn eller personnummer`,
+  bjudIn: 'Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken, delningslänkarna öppnar tjänsternas delningssidor utan att något skickas, och en besökare via länken räknas per kanal',
 };
 const T = T18R1;
 const G = G18R1;
-const ALLA_G = [G.samtycke, ...PASSROLLER.map(G.roll), G.annanVag, G.aterkoppling, G.mobil, G.inga];
+const ALLA_G = [G.samtycke, ...PASSROLLER.map(G.roll), G.annanVag, G.aterkoppling, G.mobil, G.inga, G.bjudIn];
 
-const MATT = 'Runda 18 (r1): varje yrkesroll i testinbjudan börjar med ett första pass på högst fem minuter: en patient och en uppgift som yrket gör varje dag, för personalen ur Sussas testfall (3.1, 4.1, 4.2, 5.1 och 2.6), med vägledning som pekar ut nästa steg i gränssnittet och följer det testaren gör. Före passet frågar systemet en gång om passet får mätas. Med ja mäts tiden till första handling, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, utan personuppgifter och utan något om demons patienter, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten och kan svara på SUS. Testledaren ser per yrkesroll och uppgift antal pass, andel klarade, medianer mot budget, de steg där flest fastnar och SUS med medelvärde och spridning, och kravsidan visar antalet genomförda pass och SUS-medelvärdet ur databasen.';
+const MATT = 'Runda 18 (r1): varje yrkesroll i testinbjudan börjar med ett första pass på högst fem minuter: en patient och en uppgift som yrket gör varje dag, för personalen ur Sussas testfall (3.1, 4.1, 4.2, 5.1 och 2.6), med vägledning som pekar ut nästa steg i gränssnittet och följer det testaren gör. Före passet frågar systemet en gång om passet får mätas. Med ja mäts tiden till första handling, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, utan personuppgifter och utan något om demons patienter, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten och kan svara på SUS. Testledaren ser per yrkesroll och uppgift antal pass, andel klarade, medianer mot budget, de steg där flest fastnar och SUS med medelvärde och spridning, och kravsidan visar antalet genomförda pass och SUS-medelvärdet ur databasen. Testaren kan bjuda in en kollega eller dela länken i sociala medier: systemet skickar aldrig något självt och sparar inga adresser, och länken har en slumpad kod som bara visar kanalen och om besökaren genomförde ett pass.';
 
 const POSTER = {
   '8.4.1.1': {
@@ -47,7 +58,7 @@ const POSTER = {
     anmarkning: `Processen är Vårdkällans egen: testfallen och klickbudgeten är automatiska. Runda 13 (r1) bjuder in personal som arbetar i Cosmic eller andra journalsystem: startsidan för testare ger uppdrag per yrke efter Sussas 34 testfall, som systemet bockar av på servern, och efter varje uppdrag svarar testaren om det var lättare, ungefär lika eller svårare än i sitt journalsystem. ${MATT} Inga svar från riktiga testare finns ännu när detta skrivs, så posten är delvis uppfylld tills de har svarat. Alla Sussas 34 testfall går att genomföra inom klickbudgeten, och resultatet står per testfall på kravsidan under K4. Tidsklassen per testfall är Vårdkällans bedömning, eftersom Sussa aldrig lämnade ut den. Tillgängligheten prövas bara delvis (tangentbord och 360 pixlars bredd i genomgången).`,
   },
   '8.4.1.2': {
-    tester: [T.forst, T.nej, T.prova, T.avbrutet, T.inga, T.sus, T.export, T.gallring, T.vidare, G.samtycke, G.annanVag, G.inga],
+    tester: [T.forst, T.nej, T.prova, T.avbrutet, T.inga, T.sus, T.export, T.gallring, T.vidare, G.samtycke, G.annanVag, G.inga, ...Object.values(T18R1IB), G.bjudIn],
     expert: 'Systemet räknar poängen för varje mätning och omvandlar dem till Sussas utvärderingspoäng, så att testledaren inte behöver kunna formlerna, och formulären sparar inga patientuppgifter. I testinbjudan bockar systemet av uppdragen själv, prövar svaret på frågeuppdragen mot Sussas rätta svar och fyller i vy, roll, uppdrag, version och webbläsare i varje synpunkt, så att testaren bara svarar på det som bara testaren vet. I första passet pekar systemet själv ut nästa steg, mäter var testaren fastnar utan att testaren behöver rapportera något och räknar SUS-poängen på servern.',
     anmarkning: `SUS och expertgranskning är underlag för riktiga användartester: inga testpersoner har fyllt i formulären än, och ingen användbarhetsexpert har granskat systemet. Runda 13 (r1): testinbjudan samlar jämförelser och synpunkter från personal i vården i en egen databas, utan namn och utan riktiga personnummer, och testledaren läser dem per uppdrag och journalsystem med en läskod som skapas på servern. ${MATT} Testarna väljer själva att vara med, så urvalet är inte representativt, och svaren är självskattade. Kartläggningen av användarna bygger på Sussas testfall, inte på egna intervjuer eller observationer. Skisser och prototyper i flera alternativ görs inte.`,
   },
@@ -57,7 +68,7 @@ const POSTER = {
   },
 };
 
-export const ALLA_TESTER = [...Object.values(T), ...ALLA_G];
+export const ALLA_TESTER = [...Object.values(T), ...Object.values(T18R1IB), ...ALLA_G];
 
 // Lägger rundans tillägg ovanpå avsnittets poster. tester läggs till postens egna, och de andra fälten ersätter postens.
 export const medR18r1 = (poster) => poster.map(x => {

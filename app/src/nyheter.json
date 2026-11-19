@@ -2,6 +2,22 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.8.0",
+      "datum": "2026-11-19",
+      "nyheter": [
+        {
+          "id": "forsta-pass-1-8-0",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": "#/testa",
+          "rubrik": "Ett första pass med vägledning för den som testar",
+          "text": "Den som väljer en yrkesroll på startsidan för testare börjar med ett kort första pass: en patient och en uppgift som yrket gör varje dag, med vägledning som visar nästa steg och följer med om du tar en annan väg. Efteråt ser du hur lång tid det tog och hur många steg det krävde, jämfört med Sussas tidsklass och klickbudgeten, och kan svara på tio korta påståenden om systemet. Passet mäts bara om du säger ja, och inga personuppgifter sparas."
+        }
+      ]
+    },
+    {
       "version": "1.7.0",
       "datum": "2026-11-17",
       "nyheter": [

@@ -23,6 +23,7 @@ import { YRKEN, SYSTEM, AR, VARDFORM, HOPPADE_OVER } from '../public/js/synpunkt
 import { profil as provaProfil } from './synpunkter.js';
 // Runda 18, r1: första passet (forsta-pass.js).
 import * as forstaPass from './forsta-pass.js';
+import { BESOK } from '../public/js/inbjudan-regler.js';
 
 export function sakra(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS testare (
@@ -37,7 +38,9 @@ export function sakra(db) {
   // pass_resultat återkopplingen, pass_sus om SUS är besvarat ('ja') eller överhoppat ('nej') och pass_vidare att
   // testaren har gått vidare till nästa uppdrag.
   const kol = db.query("SELECT name FROM pragma_table_info('testare')").all().map(k => k.name);
-  for (const [k, typ] of [['pass', "TEXT NOT NULL DEFAULT ''"], ['matning', "TEXT NOT NULL DEFAULT ''"], ['pass_start', 'TEXT'], ['pass_rad', 'TEXT'], ['pass_resultat', 'TEXT'], ['pass_sus', "TEXT NOT NULL DEFAULT ''"], ['pass_vidare', 'INTEGER NOT NULL DEFAULT 0']]) {
+  for (const [k, typ] of [['pass', "TEXT NOT NULL DEFAULT ''"], ['matning', "TEXT NOT NULL DEFAULT ''"], ['pass_start', 'TEXT'], ['pass_rad', 'TEXT'], ['pass_resultat', 'TEXT'], ['pass_sus', "TEXT NOT NULL DEFAULT ''"], ['pass_vidare', 'INTEGER NOT NULL DEFAULT 0'],
+    // Tillägg 2026-11-19: besöket via en inbjudan (aldrig koden) och om det genomförda passet är räknat på besöket.
+    ['inbjudan_besok', 'TEXT'], ['inbjudan_klar', 'INTEGER NOT NULL DEFAULT 0']]) {
     if (!kol.includes(k)) db.exec(`ALTER TABLE testare ADD COLUMN ${k} ${typ}`);
   }
   return db;
@@ -237,6 +240,7 @@ export function starta(db, body = {}, { nu = new Date(), passRad = null } = {}) 
   if (body.pass !== undefined && typeof body.pass !== 'boolean') throw new Fel(400, 'pass ska vara sant eller falskt.', 'ogiltig', { falt: ['pass'] });
   if (body.matning !== undefined && !['ja', 'nej'].includes(body.matning)) throw new Fel(400, 'Svara ja eller nej på frågan om mätning.', 'ogiltig', { falt: ['matning'] });
   const pass = body.pass === true ? forstaPass.passFor(r.id, r.demoroll) : null;
+  if (body.besok !== undefined && body.besok !== null && (typeof body.besok !== 'string' || !BESOK.test(body.besok))) throw new Fel(400, 'Besöket via inbjudan känns inte igen.', 'ogiltig', { falt: ['besok'] });
   sakra(db);
   if (r.sussaData) {
     const pers = db.query('SELECT * FROM personal WHERE id = ?').get(r.demoroll);
@@ -255,7 +259,7 @@ export function starta(db, body = {}, { nu = new Date(), passRad = null } = {}) 
     db.query('DELETE FROM testare_uppdrag').run();
     db.query('INSERT INTO testare (id, testroll, start, bas, profil) VALUES (1, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET testroll = excluded.testroll, start = excluded.start, bas = excluded.bas, profil = excluded.profil')
       .run(r.id, nu.toISOString(), JSON.stringify(bas), JSON.stringify(p));
-    db.query("UPDATE testare SET pass = ?, matning = '', pass_start = NULL, pass_rad = NULL, pass_resultat = NULL, pass_sus = '', pass_vidare = 0 WHERE id = 1").run(pass?.uppdrag ?? '');
+    db.query("UPDATE testare SET pass = ?, matning = '', pass_start = NULL, pass_rad = NULL, pass_resultat = NULL, pass_sus = '', pass_vidare = 0, inbjudan_besok = ?, inbjudan_klar = 0 WHERE id = 1").run(pass?.uppdrag ?? '', body.besok ?? null);
   })();
   if (pass && body.matning) return samtycke(db, { matning: body.matning }, { nu, passRad });
   return tillstand(db, { nu });
@@ -318,6 +322,17 @@ export function sus(db, body = {}, { nu = new Date(), spara } = {}) {
   const ut = spara(body.svar, { testroll: r.id, pass, profil: profilFor(db) });
   db.query("UPDATE testare SET pass_sus = 'ja' WHERE id = 1").run();
   return [201, { ...ut, tillstand: tillstand(db, { nu }) }];
+}
+
+// Tillägg 2026-11-19: när passet är klart räknas det på besöket via inbjudan, en gång. markera är inbjudan.passKlar.
+export function inbjudanKlar(db, markera) {
+  const t = lasTillstand(db);
+  if (!t?.pass || !t.inbjudan_besok || t.inbjudan_klar) return false;
+  const s = db.query('SELECT status FROM testare_uppdrag WHERE uppdrag = ?').get(t.pass);
+  if (s?.status !== 'klar') return false;
+  markera(t.inbjudan_besok);
+  db.query('UPDATE testare SET inbjudan_klar = 1 WHERE id = 1').run();
+  return true;
 }
 
 // Efter passet: vidare till nästa uppdrag. Vägledningen följer inte med.

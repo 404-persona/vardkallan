@@ -547,6 +547,13 @@ FLODEN.push(
     motivering: 'Ett klick på yrkesrollen, som loggar in i rätt demoroll och visar första passet i panelen, och ett klick för att svara på frågan om passet får mätas, som ställs en gång. Därefter pekar vägledningen ut nästa steg. Passets uppgift mäts för sig, mot klickbudgeten för samma uppgift i Sussas testfall, och vägledningen får inte göra den dyrare.',
   },
 );
+// Tillägg 2026-11-19 (Jonas), runda 18, r1: bjuda in en kollega från återkopplingen efter första passet.
+FLODEN.push(
+  {
+    id: 'bjud-in-kollega', namn: 'Bjuda in en kollega efter första passet', roll: 'lak-kard', start: 'Återkopplingen efter första passet', budget: 3,
+    motivering: 'Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten, skapar länken med en slumpad kod och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.',
+  },
+);
 // Runda 14, r3: ett intyg genom intygsapplikationen och en e-remiss till en vårdgivare utanför Vårdkällan.
 FLODEN.push(
   {

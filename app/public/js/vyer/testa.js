@@ -11,7 +11,21 @@ const PROFIL = 'vk_testare_profil';
 const lasProfil = () => { try { return JSON.parse(localStorage.getItem(PROFIL) ?? '{}') ?? {}; } catch { return {}; } };
 const sparaProfil = (p) => { try { localStorage.setItem(PROFIL, JSON.stringify(p)); } catch { /* utan lagring */ } };
 
-export async function visa(main) {
+// Tillägg 2026-11-19 (Jonas): besökaren kom via en inbjudan. Koden och kanalen i adressen skickas en gång per flik, och
+// besöket som servern ger tillbaka följer med när ett pass startar. Inget annat om besökaren sparas.
+async function inbjudanBesok(q) {
+  const kod = q?.get?.('i');
+  const kanal = q?.get?.('k');
+  if (!kod || !kanal) return;
+  try { if (sessionStorage.getItem(testare.BESOK_NYCKEL)) return; } catch { return; }
+  try {
+    const { besok } = await api('/api/inbjudan/besok', { metod: 'POST', data: { kod, kanal }, tyst: true, direkt: true });
+    if (besok) sessionStorage.setItem(testare.BESOK_NYCKEL, besok);
+  } catch { /* utan besök fungerar allt likadant */ }
+}
+
+export async function visa(main, _param, q) {
+  inbjudanBesok(q);
   main.innerHTML = `<div class="testa">
     <div class="testa-marke">${logotyp(40)}<p>Vårdkällan</p></div>
     ${vyRubrik('Testa Vårdkällan och jämför med ditt journalsystem')}
@@ -46,8 +60,14 @@ export async function visa(main) {
       <h2 id="testa-roll">Välj din yrkesroll</h2>
       <ul class="testa-roller" id="testa-roller"><li class="tom">Hämtar yrkesrollerna.</li></ul>
     </section>
+    <section class="ruta testa-bjud" aria-labelledby="testa-bjud">
+      <h2 id="testa-bjud">Känner du någon som borde pröva?</h2>
+      <p>Du får en färdig text med länken som du skickar själv, med e-post, i ett meddelande eller i sociala medier. Vårdkällan skickar ingenting och sparar inga adresser.</p>
+      <button type="button" class="knapp sekundar" data-testa="bjud-in">Bjud in en kollega</button>
+    </section>
     <p class="liten dampad testa-fot">Vill du hellre välja fritt bland alla demoroller? <a href="#/">Logga in med en demoroll</a>. Om testet och integriteten: <a href="#/om">Om demon och testet</a>.</p>
   </div>`;
+  main.querySelector('[data-testa="bjud-in"]').addEventListener('click', () => testare.bjudInDialog());
   await rollvaljare(main.querySelector('#testa-roller'), () => testare.profilUr(main.querySelector('#testa-profil')));
 }
 

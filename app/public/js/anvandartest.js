@@ -138,6 +138,12 @@ const FORBERED = {
   'cytostatika-kur': async () => { await aterstallDemo(); await api('/api/demo/cytostatika-kur', { metod: 'POST', data: {} }); },
   // Runda 15, r4: Gunnar Åkessons journal har 30 anteckningar, där de senaste inte har någon bedömning.
   'journal-30': async () => { await aterstallDemo(); await api('/api/demo/journal-30', { metod: 'POST', data: {} }); },
+  // Tillägg 2026-11-19, runda 18, r1: första passet startas och avbryts, så att återkopplingen med Bjud in visas.
+  'pass-klart': async () => {
+    await api('/api/testare/starta', { metod: 'POST', data: { testroll: 'lakare-sjukhus', pass: true, matning: 'nej' } });
+    await api('/api/testare/uppdrag/3.1/hoppa', { metod: 'POST', data: {} });
+    await (await import('./testinbjudan.js')).uppdatera({ visa: true });
+  },
   // Runda 16, r3: förlossningens demopatienter, som läggs in en gång per sandlåda.
   obstetrik: async () => { await api('/api/demo/obstetrik', { metod: 'POST', data: {} }); },
   // Runda 14, r1: övningstjänsten kopplas in av de två systemförvaltarna, och sedan loggas personen ut, så att uppgiften
