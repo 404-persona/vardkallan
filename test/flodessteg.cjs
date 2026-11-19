@@ -734,6 +734,8 @@ function skapa(BAS) {
       return a.ok && b.ok;
     });
     if (!ok) throw new Error('Första passet kunde inte förberedas');
+    // Sidan laddas om från en tom sida, så att panelen hämtar det nya läget.
+    await page.goto('about:blank');
     await gaTill(page, '#/arbetslista');
     await page.waitForSelector('#testare-panel [data-tp="bjud-in"]');
   };

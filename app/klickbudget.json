@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-19T09:08:15.372Z",
-  "bas": "http://127.0.0.1:18230",
+  "tid": "2026-11-19T13:14:35.931Z",
+  "bas": "http://127.0.0.1:18281",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "7034cc5c8028432fef72b1daa0fcd9184e86566bb344253caa7934e4f1240540",
+  "gransnittHash": "7809bb339f964c0a2c9b7fc76f862b1a7e47aa7126a53b2e8a957b76134519f1",
   "regler": "Klick på knappar, länkar och rader räknas. En rullgardinslista som måste ändras räknas som två klick. Varje flytt till ett textfält räknas som ett fältbyte, utom när fältet redan har fokus. Text som skrivs räknas inte som steg, men tecknen räknas för sig: de som skrivs, de som systemet skriver ur underlaget och de som skrevs fast systemet redan visste dem. Tangenter som Enter räknas.",
   "floden": [
     {
@@ -2466,11 +2466,11 @@
     },
     {
       "id": "valj-yrkesroll",
-      "namn": "Välja yrkesroll och starta första uppdraget",
+      "namn": "Välja yrkesroll och starta första passet",
       "roll": "lak-kard",
       "start": "Startsidan för testare",
       "budget": 2,
-      "motivering": "Ett klick på yrkesrollen, som loggar in i rätt demoroll och startar uppdragen i panelen, och ett klick på en patient i arbetslistan för det första uppdraget. Systemet bockar av uppdraget själv och ställer jämförelsefrågan.",
+      "motivering": "Ett klick på yrkesrollen, som loggar in i rätt demoroll och visar första passet i panelen, och ett klick för att svara på frågan om passet får mätas, som ställs en gång. Därefter pekar vägledningen ut nästa steg. Passets uppgift mäts för sig, mot klickbudgeten för samma uppgift i Sussas testfall, och vägledningen får inte göra den dyrare.",
       "klick": 2,
       "faltbyten": 0,
       "tangenter": 0,
@@ -2478,7 +2478,27 @@
       "inomBudget": true,
       "steg": [
         "klick: Läkare på sjukhus",
-        "klick: en patient i arbetslistan"
+        "klick: Ja, mät passet"
+      ],
+      "teckenSkrivna": 0,
+      "teckenSystemet": 0,
+      "teckenKundeSystemet": 0
+    },
+    {
+      "id": "bjud-in-kollega",
+      "namn": "Bjuda in en kollega efter första passet",
+      "roll": "lak-kard",
+      "start": "Återkopplingen efter första passet",
+      "budget": 3,
+      "motivering": "Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten, skapar länken med en slumpad kod och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.",
+      "klick": 2,
+      "faltbyten": 0,
+      "tangenter": 0,
+      "uppmatt": 2,
+      "inomBudget": true,
+      "steg": [
+        "klick: Bjud in en kollega",
+        "klick: Kopiera texten"
       ],
       "teckenSkrivna": 0,
       "teckenSystemet": 0,
@@ -3513,7 +3533,11 @@
       "status": "grön"
     },
     {
-      "namn": "Gränssnitt > Klickbudget > Välja yrkesroll och starta första uppdraget inom budget",
+      "namn": "Gränssnitt > Klickbudget > Välja yrkesroll och starta första passet inom budget",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Klickbudget > Bjuda in en kollega efter första passet inom budget",
       "status": "grön"
     },
     {
