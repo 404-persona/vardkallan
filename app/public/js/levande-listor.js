@@ -26,7 +26,7 @@ const vyNu = () => (location.hash || '').split('?')[0];
 function upptagen() {
   const a = document.activeElement;
   if (a && a !== document.body && a.matches('input, textarea, select, [contenteditable="true"]')) return true;
-  if (document.querySelector('dialog[open]') || document.body.classList.contains('meny-oppen')) return true;
+  if ([...document.querySelectorAll('dialog')].some(d => d.open) || document.body.classList.contains('meny-oppen')) return true;
   try { if (String(getSelection?.() ?? '').trim()) return true; } catch { /* inget markerat */ }
   return false;
 }

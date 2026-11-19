@@ -18,6 +18,8 @@ export const ANDRINGAR = [
     resurser: [], skrivning: [], annat: [
       // Runda 18, r2: sökrutan Vad vill du göra? och ordlistan Jag letar efter (docs/api-avvikelser.md).
       'Nya rutter i det interna API:t för sökrutan Vad vill du göra?, som ger de handlingar som den inloggade får och vilken roll som gör det som saknas, och för ordlistan Jag letar efter, som är öppen utan inloggning (docs/api-avvikelser.md)',
+      // Runda 18, r5: lärdomar från vårdpersonalens erfarenheter (docs/api-avvikelser.md).
+      'En dosändring och en utsättning av en ordination som någon annan har ändrat eller satt ut svarar 409 med vem som ändrade vad och det som gäller nu, och dosändringen tar emot det som visades när dialogen öppnades. Nya rutter för de senast använda mallarna och för svarstiderna i webbläsaren, och listorna som uppdateras i bakgrunden svarar 204 när sandlådan vilar',
     ],
   },
   // Legitimation och förskrivningsrätt ur HOSP: version 1.7.

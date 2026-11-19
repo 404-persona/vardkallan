@@ -24,6 +24,26 @@
           "var": "#/ordlista",
           "rubrik": "Jag letar efter",
           "text": "Ordlistan Jag letar efter kopplar ord som du kanske använder i andra journalsystem, till exempel läkemedelskurva, labb eller akuttavla, till vad det heter och var det finns här. Samma ord fungerar i Vad vill du göra?."
+        },
+        {
+          "id": "osparad-text-1-8-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Texten finns kvar när du byter patient",
+          "text": "Har du börjat skriva och går till en annan patient eller rad finns texten kvar och står i formuläret igen när du öppnar det. En rad överst visar texter som inte är sparade, och när du byter patient säger systemet vem som nu är öppen."
+        },
+        {
+          "id": "levande-listor-1-8-0",
+          "roller": [
+            "personal"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Listorna uppdaterar sig själva",
+          "text": "Arbetslistan, inkorgen, väntrummet och avdelningens planering visar det nya utan att du behöver ladda om. Mallarna i en ny anteckning har dina senast använda och dina favoriter först, och långa listor har ett sökfält."
         }
       ]
     },

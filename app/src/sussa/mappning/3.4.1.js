@@ -11,6 +11,7 @@ import { medR4 } from '../planering-r4.js';
 import { medR8 } from '../bokning-r8.js';
 // Runda 10, r7: kapacitet, ombud, kassan, meddelanden och kontorsstödet (sussa/runda10-r7.js).
 import { medR10r7 } from '../runda10-r7.js';
+import { medR18r2 } from '../runda18-r2.js';
 
 const { A, M, R, GK } = TEST;
 
@@ -86,4 +87,5 @@ const AVSNITT = [
 // Runda 6, r4: posterna som byggdes i planering och tidbok, del 2, och remiss, del 2, ersätts ur sussa/planering-r4.js.
 // Runda 13, r4: arbetsdagen, väntelistan och bokningen (sussa/runda13-r4.js).
 // Runda 16, r2: bevakningen av sjukskrivningar för läkaren och vårdenheten (sussa/runda16-r2.js).
-export default medR16r2(medR13r4(medR10r7(medR8(medR4(AVSNITT)))));
+// Runda 18, r5: lärdomar från vårdpersonalens erfarenheter (sussa/runda18-r2.js).
+export default medR18r2(medR16r2(medR13r4(medR10r7(medR8(medR4(AVSNITT))))));

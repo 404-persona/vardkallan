@@ -1046,6 +1046,14 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - Nytt: `GET /api/handlingar/sok?q=&patient=` (personalens inloggning) ger `{ fraga, patient, vanliga, traffar, saknas, inget? }`. Utan `q` är `vanliga` sant och `traffar` det vanligaste för rollen. Varje träff är `{ id, namn, vy, kraverPatient, href, mal?, klicka?, fokus?, via?, forklaring? }`: `href` är adressen i gränssnittet, för en handling i journalen bara när patienten är öppen, annars `null` med `mal` (`{ flik, sub }`). `via` förklarar ett ord ur ordlistan, och `forklaring` att handlingen inte går för den öppna patienten. `saknas` är `[{ id, namn, text }]` med vilken roll som gör det som rollen inte får, utan patientuppgifter. `patient` räknas bara när den har öppnats i sessionen och får ses, annars är svaret detsamma som utan patient. Inget loggas. 400 när `q` är längre än 80 tecken eller `patient` inte är ett giltigt id, 401 utan personalens inloggning.
 - Nytt: `GET /api/handlingar/ordlista` (öppen utan inloggning, skapar ingen sandlåda) ger `{ poster: [{ ord, heter, forklaring, handling, vy, kraverPatient, href }] }`. `href` finns bara för inloggad personal när rollen får handlingen och den inte kräver en patient.
 
+## Version 1.8.0: lärdomar från vårdpersonalens erfarenheter (runda 18, r5)
+
+- `POST /api/ordination/:id/dosandring` tar emot `forvantat` (`{ dosering, lakemedelId, status }`, det som visades när dialogen öppnades). Har ordinationen ändrats eller satts ut sedan dess svarar servern 409 med `kod: "andrad"`, en förklaring med vem som ändrade vad och när, och `nu` med det som gäller. Utan `forvantat` fungerar dosändringen som förut.
+- `POST /api/ordination/:id/utsatt` och `POST /api/ordination/:id/dosandring` för en ordination som redan är utsatt svarar 409 med vem som satte ut den, när och varför (förut 400 utan namn). Prövningen görs efter behörigheten.
+- Nytt: `GET /api/mallar/senaste` ger `{ typer }`, den inloggades högst tre senast använda anteckningsmallar bland dem rollen får skriva med.
+- Nytt: `GET /api/drift/webblasare` (öppen utan inloggning) ger svarstiderna i webbläsaren: `{ finns, aktuell, tid, webblasare, mal, lagen: { vanlig, strypt } }`.
+- `GET /api/arbetslista`, `/api/inkorg`, `/api/vantrum` och `/api/avdelning/planering` med `X-Vk-Bakgrund: 1` svarar 204 med `X-Vk-Vilar: 1` när sandlådan vilar, utan att väcka den.
+
 ## Intygen i intygsapplikationen (runda 16, r1)
 
 - `GET /api/patient/:id/intyg`: varje intyg har också `version`, `blankett`, `ersatt` (text när intygstypen har ersatts), `sandning` (`samrad`, `utskrift`, `post` eller `vid_signering`), `relation` (`{ typ, text }` för ett förnyat eller bytt intyg), `kanFornyas` och `fornyasMed` (`{ kod, version, text }`). Varje intygstyp i `typer` har också `version`, `blankett`, `sandning` och `kanSignera`. Listan har bara de intygstyper som den inloggade får skapa eller signera, och ett ersatt intyg står med `mojlig: false` och vad som ersatte det.
