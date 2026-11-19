@@ -25,16 +25,23 @@ export function sakra(db) {
 }
 
 // Taket per adressgrupp och timme hålls i minnet. Det gäller bara hur mycket som räknas, aldrig vad besökaren får göra,
-// och börjar om när servern startar om.
+// och börjar om när servern startar om. Kartan har bara den pågående timmen: poster från tidigare timmar tas bort när
+// timmen byts. Är kartan full räknas inga nya adressgrupper förrän nästa timme (fail closed), och ett globalt tak per
+// timme gäller allt som räknas. Ingen besökare nekas något av det.
 export class TakPerTimme {
-  constructor() { this.antal = new Map(); }
+  constructor({ maxPoster = 50000, globaltPerTimme = 5000 } = {}) {
+    this.antal = new Map(); this.timme = null; this.totalt = 0; this.maxPoster = maxPoster; this.globaltPerTimme = globaltPerTimme;
+  }
   far(adress, nu) {
     const timme = Math.floor(nu.getTime() / 3600_000);
-    const nyckel = `${skapareFor(adress)}|${timme}`;
-    if (this.antal.size > 50000) this.antal.clear();
-    const n = this.antal.get(nyckel) ?? 0;
-    if (n >= MAX_PER_TIMME) return false;
-    this.antal.set(nyckel, n + 1);
+    if (timme !== this.timme) { this.antal.clear(); this.timme = timme; this.totalt = 0; }
+    if (this.totalt >= this.globaltPerTimme) return false;
+    const nyckel = skapareFor(adress);
+    const n = this.antal.get(nyckel);
+    if (n === undefined && this.antal.size >= this.maxPoster) return false;
+    if ((n ?? 0) >= MAX_PER_TIMME) return false;
+    this.antal.set(nyckel, (n ?? 0) + 1);
+    this.totalt++;
     return true;
   }
 }

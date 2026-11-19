@@ -88,6 +88,21 @@ describe('Inbjudan', () => {
     // Passen har samma tak.
     for (let i = 0; i < ib.MAX_PER_TIMME + 3; i++) ib.passKlar(db, 'dela', { nu, adress: '10.9.9.9', tak });
     expect(rader(db).find(r => r.kanal === 'dela').pass).toBe(ib.MAX_PER_TIMME);
+    // En full karta nollställer aldrig någons tak: nya adressgrupper räknas inte förrän nästa timme (fail closed), och ett
+    // globalt tak per timme gäller allt som räknas. Ingen besökare nekas.
+    const liten = new ib.TakPerTimme({ maxPoster: 3, globaltPerTimme: 1000 });
+    const db2 = sp.oppna(':memory:');
+    for (let i = 0; i < 3; i++) ib.besok(db2, { kanal: 'lank' }, { nu, adress: `10.2.2.${i}`, tak: liten });
+    expect(ib.besok(db2, { kanal: 'lank' }, { nu, adress: '10.2.2.99', tak: liten })).toEqual({ ok: true });
+    expect(rader(db2)[0].besok).toBe(3);
+    for (let i = 0; i < ib.MAX_PER_TIMME + 3; i++) ib.besok(db2, { kanal: 'lank' }, { nu, adress: '10.2.2.0', tak: liten });
+    expect(rader(db2)[0].besok).toBe(2 + ib.MAX_PER_TIMME);
+    ib.besok(db2, { kanal: 'lank' }, { nu: new Date(nu.getTime() + 3600_000), adress: '10.2.2.99', tak: liten });
+    expect(rader(db2)[0].besok).toBe(3 + ib.MAX_PER_TIMME);
+    const global = new ib.TakPerTimme({ globaltPerTimme: 5 });
+    const db3 = sp.oppna(':memory:');
+    for (let i = 0; i < 8; i++) ib.besok(db3, { kanal: 'x' }, { nu, adress: `10.3.3.${i}`, tak: global });
+    expect(rader(db3)[0].besok).toBe(5);
     expect(sp.skapareFor('2001:db8:1:1::5')).toBe(sp.skapareFor('2001:db8:1:ffff::9'));
     expect(sp.skapareFor('2001:db8:1::1')).not.toBe(sp.skapareFor('2001:db8:2::1'));
     expect(sp.skapareFor('::ffff:10.0.0.1')).toBe(sp.skapareFor('10.0.0.1'));
