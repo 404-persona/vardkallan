@@ -24,12 +24,11 @@ export const T18R1 = {
 // Tillägg 2026-11-19 (Jonas): bjud in andra och dela (inbjudan.js och public/js/inbjudan-regler.js).
 const IB = 'Inbjudan > ';
 export const T18R1IB = {
-  skapa: `${IB}en inbjudan får en slumpad kod utan något om testaren, och taken per session och timme, per adress och totalt gäller`,
-  besok: `${IB}ett besök via en inbjudan sparar bara kanalen, och en okänd kod eller kanal ger samma svar utan att något sparas`,
-  pass: `${IB}ett genomfört pass räknas på besöket utan koppling till mätningen, svaren eller synpunkterna`,
-  testledare: `${IB}testledaren ser bara antal per kanal och hur många som genomförde ett pass, och inbjudningarna gallras som synpunkterna`,
-  takUtanSession: `${IB}taken per minut, timme och dygn räknas per adressgrupp i databasen också utan session, det globala taket per minut och timme gäller alla, och det totala taket stoppar nya med 503 utan att ta bort någons levande inbjudan`,
-  ipv6: `${IB}IPv6-adresser räknas per /48 för taken utan inloggning, och IPv4 per adress`,
+  ingenRad: `${IB}att bjuda in skapar ingen rad och inget anrop: länken bär bara kanalen ur en fast lista, så delningen kan aldrig nekas eller fyllas upp`,
+  besok: `${IB}ett besök via en inbjudan räknas i en räknare per dag och kanal utan något om besökaren, och en okänd kanal ger samma svar utan att något räknas`,
+  pass: `${IB}ett genomfört pass räknas på kanalen i besökarens sandlåda, en gång, utan koppling till mätningen, svaren eller synpunkterna`,
+  tak: `${IB}en adressgrupp räknas högst ett visst antal gånger i timmen, IPv6 per /48, och det som går över räknas inte men nekas aldrig`,
+  testledare: `${IB}testledaren ser bara antal besök och genomförda pass per kanal, tabellen växer inte utöver dagar gånger kanaler och gallras efter 365 dagar`,
   text: `${IB}inbjudningstexten är neutral och delningslänkarna går till tjänsternas egna delningssidor med länken till testinbjudans startsida`,
 };
 
@@ -46,13 +45,13 @@ export const G18R1 = {
   aterkoppling: `${GP}återkopplingen visar tid och steg mot Sussas tidsklass och klickbudget, och SUS efter passet räknas på servern`,
   mobil: `${GP}vägledningen fungerar på 390 px och med tangentbordet, och markeringen skymmer inte det som ska klickas`,
   inga: `${GP}inget som skickas under passet innehåller patientens id, namn eller personnummer`,
-  bjudIn: 'Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken, delningslänkarna öppnar tjänsternas delningssidor utan att något skickas, och en besökare via länken räknas per kanal',
+  bjudIn: 'Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken utan att något skickas till servern, delningslänkarna öppnar tjänsternas delningssidor, och en besökare via länken räknas på kanalen',
 };
 const T = T18R1;
 const G = G18R1;
 const ALLA_G = [G.samtycke, ...PASSROLLER.map(G.roll), G.annanVag, G.aterkoppling, G.mobil, G.inga, G.bjudIn];
 
-const MATT = 'Runda 18 (r1): varje yrkesroll i testinbjudan börjar med ett första pass på högst fem minuter: en patient och en uppgift som yrket gör varje dag, för personalen ur Sussas testfall (3.1, 4.1, 4.2, 5.1 och 2.6), med vägledning som pekar ut nästa steg i gränssnittet och följer det testaren gör. Före passet frågar systemet en gång om passet får mätas. Med ja mäts tiden till första handling, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, utan personuppgifter och utan något om demons patienter, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten och kan svara på SUS. Testledaren ser per yrkesroll och uppgift antal pass, andel klarade, medianer mot budget, de steg där flest fastnar och SUS med medelvärde och spridning, och kravsidan visar antalet genomförda pass och SUS-medelvärdet ur databasen. Testaren kan bjuda in en kollega eller dela länken i sociala medier: systemet skickar aldrig något självt och sparar inga adresser, och länken har en slumpad kod som bara visar kanalen och om besökaren genomförde ett pass.';
+const MATT = 'Runda 18 (r1): varje yrkesroll i testinbjudan börjar med ett första pass på högst fem minuter: en patient och en uppgift som yrket gör varje dag, för personalen ur Sussas testfall (3.1, 4.1, 4.2, 5.1 och 2.6), med vägledning som pekar ut nästa steg i gränssnittet och följer det testaren gör. Före passet frågar systemet en gång om passet får mätas. Med ja mäts tiden till första handling, tiden per steg, återvändor, öppnad hjälp, sökningar och avbrutna pass, utan personuppgifter och utan något om demons patienter, och efter passet ser testaren sin tid mot Sussas tidsklass och sina steg mot klickbudgeten och kan svara på SUS. Testledaren ser per yrkesroll och uppgift antal pass, andel klarade, medianer mot budget, de steg där flest fastnar och SUS med medelvärde och spridning, och kravsidan visar antalet genomförda pass och SUS-medelvärdet ur databasen. Testaren kan bjuda in en kollega eller dela länken i sociala medier: systemet skickar aldrig något självt och sparar inga adresser, och länken bär bara kanalen, som räknas per dag med antalet besök och genomförda pass.';
 
 const POSTER = {
   '8.4.1.1': {

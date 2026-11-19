@@ -72,12 +72,11 @@ export function registreraRutter({ rutt, sessionFil = '', synpunktFil, version, 
     if (!c.db) return { aktiv: false };
     const t = ti.tillstand(c.db);
     // Tillägg 2026-11-19: ett genomfört pass räknas på besöket via inbjudan.
-    try { ti.inbjudanKlar(c.db, (b) => ib.passKlar(db, b)); } catch (e) { console.error('Passet kunde inte räknas på inbjudan:', e.message); }
+    try { ti.inbjudanKlar(c.db, (kanal) => ib.passKlar(db, kanal, { adress: c.ip })); } catch (e) { console.error('Passet kunde inte räknas på inbjudan:', e.message); }
     return t;
   });
-  // Tillägg 2026-11-19: en inbjudan och ett besök via en inbjudan. Ingen kräver en sandlåda, och inget av dem tar emot
-  // eller sparar något om testaren eller besökaren.
-  rutt('POST', '/api/inbjudan', (c) => [201, ib.skapa(db, { session: c.s ?? null, adress: c.ip })]);
+  // Tillägg 2026-11-19: ett besök via en inbjudan räknas per dag och kanal. Rutten kräver ingen sandlåda, sparar inget om
+  // besökaren och svarar alltid likadant. Att bjuda in skapar ingen rad och har ingen rutt.
   rutt('POST', '/api/inbjudan/besok', (c) => ib.besok(db, c.body, { adress: c.ip }));
   // Runda 18, r1: med pass: true börjar uppdragen med första passet. Raden för en mätning skapas med serverns sammanhang.
   const passRad = (c) => (u) => fp.skapaRad(db, { ...sammanhang(c), ...u });

@@ -11,17 +11,14 @@ const PROFIL = 'vk_testare_profil';
 const lasProfil = () => { try { return JSON.parse(localStorage.getItem(PROFIL) ?? '{}') ?? {}; } catch { return {}; } };
 const sparaProfil = (p) => { try { localStorage.setItem(PROFIL, JSON.stringify(p)); } catch { /* utan lagring */ } };
 
-// Tillägg 2026-11-19 (Jonas): besökaren kom via en inbjudan. Koden och kanalen i adressen skickas en gång per flik, och
-// besöket som servern ger tillbaka följer med när ett pass startar. Inget annat om besökaren sparas.
+// Tillägg 2026-11-19 (Jonas): besökaren kom via en inbjudan. Kanalen i adressen räknas en gång per flik, och följer med
+// när ett pass startar, så att ett genomfört pass räknas på kanalen. Inget annat om besökaren sparas.
+const KANALNAMN = /^[a-z]{1,10}$/;
 async function inbjudanBesok(q) {
-  const kod = q?.get?.('i');
-  const kanal = q?.get?.('k');
-  if (!kod || !kanal) return;
-  try { if (sessionStorage.getItem(testare.BESOK_NYCKEL)) return; } catch { return; }
-  try {
-    const { besok } = await api('/api/inbjudan/besok', { metod: 'POST', data: { kod, kanal }, tyst: true, direkt: true });
-    if (besok) sessionStorage.setItem(testare.BESOK_NYCKEL, besok);
-  } catch { /* utan besök fungerar allt likadant */ }
+  const kanal = q?.get?.('via');
+  if (!kanal || !KANALNAMN.test(kanal)) return;
+  try { if (sessionStorage.getItem(testare.VIA_NYCKEL)) return; sessionStorage.setItem(testare.VIA_NYCKEL, kanal); } catch { return; }
+  try { await api('/api/inbjudan/besok', { metod: 'POST', data: { kanal }, tyst: true, direkt: true }); } catch { /* utan räkning fungerar allt likadant */ }
 }
 
 export async function visa(main, _param, q) {

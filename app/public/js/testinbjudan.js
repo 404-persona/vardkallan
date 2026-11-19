@@ -18,8 +18,8 @@ const AKTIV = 'vk_testare_aktiv';
 const OPPEN = 'vk_testare_oppen';
 // Runda 18, r1: svaret på frågan om mätning, så att frågan ställs en gång.
 export const MATNING = 'vk_testare_matning';
-// Tillägg 2026-11-19: besöket via en inbjudan, i den här fliken.
-export const BESOK_NYCKEL = 'vk_testare_besok';
+// Tillägg 2026-11-19: kanalen som besökaren kom via, i den här fliken.
+export const VIA_NYCKEL = 'vk_testare_via';
 const las = (k, s = sessionStorage) => { try { return s.getItem(k); } catch { return null; } };
 const satt = (k, v, s = sessionStorage) => { try { if (v == null) s.removeItem(k); else s.setItem(k, v); } catch { /* utan lagring */ } };
 
@@ -95,9 +95,9 @@ export async function uppdatera({ visa = false } = {}) {
 export async function starta(testroll, profil, knapp) {
   // Runda 18, r1: uppdragen börjar med första passet. Har testaren redan svarat på frågan om mätning följer svaret med.
   const matning = las(MATNING, localStorage);
-  // Tillägg 2026-11-19: ett besök via en inbjudan följer med, så att ett genomfört pass räknas på besöket.
-  const besok = las(BESOK_NYCKEL);
-  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil, pass: true, ...(['ja', 'nej'].includes(matning) ? { matning } : {}), ...(besok ? { besok } : {}) } });
+  // Tillägg 2026-11-19: kanalen som besökaren kom via följer med, så att ett genomfört pass räknas på kanalen.
+  const via = las(VIA_NYCKEL);
+  const r = await api('/api/testare/starta', { metod: 'POST', data: { testroll, profil, pass: true, ...(['ja', 'nej'].includes(matning) ? { matning } : {}), ...(via ? { via } : {}) } });
   T = r;
   satt(AKTIV, '1');
   satt(OPPEN, '1', localStorage);
@@ -274,19 +274,17 @@ function susDialog() {
 // ---------------------------------------------------------------------------------------------------------------------
 
 // ---- Tillägg 2026-11-19 (Jonas): bjud in en kollega och dela. ------------------------------------------------------
-// Systemet skickar aldrig något självt och sparar inga adresser. Dialogen hämtar en slumpad kod för länken och visar en
-// färdig text som testaren skickar själv: Dela (webbläsarens delning där den finns), Kopiera, E-post (testarens eget
-// e-postprogram) och tjänsternas egna delningssidor som vanliga länkar i en ny flik.
+// Systemet skickar aldrig något självt och sparar inga adresser. Dialogen visar en färdig text som testaren skickar själv:
+// Dela (webbläsarens delning där den finns), Kopiera, E-post (testarens eget e-postprogram) och tjänsternas egna
+// delningssidor som vanliga länkar i en ny flik. Inget anrop görs när dialogen öppnas: länken bär bara kanalen.
 let bjudOppen = false;
-export async function bjudInDialog() {
+export function bjudInDialog() {
   if (bjudOppen) return;
   bjudOppen = true;
   const forra = document.activeElement;
-  let kod;
-  try { kod = (await api('/api/inbjudan', { metod: 'POST', data: {}, direkt: true })).kod; } catch (err) { bjudOppen = false; felNotis(err); return; }
   const origin = location.origin;
-  const text = inbjudningstext(lankFor(origin, kod, 'lank'));
-  const l = delningslankar(origin, kod);
+  const text = inbjudningstext(lankFor(origin, 'lank'));
+  const l = delningslankar(origin);
   const dl = document.createElement('dialog');
   dl.className = 'dialog dialog-bred bj-dialog';
   dl.setAttribute('aria-labelledby', 'bj-rubrik');
@@ -319,7 +317,7 @@ export async function bjudInDialog() {
       try { await navigator.clipboard.writeText(ta.value); meddela('Inbjudan är kopierad. Klistra in den där du vill skicka den.'); } catch { ta.focus(); ta.select(); meddela('Texten är markerad. Kopiera den med Ctrl+C, eller Cmd+C på Mac.'); }
     }
     if (b.dataset.bj === 'dela') {
-      try { await navigator.share({ title: AMNE, text: inbjudningstext(lankFor(origin, kod, 'lank')) }); } catch { /* testaren avbröt delningen */ }
+      try { await navigator.share({ title: AMNE, text: inbjudningstext(lankFor(origin, 'dela')) }); } catch { /* testaren avbröt delningen */ }
     }
   });
   dl.addEventListener('cancel', (e) => { e.preventDefault(); dl.close(); });

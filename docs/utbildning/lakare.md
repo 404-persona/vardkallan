@@ -371,7 +371,7 @@ Ett klick på yrkesrollen, som loggar in i rätt demoroll och visar första pass
 
 Börjar i: Återkopplingen efter första passet. Klickbudget: högst 3 steg. I demon gör Sara Lindqvist flödet.
 
-Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten, skapar länken med en slumpad kod och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.
+Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten och länken, som bara bär kanalen, utan något anrop till servern, och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.
 
 ### Skriva ett intyg i intygsapplikationen
 

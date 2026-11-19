@@ -551,7 +551,7 @@ FLODEN.push(
 FLODEN.push(
   {
     id: 'bjud-in-kollega', namn: 'Bjuda in en kollega efter första passet', roll: 'lak-kard', start: 'Återkopplingen efter första passet', budget: 3,
-    motivering: 'Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten, skapar länken med en slumpad kod och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.',
+    motivering: 'Ett klick på Bjud in en kollega i återkopplingen, som visar en färdig text med länken, och ett klick på Kopiera texten. Dela och E-post är också ett klick. Systemet skriver texten och länken, som bara bär kanalen, utan något anrop till servern, och skickar ingenting självt. Budgeten är högst tre klick till en färdig text som testaren kan skicka.',
   },
 );
 // Runda 14, r3: ett intyg genom intygsapplikationen och en e-remiss till en vårdgivare utanför Vårdkällan.

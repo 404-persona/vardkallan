@@ -448,7 +448,7 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await page.click('[data-testa="bjud-in"]');
       await forvanta(page, 'dialog[open].bj-dialog', 'Vårdkällan skickar ingenting');
       const v = await page.locator('#bj-text').inputValue();
-      if (!/\/#\/testa\?i=I-[A-Z0-9]{6}&k=lank/.test(v)) throw new Error(`texten saknar länken: ${v}`);
+      if (!v.includes('/#/testa?via=lank')) throw new Error(`texten saknar länken: ${v}`);
       for (const k of ['linkedin', 'facebook', 'x', 'epost']) await page.waitForSelector(`dialog[open] [data-bj-kanal="${k}"]`);
       await bild(page, '18r1-bjud-in');
       await page.click('dialog[open] [data-bj="stang"]');

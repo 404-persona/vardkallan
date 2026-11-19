@@ -297,7 +297,7 @@ MODULER.push(m('testinbjudan', 'forvaltning', 'Testinbjudan och synpunkter',
   { avsnitt: [], rutter: ['#/testa', '#/om', '#/testledare'], vyer: ['testa.js', 'om.js', 'testledare.js'], kod: ['src/testinbjudan.js', 'src/synpunkter.js', 'src/r13r1-rutter.js', 'public/js/testinbjudan.js', 'public/js/synpunkt-regler.js', 'scripts/testinbjudan.js',
       // Runda 18, r1: första passet och inbjudan.
       'src/forsta-pass.js', 'src/inbjudan.js', 'public/js/forsta-pass.js', 'public/js/forsta-pass-steg.js', 'public/js/inbjudan-regler.js'],
-    api: ['/api/synpunkter', '/api/testare', '/api/testledare/synpunkter', '/api/testare/pass/matning', '/api/inbjudan'], simulerat: 'Demorollerna och testpatienterna är påhittade. Svaren är testarnas egna och sparas i en egen databas utanför sandlådorna.' }));
+    api: ['/api/synpunkter', '/api/testare', '/api/testledare/synpunkter', '/api/testare/pass/matning', '/api/inbjudan/besok'], simulerat: 'Demorollerna och testpatienterna är påhittade. Svaren är testarnas egna och sparas i en egen databas utanför sandlådorna.' }));
 
 // Runda 14, r2: tjänstekontrakten i RIVTA hör till de nationella tjänsterna (src/rivta/, docs/rivta.md).
 {

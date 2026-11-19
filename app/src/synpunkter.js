@@ -28,7 +28,7 @@ import { adressGrupp } from './anvandartest-svar.js';
 // Runda 18, r1: första passet (forsta-pass.js) sparar sina mätningar och SUS i samma databas.
 import { sammanstall as passSammanstall, radUt as passRadUt, susUt as passSusUt, passFor } from './forsta-pass.js';
 // Tillägg 2026-11-19: inbjudningarna (inbjudan.js).
-import { sammanstall as inbjudanSammanstall } from './inbjudan.js';
+import { sammanstall as inbjudanSammanstall, sakra as sakraInbjudan, stada as stadaInbjudan } from './inbjudan.js';
 import {
   TYPER, ALLVAR, YRKEN, SYSTEM, AR, VARDFORM, JAMFORELSE, HOPPADE_OVER, MAX_TEXT, MIN_TEXT, MAX_KONTAKT, MAX_MITT_SYSTEM,
   GALLRING_DAGAR, KONTAKT_DAGAR, PERSONNUMMER_TEXT, kandidater,
@@ -79,13 +79,6 @@ CREATE TABLE IF NOT EXISTS pass_sus (
 );
 CREATE INDEX IF NOT EXISTS ix_pass_matningar_skapare ON pass_matningar (skapare, tid);
 CREATE INDEX IF NOT EXISTS ix_pass_sus_skapare ON pass_sus (skapare, tid);
--- Tillägg 2026-11-19: inbjudningar och besök via dem, utan något om testaren eller besökaren (inbjudan.js).
-CREATE TABLE IF NOT EXISTS inbjudningar (id INTEGER PRIMARY KEY, kod TEXT NOT NULL UNIQUE, tid TEXT NOT NULL, skapare TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS inbjudan_besok (
-  id INTEGER PRIMARY KEY, besok TEXT NOT NULL UNIQUE, kod TEXT NOT NULL, kanal TEXT NOT NULL, tid TEXT NOT NULL, pass INTEGER NOT NULL DEFAULT 0, skapare TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS ix_inbjudningar_skapare ON inbjudningar (skapare, tid);
-CREATE INDEX IF NOT EXISTS ix_inbjudan_besok_skapare ON inbjudan_besok (skapare, tid);
 `;
 
 export function oppna(fil = ':memory:') {
@@ -96,6 +89,8 @@ export function oppna(fil = ':memory:') {
   const kol = db.query("SELECT name FROM pragma_table_info('synpunkt_utskrifter')").all().map(k => k.name);
   if (!kol.includes('pass')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN pass INTEGER NOT NULL DEFAULT 0');
   if (!kol.includes('sus')) db.exec('ALTER TABLE synpunkt_utskrifter ADD COLUMN sus INTEGER NOT NULL DEFAULT 0');
+  // Tillägg 2026-11-19: räknarna för inbjudningar, en rad per dag och kanal (inbjudan.js).
+  sakraInbjudan(db);
   return db;
 }
 
@@ -317,7 +312,7 @@ export function lista(db, { filter = {}, namnFor } = {}) {
     perUppdrag: perUppdrag(jamforelser, namnFor),
     // Runda 18, r1: första passet per yrkesroll och uppgift, och SUS.
     pass: passSammanstall(db, { filter }),
-    // Tillägg 2026-11-19: bara antal per kanal och genomförda pass.
+    // Tillägg 2026-11-19: bara antal besök och genomförda pass per kanal.
     inbjudningar: inbjudanSammanstall(db),
     val: { roller: [...new Set(alla.map(r => r.roll ?? ''))], vyer: [...new Set(alla.map(r => r.vy))].sort(), testroller: [...new Set([...alla, ...allaJ, ...db.query('SELECT DISTINCT testroll FROM pass_matningar').all()].map(r => r.testroll).filter(Boolean))] },
   };
@@ -451,8 +446,7 @@ export function stada(db, { nu = new Date() } = {}) {
   // Runda 18, r1: första passen och SUS gallras på samma sätt.
   const pa = db.query('DELETE FROM pass_matningar WHERE tid < ?').run(grans).changes;
   const su = db.query('DELETE FROM pass_sus WHERE tid < ?').run(grans).changes;
-  // Tillägg 2026-11-19: inbjudningarna och besöken.
-  const ib = db.query('DELETE FROM inbjudningar WHERE tid < ?').run(grans).changes;
-  const bs = db.query('DELETE FROM inbjudan_besok WHERE tid < ?').run(grans).changes;
-  return { kontakter: k, synpunkter: s, jamforelser: j, pass: pa, sus: su, inbjudningar: ib, besok: bs };
+  // Tillägg 2026-11-19: räknarna för inbjudningar, per dag.
+  const ib = stadaInbjudan(db, new Date(nu.getTime() - GALLRING_DAGAR * DAG));
+  return { kontakter: k, synpunkter: s, jamforelser: j, pass: pa, sus: su, inbjudningar: ib };
 }
