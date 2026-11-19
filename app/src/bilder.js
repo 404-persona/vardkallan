@@ -368,7 +368,8 @@ export const huvuden = (typ, namn, { ladda = false } = {}) => ({ 'Content-Type':
 export function fil(atk, m, { ladda = false } = {}) {
   kravFil(atk, m);
   // Runda 11, r5: filen kan laddas ner (export av bildmaterialet).
-  return new Response(m.data, { headers: huvuden(m.typ, m.namn, { ladda }) });
+  // Runda 18, r3 (Sussa KD1.1.3.5): innehållet kan ligga i lagringen för äldre uppgifter (lagring-aldre.js).
+  return new Response(require('./lagring-aldre.js').lasData(atk.db, 'media', m), { headers: huvuden(m.typ, m.namn, { ladda }) });
 }
 // Runda 11, r5: samma prövning och loggning för filen, miniatyren och visningsbilden (bildmedia.js). En bild som väntar
 // på granskning från Min journal prövas som journalen; en import från en apparat eller en annan vårdgivare efter sin kategori.

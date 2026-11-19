@@ -444,7 +444,8 @@ function ordinationsForm(plats, ctx, tidigare = null, { muntlig = false } = {}) 
         // HOSP: ett läkemedel som den inloggade inte får förskriva enligt Socialstyrelsens register går inte att välja, och
         // servern säger varför (ejForskrivning).
         traffar.innerHTML = lista.length ? lista.slice(0, 8).map(l => (l.ejForskrivning ? `<li class="lm-ej-valbar" data-ej-forskrivning><span><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)}</span><span class="under-text">${esc(l.ejForskrivning)}</span></li>`
-          : `<li><button type="button" data-lm="${esc(l.id)}" data-namn="${esc(`${l.namn} ${l.styrka} ${l.form}`)}"><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)} <span class="dampad">${esc(l.substans)}, ATC ${esc(l.atc)}</span></button></li>`)).join('') : '<li class="tom liten">Inget läkemedel i katalogen matchar.</li>';
+          // Runda 18, r3 (Sussa B4): priset diskret i träffen, och periodens vara när den är billigare (för den som ser priser).
+          : `<li><button type="button" data-lm="${esc(l.id)}" data-namn="${esc(`${l.namn} ${l.styrka} ${l.form}`)}"${l.pris ? ` data-pris-text="${esc(l.pris.text)}" data-pris-alt="${esc(l.pris.alternativ?.text ?? '')}"` : ''}><strong>${esc(l.namn)}</strong> ${esc(l.styrka)} ${esc(l.form)} <span class="dampad">${esc(l.substans)}, ATC ${esc(l.atc)}</span>${l.pris ? `<span class="under-text lm-pris">${esc(l.pris.text)}</span>` : ''}</button></li>`)).join('') : '<li class="tom liten">Inget läkemedel i katalogen matchar.</li>';
       } catch (e) { felNotis(e); }
     }, 180);
   });
@@ -455,6 +456,11 @@ function ordinationsForm(plats, ctx, tidigare = null, { muntlig = false } = {}) 
   async function valj(b, efter = null) {
     form.lakemedelId.value = b.lm;
     form.querySelector('#lm-valt').textContent = `Valt: ${b.namn}`;
+    // Runda 18, r3 (Sussa B4): priset och periodens vara under det valda läkemedlet. Inget att välja: apoteket byter ut.
+    let lmPris = form.querySelector('#lm-pris');
+    if (!lmPris) { lmPris = document.createElement('p'); lmPris.id = 'lm-pris'; lmPris.className = 'hjalp lm-pris'; form.querySelector('#lm-valt').after(lmPris); }
+    lmPris.textContent = b.prisText ? `Pris: ${b.prisText}. ${b.prisAlt ?? ''} Påhittat demopris.`.replace(/\s+/g, ' ').trim() : '';
+    lmPris.hidden = !b.prisText;
     sok.value = b.namn;
     traffar.innerHTML = '';
     kontrollerad = null;

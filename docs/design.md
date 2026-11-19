@@ -3387,3 +3387,69 @@ Varje yrke som dokumenterar i journalen har nu en egen roll med minsta åtkomst 
 
 **Simulerat och demoregler.** HOSP-tjänsten är simulerad. Personalens personnummer kommer i demon från en tabell i den simulerade HSA-katalogen (`seed/hosp.js`) och är Skatteverkets testpersonnummer. I demon har alla sjuksköterskor och barnmorskor förskrivningsrätt utom tre avvikelser som demon visar: en anestesiläkare (Gustav Fernlund) vars förskrivningsrätt inte omfattar narkotiska läkemedel, en sjuksköterska på anestesin (Ida Wedin) utan förskrivningsrätt och en läkare på kvinnokliniken (Johanna Rehn) vars legitimation är återkallad. Personerna är påhittade. Narkotika klassas efter ATC-grupp (opioider, bensodiazepiner, z-preparat och centralstimulantia), vilket är en förenkling: Läkemedelsverkets förteckningar gäller substanser. Kodverket i kontraktet saknar hälso- och sjukvårdskurator, så kuratorns legitimation prövas bara mot HSA-katalogen.
 
+
+## Ekonomin och lagringen för äldre uppgifter (runda 18, r3: ekonomi.js, ekonomi-priser.js, ekonomi-schema.js, kassa.js och lagring-aldre.js, Sussa bör-krav B1 till B5, 7.1.1.2, 7.1.2.1 och KD1.1.3.5)
+
+Version 1.8 gör ekonomin synlig där vården fattar beslut och flyttar äldre filinnehåll till en egen databas.
+
+**Kostnaden i vårdprocessen (B5, 7.1.2.1).** Kostnadsrutan i patientens översikt har sedan version 1.8 också prover och
+undersökningar ur beställningarna i de synliga vårdkontakterna, med demopriset hos det utförande laboratoriet eller
+röntgen. Varje kategori har sin källa, och rutan listar prislistorna med version och giltighet, schablonerna och
+laboratoriernas priser under Var beloppen kommer ifrån. För ett vårdtillfälle med DRG-grupp jämför rutan kostnaden hittills
+med ersättningen för ett jämförbart vårdtillfälle i samma grupp och säger hur många dygn patienten har vårdats mot gruppens
+trimgräns. Beställningarna prövas med `las_prover` och samma filter som journalen, så en beställning på en spärrad eller
+annan vårdenhet syns inte och ändrar inte svaret.
+
+**Priser där beslutet fattas (B4).** `ekonomi-priser.js` räknar påhittade demopriser: per förpackning för läkemedel ur
+katalogen, per analys och undersökning efter disciplin och modalitet, och för hjälpmedel ur vårdenhetens prislista.
+Läkemedelskatalogen, förslaget för beställning av prover och listan med hjälpmedel får priset för den som ser kostnaderna i
+vårdprocessen (läkare och sjuksköterskor). Ett billigare likvärdigt alternativ visas bara när det är likvärdigt: periodens
+vara i en påhittad utbytesgrupp, som apoteket byter till om förskrivaren inte motsätter sig utbyte, och basmodellen ur
+hjälpmedelssortimentet. Priset står i träffen och under det valda läkemedlet, så inget flöde får fler steg.
+
+**Uthämtning och betalning av hjälpmedel (B1).** Systemet avgör ur artikeln om ett hjälpmedel lämnas ut direkt eller
+hämtas ut i receptionen (`UTHAMTNING` i ekonomi-schema.js). Ett hjälpmedel som hämtas ut är förskrivet (status
+`forskriven`) och blir en post i faktureringsunderlaget först när det är uthämtat. Kassören på vårdenheten ser det i rutan
+Avgifter och högkostnadsskydd och registrerar uthämtningen och betalningen med kort eller faktura i ett klick. Betalningen
+(`hjalpmedel_betalningar`) har ett kvitto, ändras aldrig, finns i kassan och dagsavslutet och ger posten i underlaget
+status betald eller faktureras med kvittot. En kassör på en annan vårdenhet får samma svar som om hjälpmedlet inte fanns.
+
+**Avtal med betalningsmottagare (B3, 7.1.1.2).** Ekonomen registrerar avtal (`ekonomiavtal`) med en annan region om
+rabatt på utomlänsvården och med en kommun om priset per vårddygn för utskrivningsklara patienter, från ett datum som inte
+har passerat. Ett avtal ändras aldrig. Posten i underlaget får avtalet, beloppet före rabatten och rabatten. Utan
+överenskommelse betalar kommunen genomsnittskostnaden i riket för ett vårddygn i den slutna vården, enligt 5 kap. 6 § lagen
+(2017:612) om samverkan vid utskrivning från sluten hälso- och sjukvård (kontrollerad mot Riksdagens text 2026-11-19).
+Beloppet i demon är ett demovärde.
+
+**Kostnader per vårdenhet (B2).** Verksamhetschefen ser de vårdenheter hen är chef för och ekonomen alla, under
+Kostnader per vårdenhet (`GET /api/ekonomi/kostnader`). Varje vårdenhet har ett stapeldiagram med en serie, kostnaden
+enligt prislistan per månad, där den pågående månaden är streckad som preliminär och bara den största och den senaste
+stapeln har sitt värde utskrivet. Samma siffror finns i en tabell med kostnaden per typ, ersättningen enligt DRG och
+patientavgifterna. Diagrammets färger har minst 3:1 mot ytan för staplarna och 4,5:1 för texten i ljust läge, i mörkt
+läge och i hög kontrast. Vårdkällan har inget mörkt läge i övrigt, så rutan med diagrammet följer datorns mörka läge för
+sig. Svaret har bara summor per vårdenhet och månad och loggas utan patient.
+
+**Lagringen för äldre uppgifter (KD1.1.3.5).** `lagring-aldre.js` kopplar en egen SQLite-databas till varje sandlåda
+(`ATTACH`, schemat `aldre`). Det som enligt lagringsklassen Lagring för äldre uppgifter ska flyttas är filinnehållet i
+avslutade vårdkontakter och äldre handlingar: bilder och filer i journalen, inskannade restjournaler och mellanarkivets
+paket, när de är äldre än klassens gräns och vårdkontakten är avslutad sedan lika länge. Raden om filen stannar i den
+aktiva databasen med tom `data`, så att listor, sökning, behörighet och loggning är som förut, och `lasData` läser
+innehållet ur rätt databas och prövar kontrollsumman. Miniatyrerna stannar i den snabba lagringen.
+
+Flytten görs av systemet en gång om dygnet i de vakna sandlådorna och av systemförvaltaren med Flytta nu på sidan Lagring.
+Den prövar regeln, huvudmannen och kontrollsumman för varje rad i samma transaktion, läser tillbaka innehållet ur den
+äldre databasen och jämför innan raden töms, och stoppar hela flytten om något inte stämmer (fail closed). Den går att köra
+igen utan dubbletter. Gallring och radering tar bort innehållet också i den äldre databasen med en trigger på anslutningen
+(TEMP, eftersom en trigger i den aktiva databasen inte får peka på en annan databas). Sammanslagning av journaler ändrar
+bara raden i den aktiva databasen, och innehållet följer med.
+
+Allt som sparar eller kopierar en sandlåda använder `bild(db)` i stället för `db.serialize()`: vilan på disk, sparandet
+när servern stängs, säkerhetskopiorna, provåterläsningen, nya miljöer och reservservern. Bilden har den äldre databasen i en
+tabell som bara finns i ögonblicksbilden, och `koppla` (från `migrera` och `nySessionsDb`) lägger tillbaka den i en egen
+databas. Uttaget per huvudman skriver in filinnehållet ur den äldre databasen. I driften är den äldre databasen en egen fil
+på en billigare volym, och bilden behövs inte.
+
+Klassningen för uttaget per huvudman prövas nu på alla tabeller som någon modul skapar, också de som skapas först när
+de används (`test/lagring-klassning-r18.test.js` läser alla CREATE TABLE i `src/`). Rapporterna till myndigheter
+(`myndighetsrapporter`) och kvalitetsregistrets återkoppling (`registeraterkoppling`) hör till systemet och följer inte
+med i en huvudmans uttag, eftersom en rapport kan ha identifierare och uppgifter per vårdenhet från flera huvudmän. Synpunkterna och användartestets svar ligger i egna databaser utanför sandlådan och prövas inte.

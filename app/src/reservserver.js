@@ -102,7 +102,8 @@ function macOk(nyckel, r) {
 export function oppna({ katalog, andraKatalog = null, nyckel = null, loggKatalog = null, loggNyckel = loggNyckelUrMiljo(), nu = new Date() } = {}) {
   if (loggKatalog && !loggNyckel) throw new Fel(500, 'Reservservern skriver en logg men saknar nyckeln som den delar med kärnsystemet. Ange RESERV_LOGG_NYCKEL, samma som i kärnsystemet, med minst 32 tecken.', 'fel');
   const k = senasteKopia({ katalog, andraKatalog, nyckel });
-  const db = Database.deserialize(k.data);
+  // Runda 18, r3: lagringen för äldre uppgifter kopplas innan databasen blir skrivskyddad (lagring-aldre.js).
+  const db = require('./lagring-aldre.js').ny(k.data);
   lasEndast(db);
   const sista = db.query('SELECT coalesce(max(id), 0) AS m FROM atkomstlogg').get().m;
   const reserv = { db, kopia: k.kopia, nyckel: k.nyckel, startad: iso(nu), loggKatalog, loggFil: null, loggNyckel, kopiaLoggId: sista, sistaLoggId: sista };

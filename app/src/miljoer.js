@@ -143,7 +143,8 @@ export function skapa(prod, typ, { nu = new Date() } = {}) {
   let db;
   let resultat;
   if (typ === 'acceptanstest') {
-    db = Database.deserialize(prod.serialize());
+    // Runda 18, r3: kopian tar med lagringen för äldre uppgifter (lagring-aldre.js).
+    db = require('./lagring-aldre.js').ny(require('./lagring-aldre.js').bild(prod));
     resultat = avidentifiera(db);
   } else {
     db = nySessionsDb();

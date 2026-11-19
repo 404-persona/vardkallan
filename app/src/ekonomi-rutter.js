@@ -69,4 +69,33 @@ export function registreraRutter({ rutt, kravInloggad, medPatient }) {
   });
   rutt('POST', '/api/patient/:id/hjalpmedel', (c, id) => { kravInloggad(c); return medPatient(c, id, 'hjalpmedel', (atk) => ekonomi.registreraHjalpmedel(atk, c.body)); });
   rutt('POST', '/api/patient/:id/lma', (c, id) => { kravInloggad(c); return medPatient(c, id, 'lma', (atk) => ekonomi.registreraLma(atk, c.body)); });
+
+  // Runda 18, r3 (Sussa B1): uthämtning och betalning av hjälpmedel i kassan, med kvitto. Patienten prövas med
+  // las_kostnader, som rutan där kassören ser hjälpmedlen, och ekonomi.js prövar handlingen och vårdenheten för raden.
+  rutt('POST', '/api/patient/:id/hjalpmedel/:hid/uthamta', (c, id, hid) => { kravInloggad(c); return medPatient(c, id, 'las_kostnader', (atk) => ekonomi.uthamta(atk, hid, c.body)); });
+  rutt('GET', '/api/patient/:id/hjalpmedel/:hid/kvitto', (c, id, hid) => { kravInloggad(c); return medPatient(c, id, 'las_kostnader', (atk) => ekonomi.hjalpmedelKvitto(atk, hid)); });
+  // Runda 18, r3 (Sussa B4): priset för ett läkemedel där det ordineras, för den som ser priser. Inga patientuppgifter.
+  rutt('GET', '/api/priser/lakemedel/:id', (c, id) => {
+    const p = kravInloggad(c);
+    const priser = require('./ekonomi-priser.js');
+    if (!priser.visarPriser(p)) throw new Fel(403, 'Din yrkesroll ser inte priserna.', 'nekad');
+    const pr = priser.lakemedelspris(id);
+    if (!pr) throw new Fel(404, 'Läkemedlet finns inte i katalogen.', 'saknas');
+    return pr;
+  });
+  // Runda 18, r3 (Sussa B2): kostnaderna per vårdenhet och månad för verksamhetschefen och ekonomen.
+  rutt('GET', '/api/ekonomi/kostnader', (c) => {
+    const p = kravEkonom(c, 'ekonomi_oversikt', 'ekonomi:kostnader');
+    const n = Number(c.url.searchParams.get('manader') ?? 6);
+    return ekonomi.kostnadsoversikt(c.db, p, { manader: Number.isInteger(n) ? n : 6 });
+  });
+  // Runda 18, r3 (Sussa 7.1.1.2): avtal med betalningsmottagare, som ekonomen läser och registrerar med prislistornas handling.
+  rutt('GET', '/api/ekonomi/avtal', (c) => {
+    kravEkonom(c, 'prislista', 'ekonomiavtal:alla');
+    return { avtal: ekonomi.avtalLista(c.db), regioner: Object.entries(ekonomi.REGIONER).map(([id, namn]) => ({ id, namn })), kommuner: ekonomi.KOMMUNER, demo: ekonomi.DEMO };
+  });
+  rutt('POST', '/api/ekonomi/avtal', (c) => {
+    const p = kravEkonom(c, 'prislista', 'ekonomiavtal:ny');
+    return [201, ekonomi.registreraAvtal(c.db, p, c.body)];
+  });
 }

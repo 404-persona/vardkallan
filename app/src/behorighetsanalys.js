@@ -82,14 +82,14 @@ export const ANALYS = {
   },
   verksamhetschef: {
     namn: "Verksamhetschef",
-    behov: "Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten.",
+    behov: "Utser uppdrag i läkemedelshanteringen, fastställer direktiv, utfärdar utbildarintyg och följer vårdenhetens intyg och signeringslistan. Godkänner som andra person att uppgifter som har registrerats på fel patient flyttas till en patient utan vårdrelation till vårdenheten. Följer kostnaderna per månad för de vårdenheter hen är chef för, som summor utan patientuppgifter.",
     risker: "Att chefsrollen används för att läsa enskilda patienters journaler.",
     atgarder: "Läser inte journalen. Uppgifterna gäller den egna vårdenheten. Ett förslag om flytt visar numret som skrevs men ingenting om patienten som numret leder till, och den som föreslog flytten kan aldrig godkänna den själv.",
     inte: ["las_journal", "las_oversikt", "ordinera"],
   },
   ekonom: {
     namn: "Ekonom",
-    behov: "Hämtar faktureringsunderlag och ändrar prislistor.",
+    behov: "Hämtar faktureringsunderlag, ändrar prislistor, registrerar avtal med betalningsmottagare och följer kostnaderna per vårdenhet och månad.",
     risker: "Att ekonomiska underlag röjer vårdinnehåll eller skyddade personuppgifter.",
     atgarder: "Läser inte journalen. Underlaget innehåller aldrig namn eller adress för en patient med skyddade personuppgifter.",
     inte: ["las_journal", "las_oversikt", "sok"],

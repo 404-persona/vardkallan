@@ -243,6 +243,10 @@ MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Kodverk och masterda
 MENY.systemforvaltare.splice(MENY.systemforvaltare.indexOf('Servicenivåer och incidenter') + 1, 0, 'Nationella tjänster');
 // Runda 15, r2, tredje omgången: verksamhetschefen och vårdadministratören har Flyttar till rätt patient före Utbildning.
 for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k].indexOf('Utbildning'), 0, 'Flyttar till rätt patient');
+// Runda 18, r3 (Sussa B2): Kostnader per vårdenhet för ekonomen efter Prislistor och för verksamhetschefen före
+// Forskningsuttag, i menyns ordning.
+MENY.ekonom.splice(MENY.ekonom.indexOf('Prislistor') + 1, 0, 'Kostnader per vårdenhet');
+MENY.verksamhetschef.splice(MENY.verksamhetschef.indexOf('Forskningsuttag'), 0, 'Kostnader per vårdenhet');
 // Runda 16, r3: Handledning före Utbildning för handledarna på en vårdenhet med studenter (Sara Lindqvist, Johan Ek och
 // Sofia Ekdahl), och för studenterna. Operationskoordinatorn i Karlskoga har inga studenter, och barnmorskan på
 // vårdcentralen har Mödrahälsovård i stället för Förlossningen. Paramedicinarna har fysioterapeutens meny, och psykologen
@@ -2067,6 +2071,18 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await saknas(page, 'Elin Sandberg');
       await bild(page, '99-sjukskrivningar-enhet');
     });
+    // Runda 18, r3 (Sussa B2): kostnaderna per vårdenhet och månad, som diagram och tabell, utan patientuppgifter.
+    await s('Ulrika Sandell ser kardiologins kostnader per månad som diagram och tabell, utan patientuppgifter', async () => {
+      await gaTill(page, '#/kostnader');
+      await forvanta(page, 'main h1', 'Kostnader per vårdenhet');
+      await page.locator('.kv-enhet svg.kv-diagram').first().waitFor();
+      await forvanta(page, '.kv-enhet', 'Kardiologiska kliniken');
+      await page.locator('.kv-enhet .kv-tabell summary').first().click();
+      await forvanta(page, '.kv-enhet .kv-tabell', 'Ersättning enligt DRG');
+      await saknas(page, 'Gunnar');
+      await saknas(page, 'Åkesson');
+      await bild(page, '99b-kostnader-vardenhet');
+    });
     await allaVyer(page, 'Ulrika Sandell', MENY.verksamhetschef);
     // Fredrik Alm, ekonom (runda 7, r3)
     await s('Fredrik Alm hämtar förra månadens faktureringsunderlag som CSV med ett klick, och exporten syns i listan', async () => {
@@ -2102,6 +2118,21 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       await forvanta(page, '.notis', 'Telefonkontakt kostar 475 kr från');
       await forvanta(page, '.pl-historik', 'Nytt demopris för telefonkontakt');
       await forvanta(page, '.faktarad', 'Kommande');
+      await page.waitForLoadState('networkidle');
+    });
+    // Runda 18, r3 (Sussa 7.1.1.2): ett avtal med en kommun om priset per vårddygn för utskrivningsklara patienter.
+    await s('Fredrik Alm ser samverkansavtalet med Region Värmland och registrerar en överenskommelse med Karlskoga kommun', async () => {
+      await gaTill(page, '#/prislistor');
+      await forvanta(page, '.pl-avtal', 'Region Värmland');
+      await page.click('[data-nytt-avtal]');
+      await page.locator('dialog[open] #av-motpart').waitFor();
+      await page.selectOption('dialog[open] #av-motpart', 'kommun:Karlskoga');
+      await page.fill('dialog[open] #av-varde', '6500');
+      await page.fill('dialog[open] #av-text', 'Överenskommelse om utskrivningsklara patienter');
+      await bild(page, '100b-avtal');
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'Avtalet med Karlskoga kommun gäller från');
+      await forvanta(page, '.pl-avtal', '6500 kr per vårddygn');
       await page.waitForLoadState('networkidle');
     });
     await allaVyer(page, 'Fredrik Alm', MENY.ekonom);
@@ -2171,6 +2202,17 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       const alternativ = await page.locator('dialog[open] #sf-u-omfang option').evaluateAll(o => o.map(x => x.value));
       if (alternativ.includes('anteckning')) throw new Error(`en enskild anteckning går att välja utan begäran: ${alternativ}`);
       await page.click('dialog[open] [data-varde="avbryt"]');
+      await page.waitForLoadState('networkidle');
+    });
+    // Runda 18, r3 (KD1.1.3.5): lagringen för äldre uppgifter som en egen databas, med flytten.
+    await s('Tomas Lindh ser lagringen för äldre uppgifter och flyttar det som väntar till den egna databasen', async () => {
+      await gaTill(page, '#/lagring');
+      await forvanta(page, '[data-aldre]', 'Lagringen för äldre uppgifter');
+      if (await page.locator('[data-flytta-aldre]').count()) {
+        await page.click('[data-flytta-aldre]');
+        await forvanta(page, '.notis', 'lagringen för äldre uppgifter');
+      }
+      await forvanta(page, '[data-aldre]', 'ligger i en egen databas');
       await page.waitForLoadState('networkidle');
     });
     await s('Tomas Lindh provar säkerhetskopian och ser uppgifterna per huvudman', async () => {
@@ -3002,6 +3044,20 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
       const t = await page.locator('.ov-kostnader').textContent();
       for (const x of ['DRG', 'Furosemid', 'Läkemedel', 'Vårddygn']) if (t.includes(x)) throw new Error(`kostnadsrutan för vårdadministratören visar ${x}`);
     });
+    // Runda 18, r3 (Sussa B1): blodtrycksmätaren som läkaren förskrev hämtas ut och betalas i kassan, med kvitto.
+    await s('Karin Berg tar betalt för den förskrivna blodtrycksmätaren med kort och får ett kvitto, och betalningen finns i kassan', async () => {
+      await gaTill(page, '#/patient/p01');
+      await forvanta(page, '.ov-kostnader [data-att-hamta]', 'Blodtrycksmätare för mätning hemma');
+      await page.click('.ov-kostnader [data-att-hamta] [data-satt="kort"]');
+      await page.locator('dialog[open] .ek-kvitto').waitFor();
+      await forvanta(page, 'dialog[open]', 'VK-DEMO-H-');
+      await bild(page, '102b-kvitto-hjalpmedel');
+      await page.click('dialog[open] [data-varde="ok"]');
+      await forvanta(page, '.notis', 'är uthämtat');
+      await gaTill(page, '#/kassa');
+      await forvanta(page, 'main', 'Hjälpmedelsavgift');
+      await page.waitForLoadState('networkidle');
+    });
     // Runda 15, r2, tredje omgången: ett vårdtillfälle på fel patient flyttas till en patient utan vårdrelation till vårdenheten
     // bara med fyra ögon. Ulrika Sandell ser förslaget i sin egen inloggning, utan något om patienten som numret leder
     // till, och avslår det. Inget flyttas.
@@ -3199,7 +3255,9 @@ for (const k of ['vardadministrator', 'verksamhetschef']) MENY[k].splice(MENY[k]
         'forlang-sjukskrivning',
         // Runda 16: rehabkoordinatorns REKO-status.
         'satt-reko-status',
-        'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
+        'student-anteckning', 'lakarstudent-anteckning', 'barnmorskestudent-anteckning',
+        // Runda 18, r3: uthämtningen av ett hjälpmedel och kostnaderna per vårdenhet.
+        'hamta-ut-hjalpmedel', 'kostnader-vardenhet']) await page.uncheck(`input[name="uppgift"][value="${id}"]`);
       await page.click('#at-start [type="submit"]');
       await forvanta(page, '#testlage', 'Uppgift 1 av 2');
       await forvanta(page, '#testlage-text', 'blodtryck till 128/82');

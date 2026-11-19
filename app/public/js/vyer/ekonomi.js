@@ -124,7 +124,10 @@ export const prislistor = {
         <section aria-labelledby="pl-historik"><h2 id="pl-historik">Historik</h2><ol class="enkel-lista pl-historik">${h.versioner.map(v => `<li><strong>Version ${v.version}</strong>, ${esc(datum(v.giltigFran))} till ${v.giltigTill ? esc(datum(v.giltigTill)) : 'tills vidare'}
           <span class="under-text">${esc(v.orsak)}. ${v.skapadAv ? `${esc(v.skapadAv.namn)}, ` : ''}${esc(tidpunkt(v.skapad))}.</span>
           ${v.andringar.length ? `<span class="under-text">${v.andringar.slice(0, 6).map(a => `${esc(a.text)}: ${a.fore == null ? 'ny' : esc(kr(a.fore))} till ${esc(kr(a.efter))}`).join('. ')}${v.andringar.length > 6 ? `. Och ${v.andringar.length - 6} till.` : '.'}</span>` : ''}</li>`).join('')}</ol></section>
+        <div id="pl-avtal-plats"></div>
         <p class="demoregel">${esc(h.demo)}</p>`;
+      // Runda 18, r3 (Sussa 7.1.1.2): avtalen med betalningsmottagare.
+      avtalSektion(el.querySelector('#pl-avtal-plats')).catch(felNotis);
       el.querySelector('#pl-enhet').addEventListener('change', (e) => ladda(e.target.value).catch(felNotis));
       return h;
     };
@@ -155,3 +158,96 @@ export const prislistor = {
     });
   },
 };
+
+// ---------------------------------------------------------------------------------------------------------------
+// Runda 18, r3 (Sussa bör-krav B2): kostnaderna per vårdenhet och månad för verksamhetschefen och ekonomen. Ett
+// stapeldiagram per vårdenhet med en serie (kostnaden enligt prislistan), den pågående månaden streckad som preliminär,
+// och samma siffror i en tabell för skärmläsare och den som vill läsa exakta belopp. Inga patientuppgifter.
+const MANADKORT = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+const manadKort = (m) => MANADKORT[Number(m.slice(5, 7)) - 1];
+const tusen = (n) => (n >= 1_000_000 ? `${(n / 1_000_000).toLocaleString('sv-SE', { maximumFractionDigits: 1 })} mkr` : n >= 1000 ? `${Math.round(n / 1000).toLocaleString('sv-SE')} tkr` : kr(n));
+
+function stapelDiagram(v, perioder) {
+  // Den pågående månaden har ett snett mönster i stapelns färg, så att den skiljs från de avslutade utan att bero på färgen.
+  const monster = `kv-m-${esc(v.vardenhet.id)}`;
+  const max = Math.max(1, ...v.manader.map(m => m.kostnad));
+  const B = 320; const H = 150; const fot = 22; const topp = 18; const steg = B / perioder.length; const bredd = Math.min(34, steg - 10);
+  const hojd = (x) => Math.round((x / max) * (H - fot - topp));
+  const storst = v.manader.reduce((a, m, i) => (m.kostnad > v.manader[a].kostnad ? i : a), 0);
+  const staplar = v.manader.map((m, i) => {
+    const h = hojd(m.kostnad);
+    const x = Math.round(i * steg + (steg - bredd) / 2);
+    const y = H - fot - h;
+    const p = perioder[i];
+    // Värdet skrivs bara vid den största och den senaste stapeln, så att diagrammet inte blir en sifferlista.
+    const etikett = (i === storst || i === v.manader.length - 1) && m.kostnad > 0 ? `<text class="kv-varde" x="${x + bredd / 2}" y="${y - 5}" text-anchor="middle">${esc(tusen(m.kostnad))}</text>` : '';
+    return `<g class="kv-stapel${p.pagar ? ' kv-preliminar' : ''}" tabindex="-1"><title>${esc(p.text)}${p.pagar ? ' (pågår)' : ''}: ${esc(kr(m.kostnad))}</title>
+      ${h > 0 ? `<path${p.pagar ? ` fill="url(#${monster})"` : ''} d="M${x},${H - fot} V${y + 4} Q${x},${y} ${x + 4},${y} H${x + bredd - 4} Q${x + bredd},${y} ${x + bredd},${y + 4} V${H - fot} Z"/>` : ''}
+      <rect class="kv-traff" x="${Math.round(i * steg)}" y="0" width="${Math.round(steg)}" height="${H}"/>${etikett}
+      <text class="kv-manad" x="${x + bredd / 2}" y="${H - 6}" text-anchor="middle">${esc(manadKort(p.manad))}</text></g>`;
+  }).join('');
+  return `<svg class="kv-diagram" viewBox="0 0 ${B} ${H}" role="img" aria-label="${esc(`Kostnad per månad för ${v.vardenhet.namn}. Siffrorna finns i tabellen.`)}">
+    <defs><pattern id="${monster}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="kv-m-yta" width="6" height="6"/><rect class="kv-m-linje" width="3" height="6"/></pattern></defs>
+    <line class="kv-bas" x1="0" x2="${B}" y1="${H - fot}" y2="${H - fot}"/>${staplar}</svg>`;
+}
+
+export const kostnader = {
+  namn: 'kostnader',
+  async visa(main) {
+    main.innerHTML = vyRubrik('Kostnader per vårdenhet', 'Vad vården på vårdenheten har kostat per månad enligt prislistan. Systemet räknar det ur det som har hänt, så att ingen behöver sammanställa något.')
+      + '<div id="kv"><p class="tom">Hämtar kostnaderna.</p></div>';
+    const o = await api('/api/ekonomi/kostnader');
+    const el = main.querySelector('#kv');
+    if (!el) return;
+    if (!o.vardenheter.length) { el.innerHTML = '<p class="tom">Du är inte verksamhetschef för någon vårdenhet. Ekonomen ser alla vårdenheter.</p>'; return; }
+    const sista = o.perioder.length - 1;
+    el.innerHTML = `<p class="liten">${esc(o.text)}</p>
+      <ul class="kv-lista">${o.vardenheter.map(v => {
+        const nu = v.manader[sista];
+        const fore = v.manader[sista - 1];
+        return `<li class="kv-enhet" data-enhet="${esc(v.vardenhet.id)}"><h2>${esc(v.vardenhet.namn)}</h2>
+          <p class="kv-summa"><strong>${esc(kr(v.summa))}</strong> de senaste ${o.perioder.length} månaderna. ${fore ? `Förra månaden ${esc(kr(fore.kostnad))}` : ''}${nu ? `, ${esc(o.perioder[sista].text)} hittills ${esc(kr(nu.kostnad))} (preliminärt).` : '.'}</p>
+          ${stapelDiagram(v, o.perioder)}
+          <p class="kv-forklaring liten"><span class="kv-post"><span class="kv-prov" aria-hidden="true"></span>Kostnad enligt prislistan</span><span class="kv-post"><span class="kv-prov kv-prov-prel" aria-hidden="true"></span>Pågående månad, preliminär</span></p>
+          <details class="kv-tabell"><summary>Visa siffrorna som tabell</summary><div class="tabellrulle"><table class="tabell siffertabell">
+            <caption class="sr">Kostnader per månad för ${esc(v.vardenhet.namn)}</caption>
+            <thead><tr><th scope="col">Månad</th>${o.typer.map(t => `<th scope="col" class="tal">${esc(t.text)}</th>`).join('')}<th scope="col" class="tal">Kostnad</th><th scope="col" class="tal">Ersättning enligt DRG</th><th scope="col" class="tal">Patientavgifter</th></tr></thead>
+            <tbody>${v.manader.map((m, i) => `<tr><th scope="row">${esc(o.perioder[i].text)}${o.perioder[i].pagar ? ' (pågår)' : ''}</th>${o.typer.map(t => `<td class="tal">${esc(kr(m.perTyp[t.typ]))}</td>`).join('')}<td class="tal"><strong>${esc(kr(m.kostnad))}</strong></td><td class="tal">${esc(kr(m.drg))}</td><td class="tal">${esc(kr(m.avgifter))}</td></tr>`).join('')}</tbody>
+          </table></div></details></li>`;
+      }).join('')}</ul>
+      <p class="demoregel">${esc(o.demo)}</p>`;
+  },
+};
+
+// Runda 18, r3 (Sussa 7.1.1.2): avtalen med betalningsmottagare under prislistorna. Ekonomen registrerar ett avtal med
+// en region om rabatt på utomlänsvården eller med en kommun om priset per vårddygn, från ett datum som inte har passerat.
+export async function avtalSektion(plats) {
+  const a = await api('/api/ekonomi/avtal');
+  const STATUS = { galler: 'Gäller', kommande: 'Kommande', avslutat: 'Avslutat' };
+  plats.innerHTML = `<section aria-labelledby="pl-avtal"><h2 id="pl-avtal">Avtal med betalningsmottagare</h2>
+    ${a.avtal.length ? `<ul class="enkel-lista pl-avtal">${a.avtal.map(x => `<li><strong>${esc(x.motpart)}</strong>: ${esc(x.villkor)}. <span class="tagg">${esc(STATUS[x.status])}</span>
+      <span class="under-text">${esc(x.text)}, från ${esc(datum(x.giltigFran))}${x.giltigTill ? ` till ${esc(datum(x.giltigTill))}` : ''}.</span></li>`).join('')}</ul>` : '<p class="tom liten">Inga avtal. Utan överenskommelse betalar kommunen genomsnittskostnaden i riket per vårddygn.</p>'}
+    <p class="liten">Utan en överenskommelse med kommunen betalar kommunen genomsnittskostnaden i riket för ett vårddygn för utskrivningsklara patienter. Systemet väljer själv avtalet som gäller dagen för vården.</p>
+    <button type="button" class="knapp sekundar" data-nytt-avtal>Registrera avtal</button></section>`;
+  plats.querySelector('[data-nytt-avtal]').addEventListener('click', async () => {
+    const svar = await dialog(`<h2 id="dlg-rubrik">Registrera avtal</h2><form class="dialog-text">
+        <div class="falt"><label for="av-motpart">Betalningsmottagare</label><select id="av-motpart" name="motpart" required>
+          <optgroup label="Regioner, rabatt på utomlänsvården">${a.regioner.map(r => `<option value="region:${esc(r.id)}">${esc(r.namn)}</option>`).join('')}</optgroup>
+          <optgroup label="Kommuner, pris per vårddygn">${a.kommuner.map(k => `<option value="kommun:${esc(k)}">${esc(k)} kommun</option>`).join('')}</optgroup></select></div>
+        <div class="falt"><label for="av-varde">Rabatt på utomlänsvården i procent</label><input id="av-varde" name="varde" type="number" min="0" step="0.1" inputmode="decimal" required></div>
+        <div class="falt"><label for="av-fran">Gäller från</label><input id="av-fran" name="giltigFran" type="date" min="${esc(idag())}" value="${esc(forstaNastaManad())}" required></div>
+        <div class="falt"><label for="av-text">Avtalets namn</label><input id="av-text" name="text" type="text" maxlength="200" value="Överenskommelse" required></div>
+        <p class="dialog-fel form-fel" hidden></p></form>
+      <div class="knapprad"><button type="button" class="knapp" data-varde="ok">Registrera</button><button type="button" class="knapp text" data-varde="avbryt">Avbryt</button></div>`,
+    // Fältet säger vad som ska anges för den valda betalningsmottagaren: rabatt för en region, pris för en kommun.
+    { onOpen: (d) => { const m = d.querySelector('#av-motpart'); const l = d.querySelector('label[for="av-varde"]'); m.addEventListener('change', () => { l.textContent = m.value.startsWith('kommun:') ? 'Pris per vårddygn i kronor' : 'Rabatt på utomlänsvården i procent'; }); } });
+    if (!svar) return;
+    const [typ, motpart] = String(svar.data.motpart).split(':');
+    const v = Number(String(svar.data.varde).replace(',', '.'));
+    try {
+      const r = await api('/api/ekonomi/avtal', { metod: 'POST', data: { motpartTyp: typ, motpart, giltigFran: svar.data.giltigFran, text: svar.data.text, ...(typ === 'region' ? { rabattProcent: v } : { dygnspris: Math.round(v) }) } });
+      notis(`Avtalet med ${r.motpart} gäller från ${datum(r.giltigFran)}.`);
+      await avtalSektion(plats);
+    } catch (err) { felNotis(err); }
+  });
+}

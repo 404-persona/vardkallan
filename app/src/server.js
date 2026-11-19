@@ -69,6 +69,8 @@ import { registreraRutter as ekonomiRutter } from './ekonomi-rutter.js';
 // Runda 8, r3: fri bokning, teambesök, gruppträffar och avdelningens planerade händelser (r8r3-rutter.js).
 import { registreraRutter as r8r3Rutter } from './r8r3-rutter.js';
 import * as ekonomi from './ekonomi.js';
+// Runda 18, r3 (Sussa KD1.1.3.5): lagringen för äldre uppgifter som en egen databas.
+import * as aldreLagring from './lagring-aldre.js';
 // Runda 7, r4: systemförvaltningen, med konfiguration, omorganisation, undantag och lagring.
 import { registreraRutter as systemforvaltningRutter, efterDatum as systemforvaltningEfterDatum, inkorg as systemforvaltningInkorg } from './systemforvaltning-rutter.js';
 import * as konfiguration from './konfiguration.js';
@@ -563,7 +565,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     const db = s.dbOmVaken;
     if (!db || (!tvinga && pagande.get(s))) return false;
     try {
-      vilolager.vila(s.kopieId, db.serialize(), { app: APPVERSION, kopior: kopiorTillJson(s.kopior), matning: [...s.matning.data] });
+      // Runda 18, r3: bilden tar med lagringen för äldre uppgifter (lagring-aldre.js).
+      vilolager.vila(s.kopieId, aldreLagring.bild(db), { app: APPVERSION, kopior: kopiorTillJson(s.kopior), matning: [...s.matning.data] });
     } catch (e) { console.error('Sandlådan kunde inte skrivas till disk:', e.message); return false; }
     s.vilaIndex = vilaIndex(db);
     s.kopiaIds = [...s.kopior.keys()];
@@ -583,7 +586,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
       if (sid) taBortSandlada(sid);
       throw new Fel(500, 'Sandlådan kunde inte läsas in från disken. Ladda om sidan för att börja om i en ny sandlåda.', 'fel');
     }
-    const db = Database.deserialize(ut.data);
+    // Runda 18, r3: lagringen för äldre uppgifter kopplas igen (lagring-aldre.js).
+    const db = aldreLagring.ny(ut.data);
     s.dbByte = ut.data.byteLength;
     // En sandlåda som vilade när programmet uppgraderades får de nya tabellerna.
     if (ut.meta.app !== APPVERSION) migrera(db);
@@ -753,6 +757,17 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     try { r15r2Schemalagg([...vakna].map(x => x.dbOmVaken).filter(Boolean)); } catch (e) { console.error('De nationella köerna:', e.message); }
   }, 60_000);
   nationellaTimer.unref?.();
+  // Runda 18, r3 (Sussa KD1.1.3.5): lagringsflytten görs av systemet en gång om dygnet i de sandlådor som är vakna
+  // (lagring-aldre.js). Ingen behöver komma ihåg den, och ett fel stoppar bara flytten, aldrig sandlådan.
+  const senasteFlytt = new WeakMap();
+  const flyttTimer = setInterval(() => {
+    for (const db of [...vakna].map(x => x.dbOmVaken).filter(Boolean)) {
+      if (Date.now() - (senasteFlytt.get(db) ?? 0) < 86400_000) continue;
+      senasteFlytt.set(db, Date.now());
+      try { aldreLagring.flytta(db, null); } catch (e) { if (e?.status !== 409) console.error('Lagringsflytten:', e.message); }
+    }
+  }, 3600_000);
+  flyttTimer.unref?.();
 
   function lasSparade() {
     if (!sessionFil || !existsSync(sessionFil)) return;
@@ -817,7 +832,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     }
     for (const x of sessioner.values()) if (x.vilar) vaknaSandlada(x);
     const lista = [...sessioner].map(([sid, x]) => ({
-      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(x.db.serialize()).toString('base64'),
+      v: SPARVERSION, sid, personalId: x.personalId, uppdrag: x.uppdrag ?? null, invanareInloggning: x.invanareInloggning ?? null, invanareId: x.invanareId, val: x.val, sist: x.sist, aktiv: x.aktiv, db: Buffer.from(aldreLagring.bild(x.db)).toString('base64'),
       lasnyckel: x.lasnyckel, oppnade: [...x.oppnade], kopieId: x.kopieId,
       kopior: [...x.kopior].map(([id, k]) => [id, { ...k, patienter: [...k.patienter], loggIds: [...k.loggIds] }]),
     }));
@@ -1878,7 +1893,8 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
 
   rutt('GET', '/api/patient/:id/lakemedel', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_lakemedel', (atk) => lakemedel.lista(atk)); });
   // HOSP: läkemedel som den inloggade inte får förskriva enligt Socialstyrelsens register får ejForskrivning med förklaringen.
-  rutt('GET', '/api/lakemedel/katalog', (c) => { const p = kravInloggad(c); return hosp.markeraKatalog(c.db, p, lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? '')); });
+  // Runda 18, r3 (Sussa B4): priset och periodens vara för den som ser priser (ekonomi-priser.js).
+  rutt('GET', '/api/lakemedel/katalog', (c) => { const p = kravInloggad(c); return require('./ekonomi-priser.js').markeraKatalog(p, hosp.markeraKatalog(c.db, p, lakemedel.sokKatalog(c.db, c.url.searchParams.get('q') ?? ''))); });
   rutt('POST', '/api/patient/:id/lakemedel/kontroll', (c, id) => { kravInloggad(c); return medPatient(c, id, 'ordinera', (atk) => lakemedel.kontroll(atk, c.body)); });
   rutt('POST', '/api/patient/:id/lakemedel', (c, id) => {
     kravInloggad(c);
@@ -2929,7 +2945,7 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
     kopior, stadaKopior,
     // Runda 13, r1.
     synpunkter,
-    stopp() { clearInterval(stadningsTimer); clearInterval(vilaTimer); clearInterval(nationellaTimer); if (kopieSchema) clearInterval(kopieSchema); server.stop(true); for (const s of sessioner.values()) { s.dbOmVaken?.close(); s.db = null; } sessioner.clear(); anvandartestDb.close(); synpunkter.stopp(); },
+    stopp() { clearInterval(stadningsTimer); clearInterval(vilaTimer); clearInterval(nationellaTimer); clearInterval(flyttTimer); if (kopieSchema) clearInterval(kopieSchema); server.stop(true); for (const s of sessioner.values()) { s.dbOmVaken?.close(); s.db = null; } sessioner.clear(); anvandartestDb.close(); synpunkter.stopp(); },
     // Runda 13, r2: vilan och städningen med en vald tid, för testerna och lasttestet.
     vilolager, vila: (s) => vilaSandlada(s, { tvinga: true }), vilaStadning, stadning, kapacitet, glomKalenderlankar: () => kalender.lankar.clear(),
   };

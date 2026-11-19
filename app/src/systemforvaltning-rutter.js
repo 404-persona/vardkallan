@@ -62,6 +62,8 @@ export function registreraRutter({ rutt, kravInloggad }) {
 
   rutt('GET', '/api/lagring', (c) => lagring.oversikt(c.db, kravInloggad(c)));
   rutt('POST', '/api/lagring/prov', (c) => lagring.provaAterlasning(c.db, kravInloggad(c)));
+  // Runda 18, r3 (Sussa KD1.1.3.5): flytten till lagringen för äldre uppgifter (lagring-aldre.js).
+  rutt('POST', '/api/lagring/flytt', (c) => require('./lagring-aldre.js').flytta(c.db, kravInloggad(c)));
   rutt('POST', '/api/lagring/uttag', (c) => [201, lagring.beslutaUttag(c.db, kravInloggad(c), c.body)]);
   rutt('POST', '/api/lagring/uttag/:id/godkann', (c, id) => lagring.godkannUttag(c.db, kravInloggad(c), id));
   rutt('GET', '/api/lagring/uttag/:id/fil', (c, id) => {

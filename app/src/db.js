@@ -711,6 +711,9 @@ export function migrera(db) {
   // Runda 12, r2: kontrollen av schemaversionen när en sandlåda läses in (releaser.js). Saknade migreringar tillämpas och
   // migreringar från en nyare version av programmet backas med de återställningar som sparades i databasen.
   require('./releaser.js').kontrolleraVidStart(db);
+  // Runda 18, r3 (Sussa KD1.1.3.5): lagringen för äldre uppgifter kopplas som en egen databas, och en sparad bild av den
+  // läggs tillbaka där (lagring-aldre.js).
+  require('./lagring-aldre.js').koppla(db);
   return db;
 }
 
@@ -767,6 +770,8 @@ export function nySessionsDb() {
   require('./tidbok.js').anpassaTillNu(db);
   // Runda 6, r3: patienten som väntar på beslut om intagning räknas från nu (tvangsvard.js).
   require('./r3-rutter.js').tillagg.anpassaTillNu(db);
+  // Runda 18, r3 (Sussa KD1.1.3.5): lagringen för äldre uppgifter som en egen databas (lagring-aldre.js).
+  require('./lagring-aldre.js').koppla(db);
   return db;
 }
 

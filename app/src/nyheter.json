@@ -2,6 +2,75 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.8.0",
+      "datum": "2026-11-19",
+      "nyheter": [
+        {
+          "id": "priser-beslut-1-8-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Priset syns där du beslutar",
+          "text": "När du ordinerar ett läkemedel, beställer prover och undersökningar eller lämnar ut ett hjälpmedel visar systemet priset diskret, och ett billigare likvärdigt alternativ när det finns, till exempel periodens vara som apoteket byter till av sig självt. Du behöver inte göra något extra, och du väljer alltid det som är medicinskt rätt. Priserna är påhittade demopriser."
+        },
+        {
+          "id": "kostnad-vardprocess-1-8-0",
+          "roller": [
+            "lakare",
+            "sjukskoterska"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Kostnaden i vårdprocessen med källor och jämförelse",
+          "text": "Rutan med kostnaderna i patientens översikt har nu också prover och undersökningar, var varje belopp kommer ifrån och en jämförelse med ersättningen för ett jämförbart vårdtillfälle i samma DRG-grupp."
+        },
+        {
+          "id": "hjalpmedel-kassa-1-8-0",
+          "roller": [
+            "vardadministrator"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Hjälpmedel hämtas ut och betalas i kassan",
+          "text": "Ett hjälpmedel som patienten hämtar ut i receptionen står i rutan Avgifter och högkostnadsskydd i översikten. Ett klick registrerar uthämtningen och betalningen med kort eller faktura, och kvittot visas direkt. Betalningen kommer med i kassan och dagsavslutet."
+        },
+        {
+          "id": "kostnader-vardenhet-1-8-0",
+          "roller": [
+            "verksamhetschef",
+            "ekonom"
+          ],
+          "omfattning": "liten",
+          "var": "#/kostnader",
+          "rubrik": "Kostnader per vårdenhet",
+          "text": "Under Kostnader per vårdenhet ser du vad vården har kostat per månad enligt prislistan, som diagram och som tabell. Systemet räknar det ur det som har hänt, utan patientuppgifter."
+        },
+        {
+          "id": "avtal-betalningsmottagare-1-8-0",
+          "roller": [
+            "ekonom"
+          ],
+          "omfattning": "liten",
+          "var": "#/prislistor",
+          "rubrik": "Avtal med betalningsmottagare",
+          "text": "Under Prislistor registrerar du avtal med andra regioner om rabatt på utomlänsvården och med kommuner om priset per vårddygn för utskrivningsklara patienter. Utan överenskommelse räknar systemet med genomsnittskostnaden i riket."
+        },
+        {
+          "id": "lagring-aldre-1-8-0",
+          "roller": [
+            "systemforvaltare"
+          ],
+          "omfattning": "liten",
+          "var": "#/lagring",
+          "rubrik": "Lagringen för äldre uppgifter",
+          "text": "Systemet flyttar filer i avslutade vårdkontakter som är äldre än lagringsklassens gräns till en egen databas och läser dem därifrån. Journalen ser ut som förut. Under Lagring ser du vad som har flyttats och vad som väntar."
+        }
+      ]
+    },
+    {
       "version": "1.7.0",
       "datum": "2026-11-17",
       "nyheter": [

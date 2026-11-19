@@ -631,6 +631,22 @@ Statusen gäller sjukfallet på vårdenheten. Bara rehabkoordinatorn sätter den
 
 Pröva i demon: logga in som Sara Lindqvist och öppna [samma ställe i demon](https://vardkallan.404haven.se/#/sjukskrivningar).
 
+### Övning 20
+
+Du ordinerar ett läkemedel och systemet säger att periodens vara i utbytesgruppen är billigare. Vad behöver du göra?
+
+Rätt svar: Ingenting. Apoteket byter till periodens vara om du inte motsätter dig utbyte. Priset är ett stöd, och du väljer det som är medicinskt rätt.
+
+Systemet visar priset diskret där du beslutar och föreslår bara likvärdiga alternativ. Det gör inget flöde längre, och priserna i demon är påhittade.
+
+### Övning 21
+
+Kostnadsrutan säger att kostnaden hittills är högre än ersättningen för ett jämförbart vårdtillfälle. Vad betyder det?
+
+Rätt svar: Att vårdtillfället hittills har kostat mer enligt prislistan än vad ett vårdtillfälle i samma DRG-grupp ersätts med. Det är information, inget beslut.
+
+Systemet räknar kostnaden ur det som har hänt och jämför med DRG-gruppen. I demon är grupperingen en egen demogruppering, inte NordDRG.
+
 ## Praktiska prov
 
 Ett praktiskt prov görs på riktigt i en övningsjournal, som är en av demons påhittade patienter. Systemet kontrollerar själv att det blev rätt och säger på vanlig svenska vad som saknas. Utbildaren eller verksamhetschefen startar proven för vårdenheten. Ett godkänt prov gäller i ett år.
@@ -757,4 +773,4 @@ Du arbetar som Per Holm, distriktsläkare på Vårdcentralen Tybble, som motsvar
 - Skicka en remiss och kvittera ett remissvar.
 - Veta när nödåtkomst får användas och vad som loggas.
 - Göra de vanliga arbetsflödena ovan inom klickbudgeten.
-- Svara rätt på alla 19 övningar och få intyget.
+- Svara rätt på alla 21 övningar och få intyget.

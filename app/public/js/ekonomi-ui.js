@@ -35,14 +35,20 @@ export function sektionHtml(k) {
     innehall = `<p><strong>${esc(vad)}: ${esc(kr(a.totalt))}</strong> ${a.pagar ? 'hittills' : ''}</p>
       <div class="tabellrulle"><table class="tabell siffertabell ek-kostnad"><thead><tr><th scope="col">Kostnad</th><th scope="col" class="tal">Antal</th><th scope="col" class="tal">Belopp</th></tr></thead>
         <tbody>${a.kategorier.map(x => `<tr><td>${esc(x.text)}</td><td class="tal">${x.antal}</td><td class="tal">${esc(kr(x.belopp))}</td></tr>`).join('')}</tbody></table></div>
-      ${lista('Läkemedel', a.lakemedel)}${lista('Material', a.material)}${lista('Åtgärder', a.atgarder)}${lista('Hjälpmedel', a.hjalpmedel)}
+      ${lista('Läkemedel', a.lakemedel)}${lista('Material', a.material)}${lista('Åtgärder', a.atgarder)}${lista('Hjälpmedel', a.hjalpmedel)}${lista('Prover och undersökningar', a.undersokningar)}
       ${a.drg ? `<p class="ek-drg">Enligt DRG, demogrupp ${esc(a.drg.text.replace(' (demogrupp)', '').toLowerCase())}: <strong>${esc(kr(a.drg.belopp))}</strong>${a.drg.preliminar ? ', preliminärt tills patienten är utskriven' : ''}.<span class="under-text">${esc(a.drg.forklaring)}</span></p>` : ''}
+      ${a.jamforelse ? `<p class="ek-jamforelse" data-jamforelse>${esc(a.jamforelse.text)}</p>` : ''}
+      ${a.kallor?.length ? `<details class="ek-kallor"><summary>Var beloppen kommer ifrån</summary><ul class="enkel-lista">${a.kallor.map(x => `<li>${esc(x.text)}</li>`).join('')}</ul></details>` : ''}
       ${fardigHtml(a.fardigbehandlad)}`;
   } else innehall = `<p>${a.typ === 'vardtillfalle' ? 'Vårdtillfället' : 'Vårdkontakten'} ${esc(datum(a.sedan))}.</p>`;
   // Läkare och sjuksköterskor lämnar ut hjälpmedel härifrån. Posten och en eventuell hjälpmedelsavgift skapar systemet.
   const hjalpmedel = far('hjalpmedel') ? '<div class="knapprad tat" data-skriv><button type="button" class="knapp liten sekundar" data-ek="hjalpmedel">Lämna ut hjälpmedel</button></div>' : '';
+  // Runda 18, r3 (Sussa B1): hjälpmedel som väntar på uthämtning eller betalning på vårdenheten.
+  const attHamta = k.hjalpmedelAttHamta?.length ? `<div class="ek-att-hamta" data-att-hamta><h3>Hjälpmedel att hämta ut eller betala</h3><ul class="enkel-lista">${k.hjalpmedelAttHamta.map(h => `<li data-hm="${h.id}"><span><strong>${esc(h.text)}</strong>${h.avgift ? `, avgift ${esc(kr(h.avgift))}` : ''}<span class="under-text">${esc(h.statusText)}</span></span>
+      <span class="knapprad tat" data-skriv>${h.kanBetala ? `<button type="button" class="knapp liten" data-uthamta="${h.id}" data-satt="kort">${h.status === 'forskriven' ? 'Hämtas ut, betalt med kort' : 'Betalt med kort'}</button><button type="button" class="knapp liten sekundar" data-uthamta="${h.id}" data-satt="faktura">Faktura</button>`
+        : `<button type="button" class="knapp liten" data-uthamta="${h.id}">Hämtat ut</button>`}</span></li>`).join('')}</ul></div>` : '';
   return `<section class="ov-sektion ov-kostnader" aria-labelledby="ov-kostnader"><div class="sektion-huvud"><h2 id="ov-kostnader">${a?.kategorier ? 'Kostnader i vårdprocessen' : 'Avgifter och högkostnadsskydd'}</h2><span class="tagg tagg-demo">Demopriser</span></div>
-    ${innehall}${avgifter}${hog}${hjalpmedel}<p class="demoregel">${esc(k.demo)}</p></section>`;
+    ${innehall}${avgifter}${hog}${attHamta}${hjalpmedel}<p class="demoregel">${esc(k.demo)}</p></section>`;
 }
 
 // Utlämnat hjälpmedel: ett klick på hjälpmedlet ur vårdenhetens prislista. Vårdkontakten väljer systemet.
@@ -50,17 +56,45 @@ async function lamnaUt(ctx, ladda) {
   const { hjalpmedel } = await api('/api/hjalpmedel');
   const svar = await dialog(`<h2 id="dlg-rubrik">Lämna ut hjälpmedel</h2><div class="dialog-text">
       <p>Välj hjälpmedlet som ${esc(ctx.patient?.namn ?? 'patienten')} får. Systemet registrerar det på den pågående vårdkontakten, och en hjälpmedelsavgift kommer med i faktureringsunderlaget.</p>
-      <div class="knappval-lista ek-hjalpmedel">${hjalpmedel.map(h => `<button type="button" class="knapp sekundar" data-varde="${esc(h.kod)}">${esc(h.text)}${h.avgift ? ` (avgift ${esc(kr(h.avgift))})` : ''}</button>`).join('')}</div></div>
+      <div class="knappval-lista ek-hjalpmedel">${hjalpmedel.map(h => `<button type="button" class="knapp sekundar" data-varde="${esc(h.kod)}">${esc(h.text)}${h.avgift ? ` (avgift ${esc(kr(h.avgift))})` : ''}${prisText(h)}</button>`).join('')}</div>
+      ${hjalpmedel.some(h => h.pris != null) ? '<p class="dampad liten">Priserna är påhittade demopriser ur vårdenhetens prislista. Systemet föreslår basmodellen när den är likvärdig, och du väljer det som är rätt för patienten.</p>' : ''}</div>
     <div class="knapprad"><button type="button" class="knapp text" data-varde="avbryt">Avbryt</button></div>`);
   if (!svar) return;
   const r = await api(`/api/patient/${encodeURIComponent(ctx.id)}/hjalpmedel`, { metod: 'POST', data: { artikel: svar.val } });
-  notis(`${r.text} är registrerat som utlämnat.`);
+  // Runda 18, r3 (Sussa B1): ett hjälpmedel som hämtas ut i receptionen är förskrivet.
+  notis(r.uthamtning ? r.besked : `${r.text} är registrerat som utlämnat.`);
   await ladda();
+}
+
+// Runda 18, r3 (Sussa B4): priset diskret i knappen, och basmodellen när den är ett likvärdigt billigare alternativ.
+function prisText(h) {
+  if (h.pris == null) return '';
+  return `<span class="under-text">${esc(kr(h.pris))}${h.uthamtning ? '. Hämtas ut i receptionen' : ''}${h.alternativ ? `. Likvärdigt billigare: ${esc(h.alternativ.text.toLowerCase())}, ${esc(kr(h.alternativ.pris))}` : ''}</span>`;
+}
+
+// Runda 18, r3 (Sussa B1): kvittot efter betalningen, som kan skrivas ut.
+async function visaKvitto(q) {
+  await dialog(`<h2 id="dlg-rubrik">Kvitto ${esc(q.kvitto)}</h2><div class="dialog-text ek-kvitto">
+      <dl><dt>Vårdenhet</dt><dd>${esc(q.vardenhet ?? '')}</dd><dt>Tid</dt><dd>${esc(datum(q.tid))}</dd>${q.rader.map(r => `<dt>${esc(r.text)}</dt><dd>${esc(kr(r.belopp))}</dd>`).join('')}
+        <dt>Betalsätt</dt><dd>${esc(q.sattText)}</dd><dt>Kassör</dt><dd>${esc(q.kassor ?? '')}</dd></dl>
+      <p class="liten">${esc(q.text)}</p><p class="demoregel">${esc(q.demo)}</p></div>
+    <div class="knapprad"><button type="button" class="knapp sekundar" data-skriv-ut>Skriv ut</button><button type="button" class="knapp" data-varde="ok">Stäng</button></div>`,
+  { onOpen: (d) => d.querySelector('[data-skriv-ut]')?.addEventListener('click', () => window.print()) });
 }
 
 export function koppla(el, k, ctx, ladda) {
   if (!k) return;
   el.addEventListener('click', async (e) => {
+    const ut = e.target.closest('[data-uthamta]');
+    if (ut) {
+      try {
+        const r = await api(`/api/patient/${encodeURIComponent(ctx.id)}/hjalpmedel/${encodeURIComponent(ut.dataset.uthamta)}/uthamta`, { metod: 'POST', data: ut.dataset.satt ? { satt: ut.dataset.satt } : {} });
+        notis(r.text);
+        await ladda();
+        if (r.kvitto) await visaKvitto(r.kvitto);
+      } catch (err) { felNotis(err); }
+      return;
+    }
     const hm = e.target.closest('[data-ek="hjalpmedel"]');
     if (hm) { try { await lamnaUt(ctx, ladda); } catch (err) { felNotis(err); } return; }
     const b = e.target.closest('[data-ek="fardigbehandlad"]');

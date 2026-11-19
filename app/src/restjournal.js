@@ -255,7 +255,8 @@ export function fil(atk, r) {
   if (r.status !== 'journal') throw new Fel(404, 'Restjournalen finns inte.', 'saknas');
   atk.krav(LAS, { resurs: { enhet_id: r.enhet_id }, beskrivning: `restjournal:${r.id}` });
   atk.logga(LAS, atk.grund(), `restjournal:${r.id}`);
-  return new Response(r.data, { headers: huvuden(r.typ, r.namn) });
+  // Runda 18, r3 (Sussa KD1.1.3.5): innehållet kan ligga i lagringen för äldre uppgifter (lagring-aldre.js).
+  return new Response(require('./lagring-aldre.js').lasData(atk.db, 'restjournaler', r), { headers: huvuden(r.typ, r.namn) });
 }
 
 // POST /api/restjournal/:id/makulera { orsak }: på den vårdenhet där den skannades, av den som får skanna och läsa.

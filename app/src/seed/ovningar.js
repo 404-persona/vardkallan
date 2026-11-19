@@ -298,3 +298,27 @@ OVNINGAR_V1.push(
     ['c', 'Bara rehabkoordinatorn.'],
   ], 'a', 'Statusen gäller sjukfallet på vårdenheten. Bara rehabkoordinatorn sätter den, och varje ändring finns kvar i historiken med vem och när.', '#/sjukskrivningar'),
 );
+// Runda 18, r3 (Sussa B1 till B5): priserna där beslutet fattas och kostnaden i vårdprocessen för läkaren, kostnaderna
+// per vårdenhet för verksamhetschefen och ekonomen, och uthämtningen av hjälpmedel för vårdadministratören.
+OVNINGAR_V1.push(
+  o('pris-periodens-vara', ['lakare'], 'Du ordinerar ett läkemedel och systemet säger att periodens vara i utbytesgruppen är billigare. Vad behöver du göra?', [
+    ['a', 'Byta till periodens vara själv, annars blir ordinationen fel.'],
+    ['b', 'Ingenting. Apoteket byter till periodens vara om du inte motsätter dig utbyte. Priset är ett stöd, och du väljer det som är medicinskt rätt.'],
+    ['c', 'Fråga patienten vilket läkemedel som är billigast.'],
+  ], 'b', 'Systemet visar priset diskret där du beslutar och föreslår bara likvärdiga alternativ. Det gör inget flöde längre, och priserna i demon är påhittade.'),
+  o('kostnad-jamforelse', ['lakare'], 'Kostnadsrutan säger att kostnaden hittills är högre än ersättningen för ett jämförbart vårdtillfälle. Vad betyder det?', [
+    ['a', 'Att patienten måste skrivas ut.'],
+    ['b', 'Att vårdtillfället hittills har kostat mer enligt prislistan än vad ett vårdtillfälle i samma DRG-grupp ersätts med. Det är information, inget beslut.'],
+    ['c', 'Att något i journalen är fel.'],
+  ], 'b', 'Systemet räknar kostnaden ur det som har hänt och jämför med DRG-gruppen. I demon är grupperingen en egen demogruppering, inte NordDRG.'),
+  o('kostnader-vardenhet', ['verksamhetschef', 'ekonom'], 'Hur ser du vad vården på din vårdenhet har kostat de senaste månaderna?', [
+    ['a', 'Du ber ekonomen ta fram en sammanställning.'],
+    ['b', 'Under Kostnader per vårdenhet. Systemet räknar kostnaden per månad ur det som har hänt, som diagram och tabell, utan patientuppgifter.'],
+    ['c', 'Du räknar själv ur journalerna.'],
+  ], 'b', 'Systemet räknar kostnaderna enligt prislistan. Ersättningen enligt DRG och patientavgifterna står för sig, och den pågående månaden är preliminär.', '#/kostnader'),
+  o('hjalpmedel-uthamtning', ['vardadministrator'], 'En patient kommer till receptionen för att hämta ut en knäortos som läkaren har förskrivit. Hur registrerar du det?', [
+    ['a', 'Du skriver in hjälpmedlet och avgiften i kassan för hand.'],
+    ['b', 'Du öppnar patientens översikt, där hjälpmedlet står med avgiften, och klickar på hur patienten betalar. Systemet registrerar uthämtningen och betalningen och visar kvittot.'],
+    ['c', 'Läkaren registrerar uthämtningen.'],
+  ], 'b', 'Systemet vet vad som ska hämtas ut och vad det kostar. Betalningen kommer med i kassan, dagsavslutet och faktureringsunderlaget. Terminalen är simulerad.'),
+);

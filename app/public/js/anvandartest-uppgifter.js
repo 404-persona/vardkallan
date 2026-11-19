@@ -822,6 +822,15 @@ UPPGIFTER.push(
     text: 'Du är barnmorska på barnmorskemottagningen. Anna vill börja med p-piller med bara gestagen. Förskriv dem.', kontroll: { notis: 'är förskrivet' } },
 );
 
+// Runda 18, r3 (Sussa bör-krav B1 och B2): uthämtning och betalning av ett hjälpmedel i receptionen, och kostnaderna per
+// vårdenhet för verksamhetschefen.
+UPPGIFTER.push(
+  { id: 'hamta-ut-hjalpmedel', namn: 'Lämna ut ett förskrivet hjälpmedel och ta betalt i kassan', roll: 'adm-kard', start: 'Patientens översikt',
+    text: 'Gunnar Åkesson står i receptionen för att hämta blodtrycksmätaren som läkaren har förskrivit, och han betalar med kort. Registrera det och ge honom kvittot.', kontroll: { notis: 'är uthämtat' } },
+  { id: 'kostnader-vardenhet', namn: 'Se vårdenhetens kostnader per månad', roll: 'vch-kard', start: 'Verksamhetschefens startsida',
+    text: 'Du är verksamhetschef på kardiologen och vill se vad vården på kliniken har kostat de senaste månaderna. Ta fram det.', kontroll: { sel: '.kv-enhet', text: 'Kardiologiska kliniken' } },
+);
+
 // Deltagarens bakgrund. Bara val, inga fritextfält, så att inga identifierande uppgifter samlas in.
 export const YRKESROLLER = [
   ['lakare', 'Läkare'], ['sjukskoterska', 'Sjuksköterska'], ['underskoterska', 'Undersköterska'],

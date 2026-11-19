@@ -56,6 +56,9 @@ export const TACKNING = {
   'dos-efterhand': nej('Som att ge en dos.'),
   // Runda 7, r3: underlaget är personalens API, inte det öppna FHIR-API:t.
   'exportera-underlag': nej('Faktureringsunderlaget hämtas med personalens API som CSV eller JSON. Det finns ingen FHIR-resurs för det i Vårdkällan.', [a('GET', '/api/ekonomi/underlag?vardenhet={id}&period={månad}&format=csv')]),
+  // Runda 18, r3: uthämtningen och kostnaderna per vårdenhet görs med personalens API.
+  'hamta-ut-hjalpmedel': nej('Uthämtningen och betalningen registreras med personalens API, och posten läses som ChargeItem i FHIR.', [a('POST', '/api/patient/{id}/hjalpmedel/{hid}/uthamta'), a('GET', '/fhir/ChargeItem?patient={id}')]),
+  'kostnader-vardenhet': nej('Kostnaderna per vårdenhet är summor i personalens API. Det finns ingen FHIR-resurs för dem i Vårdkällan.', [a('GET', '/api/ekonomi/kostnader')]),
   'lamna-ut-hjalpmedel': nej('Utlämnade hjälpmedel registreras med personalens API och läses som ChargeItem i FHIR, men registreras inte via FHIR.', [a('POST', '/api/patient/{id}/hjalpmedel'), a('GET', '/fhir/ChargeItem?patient={id}')]),
   'extern-tillampning': ja([a('GET', '/fhir/.well-known/smart-configuration'), a('GET', '/oauth/authorize'), a('POST', '/oauth/token'), a('GET', '/fhir/Observation?patient={id}')], 'Det här flödet är API:t: tillämpningen startas med SMART on FHIR och läser med sin åtkomstbiljett.'),
   // Runda 7, r2: nyhetsrutan hör till gränssnittet.

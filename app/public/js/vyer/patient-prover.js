@@ -85,7 +85,7 @@ async function bestallForm(plats, ctx) {
   const lakareVal = f.paUppdrag ? `<div class="falt"><label for="pr-lakare">På uppdrag av</label><select id="pr-lakare" name="lakareId">${f.lakare.map(l => `<option value="${esc(l.id)}"${l.forvald ? ' selected' : ''}>${esc(l.namn)}</option>`).join('')}</select>
     <p class="hjalp">Läkaren blir ansvarig för beställningen, får svaren och signerar beställningen i inkorgen.</p></div>` : '';
   const paketKort = (p) => `<li class="pr-paket"><div class="pr-paket-text"><strong>${esc(p.namn)}</strong>
-      <span class="under-text">${p.analyser.length ? esc(p.analyser.map(a => a.namn).join(', ')) : 'Allt i paketet är redan taget eller beställt'}${p.analyser.length ? `, till ${esc([...new Set(p.analyser.map(a => a.lab.kort))].join(' och '))}` : ''}.</span>
+      <span class="under-text">${p.analyser.length ? esc(p.analyser.map(a => a.namn).join(', ')) : 'Allt i paketet är redan taget eller beställt'}${p.analyser.length ? `, till ${esc([...new Set(p.analyser.map(a => a.lab.kort))].join(' och '))}` : ''}.${p.pris?.belopp ? /* Runda 18, r3 (B4) */ ` <span class="pr-pris">Paketet kostar ${esc(`${p.pris.belopp.toLocaleString('sv-SE')} kr`)} (demopris).</span>` : ''}</span>
       ${p.skal.length ? `<span class="under-text">${esc(p.skal.join(' '))}</span>` : ''}
       ${p.utelamnade.map(u => `<span class="under-text pr-utelamnad">${ikon.info}<span>Tas inte med: ${esc(u.skal)}</span></span>`).join('')}</div>
     <div class="knapprad tat">${p.analyser.length ? `<button type="button" class="knapp liten" data-bestall-paket="${esc(p.id)}">Beställ</button>` : ''}<button type="button" class="knapp liten sekundar" data-valj-paket="${esc(p.id)}">Välj och ändra</button></div></li>`;
@@ -97,7 +97,7 @@ async function bestallForm(plats, ctx) {
     <details class="pr-valj" id="pr-valj"><summary>Välj analyser eller ett annat paket</summary>
       <div class="falt"><label for="pr-sok">Sök analys</label><input id="pr-sok" type="search" autocomplete="off" placeholder="Till exempel crp, blodstatus eller odling"></div>
       <ul class="pr-analyser" id="pr-analyser">${f.analyser.map(a => `<li class="kryssfalt" data-ord="${esc([a.namn, ...a.ord].join(' ').toLocaleLowerCase('sv'))}"><input type="checkbox" id="pr-a-${esc(a.id)}" value="${esc(a.id)}" data-analys>
-        <label for="pr-a-${esc(a.id)}">${esc(a.namn)} <span class="under-text">${esc(a.ror)}, ${esc(a.lab.kort)}${f.dubbletter[a.id] ? `. ${esc(f.dubbletter[a.id])}` : ''}</span></label></li>`).join('')}</ul>
+        <label for="pr-a-${esc(a.id)}">${esc(a.namn)} <span class="under-text">${esc(a.ror)}, ${esc(a.lab.kort)}${a.pris ? /* Runda 18, r3 (B4) */ `, <span class="pr-pris">${esc(a.pris.text)}</span>` : ''}${f.dubbletter[a.id] ? `. ${esc(f.dubbletter[a.id])}` : ''}</span></label></li>`).join('')}</ul>
       <p class="liten">Paket: ${f.allaPaket.map(p => `<button type="button" class="knapp liten text" data-valj-paket="${esc(p.id)}">${esc(p.namn)}</button>`).join(' ')}</p>
       <fieldset class="kryssgrupp"><legend>Provtagning</legend>${f.tider.map((t, i) => `<div class="kryssfalt"><input type="radio" id="pr-tid-${t.id}" name="tid" value="${esc(t.tid)}"${i ? '' : ' checked'}><label for="pr-tid-${t.id}">${esc(t.text)}</label></div>`).join('')}</fieldset>
       <div class="falt" id="pr-anamnes-falt" hidden><label for="pr-anamnes" id="pr-anamnes-etikett">Anamnes till laboratoriet</label><textarea id="pr-anamnes" name="anamnes" rows="2" maxlength="500">${esc(f.anamnes ?? '')}</textarea>
