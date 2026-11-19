@@ -132,10 +132,11 @@ function rita({ oppna = false } = {}) {
     ${iPass ? passHtml(T.pass, fraga) : fraga ? jamforelseHtml(fraga) : aktuell ? aktuelltHtml(aktuell) : `<div class="tp-klart"><p><strong>Alla uppdrag är gjorda.</strong> Tack! Du kan fortsätta pröva systemet fritt och lämna synpunkter från varje sida.</p><p><a href="#/testa">Välj en annan yrkesroll</a></p></div>`}
     ${iPass ? '' : `<details class="tp-alla"><summary>Alla uppdrag</summary><ol class="tp-lista">${T.uppdrag.map(u => `<li class="${u.id === T.aktuellt ? 'tp-ar-aktuell' : ''}">${ikonFor(u, u.id === T.aktuellt)}<span>${u.sussa ? `<span class="tp-sussa">Sussa ${esc(u.sussa)}</span> ` : ''}${esc(u.titel)}<span class="sr">, ${statusText(u)}</span></span></li>`).join('')}</ol></details>`}`;
   // Runda 18, r1: vägledningen följer passet. Steget skrivs i panelen när det byts.
-  document.body.classList.toggle('i-forsta-pass', T.pass?.fas === 'pagar' && !panel.hidden);
+  // Runda 19, r1: vägledningen följer också uppdragen, och i passet börjar den direkt.
+  document.body.classList.toggle('i-forsta-pass', fp.harVagledning(T) && !panel.hidden);
   fp.aktivera(T, { onSteg: visaSteg });
-  if (T.pass?.fas === 'pagar') visaSteg(fp.stegInfo());
-  else if (T.pass?.fas === 'aterkoppling' && T.pass.matning === 'ja' && !T.pass.resultat) skickaMatning();
+  if (rot.querySelector('#tp-steg')) visaSteg(fp.stegInfo());
+  if (T.pass?.fas === 'aterkoppling' && T.pass.matning === 'ja' && !T.pass.resultat) skickaMatning();
 }
 
 function aktuelltHtml(u) {
@@ -144,10 +145,16 @@ function aktuelltHtml(u) {
     <h3 id="tp-aktuellt">${esc(u.titel)}</h3>
     <ul>${u.text.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     ${u.slut ? `<p class="dampad liten">Klart när: ${esc(u.slut)}</p>` : ''}
+    ${vagledningHtml(`<button type="button" class="knapp text liten" data-tp="hoppa" data-id="${esc(u.id)}">Hoppa över uppdraget</button>`)}
     ${u.fraga ? `<form class="tp-fraga" data-tp-form="svar" data-id="${esc(u.id)}" novalidate><div class="falt"><label for="tp-svar">${esc(u.fraga)}</label><input id="tp-svar" name="svar" maxlength="200" autocomplete="off"></div><p class="form-fel" role="alert" hidden></p><button type="submit" class="knapp liten">Svara</button></form>`
     : '<p class="dampad liten">Systemet bockar av uppdraget när det är gjort.</p>'}
-    <p class="knapprad"><button type="button" class="knapp text liten" data-tp="hoppa" data-id="${esc(u.id)}">Hoppa över uppdraget</button></p>
   </section>`;
+}
+// Runda 19, r1: steget och knapparna för vägledningen, samma i passet och i uppdragen. sist är knappen som avbryter.
+function vagledningHtml(sist) {
+  const pa = fp.vagledningPa();
+  return `<p class="tp-steg" id="tp-steg" tabindex="-1" aria-live="polite" data-steg=""${pa ? '' : ' hidden'}></p>
+      <p class="knapprad tp-pass-knappar">${pa ? '<button type="button" class="knapp liten" data-tp="visa-steg">Visa var</button>' : ''}<button type="button" class="knapp sekundar liten" data-tp="vagledning">${pa ? 'Stäng av vägledningen' : 'Slå på vägledningen'}</button>${sist}</p>`;
 }
 
 // ---- Runda 18, r1: första passet i panelen. ------------------------------------------------------------------------
@@ -155,26 +162,19 @@ const minSek = (s) => (s == null ? '' : s < 60 ? `${s} ${s === 1 ? 'sekund' : 's
 const antal = (n, en, flera) => `${n} ${n === 1 ? en : flera}`;
 const passEtikett = (p) => `Första passet${p.sussa ? `, Sussas testfall ${esc(p.sussa)}` : ''}`;
 function passHtml(p, fraga) {
-  if (p.fas === 'samtycke') {
-    return `<section class="tp-pass tp-samtycke" aria-labelledby="tp-pass-rubrik">
+  // Runda 19, r1: vägledningen visas direkt. Frågan om mätning står kvar i panelen tills testaren svarar, men den
+  // stoppar inte vägledningen.
+  if (p.fas === 'samtycke' || p.fas === 'pagar') {
+    return `<section class="tp-pass${p.fas === 'samtycke' ? ' tp-samtycke' : ''}" aria-labelledby="tp-pass-rubrik">
       <p class="tp-etikett">${passEtikett(p)}</p>
       <h3 id="tp-pass-rubrik">${esc(p.titel)}</h3>
       <p class="tp-pass-text">${esc(p.text)}</p>
-      <p>Du behöver inte kunna systemet. Vägledningen visar nästa steg, och du kan stänga av den.</p>
-      <h4 id="tp-matning-fraga">${esc(MATNING_FRAGA)}</h4>
-      <p class="liten">${esc(MATNING_TEXT)}</p>
-      <p class="knapprad"><button type="button" class="knapp liten" data-tp="matning" data-varde="ja">Ja, mät passet</button><button type="button" class="knapp sekundar liten" data-tp="matning" data-varde="nej">Nej, mät inte</button></p>
-    </section>`;
-  }
-  if (p.fas === 'pagar') {
-    const pa = fp.vagledningPa();
-    return `<section class="tp-pass" aria-labelledby="tp-pass-rubrik">
-      <p class="tp-etikett">${passEtikett(p)}</p>
-      <h3 id="tp-pass-rubrik">${esc(p.titel)}</h3>
-      <p class="tp-pass-text">${esc(p.text)}</p>
-      <p class="tp-steg" id="tp-steg" tabindex="-1" aria-live="polite" data-steg=""${pa ? '' : ' hidden'}></p>
-      <p class="knapprad tp-pass-knappar">${pa ? '<button type="button" class="knapp liten" data-tp="visa-steg">Visa var</button>' : ''}<button type="button" class="knapp sekundar liten" data-tp="vagledning">${pa ? 'Stäng av vägledningen' : 'Slå på vägledningen'}</button><button type="button" class="knapp text liten" data-tp="avbryt-pass">Avbryt passet</button></p>
-      <p class="dampad liten">${p.matning === 'ja' ? 'Passet mäts, som du svarade ja till.' : 'Passet mäts inte.'} Systemet ser själv när uppgiften är gjord.</p>
+      ${vagledningHtml('<button type="button" class="knapp text liten" data-tp="avbryt-pass">Avbryt passet</button>')}
+      ${p.fas === 'samtycke' ? `<div class="tp-matning" role="group" aria-labelledby="tp-matning-fraga">
+        <h4 id="tp-matning-fraga">${esc(MATNING_FRAGA)}</h4>
+        <p class="liten">${esc(MATNING_TEXT)}</p>
+        <p class="knapprad"><button type="button" class="knapp liten" data-tp="matning" data-varde="ja">Ja, mät passet</button><button type="button" class="knapp sekundar liten" data-tp="matning" data-varde="nej">Nej, mät inte</button></p>
+      </div>` : `<p class="dampad liten">${p.matning === 'ja' ? 'Passet mäts, som du svarade ja till.' : 'Passet mäts inte.'} Systemet ser själv när uppgiften är gjord.</p>`}
     </section>`;
   }
   // Återkopplingen, sedan jämförelsen, SUS och valet av vad som händer sedan.
@@ -183,7 +183,7 @@ function passHtml(p, fraga) {
         <p>Vill du svara på tio korta påståenden om systemet? Det tar ungefär en minut och är frivilligt.</p>
         <p class="knapprad"><button type="button" class="knapp liten" data-tp="sus">Svara på påståendena</button><button type="button" class="knapp text liten" data-tp="sus-hoppa">Nej tack</button></p></section>`
     : `<section class="tp-vidare" aria-labelledby="tp-vidare-rubrik"><h3 id="tp-vidare-rubrik">Vad vill du göra nu?</h3>
-        <p>Det finns fler uppdrag för yrket. De görs utan vägledning, och efter varje uppdrag får du en kort fråga.</p>
+        <p>Det finns fler uppdrag för yrket. Vägledningen visar vägen i varje uppdrag, och efter varje uppdrag får du en kort fråga.</p>
         <p class="knapprad"><button type="button" class="knapp liten" data-tp="vidare">Fortsätt med nästa uppdrag</button><button type="button" class="knapp sekundar liten" data-tp="avsluta-test">Avsluta testet</button></p>
         <p class="liten"><a href="#/testa">Välj en annan yrkesroll</a></p></section>`;
   return `${aterkopplingHtml(p)}${nasta}`;
@@ -201,6 +201,8 @@ function aterkopplingHtml(p) {
     rader.push(r.steg <= r.budget ? 'Du klarade den inom budgeten.' : 'Det är vanligt att det tar fler steg första gången.');
   } else if (klar) rader.push(`Klickbudgeten, som Vårdkällan ska klara uppgiften inom, är ${r.budget} steg.`);
   if (p.matning === 'nej') rader.push('Du valde att passet inte mäts, så det här är bara vad uppgiften brukar kräva.');
+  // Runda 19, r1: uppgiften blev gjord, eller passet avbröts, innan testaren svarade på frågan om mätning.
+  if (!p.matning) rader.push('Passet mättes inte, eftersom du inte hade svarat på frågan om mätning. Det här är vad uppgiften brukar kräva.');
   if (!klar) rader.push(p.matning === 'ja' ? 'Det som hann mätas är sparat och visar var det blev svårt. Det hjälper oss att göra systemet enklare.' : 'Det är bra att veta var det blev svårt. Skriv gärna det i frågan nedan.');
   return `<section class="tp-aterkoppling" aria-labelledby="tp-ak-rubrik">
     <p class="tp-etikett">${passEtikett(p)}</p>
@@ -361,7 +363,7 @@ async function klick(e) {
       satt(MATNING, b.dataset.varde, localStorage);
       T = await api('/api/testare/pass/samtycke', { metod: 'POST', data: { matning: b.dataset.varde }, direkt: true });
       rita({ oppna: true });
-      rot.querySelector('#tp-steg')?.focus();
+      rot.querySelector('#tp-steg:not([hidden]), [data-tp="vagledning"]')?.focus();
       return;
     }
     if (a === 'visa-steg') { if (!fp.visaMal()) rot.querySelector('#tp-steg')?.focus(); return; }
@@ -408,7 +410,8 @@ async function skicka(e) {
     const jf = form.querySelector('[name="jamforelse"]:checked')?.value;
     if (!jf) { const f = form.querySelector('.form-fel'); f.textContent = 'Välj om det var lättare, ungefär lika eller svårare, eller att det inte går att jämföra.'; f.hidden = false; form.querySelector('[name="jamforelse"]').focus(); return; }
     const r = await api(`/api/testare/uppdrag/${id}/jamforelse`, { metod: 'POST', direkt: true,
-      data: { jamforelse: jf, text: form.querySelector('[name="text"]').value, mittSystem: form.querySelector('[name="mittSystem"]').value, bredd: window.innerWidth, ...profilUr(form) } });
+      // Runda 19, r1: om vägledningen var på, så att testledaren kan skilja svaren åt.
+      data: { jamforelse: jf, text: form.querySelector('[name="text"]').value, mittSystem: form.querySelector('[name="mittSystem"]').value, bredd: window.innerWidth, vagledning: fp.vagledningPa(), ...profilUr(form) } });
     T = r.tillstand;
     notis(`Tack! Svaret är sparat med nummer ${r.nummer}.`);
     rita({ oppna: true });
