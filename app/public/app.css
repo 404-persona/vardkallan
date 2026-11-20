@@ -1289,6 +1289,10 @@ mark { background: var(--obs-bg); color: inherit; outline: 1px solid var(--obs-k
 .tv-punkt.tv-fodsel { fill: var(--obs-bg); stroke: var(--obs); }
 .tv-handelse { stroke: var(--obs); stroke-width: 1; stroke-dasharray: 2 3; }
 .tv-handelse-nr { fill: var(--obs); font-size: 10px; font-weight: 700; font-family: var(--sans); }
+/* Fenton 2025: bilden från fentongrowth.ca och källan vid prematurkurvan. */
+.tv-fenton-bild { margin: .75rem 0; }
+.tv-fenton-bild img { display: block; max-width: 100%; height: auto; border: 1px solid var(--linje); background: #fff; }
+.tv-fenton .tv-kalla strong { font-weight: 700; }
 .tv-tecken { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0; margin: 4px 0 10px; font-size: var(--f-s); color: var(--blak-2); }
 .tv-tecken li { display: flex; align-items: center; gap: 6px; }
 .tv-tecken svg { width: 20px; height: 14px; }
