@@ -53,6 +53,18 @@ docker run --rm --memory=2g -v "$PWD:/w" -w /w/app oven/bun:1.3.14-alpine bun te
 
 Den lokala tjänsteplattformen (`app/src/rivta/plattform.js`) gör det som tjänsteplattformens virtualiseringstjänst gör med ett anrop (anropsbehörighet, vägval, felkoderna VP004 och VP007 och huvudet med den ursprungliga konsumenten), men den är inte Ineras tjänsteplattform. Ineras VP och TAK (github.com/skltp, LGPL-3.0) kördes inte: den nuvarande VP bygger på Camel och Spring Boot och beror på skltp:s egna bibliotek (till exempel takcache och hsa-cache) som inte finns på Maven Central och måste byggas från källkod ett i taget, och TAK behöver en egen databas och tjänst. VP och TAK behöver då köras samtidigt i var sin container. Att bygga dem och köra dem samtidigt ryms inte inom det minne som testdatorn har för hjälptjänster, högst 1 GB per container och en container åt gången. Testerna går därför mot den lokala plattformen och mockar som följer profilen.
 
+## Vem som står för den skarpa testningen
+
+Vårdkällan tecknar inga avtal och har inga kostnader. Ineras Öppen testmiljö går bara att beställa för en organisation med organisationsnummer, efter ett kundavtal med Inera och mot en avgift (svar från Inera 2026-11-17, ärende CS0384328 och CS0383610). Det går inte ihop med att Vårdkällan är fri att använda och inte har någon organisation som avtalspart. Inera har ingen enklare version av testmiljön och inget annat testverktyg för den situationen.
+
+Ansvaret delas därför så här:
+
+- **Vårdkällan** bygger kontrakten mot de pinnade tjänstekontrakten och prövar dem med sin egen testsvit: valideringen mot schemana, samma svar som xmllint, anropen genom den lokala tjänsteplattformen och de simulerade producenterna och konsumenterna. Testsviten och resultaten är öppna och följer med varje version.
+- **Den region eller kommun som inför Vårdkällan** har redan ett eget kundavtal med Inera och tillgång till Ineras test- och införandemiljöer. Den står för den skarpa testningen där: anslutningen till tjänsteplattformen med eget SITHS-funktionscertifikat, anropsbehörigheterna i TAK, Ineras anslutningstest och testerna mot de riktiga nationella tjänsterna. Vårdkällans testsvit är underlaget, så att det som redan är prövat lokalt inte behöver göras om och det som återstår är det som bara går att pröva i Ineras miljöer.
+- **Fel som hittas i den skarpa testningen** rättas i Vårdkällan som i alla andra fel, med ett test i testsviten som visar felet, så att nästa organisation som inför Vårdkällan får rättelsen och testet.
+
+Ingenting i Vårdkällan förutsätter att Vårdkällan själv är ansluten till tjänsteplattformen. Det är alltid organisationen som inför systemet som ansluter det, under sitt eget avtal och sina egna certifikat.
+
 ## Schemana
 
 Schemana ligger under `app/rivta/<domän>/` med `KALLA.json` (källa, tagg, commit och sha256 per fil). Licensen och versionerna står i `docs/kodkontroll.md`. Hämta om eller kontrollera dem med:
