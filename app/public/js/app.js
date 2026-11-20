@@ -846,6 +846,14 @@ export async function aterstallDemo(knapp = null) {
 }
 
 document.addEventListener('click', async (e) => {
+  // Runda 19: Hoppa till innehållet flyttar fokus till #innehall utan att byta hash (som annars ritar om vyn och bryter tabbningen).
+  const hoppa = e.target.closest('a.hoppa');
+  if (hoppa) {
+    e.preventDefault();
+    const m = document.getElementById('innehall');
+    if (m) { m.focus(); m.scrollIntoView({ block: 'start' }); }
+    return;
+  }
   const b = e.target.closest('[data-a]');
   if (!b) return;
   const a = b.dataset.a;

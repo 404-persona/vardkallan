@@ -54,8 +54,8 @@ async function lasLaget(p) {
       ram: ram ? ram.left <= r.left + 1 && ram.top <= r.top + 1 && ram.right >= r.right - 1 && ram.bottom >= r.bottom - 1 : false,
       etikett: etikett && getComputedStyle(etikett).display !== 'none' ? etikett.textContent : null,
       tagg: n.el.tagName.toLowerCase(), typ: n.el.getAttribute('type') ?? '',
-      // Panelen, meningen eller något annat får inte skymma målet.
-      oskymt: (() => { const mitt = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 12)); return Boolean(mitt) && (n.el === mitt || n.el.contains(mitt) || [...(n.el.labels ?? [])].some(x => x === mitt || x.contains(mitt))); })(),
+      // Panelen, meningen eller något annat får inte skymma målet. För en radbruten länk används första radens ruta.
+      oskymt: (() => { const b = [...n.el.getClientRects()].find(x => x.width > 0 && x.height > 0) ?? r; const mitt = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(b.height / 2, 12)); return Boolean(mitt) && (n.el === mitt || n.el.contains(mitt) || [...(n.el.labels ?? [])].some(x => x === mitt || x.contains(mitt))); })(),
     };
   });
 }

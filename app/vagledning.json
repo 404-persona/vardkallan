@@ -1,10 +1,10 @@
 {
   "roller": {
     "lakare-sjukhus": {
-      "tid": "2026-11-19T20:53:11.024Z",
-      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
       "webblasare": "Chromium 147.0.7727.15",
-      "bas": "http://127.0.0.1:18291",
+      "bas": "http://127.0.0.1:18293",
       "tester": [
         {
           "namn": "Gränssnitt > Vägledning > lakare-sjukhus > passet: vägledningen syns direkt och leder fram",
@@ -57,10 +57,10 @@
       ]
     },
     "lakare-primarvard": {
-      "tid": "2026-11-19T20:53:11.024Z",
-      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
       "webblasare": "Chromium 147.0.7727.15",
-      "bas": "http://127.0.0.1:18291",
+      "bas": "http://127.0.0.1:18293",
       "tester": [
         {
           "namn": "Gränssnitt > Vägledning > lakare-primarvard > passet: vägledningen syns direkt och leder fram",
@@ -105,10 +105,10 @@
       ]
     },
     "omladdning": {
-      "tid": "2026-11-19T20:53:11.024Z",
-      "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
       "webblasare": "Chromium 147.0.7727.15",
-      "bas": "http://127.0.0.1:18291",
+      "bas": "http://127.0.0.1:18293",
       "tester": [
         {
           "namn": "Gränssnitt > Vägledning > Omladdning > en öppen flik laddar om till samma vy när en ny version finns",
@@ -116,6 +116,322 @@
         },
         {
           "namn": "Gränssnitt > Vägledning > Omladdning > med osparad text visas en rad i stället, och sidan laddas inte om",
+          "status": "grön"
+        }
+      ]
+    },
+    "sjukskoterska": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 7.1: Överblicka dagens arbete för din arbetsplats",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 6.1: Akut inskrivning av patient på vårdavdelning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > news2: Gör en NEWS2-kontroll",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 1.4: Administrera läkemedel",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 1.3: Ordinera läkemedel på uppdrag",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 3.2: Upprätta en labbeställning på uppdrag",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 3.3: Registrera provtagning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 4.1: Skapa anteckning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > 6.2: Överflyttning av patient mellan avdelningar med olika medicinsk specialitet",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > meddelande: Svara på ett meddelande från en patient",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > utskrivning: Skriv ut en patient",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > sjukskoterska > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "underskoterska": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > 7.2: Överblicka dagens händelser för en grupp patienter",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > vatskebalans: Registrera vätskebalansen",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > dos: Ge en dos med din delegering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > 3.2: Upprätta en labbeställning på uppdrag",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > 3.3: Registrera provtagning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > 3.4: Överblicka provsvar",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > underskoterska > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "barnmorska": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > partogram: Fyll i partogrammet",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > smartlindring: Registrera smärtlindring",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > fodelse: Registrera barnet",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > fodelseanmalan: Gör födelseanmälan",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > bb: Gör en kontroll på BB",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > barnmorska > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "vardadministrator": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.5: Ankomstregistrering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.7: Oplanerad ankomstregistrering",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.2: Boka ett teambesök",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.3: Boka ett gruppbesök",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.4: Omboka besök",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 5.8: Väntelista",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 2.2: Upprätta och skicka vårdbegäran på uppdrag",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 2.4: Ta emot vårdbegäran på uppdrag",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > 2.5: Registrera en extern vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > betala: Ta betalt",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > dagsavslut: Gör dagsavslut i kassan",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > vardadministrator > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "fysioterapeut": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > 7.1: Överblicka dagens arbete för din arbetsplats",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > 2.3: Ta emot vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > uppgift: Bocka av dagens träning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > 4.1: Skapa anteckning",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > matvarde: Registrera ett mätvärde",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > 2.1: Upprätta och skicka vårdbegäran",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > fysioterapeut > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "systemforvaltare": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > godkann: Godkänn en ändring",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > mall: Ändra en journalmall eller ett mätvärde",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > formular: Bygg ett formulär",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > kodverk: Lägg in en ny utgåva av ett kodverk",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > omorganisation: Förbered ett namnbyte",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > lagring: Kontrollera säkerhetskopian",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > systemforvaltare > alla uppdrag är gjorda och ramen är borta",
+          "status": "grön"
+        }
+      ]
+    },
+    "patient": {
+      "tid": "2026-11-20T16:04:57.793Z",
+      "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+      "webblasare": "Chromium 147.0.7727.15",
+      "bas": "http://127.0.0.1:18293",
+      "tester": [
+        {
+          "namn": "Gränssnitt > Vägledning > patient > passet: vägledningen syns direkt och leder fram",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > las: Läs din journal",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > logglista: Se vem som har läst din journal",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > meddelande: Skriv till vården",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > recept: Förnya ett recept",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > tid: Boka, boka om eller avboka en tid",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > begaran: Begär ett loggutdrag eller en spärr",
+          "status": "grön"
+        },
+        {
+          "namn": "Gränssnitt > Vägledning > patient > alla uppdrag är gjorda och ramen är borta",
           "status": "grön"
         }
       ]
@@ -241,8 +557,333 @@
       "namn": "Gränssnitt > Vägledning > Omladdning > med osparad text visas en rad i stället, och sidan laddas inte om",
       "status": "grön",
       "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 7.1: Överblicka dagens arbete för din arbetsplats",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 6.1: Akut inskrivning av patient på vårdavdelning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > news2: Gör en NEWS2-kontroll",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 1.4: Administrera läkemedel",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 1.3: Ordinera läkemedel på uppdrag",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 3.2: Upprätta en labbeställning på uppdrag",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 3.3: Registrera provtagning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 4.1: Skapa anteckning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > 6.2: Överflyttning av patient mellan avdelningar med olika medicinsk specialitet",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > meddelande: Svara på ett meddelande från en patient",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > utskrivning: Skriv ut en patient",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > sjukskoterska > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > 7.2: Överblicka dagens händelser för en grupp patienter",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > vatskebalans: Registrera vätskebalansen",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > dos: Ge en dos med din delegering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > 3.2: Upprätta en labbeställning på uppdrag",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > 3.3: Registrera provtagning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > 3.4: Överblicka provsvar",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > underskoterska > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > partogram: Fyll i partogrammet",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > smartlindring: Registrera smärtlindring",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > fodelse: Registrera barnet",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > fodelseanmalan: Gör födelseanmälan",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > bb: Gör en kontroll på BB",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > barnmorska > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.5: Ankomstregistrering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.7: Oplanerad ankomstregistrering",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.2: Boka ett teambesök",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.3: Boka ett gruppbesök",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.4: Omboka besök",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 5.8: Väntelista",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 2.2: Upprätta och skicka vårdbegäran på uppdrag",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 2.4: Ta emot vårdbegäran på uppdrag",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > 2.5: Registrera en extern vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > betala: Ta betalt",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > dagsavslut: Gör dagsavslut i kassan",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > vardadministrator > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > 7.1: Överblicka dagens arbete för din arbetsplats",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > 2.3: Ta emot vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > uppgift: Bocka av dagens träning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > 4.1: Skapa anteckning",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > matvarde: Registrera ett mätvärde",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > 2.1: Upprätta och skicka vårdbegäran",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > fysioterapeut > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > godkann: Godkänn en ändring",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > mall: Ändra en journalmall eller ett mätvärde",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > formular: Bygg ett formulär",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > kodverk: Lägg in en ny utgåva av ett kodverk",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > omorganisation: Förbered ett namnbyte",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > lagring: Kontrollera säkerhetskopian",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > systemforvaltare > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > passet: vägledningen syns direkt och leder fram",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > las: Läs din journal",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > logglista: Se vem som har läst din journal",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > meddelande: Skriv till vården",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > recept: Förnya ett recept",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > tid: Boka, boka om eller avboka en tid",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > begaran: Begär ett loggutdrag eller en spärr",
+      "status": "grön",
+      "aktuell": true
+    },
+    {
+      "namn": "Gränssnitt > Vägledning > patient > alla uppdrag är gjorda och ramen är borta",
+      "status": "grön",
+      "aktuell": true
     }
   ],
-  "gransnittHash": "63496b60a431422f6a93d23334993a73064caa9e1769f407d12b60b461474826",
-  "tid": "2026-11-19T20:53:11.024Z"
+  "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+  "tid": "2026-11-20T16:04:57.793Z"
 }

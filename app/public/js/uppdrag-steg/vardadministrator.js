@@ -42,7 +42,10 @@ export default {
     { id: 'meny', text: 'Välj Dagens arbete i menyn.', mal: idag },
     { id: 'grupp', hash: '#/idag', text: 'Välj Lägg till patient vid Hjärtrehabilitering i grupp.', mal: [{ sel: '#idag-grupper [data-atgard="r8_grupp"]' }] },
     { id: 'sok', text: 'Skriv Sven Markström och tryck Enter.', mal: [{ sel: 'dialog:modal #r8-sok' }], gor: { skriv: 'Sven Markström', tangent: 'Enter' } },
-    { id: 'patient', text: 'Välj Sven Markström. Lägg sedan till fler patienter på samma sätt.', mal: [{ sel: 'dialog:modal [data-r8-patient]', innehaller: 'Sven Markström' }] },
+    { id: 'patient', text: 'Välj Sven Markström.', mal: [{ sel: 'dialog:modal [data-r8-patient]', innehaller: 'Sven Markström' }] },
+    { id: 'klar', text: 'Välj Klar när du har lagt till patienterna.', nar: { sel: 'dialog:modal .r8-besked', innehaller: 'har fått en plats' }, mal: [{ sel: 'dialog:modal [data-varde="ok"]' }] },
+    { id: 'kalla', hash: '#/idag', text: 'Välj Skicka kallelser vid Hjärtrehabilitering i grupp.', mal: [{ sel: '#idag-kallelser [data-atgard="kalla_grupp"]', rad: 'li', innehaller: 'Hjärtrehabilitering i grupp' }] },
+    { id: 'skicka', text: 'Välj Skicka kallelser.', mal: [{ sel: 'dialog:modal [data-varde="ok"]', rad: 'dialog:modal', innehaller: 'Skicka kallelser till' }] },
   ],
   '5.4': [
     ...sokPatient('Susanne Svedin'),
