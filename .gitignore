@@ -7,5 +7,5 @@ docs/filmer/*.webm
 
 # Fenton 2025: kurvdatan, kalkylbladet och nyckeln är licensierade och får aldrig läggas i git (app/src/fenton.js).
 fenton*.json
-*.xlsx
+*[Ff]enton*.xlsx
 fenton.env
