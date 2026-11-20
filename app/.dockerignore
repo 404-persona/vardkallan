@@ -3,3 +3,7 @@ test-resultat.json
 test-resultat.xml
 *.md
 .testtmp-*
+# Fenton 2025: kurvdatan, kalkylbladet och nyckeln får aldrig hamna i avbilden.
+fenton*.json
+*.xlsx
+*.env

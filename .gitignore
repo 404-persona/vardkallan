@@ -4,3 +4,8 @@ app/.testtmp-*
 
 # Runda 15: instruktionsfilmerna ligger som bilagor till releasen, inte i git.
 docs/filmer/*.webm
+
+# Fenton 2025: kurvdatan, kalkylbladet och nyckeln är licensierade och får aldrig läggas i git (app/src/fenton.js).
+fenton*.json
+*.xlsx
+fenton.env
