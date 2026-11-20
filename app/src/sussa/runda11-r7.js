@@ -40,6 +40,9 @@ export const TILLVAXT = {
   indikatorer: `${TV}barnavårdscentralen väljer sina indikatorer, och regionen ser dem med varje liten cell spärrad för sig`,
   sparr: `${TV}en pubertetsregistrering på en spärrad vårdenhet syns inte och ändrar inte bedömningen`,
   kbImport: kb('tillvaxt-import'),
+  // Fenton 2025 (fenton.js och test/fenton.test.js).
+  fenton: 'Fenton 2025 > z-värdet räknas med SD23-korrektionen, SGA och LGA vid födelsen, och vyn får inga LMS-värden eller percentillinjer',
+  fentonSparr: 'Fenton 2025 > mellanhanden skickar bara i demon, för testpersonnummer och utan namn och personnummer',
 };
 
 const DEMO = 'Hjärtintensiven på Kardiologiska kliniken är demons intensivvårdsavdelning med åtta platser. Reglerna och protokollen är demoregler, inte kliniskt beslutsstöd, och utrustningen är simulerad. Specialområdet sköts upp i Tilläggsavtal 3.';
@@ -84,14 +87,14 @@ const POSTER_IVA = {
 };
 const POSTER_TILLVAXT = {
   '4.1.1.2': {
-    tester: [TILLVAXT.who2007, TILLVAXT.byte],
-    losning: 'Kurvorna bygger på WHO:s tillväxtstandard 0 till 5 år och WHO:s tillväxtreferens 5 till 19 år (L, M och S per månad för vikt till tio år, längd och BMI). Systemet väljer referens efter barnets ålder och går mjukt över mellan dem vid fem år. För ett barn som är fött före vecka 37 räknas korrigerad ålder till två år.',
-    anmarkning: 'De svenska referenserna, prematurkurvorna (Fenton 2013 och INTERGROWTH-21st) och kurvorna för Downs och Turners syndrom finns inte utgivna under en fri licens med maskinläsbara värden och används inte (docs/kodkontroll.md). WHO:s tabeller används under CC BY-NC-SA 3.0 IGO.',
+    tester: [TILLVAXT.who2007, TILLVAXT.byte, TILLVAXT.fenton],
+    losning: 'Kurvorna bygger på WHO:s tillväxtstandard 0 till 5 år och WHO:s tillväxtreferens 5 till 19 år (L, M och S per månad för vikt till tio år, längd och BMI). Systemet väljer referens efter barnets ålder och går mjukt över mellan dem vid fem år. För ett barn som är fött före vecka 37 räknar systemet z-värde och percentil på Fentons prematurkurva 2025 efter exakt gestationsålder till 50 veckor, med WHO:s SD23-korrektion, och storleken för gestationsåldern vid födelsen (SGA, AGA eller LGA) till och med vecka 36. Därefter räknas korrigerad ålder på WHO:s kurvor till två år.',
+    anmarkning: 'Fentons kurvdata 2025 används med tillstånd av Tanis Fenton för demon med påhittade patienter (CC BY-NC-ND 4.0). Värdena ligger bara på servern, utanför källkoden, och användarna ser bara barnets z-värden och percentiler. Saknas datafilen används korrigerad ålder som förut. De svenska referenserna, INTERGROWTH-21st och kurvorna för Downs och Turners syndrom finns inte utgivna under en fri licens med maskinläsbara värden och används inte (docs/kodkontroll.md). WHO:s tabeller används under CC BY-NC-SA 3.0 IGO.',
   },
   '4.1.1.3': {
     tester: [TILLVAXT.who2007, TILLVAXT.byte],
     losning: 'Två referenser finns: WHO:s tillväxtstandard 0 till 5 år och WHO:s tillväxtreferens 5 till 19 år, med kurvor för vikt, längd, huvudomfång (till fem år) och BMI och linjerna -2, -1, 0, +1 och +2 SD. Referenserna ligger i egna tabeller med källa och licens. I gränssnittet väljs WHO efter barnets ålder, eller en av referenserna, och referenserna som inte finns står med skälet.',
-    anmarkning: 'Svenska referenser, prematurkurvor och kurvor för syndrom saknas, eftersom de inte får användas fritt (docs/kodkontroll.md).',
+    anmarkning: 'Fentons prematurkurva 2025 visas som barnets z-värden mot percentilerna, eftersom licensen inte tillåter att kurvdatan syns. Svenska referenser, INTERGROWTH-21st och kurvor för syndrom saknas, eftersom de inte får användas fritt (docs/kodkontroll.md).',
   },
   '4.1.1.4': {
     tester: [TILLVAXT.sitthojd, TILLVAXT.pubertet, TILLVAXT.sparr], avsedd: 'uppfyllt_demo',
@@ -100,10 +103,10 @@ const POSTER_TILLVAXT = {
     anmarkning: 'Kroppslängdens kod i K11 (248334005) är inaktiv i den internationella utgåvan sedan 2021 och står kvar som i K11, eftersom registret tar emot K11:s koder. Koderna i den svenska utgåvan kontrolleras bara med kontrollsiffran, eftersom den kräver licens.',
   },
   '4.1.1.6': {
-    tester: [TILLVAXT.byte, TILLVAXT.sitthojd, TILLVAXT.pubertet], avsedd: 'uppfyllt_demo',
+    tester: [TILLVAXT.byte, TILLVAXT.sitthojd, TILLVAXT.pubertet, TILLVAXT.fenton, TILLVAXT.fentonSparr], avsedd: 'uppfyllt_demo',
     losning: 'Kurvorna ritas som SVG med referenslinjerna -2, -1, 0, +1 och +2 SD och kan visas för barnets ålder, första året, två år, fem år och för större barn tio och 19 år. Användaren väljer referens och vilka mått som visas. Varje kurva har en tabell med datum, ålder, värde, SD, percentil och källa, också för inlästa värden. Särskilda händelser och pubertetens stadier med start och bedömning visas. För för tidigt födda räknas korrigerad ålder till två år. Vårdnadshavaren ser samma kurvor i Min journal.',
     expert: 'Systemet väljer ålderspannet och referensen efter barnets ålder, visar SD och percentil vid varje värde och räknar när puberteten började, så att avvikelsen syns utan att någon räknar.',
-    anmarkning: 'Prematurkurvor finns inte av licensskäl (4.1.1.2). För tidigt födda visas med korrigerad ålder på WHO:s kurvor.',
+    anmarkning: 'För tidigt födda visas till 50 veckors gestationsålder som z-värden på Fentons prematurkurva 2025, utan percentillinjer ur kurvdatan, och därefter med korrigerad ålder på WHO:s kurvor. I demon kan personalen låta fentongrowth.ca rita Fentons egen kurva genom en mellanhand på servern, som bara skickar kön, gestationsålder, födelsedatum och mätvärden. Vårdnadshavaren ser inte prematurkurvan i Min journal.',
   },
   '4.1.1.7': {
     tester: [TILLVAXT.granska, TILLVAXT.importera, TILLVAXT.journalsystem, TILLVAXT.kontrakt, TILLVAXT.kbImport], avsedd: 'uppfyllt_demo',

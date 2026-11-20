@@ -2246,7 +2246,7 @@ i demon.
 
 ### Det som är simulerat eller saknas
 
-Monitorn och dess vågformer, det andra journalsystemet och tjänstekontrakten är simulerade. Sederingsdjup enligt RASS registreras inte, så sederingen har inget automatiskt förslag, och rapportering till Svenska Intensivvårdsregistret finns inte. Svenska tillväxtreferenser, prematurkurvor och kurvor för syndrom används inte av licensskäl (docs/kodkontroll.md). Pubertet, NEMS, egna gränser och behandlingsmål finns inte i FHIR-API:t.
+Monitorn och dess vågformer, det andra journalsystemet och tjänstekontrakten är simulerade. Sederingsdjup enligt RASS registreras inte, så sederingen har inget automatiskt förslag, och rapportering till Svenska Intensivvårdsregistret finns inte. Svenska tillväxtreferenser, INTERGROWTH-21st och kurvor för syndrom används inte av licensskäl (docs/kodkontroll.md). Fentons prematurkurva 2025 används med tillstånd i demon, med kurvdatan bara på servern (`app/src/fenton.js`). Pubertet, NEMS, egna gränser och behandlingsmål finns inte i FHIR-API:t.
 
 ## Godkännandekriterier för första versionen
 
