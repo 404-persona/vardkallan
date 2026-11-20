@@ -230,6 +230,10 @@ for (const w of ['DT', 'MR', 'HIA', 'DICOM']) TILLATNA.add(w);
 // referenser (WHO:s två referenser, licenserna och referenserna som inte får användas, CDC och Downs syndrom).
 for (const w of ['NEMS', 'PEEP', 'NIV', 'HME', 'II', 'PH', 'CDC', 'BY-NC-ND', 'INTERGROWTH-21st', 'Fenton', 'Fentons', 'Tanner', 'Tanners', 'SBAR', 'GetObservations', 'GetActivities']) TILLATNA.add(w);
 FRASER.push('Length of body', 'Nine equivalents of nursing manpower use score', 'Intensive Care Med', 'Reis Miranda', 'WHO Child Growth Standards', 'WHO Growth Reference', 'University of Oxford', 'Downs syndrom');
+// Fenton 2025: storleken för gestationsåldern (SGA, AGA och LGA), artikeln och kurvans namn som Fenton vill se vid
+// kurvan, adressen till fentongrowth.ca och rubrikerna i CSV-filen som tjänsten tar emot.
+for (const w of ['SGA', 'AGA', 'LGA', 'BN', 'TR']) TILLATNA.add(w);
+FRASER.push('fentongrowth.ca', 'en-GB', 'Fenton 2025 Preterm Growth Chart', 'Fenton third-generation growth charts of preterm infants without abnormal fetal growth', 'Date of birth', 'GA at birth', 'Data Type ,Growth', 'GA (weeks),Weight (g),Head (cm),Length (cm)');
 
 // Svenska ord som ofta skrivs utan å, ä eller ö. Formen utan prickar är inget eget ord.
 export const UTAN_PRICKAR = new Map(Object.entries({

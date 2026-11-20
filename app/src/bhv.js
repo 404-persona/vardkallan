@@ -17,6 +17,8 @@ import * as tidbok from './tidbok.js';
 import { ATC, K11 } from './kodverk.js';
 // Runda 11, r7: pubertet, import och ursprunget för inlästa värden (tillvaxt-r11.js).
 import * as r11 from './tillvaxt-r11.js';
+// Fentons prematurkurvor 2025 för barn som är födda före vecka 37 (fenton.js). Kurvdatan finns bara på servern.
+import * as F from './fenton.js';
 
 // Behörigheter (runda 7, r6). Läkare och sjuksköterskor vaccinerar enligt programmet och bokar barnets hälsobesök.
 Object.assign(HANDLINGAR, { vaccinera: 'registrera vaccinationer', boka_bhv: 'boka hälsobesök i barnhälsovården', rapportera_bhvq: 'rapportera till Svenska barnhälsovårdsregistret' });
@@ -39,7 +41,7 @@ CREATE TABLE IF NOT EXISTS bhv_inskrivning (
 CREATE TABLE IF NOT EXISTS tillvaxt_uppgifter (
   id INTEGER PRIMARY KEY, patient_id TEXT NOT NULL, enhet_id TEXT NOT NULL, typ TEXT NOT NULL, varde REAL NOT NULL, tid TEXT NOT NULL,
   registrerad_av TEXT, registrerad TEXT NOT NULL,
-  CHECK (typ IN ('graviditetslangd', 'fodelsevikt', 'fodelselangd', 'fodelse_huvudomfang', 'langd_mor', 'langd_far', 'tb_risk'))
+  CHECK (typ IN ('graviditetslangd', 'graviditetsdagar', 'fodelsevikt', 'fodelselangd', 'fodelse_huvudomfang', 'langd_mor', 'langd_far', 'tb_risk'))
 );
 CREATE TRIGGER IF NOT EXISTS tillvaxt_uppgift_andras_ej BEFORE UPDATE OF typ, varde, tid, registrerad_av ON tillvaxt_uppgifter
   BEGIN SELECT RAISE(ABORT, 'En tillväxtuppgift ändras inte. Registrera en ny.'); END;
@@ -83,7 +85,19 @@ CREATE TABLE IF NOT EXISTS bhvq_utskick (
 CREATE TRIGGER IF NOT EXISTS bhvq_utskick_andras_ej BEFORE UPDATE ON bhvq_utskick BEGIN SELECT RAISE(ABORT, 'Ett utskick ändras inte'); END;
 CREATE TRIGGER IF NOT EXISTS bhvq_utskick_raderas_ej BEFORE DELETE ON bhvq_utskick BEGIN SELECT RAISE(ABORT, 'Ett utskick raderas inte'); END;
 `;
-export function sakraSchema(db) { db.exec(SCHEMA); }
+export function sakraSchema(db) {
+  // Fenton 2025: graviditetsdagar är en ny typ av uppgift. En sandlåda från före Fentons kurva har en kontroll utan den, så
+  // tabellen byggs om med samma rader. Triggrarna som hindrar ändringar läggs tillbaka av SCHEMA.
+  const gammal = db.query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'tillvaxt_uppgifter'").get()?.sql;
+  if (gammal && !gammal.includes('graviditetsdagar')) {
+    db.transaction(() => {
+      db.exec('DROP TRIGGER IF EXISTS tillvaxt_uppgift_andras_ej; DROP TRIGGER IF EXISTS tillvaxt_uppgift_raderas_ej; ALTER TABLE tillvaxt_uppgifter RENAME TO tillvaxt_uppgifter_fore_fenton');
+      db.exec(SCHEMA);
+      db.exec('INSERT INTO tillvaxt_uppgifter SELECT * FROM tillvaxt_uppgifter_fore_fenton; DROP TABLE tillvaxt_uppgifter_fore_fenton');
+    })();
+  }
+  db.exec(SCHEMA);
+}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Seed: Barnavårdscentralen Tybble, BHV-sjuksköterskan och ett barn med hela programmet fram till i dag. Allt påhittat.
@@ -179,6 +193,70 @@ export function seeda(db, { bas = new Date() } = {}) {
     .run(b.id, 'vc-tybble', FORALDRAR[0].id, 'vikt', seedVarde('vikt', '18m', T.alderManader(b.fodd, hemma.toISOString())), hemma.toISOString(), hemma.toISOString());
   db.query('INSERT INTO tillvaxt_handelser (patient_id, enhet_id, tid, text, registrerad_av, registrerad) VALUES (?, ?, ?, ?, ?, ?)')
     .run(b.id, 'vc-tybble', lokalTid(addDagar(b.fodd, 340), '12:00'), 'Magsjuk en vecka, åt dåligt', BVC_SSK, lokalTid(addDagar(b.fodd, 365), '10:00'));
+  seedaPrematur(db);
+}
+
+// Fenton 2025: en pojke som föddes i vecka 26+2, för prematurkurvan. Mätvärdena är påhittade för hand och inte räknade
+// ur någon referens. Han är inte inskriven i barnhälsovården i Vårdkällan, så listorna för barnavårdscentralen är
+// oförändrade, men personalen kan öppna honom och se tillväxten.
+export const PREMATUR = {
+  id: 'p62', pnr: '202504252392', fornamn: 'Elias', efternamn: 'Lund', kon: 'man', fodd: '2025-04-25',
+  adress: 'Rudbecksgatan 14', postnr: '702 23', ort: 'Örebro', telefon: '070-174 06 62', kontaktperson: 'Vårdnadshavare Sara Lund, 070-174 06 62',
+};
+const PREMATUR_FODSEL = { graviditetslangd: 26, graviditetsdagar: 2, fodelsevikt: 0.89, fodelselangd: 34.5, fodelse_huvudomfang: 24.0 };
+// [dagar efter födelsen, vikt i kg, längd i cm, huvudomfång i cm]
+const PREMATUR_MATNINGAR = [
+  [7, 0.86, null, null], [14, 0.94, 36.0, 25.0], [21, 1.05, null, null], [28, 1.18, 38.0, 26.8], [35, 1.32, null, null],
+  [42, 1.48, 40.5, 28.6], [49, 1.65, null, null], [56, 1.83, 43.0, 30.3], [70, 2.25, 45.0, 32.0], [98, 3.15, 49.0, 35.0],
+  [126, 4.2, 53.0, 37.5], [154, 5.1, 56.5, 39.3], [245, 6.6, 63.0, 42.0], [366, 7.9, 70.0, 44.5], [548, 9.4, 78.0, 46.3],
+];
+// [dagar efter födelsen, kontaktorsak, status, bedömning] för besöken hos läkaren på vårdcentralen. Påhittade.
+const PREMATUR_BESOK = [
+  [98, 'Första besöket efter hemgången från neonatalavdelningen, fött i vecka 26+2.', 'Pigg och välmående. Äter bröstmjölk och berikning. Hjärta och lungor utan anmärkning.', 'Växer efter sin kurva. Följs med tillväxtkurva för för tidigt födda.'],
+  [126, 'Vägning och mätning.', 'Pigg. Äter bra.', 'Växer efter sin kurva.'],
+  [154, 'Uppföljning av tillväxten.', 'Opåverkad. Ler och följer med blicken. Fontanellen mjuk.', 'Fortsatt god tillväxt. Ny kontroll om tre månader.'],
+  [245, 'Uppföljning, korrigerad ålder fem månader.', 'Vänder sig och greppar leksaker.', 'God tillväxt och utveckling efter korrigerad ålder.'],
+  [366, 'Uppföljning vid ett års ålder, korrigerad ålder nio månader.', 'Sitter själv och kryper. Jollrar.', 'Utvecklas efter korrigerad ålder. Tillväxten följer WHO:s kurva med korrigerad ålder.'],
+  [548, 'Uppföljning vid ett och ett halvt års ålder.', 'Går själv. Säger några ord.', 'Utvecklas och växer väl. Avslutas på vårdcentralen.'],
+];
+function seedaPrematur(db) {
+  const b = PREMATUR;
+  if (db.query('SELECT 1 FROM patienter WHERE id = ?').get(b.id)) return;
+  db.query(`INSERT INTO patienter (id, personnummer, fornamn, efternamn, kon, fodd, adress, postnr, ort, telefon, kontaktperson, skyddad)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`).run(b.id, b.pnr, b.fornamn, b.efternamn, b.kon, b.fodd, b.adress, b.postnr, b.ort, b.telefon, b.kontaktperson);
+  // Listad på vårdcentralen, så att personalen där har vårdrelation.
+  db.query('INSERT INTO listningar VALUES (?, ?, ?)').run(b.id, 'vc-tybble', addDagar(b.fodd, 120));
+  if (db.query("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'identiteter'").get()) {
+    db.query("INSERT INTO identiteter (patient_id, typ, varde, status, fran, ursprung) VALUES (?, 'personnummer', ?, 'gallande', ?, ?)").run(b.id, b.pnr, lokalTid(b.fodd, '06:10'), b.id);
+  }
+  const fodselTid = lokalTid(b.fodd, '06:10');
+  const insU = db.query('INSERT INTO tillvaxt_uppgifter (patient_id, enhet_id, typ, varde, tid, registrerad_av, registrerad) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  for (const [typ, v] of Object.entries(PREMATUR_FODSEL)) insU.run(b.id, BVC, typ, v, fodselTid, BVC_SSK, fodselTid);
+  // Uppföljningen på vårdcentralen efter neonatalvården: besöken hos läkaren med anteckning och diagnos.
+  const insVk = db.query(`INSERT INTO vardkontakter (patient_id, enhet_id, typ, kontaktsatt, start, slut, plats, orsak, kalla, planerad, skapad, skapad_av, automatisk, ger_vardrelation)
+    VALUES (?, 'vc-tybble', 'oppenvard', 'besok', ?, ?, 'Vårdcentralen Tybble', ?, 'vardkallan', 0, ?, 'lak-vc', 0, 1)`);
+  const vk = {};
+  for (const [dag, orsak, status, bedomning] of PREMATUR_BESOK) {
+    const start = lokalTid(addDagar(b.fodd, dag), '10:00');
+    vk[dag] = Number(insVk.run(b.id, start, new Date(Date.parse(start) + 30 * 60_000).toISOString(), orsak, start).lastInsertRowid);
+    const t = new Date(Date.parse(start) + 25 * 60_000).toISOString();
+    const sok = JSON.stringify([{ sokord: 'Kontaktorsak', text: orsak }, { sokord: 'Status', text: status }, { sokord: 'Bedömning', text: bedomning }]);
+    db.query(`INSERT INTO anteckningar (patient_id, enhet_id, vardkontakt_id, typ, kategori, sokord, forfattare_id, skapad, status, signerad_tid, signerad_av, version, kalla)
+      VALUES (?, 'vc-tybble', ?, 'Mottagningsanteckning', 'lakare', ?, 'lak-vc', ?, 'signerad', ?, 'lak-vc', 1, 'vardkallan')`).run(b.id, vk[dag], sok, t, new Date(Date.parse(t) + 300_000).toISOString());
+    db.query("INSERT INTO diagnoser (patient_id, enhet_id, vardkontakt_id, kod, text, typ, datum, kalla) VALUES (?, 'vc-tybble', ?, 'Z00.1', ?, 'huvud', ?, 'vardkallan')")
+      .run(b.id, vk[dag], 'Rutinmässig hälsoundersökning av barn utan besvär eller utan att diagnos registrerats', addDagar(b.fodd, dag));
+  }
+  // Mätningarna från neonatalavdelningen förs in efter hemgången, på en administrativ vårdkontakt samma dag som det
+  // första besöket. De besök som har en egen vårdkontakt får sina mätningar knutna till den.
+  const hem = lokalTid(addDagar(b.fodd, PREMATUR_BESOK[0][0]), '09:00');
+  const admin = Number(db.query(`INSERT INTO vardkontakter (patient_id, enhet_id, typ, kontaktsatt, start, slut, plats, orsak, kalla, planerad, skapad, skapad_av, automatisk, ger_vardrelation)
+    VALUES (?, 'vc-tybble', 'oppenvard', 'administrativ', ?, ?, 'Vårdcentralen Tybble', ?, 'vardkallan', 0, ?, ?, 0, 1)`)
+    .run(b.id, hem, new Date(Date.parse(hem) + 15 * 60_000).toISOString(), 'Tillväxten från neonatalavdelningen förs in efter hemgången', hem, BVC_SSK).lastInsertRowid);
+  const insMv = db.query('INSERT INTO matvarden (patient_id, enhet_id, typ, varde, varde_num, matt_enhet, tid, registrerad_av, vardkontakt_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  for (const [dag, vikt, langd, huvud] of PREMATUR_MATNINGAR) {
+    const t = lokalTid(addDagar(b.fodd, dag), '10:05');
+    for (const [typ, v, e] of [['vikt', vikt, 'kg'], ['langd', langd, 'cm'], ['huvudomfang', huvud, 'cm']]) if (v != null) insMv.run(b.id, BVC, typ, String(v), v, e, t, BVC_SSK, vk[dag] ?? admin);
+  }
 }
 
 // Uppdragen på barnavårdscentralen: BHV-sjuksköterskan och distriktssköterskan på vårdcentralen, som arbetar på
@@ -229,6 +307,8 @@ export function sakra(db) {
   sakraSchema(db);
   if (!db.query('SELECT 1 FROM patienter WHERE id = ?').get(BARN.id)) seeda(db, { bas: new Date() });
   else seedaInvanare(db);
+  // Fenton 2025: pojken som föddes i vecka 26 läggs till i en sandlåda från före Fentons kurva.
+  if (db.query('SELECT 1 FROM personal WHERE id = ?').get(BVC_SSK)) seedaPrematur(db);
   seedaUppdrag(db);
 }
 
@@ -272,8 +352,8 @@ function kravInskriven(atk, handling) {
 // ---------------------------------------------------------------------------------------------------------------
 // Tillväxten: kurvor, analys och larm, byggt av de rader användaren får se
 
-const UPPGIFTER = { graviditetslangd: 'Graviditetslängd', fodelsevikt: 'Födelsevikt', fodelselangd: 'Födelselängd', fodelse_huvudomfang: 'Huvudomfång vid födelsen', langd_mor: 'Längd, biologisk mor', langd_far: 'Längd, biologisk far', tb_risk: 'Ökad risk för tuberkulos' };
-export const UPPGIFT_GRANSER = { graviditetslangd: [22, 44], fodelsevikt: [0.3, 6.5], fodelselangd: [25, 62], fodelse_huvudomfang: [18, 42], langd_mor: [120, 220], langd_far: [120, 220], tb_risk: [0, 1] };
+const UPPGIFTER = { graviditetslangd: 'Graviditetslängd', graviditetsdagar: 'Graviditetslängd, dagar utöver hela veckor', fodelsevikt: 'Födelsevikt', fodelselangd: 'Födelselängd', fodelse_huvudomfang: 'Huvudomfång vid födelsen', langd_mor: 'Längd, biologisk mor', langd_far: 'Längd, biologisk far', tb_risk: 'Ökad risk för tuberkulos' };
+export const UPPGIFT_GRANSER = { graviditetslangd: [22, 44], graviditetsdagar: [0, 6], fodelsevikt: [0.3, 6.5], fodelselangd: [25, 62], fodelse_huvudomfang: [18, 42], langd_mor: [120, 220], langd_far: [120, 220], tb_risk: [0, 1] };
 
 // Den senaste uppgiften per typ bland de rader användaren får se.
 function uppgifter(rader) {
@@ -316,13 +396,15 @@ export function bygg(db, p, { matvarden = [], upp = {}, hemma = [], handelser = 
     barn: { alderManader: Math.round(alderNu * 100) / 100, alderText: T.alderText(alderNu), korrigerad: korrigerad !== alderNu ? { alderManader: Math.round(korrigerad * 100) / 100, text: `Korrigerad ålder ${T.alderText(korrigerad)}, eftersom barnet föddes i vecka ${gv}. Kurvorna räknas med den till två års ålder.` } : null,
       kon: p.kon, inomReferens: alderNu >= ref.fran - 1 && alderNu <= refTill },
     referens: { ...T.REFERENS, id: effektiv.id, vald: ref.id, namn: effektiv.namn, text: effektiv.id === 'who2006' && ref.id !== 'auto' ? T.REFERENS.text : `${ref.text} ${T.REFERENS.text.split('. ').slice(1).join('. ')}`, kalla: ref.kalla, licens: ref.licens },
-    referenser: Object.values(T.REFERENSER).map(r => ({ id: r.id, namn: r.namn, fran: r.fran, till: r.till, text: r.text })), ejTillgangliga: T.EJ_TILLGANGLIGA,
+    referenser: Object.values(T.REFERENSER).map(r => ({ id: r.id, namn: r.namn, fran: r.fran, till: r.till, text: r.text })), ejTillgangliga: T.ejTillgangliga(F.tillganglig()),
+    // Fentons kurva för ett barn som är fött före vecka 37: bara z-värden, percentiler och storleken vid födelsen.
+    fenton: F.forBarn(p, { gv, gd: upp.graviditetsdagar?.varde ?? null, punkter, fodelsevikt: upp.fodelsevikt?.varde ?? null }),
     kurvor: Object.entries(T.MATT).filter(([m]) => visas(m)).map(([m, d]) => ({
       matt: m, namn: d.namn, enhet: d.enhet, harledd: Boolean(d.harledd), punkter: kurvor[m],
       linjer: d.utanReferens || !ref.matt.includes(m) ? T.SD_LINJER.map(sd => ({ sd, punkter: [] })) : T.referenslinjer(m, p.kon, ref.id === 'who2007' ? 61 : 0, Math.min(refTill, Math.max(12, Math.ceil(alderNu + 3))), ref.id), utanReferens: Boolean(d.utanReferens) || !effektiv.matt.includes(m),
       senaste: kurvor[m].filter(x => !x.vantar).at(-1) ?? null,
     })),
-    fodsel: { graviditetslangd: gv, tid: fodelseTid, vikt: upp.fodelsevikt?.varde ?? null, langd: upp.fodelselangd?.varde ?? null, huvudomfang: upp.fodelse_huvudomfang?.varde ?? null },
+    fodsel: { graviditetslangd: gv, graviditetsdagar: upp.graviditetsdagar?.varde ?? null, tid: fodelseTid, vikt: upp.fodelsevikt?.varde ?? null, langd: upp.fodelselangd?.varde ?? null, huvudomfang: upp.fodelse_huvudomfang?.varde ?? null },
     foraldrar: { mor: upp.langd_mor?.varde ?? null, far: upp.langd_far?.varde ?? null, malangd: mal },
     analys: T.analys(kurvor, { fran, till }), period: { fran, till },
     larm: alderNu <= refTill ? T.larm(kurvor, { fodelsevikt: upp.fodelsevikt?.varde ?? null }) : [],
@@ -352,8 +434,29 @@ export function vy(atk, p, { fran = null, till = null, nu = Date.now(), referens
   // Runda 11, r7: pubertet och import av tillväxtdata.
   ut.pubertet = r11.pubertetFor(atk, p, nu);
   ut.import = ut.kan.registrera ? { format: r11.FORMAT, maxTecken: r11.MAX_TECKEN, simuleratSystem: r11.SIMULERAT_SYSTEM } : null;
+  // Fenton: mellanhanden mot fentongrowth.ca, med skälet när den är avstängd.
+  if (ut.fenton) { const s = F.sparr(p); ut.fenton.mellanhand = { aktiv: !s, text: s }; }
   atk.logga('las_matvarden', atk.grund(), `tillvaxt:${p.id}`);
   return ut;
+}
+
+// POST /api/patient/:id/tillvaxt/fenton: barnets mätningar till fentongrowth.ca, som ritar kurvan. Bara i demon och
+// bara för ett barn med testpersonnummer (fenton.js). Behörigheten och spärren prövas innan något skickas. Vyn väntar
+// inte på anropet: knappen hämtar kurvan för sig.
+export function fentonRita(atk, p, nu = Date.now()) {
+  atk.krav('las_matvarden');
+  const s = F.sparr(p);
+  if (s) throw new Fel(403, s, 'nekad');
+  const upp = uppgifter(synliga(atk, 'tillvaxt_uppgifter'));
+  const gv = upp.graviditetslangd?.varde ?? null;
+  if (!(gv > 0) || gv >= F.FODD_FORE) throw new Fel(400, 'Fentons kurva gäller barn som är födda före vecka 37.', 'ogiltig');
+  const ut = bygg(atk.db, p, { matvarden: journal.synligaMatvarden(atk), upp, nu });
+  const punkter = Object.fromEntries(ut.kurvor.filter(k => ['vikt', 'langd', 'huvudomfang'].includes(k.matt)).map(k => [k.matt, k.punkter]));
+  const { text, antal } = F.csv(p, gv, upp.graviditetsdagar?.varde ?? 0, punkter);
+  if (!antal) throw new Fel(400, 'Barnet har inga mätningar före 50 veckors gestationsålder.', 'ogiltig');
+  // Loggen säger att uppgifter skickades och hur många rader, men inte mätvärdena.
+  atk.logga('las_matvarden', atk.grund(), `tillvaxt:fenton:${p.id}:${antal}`);
+  return F.rita({ patientId: p.id, csvText: text, antal });
 }
 
 const hemmatningUt = (db, h) => ({ id: h.id, typ: h.typ, namn: T.MATT[h.typ].namn, varde: h.varde, enhet: T.MATT[h.typ].enhet, tid: h.tid, skapad: h.skapad, status: h.status,
@@ -485,10 +588,10 @@ export function registreraUppgift(atk, p, body = {}) {
   if (!Object.hasOwn(UPPGIFTER, typ)) throw new Fel(400, 'Okänd uppgift.', 'ogiltig', { falt: ['typ'] });
   const v = typeof body.varde === 'string' ? Number(body.varde.replace(',', '.')) : typeof body.varde === 'boolean' ? Number(body.varde) : body.varde;
   const [lag, hog] = UPPGIFT_GRANSER[typ];
-  if (!Number.isFinite(v) || v < lag || v > hog || (['graviditetslangd', 'langd_mor', 'langd_far', 'tb_risk'].includes(typ) && !Number.isInteger(v))) {
-    throw new Fel(400, typ === 'tb_risk' ? 'Ange ja eller nej.' : `${UPPGIFTER[typ]} ska vara ${['graviditetslangd', 'langd_mor', 'langd_far'].includes(typ) ? 'ett heltal' : 'ett tal'} mellan ${lag} och ${hog}.`, 'ogiltig', { falt: ['varde'] });
+  if (!Number.isFinite(v) || v < lag || v > hog || (['graviditetslangd', 'graviditetsdagar', 'langd_mor', 'langd_far', 'tb_risk'].includes(typ) && !Number.isInteger(v))) {
+    throw new Fel(400, typ === 'tb_risk' ? 'Ange ja eller nej.' : `${UPPGIFTER[typ]} ska vara ${['graviditetslangd', 'graviditetsdagar', 'langd_mor', 'langd_far'].includes(typ) ? 'ett heltal' : 'ett tal'} mellan ${lag} och ${hog}.`, 'ogiltig', { falt: ['varde'] });
   }
-  const fodd = typ.startsWith('fodelse') || typ === 'graviditetslangd';
+  const fodd = typ.startsWith('fodelse') || typ.startsWith('graviditets');
   const tid = fodd ? lokalTid(p.fodd, '12:00') : iso();
   atk.db.query('INSERT INTO tillvaxt_uppgifter (patient_id, enhet_id, typ, varde, tid, registrerad_av, registrerad) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .run(p.id, atk.personal.enhet_id, typ, v, tid, atk.personal.id, iso());
@@ -686,6 +789,7 @@ export function minTillvaxt(atk, nu = Date.now()) {
   const hemma = db.query("SELECT * FROM hemmatningar WHERE patient_id = ? AND status = 'vantar' ORDER BY tid").all(p.id);
   const ut = bygg(db, p, { matvarden: rader, upp, hemma, handelser: [], nu });
   delete ut.larm;
+  delete ut.fenton;
   for (const k of ut.kurvor) for (const pt of k.punkter) { delete pt.registreradAv; delete pt.id; }
   const ins = inskrivning(db, p.id);
   const vacc = db.query('SELECT * FROM vaccinationer WHERE patient_id = ? ORDER BY tid').all(p.id).map(v => { const x = vaccinationUt(db, v); delete x.id; delete x.givetAv; return x; });
