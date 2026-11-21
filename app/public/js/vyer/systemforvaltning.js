@@ -494,7 +494,7 @@ export const lagring = {
         notis(r.ok ? 'Säkerhetskopian lästes tillbaka och allt stämmer.' : 'Provåterläsningen hittade avvikelser.', r.ok ? 'ok' : 'fel');
         lagring.visa(main).then(() => {
           const ut = main.querySelector('[data-provresultat]');
-          if (ut) ut.innerHTML = `<ul class="sf-kontroller">${r.kontroller.map(k => `<li>${k.ok ? ikon.bock : ikon.kryss} ${esc(k.text)}${k.detalj ? `: ${esc(k.detalj)}` : ''}</li>`).join('')}</ul><p class="dampad liten">SHA-256 för kopian: ${esc(r.sha256)}</p>`;
+          if (ut) ut.innerHTML = `<ul class="sf-kontroller">${r.kontroller.map(k => `<li>${k.ok ? ikon.bock : ikon.kryss} ${esc(k.text)}${k.detalj ? `: ${esc(k.detalj)}` : ''}</li>`).join('')}</ul><p class="dampad liten sf-hash">SHA-256 för kopian: ${esc(r.sha256)}</p>`;
         });
       } catch { /* notis visad */ }
     });

@@ -1268,6 +1268,8 @@ mark { background: var(--obs-bg); color: inherit; outline: 1px solid var(--obs-k
 .sf-lasta, .sf-kontroller { display: grid; gap: 6px; padding-left: 18px; }
 .sf-kontroller { list-style: none; padding-left: 0; }
 .sf-kontroller li { display: flex; gap: 6px; align-items: flex-start; }
+/* Runda 21: den långa summan bryts i stället för att göra sidan bredare än en mobil. */
+.sf-hash { overflow-wrap: anywhere; }
 [data-forhand] ul { margin: 4px 0 0 18px; padding: 0; display: grid; gap: 4px; }
 .sf-paverkas p { margin: 0 0 4px; }
 .behorighet-undantag p { margin: 0; }

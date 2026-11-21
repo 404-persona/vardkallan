@@ -412,8 +412,9 @@ MENY.verksamhetschef.splice(MENY.verksamhetschef.indexOf('Forskningsuttag'), 0, 
       await page.click('[data-tp="sus-hoppa"]');
       await forvanta(page, '.tp-vidare', 'Vad vill du göra nu?');
       await page.click('[data-tp="vidare"]');
-      if (await page.locator('.fp-ram').count()) throw new Error('vägledningen följde med till nästa uppdrag');
+      // Runda 21 (1.9.1): vägledningen följer med till nästa uppdrag och visar dess första steg i panelen.
       await forvanta(page, '#testare-panel', 'Överblicka dagens händelser för en grupp patienter');
+      await page.waitForSelector('.fp-ram', { timeout: 10000 });
       await page.fill('#tp-svar', 'Fel svar');
       await page.click('.tp-fraga [type="submit"]');
       await forvanta(page, '.tp-fraga .form-fel', 'stämmer inte');

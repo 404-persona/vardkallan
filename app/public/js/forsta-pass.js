@@ -54,8 +54,18 @@ export function aktivera(T, { onSteg } = {}) {
   if (p && (p.fas === 'pagar' || p.fas === 'samtycke')) { aktiveraPass(T); return; }
   const id = uppdragNu(T);
   if (id) { aktiveraUppdrag(T, id); return; }
+  if (mellanNu(T)) { aktiveraUppdrag(T, 'mellan', MELLAN_STEG); return; }
   stoppa();
 }
+// Runda 21: vägledningen mellan uppdragen. Efter passet och efter varje uppdrag väntar panelen på testaren (frågan om
+// jämförelsen, de tio påståendena och knappen till nästa uppdrag). Ramen och meningen visar då vad som ska göras i
+// panelen, så att testaren inte tror att testet är slut.
+const mellanNu = (T) => Boolean(T?.aktiv && (T.attBesvara?.length || (T.pass && T.pass.fas === 'aterkoppling')));
+export const MELLAN_STEG = [
+  { id: 'jamforelse', text: 'Uppdraget är klart. Välj hur det var jämfört med ditt journalsystem och välj Skicka, eller välj Svara inte.', mal: [{ sel: '.tp-jamforelse fieldset' }] },
+  { id: 'sus-erbjudande', text: 'Svara på tio korta påståenden om systemet, eller välj Nej tack.', mal: [{ sel: '.tp-sus-erbjudande .knapprad' }] },
+  { id: 'vidare', text: 'Välj Fortsätt med nästa uppdrag. Vägledningen visar vägen i nästa uppdrag också.', mal: [{ sel: '[data-tp="vidare"]' }] },
+];
 // Runda 19, r1: uppdraget som vägledningen följer, när inget pass pågår och ingen jämförelsefråga väntar.
 export const uppdragNu = (T) => (T?.aktiv && (!T.pass || T.pass.fas === 'klar') && T.aktuellt && !T.attBesvara?.length ? T.aktuellt : null);
 export const harVagledning = (T) => Boolean((T?.pass && ['pagar', 'samtycke'].includes(T.pass.fas)) || uppdragNu(T));
@@ -65,8 +75,22 @@ export function hamtaStegfil(testroll) {
   if (!stegFiler.has(testroll)) stegFiler.set(testroll, import(`./uppdrag-steg/${testroll}.js`).then(m => m.default ?? {}).catch(() => { stegFiler.delete(testroll); return {}; }));
   return stegFiler.get(testroll);
 }
-function aktiveraUppdrag(T, id) {
+function aktiveraUppdrag(T, id, fasta = null) {
   const nyckel = `${T.testroll}|${T.start}|${id}`;
+  if (fasta) {
+    if (lage?.nyckel === nyckel) { if (lyssnar) berakna(); return; }
+    if (lage) stoppa();
+    lage = { typ: 'uppdrag', nyckel };
+    nollstall();
+    steg = fasta;
+    nu = null;
+    forraId = null;
+    doljRam();
+    borja();
+    berakna();
+    paSteg?.(stegInfo());
+    return;
+  }
   if (lage?.nyckel === nyckel) { if (lyssnar) berakna(); return; }
   if (lage?.typ === 'pass') stoppa();
   lage = { typ: 'uppdrag', nyckel, laddar: true };
@@ -142,7 +166,7 @@ export function stoppa() {
     observator?.disconnect();
     observator = null;
   }
-  clearTimeout(timer);
+  clearTimeout(timer); clearTimeout(snartTimer);
   doljRam();
   nu = null;
   lage = null;
@@ -251,7 +275,7 @@ function berakna() {
   const id = nu?.id ?? null;
   // Runda 19, r1: i ett uppdrag finns ingen mätning, bara steget.
   if (lage.typ === 'uppdrag' || !P) {
-    if (id !== forraId) { forraId = id; paSteg?.(stegInfo()); if (nu && vagledningPa()) synligGor(nu.el); } else if (forra?.el !== nu?.el) paSteg?.(stegInfo());
+    if (id !== forraId) { forraId = id; paSteg?.(stegInfo()); if (nu && vagledningPa()) synligGorSnart(nu.el); } else if (forra?.el !== nu?.el) nyttMal();
     else if (nu && vagledningPa() && underPanelen(nu.el)) synligGor(nu.el);
     placera();
     return;
@@ -269,10 +293,31 @@ function berakna() {
     P.aktuellt = id;
     spara();
     paSteg?.(stegInfo());
-    if (nu && vagledningPa()) synligGor(nu.el);
-  } else if (forra?.el !== nu?.el) paSteg?.(stegInfo());
+    if (nu && vagledningPa()) synligGorSnart(nu.el);
+  } else if (forra?.el !== nu?.el) nyttMal();
   else if (nu && vagledningPa() && underPanelen(nu.el)) synligGor(nu.el);
   placera();
+}
+// Runda 21: samma steg men ett annat element, till exempel länken i menyn när testaren har öppnat Meny på mobilen.
+// Ligger det nya elementet utanför fönstret eller under panelen rullas det fram.
+function nyttMal() {
+  paSteg?.(stegInfo());
+  if (!nu || !vagledningPa()) return;
+  const r = nu.el.getBoundingClientRect();
+  if (r.bottom > window.innerHeight || r.top < 0 || underPanelen(nu.el)) synligGorSnart(nu.el);
+}
+// Runda 21: rullar fram elementet och kontrollerar en gång till efter en kort stund. Panelen byter ofta innehåll och
+// höjd just när ett nytt steg börjar, och då kan elementet hamna utanför den fria ytan igen.
+let snartTimer = null;
+function synligGorSnart(el) {
+  synligGor(el);
+  clearTimeout(snartTimer);
+  snartTimer = setTimeout(() => {
+    if (!lyssnar || nu?.el !== el || !el.isConnected || !vagledningPa() || el.closest('dialog:modal')) return;
+    const r = el.getBoundingClientRect();
+    const { topp, nere } = friYta(r);
+    if (r.top < topp || r.bottom > nere) synligGor(el);
+  }, 900);
 }
 // Det som panelen visar: stegets text och nummer, eller vad testaren kan göra när inget steg syns.
 export function stegInfo() {
@@ -309,12 +354,62 @@ function placera() {
   const m = 4;
   Object.assign(ram.style, { top: `${r.top - m}px`, left: `${r.left - m}px`, width: `${r.width + 2 * m}px`, height: `${r.height + 2 * m}px` });
   etikett.textContent = nu.text;
-  // Meningen ovanför elementet om det finns plats, annars under. Den läggs aldrig över elementet.
+  // Runda 21: meningen läggs där den skymmer minst av sidan: ovanför, under, till höger eller till vänster om elementet.
+  // Den läggs aldrig över elementet, och den undviker fält, knappar, länkar och text runt omkring.
   const h = etikett.offsetHeight || 40;
-  const ovanfor = r.top - h - 12 > 56;
-  const vanster = Math.max(8, Math.min(r.left, window.innerWidth - etikett.offsetWidth - 8));
-  Object.assign(etikett.style, { top: `${ovanfor ? r.top - h - 10 : r.bottom + 10}px`, left: `${vanster}px` });
-  etikett.dataset.sida = ovanfor ? 'ovanfor' : 'under';
+  const w = etikett.offsetWidth || 300;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const klamX = (x) => Math.max(8, Math.min(x, vw - w - 8));
+  const klamY = (y) => Math.max(8, Math.min(y, vh - h - 8));
+  // Lägena prövas i ordning efter hur nära elementet de ligger. Valet sparas som en förskjutning mot elementet en kort
+  // stund, så att meningen följer med när sidan rullar utan att allt räknas om vid varje rullning.
+  if (valt && valt.el === nu.el && valt.text === nu.text && Date.now() - valt.tid < 600) {
+    Object.assign(etikett.style, { top: `${klamY(r.top + valt.dy)}px`, left: `${klamX(r.left + valt.dx)}px` });
+    return;
+  }
+  const mitt = r.top + r.height / 2 - h / 2;
+  const ys = [['ovanfor', r.top - h - 10], ['under', r.bottom + 10], ['bredvid', mitt], ['ovanfor', r.top - 2 * h - 20], ['under', r.bottom + h + 20]];
+  const xs = [r.left, r.right - w, r.right + 12, r.left - w - 12, vw - w - 8, 8];
+  const lagen = [];
+  for (const [sida, y] of ys) for (const x of xs) {
+    if (sida === 'bredvid' && x < r.right + 12 && x + w > r.left - 12) continue;
+    lagen.push([sida === 'bredvid' ? (x >= r.right ? 'hoger' : 'vanster') : sida, klamX(x), klamY(y)]);
+  }
+  let bast = null;
+  lagen.forEach(([sida, x, y], i) => {
+    const poang = trangsel(x, y, w, h, nu.el, iPanel) * 100 + i;
+    if (!bast || poang < bast.poang) bast = { sida, x, y, poang };
+  });
+  valt = { el: nu.el, text: nu.text, tid: Date.now(), dx: bast.x - r.left, dy: bast.y - r.top };
+  Object.assign(etikett.style, { top: `${bast.y}px`, left: `${bast.x}px` });
+  etikett.dataset.sida = bast.sida;
+}
+let valt = null;
+// Hur mycket meningen skulle skymma i rutan (x, y, w, h): punkter i ett rutnät som träffar ett fält, en knapp, en länk,
+// en text eller panelen räknas, menyn lätt och arbetsytan tungt. Utanför fönstret och över elementet självt räknas mest.
+const INNEHALL = new Set(['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A', 'LABEL', 'SUMMARY', 'IMG', 'svg', 'CANVAS']);
+function trangsel(x, y, w, h, mal, iPanel) {
+  let n = 0;
+  for (let i = 0; i < 5; i++) {
+    for (let j = 0; j < 3; j++) {
+      const px = x + (w * (i + 0.5)) / 5;
+      const py = y + (h * (j + 0.5)) / 3;
+      if (px < 0 || py < 0 || px > window.innerWidth || py > window.innerHeight) { n += 5; continue; }
+      const e = document.elementFromPoint(px, py);
+      if (!e || e === ram) continue;
+      if (mal === e || mal.contains(e)) { n += 6; continue; }
+      if (e.contains(mal)) continue;
+      if (!iPanel && e.closest('#testare')) { n += 2; continue; }
+      const harText = [...e.childNodes].some(c => c.nodeType === 3 && c.textContent.trim());
+      const falt = INNEHALL.has(e.tagName) || e.closest('input, select, textarea, button, a, label');
+      if (!harText && !falt) continue;
+      // Menyn och sidhuvudet väger lätt: där gör testaren sällan något medan ett steg pågår. Fält och text i arbetsytan
+      // väger tyngst.
+      n += e.closest('nav, header, aside, .sidomeny, .meny') && !mal.closest('nav, header, aside') ? 1 : falt ? 4 : 3;
+    }
+  }
+  return n;
 }
 // Rullar fram elementet när ett nytt steg börjar och elementet inte syns, så att det hamnar mitt i den fria ytan mellan
 // sidhuvudet (och ett fast patienthuvud) och panelen längst ner, aldrig under panelen.

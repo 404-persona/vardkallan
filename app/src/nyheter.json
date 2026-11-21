@@ -2,6 +2,22 @@
   "beskrivning": "Nyheter per version och roll (Sussa 10.1.1.4). Den senaste versionen ska vara samma som version i package.json. roller är yrken ur seed/personal.js, invanare för Min journal, personal för all personal och alla för alla. omfattning är stor när arbetssättet ändras och liten när något bara har tillkommit.",
   "versioner": [
     {
+      "version": "1.9.1",
+      "datum": "2026-11-21",
+      "nyheter": [
+        {
+          "id": "vagledning-mellan-1-9-1",
+          "roller": [
+            "alla"
+          ],
+          "omfattning": "liten",
+          "var": null,
+          "rubrik": "Vägledningen visar vägen mellan uppdragen",
+          "text": "När ett uppdrag är klart visar ramen och meningen vad som ska göras i panelen: frågan om hur det var jämfört med ditt system, de tio påståendena och knappen till nästa uppdrag. Meningen bredvid ramen läggs där den skymmer minst av fälten och texten runt omkring. Krysset stänger panelen, och på mobilen rullar vägledningen fram det menyval eller den flik som steget gäller."
+        }
+      ]
+    },
+    {
       "version": "1.9.0",
       "datum": "2026-11-21",
       "nyheter": [

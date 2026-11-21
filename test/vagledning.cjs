@@ -34,6 +34,8 @@ const MAX_UPPREPNING = 4;
 const MAX_HANDLINGAR = 90;
 
 const sidfel = [];
+// Runda 21: stegen där meningen ligger över ett fält, en knapp eller en länk.
+const skymda = new Set();
 let felNr = 0;
 const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
 
@@ -53,7 +55,22 @@ async function lasLaget(p) {
       id: n.id, text: n.text, panel: panel?.dataset.steg ?? null, panelText: panel?.textContent ?? '',
       ram: ram ? ram.left <= r.left + 1 && ram.top <= r.top + 1 && ram.right >= r.right - 1 && ram.bottom >= r.bottom - 1 : false,
       etikett: etikett && getComputedStyle(etikett).display !== 'none' ? etikett.textContent : null,
+      // Runda 21: fält, knappar och länkar i arbetsytan som meningen ligger över, inte menyn när steget gäller arbetsytan (meningen tar inte emot klick, så det som ligger under
+      // den syns för elementFromPoint).
+      skymmer: (() => {
+        if (!etikett || getComputedStyle(etikett).display === 'none') return [];
+        const e = etikett.getBoundingClientRect();
+        const ut = new Set();
+        for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) {
+          const x = e.left + (e.width * (i + 0.5)) / 6, y = e.top + (e.height * (j + 0.5)) / 3;
+          const u = document.elementFromPoint(x, y)?.closest('input, select, textarea, button, a');
+          if (u && u !== n.el && !u.contains(n.el) && !n.el.contains(u) && !(u.closest('nav, header, aside') && !n.el.closest('nav, header, aside'))) ut.add(u);
+        }
+        return [...ut].map(u => (u.id ? '#' + u.id : u.tagName.toLowerCase()) + ' ' + (u.textContent || u.getAttribute('aria-label') || u.name || '').trim().slice(0, 30));
+      })(),
       tagg: n.el.tagName.toLowerCase(), typ: n.el.getAttribute('type') ?? '',
+      // Runda 21: vad som ligger över målet när det är skymt, och var målet och panelen ligger, för felmeddelandet.
+      skymtAv: (() => { const b = [...n.el.getClientRects()].find(x => x.width > 0 && x.height > 0) ?? r; const e = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(b.height / 2, 12)); const d = document.getElementById('testare')?.getBoundingClientRect(); return `${e ? e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.split(' ')[0] : '') : 'inget'}, målet y ${Math.round(r.top)} till ${Math.round(r.bottom)}, panelen y ${d ? Math.round(d.top) : '-'}, fönstret ${innerHeight}, rullat ${Math.round(scrollY)}`; })(),
       // Panelen, meningen eller något annat får inte skymma målet. För en radbruten länk används första radens ruta.
       oskymt: (() => { const b = [...n.el.getClientRects()].find(x => x.width > 0 && x.height > 0) ?? r; const mitt = document.elementFromPoint(b.left + b.width / 2, b.top + Math.min(b.height / 2, 12)); return Boolean(mitt) && (n.el === mitt || n.el.contains(mitt) || [...(n.el.labels ?? [])].some(x => x === mitt || x.contains(mitt))); })(),
     };
@@ -79,12 +96,13 @@ async function folj(p, namn, steg, klart) {
     // Ramen följer med när sidan rullar fram elementet. Den får en stund på sig innan testet säger att den ligger fel.
     if (!l.ram || !l.oskymt) {
       ramFel = ramFel ?? Date.now();
-      anta(Date.now() - ramFel < (l.ram ? 8000 : 3000), `${namn}, steget ${l.id}: ${l.ram ? 'elementet är skymt, till exempel av panelen' : 'ramen ligger inte runt elementet'}`);
+      anta(Date.now() - ramFel < (l.ram ? 8000 : 3000), `${namn}, steget ${l.id}: ${l.ram ? `elementet är skymt, till exempel av panelen (${l.skymtAv})` : 'ramen ligger inte runt elementet'}`);
       continue;
     }
     ramFel = null;
     anta(l.panelText.includes(l.text), `${namn}, steget ${l.id}: panelen visar inte stegets text`);
     if (l.etikett != null) anta(l.etikett === l.text, `${namn}, steget ${l.id}: meningen bredvid ramen är "${l.etikett}"`);
+    if (l.skymmer?.length) skymda.add(`${namn}, steget ${l.id}: ${l.skymmer.join(', ')}`);
     upprepning = l.id === senast ? upprepning + 1 : 0;
     anta(upprepning <= MAX_UPPREPNING, `${namn}, steget ${l.id}: steget leder inte vidare`);
     senast = l.id;
@@ -122,10 +140,25 @@ async function stilla(p, maxMs = 10000) {
 
 const tillstand = (p) => p.evaluate(async () => (await (await fetch('/api/testare')).json()));
 
+// Runda 21: mellan uppdragen ska ramen och meningen visa vad som ska göras i panelen (jämförelsefrågan, de tio
+// påståendena och knappen till nästa uppdrag), så att testaren inte tror att testet är slut.
+async function ramMellan(p, id) {
+  const slut = Date.now() + VANTA_MS;
+  let l = null;
+  while (Date.now() < slut) {
+    l = await lasLaget(p);
+    // På en smal skärm (högst 640 px) är meningen dold med flit. Där ringar ramen in panelens egen fråga.
+    if (l.id === id && l.ram && (l.etikett || MOBIL)) return;
+    await p.waitForTimeout(200);
+  }
+  throw new Error(`mellan uppdragen: ramen visar inte ${id} (visar ${l?.id ?? 'inget'}, ram ${l?.ram}, mening ${l?.etikett ?? 'ingen'})`);
+}
+
 // Jämförelsefrågan efter ett uppdrag. Svaret ska säga om vägledningen var på.
 async function jamfor(p, id, jamforelser) {
   const form = p.locator(`#testare-panel .tp-jamforelse[data-id="${id}"]`);
   await form.waitFor({ timeout: 10000 });
+  await ramMellan(p, 'jamforelse');
   await form.locator('input[value="lika"]').check();
   const [req] = await Promise.all([p.waitForRequest(r => r.url().includes(`/api/testare/uppdrag/${encodeURIComponent(id)}/jamforelse`)), form.locator('[type="submit"]').click()]);
   jamforelser.push(JSON.parse(req.postData() ?? '{}'));
@@ -133,8 +166,14 @@ async function jamfor(p, id, jamforelser) {
   await stilla(p);
 }
 
+// Runda 21: VAGLEDNING_BREDD (och VAGLEDNING_HOJD) kör rollerna i en annan bredd, till exempel en mobil. Den körningen
+// skriver inget resultat till vagledning.json, som gäller datorbredden.
+const BREDD = Number(process.env.VAGLEDNING_BREDD) || 1280;
+const HOJD = Number(process.env.VAGLEDNING_HOJD) || (BREDD < 700 ? 800 : 900);
+const MOBIL = BREDD < 700;
+
 async function kor(browser, roll) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm' });
+  const ctx = await browser.newContext({ viewport: { width: BREDD, height: HOJD }, locale: 'sv-SE', timezoneId: 'Europe/Stockholm', ...(MOBIL ? { isMobile: true, hasTouch: true } : {}) });
   await stallKlockan(ctx);
   const p = await ctx.newPage();
   raknaAnrop(p);
@@ -171,7 +210,9 @@ async function kor(browser, roll) {
       const t = await tillstand(p);
       await folj(p, `passet (${t.pass.uppdrag})`, steg, async () => (await p.locator('#testare-panel .tp-aterkoppling').count()) > 0);
       await jamfor(p, t.pass.uppdrag, jamforelser);
+      await ramMellan(p, 'sus-erbjudande');
       await p.click('#testare-panel [data-tp="sus-hoppa"]');
+      await ramMellan(p, 'vidare');
       await p.click('#testare-panel [data-tp="vidare"]');
       await p.waitForSelector('#tp-aktuellt, #testare-panel .tp-jamforelse');
     });
@@ -294,6 +335,16 @@ async function omladdning(browser) {
   const browser = await chromium.launch();
   const resultat = {};
   for (const roll of kora) resultat[roll] = await kor(browser, roll);
+  if (BREDD !== 1280) {
+    await browser.close();
+    const alla = Object.values(resultat).flat();
+    const roda = alla.filter(t => t.status !== 'grön');
+    console.log(`\nMeningen ligger över ett fält, en knapp eller en länk i arbetsytan i ${skymda.size} steg.${[...skymda].map(x => `\n  ${x}`).join('')}`);
+    console.log(`\nVägledning i bredden ${BREDD}: ${alla.length - roda.length} av ${alla.length} gröna för ${kora.join(', ')}. Inget resultat skrevs till filen.`);
+    for (const t of roda) console.log(`  RÖD ${t.namn ?? t.id ?? ''}: ${t.fel ?? t.detalj ?? JSON.stringify(t).slice(0, 300)}`);
+    if (sidfel.length) console.log(`Sidfel och konsolfel:\n  ${sidfel.join('\n  ')}`);
+    process.exit(roda.length || sidfel.length ? 1 : 0);
+  }
   resultat.omladdning = await omladdning(browser);
   const version = browser.version();
   await browser.close();
@@ -312,6 +363,7 @@ async function omladdning(browser) {
 
   const alla = Object.values(resultat).flat();
   const roda = alla.filter(t => t.status !== 'grön');
+  console.log(`\nMeningen ligger över ett fält, en knapp eller en länk i arbetsytan i ${skymda.size} steg.${[...skymda].map(x => `\n  ${x}`).join('')}`);
   console.log(`\nVägledning: ${alla.length - roda.length} av ${alla.length} gröna för ${[...kora, 'omladdningen'].join(', ')}. Resultatet finns i app/${resultatfil('vagledning.json')}`);
   if (sidfel.length) console.log(`Sidfel och konsolfel:\n  ${sidfel.join('\n  ')}`);
   process.exit(roda.length || sidfel.length ? 1 : 0);

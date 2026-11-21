@@ -322,7 +322,10 @@ const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
         anta(t.pass.resultat.steg === m.uppmatt, `passets räkning gav ${t.pass.resultat.steg} steg, skriptet räknade ${m.uppmatt}`);
         const saknas = steg.map(x => x.id).filter(id => id !== 'meny' && !sedda.includes(id));
         anta(!saknas.length, `stegen ${saknas.join(', ')} visades aldrig`);
-        anta(!(await p.locator('.fp-ram').count()), 'ramen finns kvar efter passet');
+        // Runda 21: efter passet pekar ramen på det som ska göras i panelen (jämförelsefrågan, påståendena eller knappen
+        // till nästa uppdrag), aldrig på något i journalen.
+        const efter = await p.evaluate(async () => { const m = await import('/js/forsta-pass.js'); const n = m.stegNu(); return n ? { id: n.id, iPanel: Boolean(n.el.closest('#testare')) } : null; });
+        anta(efter && efter.iPanel && ['jamforelse', 'sus-erbjudande', 'vidare'].includes(efter.id), `efter passet pekar ramen inte på panelen: ${JSON.stringify(efter)}`);
         console.log(`    ${roll}: ${m.uppmatt} av ${t.pass.budget} steg, ${t.pass.resultat.tidS} s`);
         if (roll === 'sjukskoterska') await bild(p, '18r1-aterkoppling');
       } finally { await c.close(); }
@@ -419,7 +422,17 @@ const anta = (villkor, text) => { if (!villkor) throw new Error(text); };
   await tP(G18R1.mobil, async () => {
     const { c, p } = await nyPassSida({ bredd: 390, hojd: 844 });
     try {
-      await startaPass(p, 'underskoterska', 'ja');
+      // Runda 21 (synpunkt på Facebook): krysset stänger panelen också medan frågan om mätning väntar, och den förblir
+      // stängd tills testaren öppnar den eller läget ändras.
+      await startaPass(p, 'underskoterska', null);
+      await p.waitForSelector('#testare-panel .tp-samtycke');
+      await p.click('#testare [data-tp="stang"]');
+      await p.waitForTimeout(1500);
+      anta(await p.locator('#testare-panel').isHidden(), 'krysset stängde inte panelen');
+      await p.click('#testare [data-tp="vaxla"]');
+      await p.waitForSelector('#testare-panel .tp-samtycke');
+      await p.click('#testare-panel [data-tp="matning"][data-varde="ja"]');
+      await p.waitForLoadState('networkidle');
       await bild(p, '18r1-vagledning-mobil');
       const { sedda } = await foljPass(p, 'underskoterska', { tangentbord: true });
       anta(sedda.includes('registrera'), `alla steg nåddes inte: ${sedda.join(', ')}`);

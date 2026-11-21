@@ -1,9 +1,93 @@
 {
-  "tid": "2026-11-21T12:33:57.293Z",
+  "tid": "2026-11-21T18:18:35.943Z",
   "bas": "http://127.0.0.1:18390",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+  "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
   "tester": [
+    {
+      "namn": "Gränssnitt > Användartest > testläget räknar klick, fältbyten och tangenter som klickbudgetskriptet för samma flöden",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > enkäten ger SUS-poäng enligt standardformeln",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > resultatfilen laddas ner med datum, version, deltagarkod, uppgifter och SUS-poäng",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > hoppa över och hjälp registreras per uppgift",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > inget anrop skickar testresultat till servern",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > testläget rensas när testet avslutas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: läkaren på sjukhus följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: läkaren i primärvården följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: sjuksköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: undersköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: barnmorskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vårdadministratören följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: fysioterapeuten följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: systemförvaltaren följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: patienten i Min journal följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: frågan om mätning ställs en gång före passet, och med nej skickas ingen mätning",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vägledningen följer med när testaren tar en annan väg, kan stängas av och slås på igen och läses upp för skärmläsare",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: återkopplingen visar tid och steg mot Sussas tidsklass och klickbudget, och SUS efter passet räknas på servern",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: vägledningen fungerar på 390 px och med tangentbordet, och markeringen skymmer inte det som ska klickas",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken utan att något skickas till servern, delningslänkarna öppnar tjänsternas delningssidor, och en besökare via länken räknas på kanalen",
+      "status": "grön"
+    },
+    {
+      "namn": "Gränssnitt > Användartest > första passet: inget som skickas under passet innehåller patientens id, namn eller personnummer",
+      "status": "grön"
+    },
     {
       "namn": "Gränssnitt > Avbrott > läskopian i webbläsaren är krypterad och nyckeln ligger inte i IndexedDB",
       "status": "grön"
@@ -114,90 +198,6 @@
     },
     {
       "namn": "Gränssnitt > Avbrott > flerfaktor: invånaren slår på en app för engångskoder i Min journal och loggar sedan in med en kod från appen",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > testläget räknar klick, fältbyten och tangenter som klickbudgetskriptet för samma flöden",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > enkäten ger SUS-poäng enligt standardformeln",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > resultatfilen laddas ner med datum, version, deltagarkod, uppgifter och SUS-poäng",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > hoppa över och hjälp registreras per uppgift",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > inget anrop skickar testresultat till servern",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > testläget rensas när testet avslutas",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: läkaren på sjukhus följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: läkaren i primärvården följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: sjuksköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: undersköterskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: barnmorskan följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: vårdadministratören följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: fysioterapeuten följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: systemförvaltaren följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: patienten i Min journal följer vägledningen genom hela uppgiften, och passet gör uppgiften inte dyrare än klickbudgeten",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: frågan om mätning ställs en gång före passet, och med nej skickas ingen mätning",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: vägledningen följer med när testaren tar en annan väg, kan stängas av och slås på igen och läses upp för skärmläsare",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: återkopplingen visar tid och steg mot Sussas tidsklass och klickbudget, och SUS efter passet räknas på servern",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: vägledningen fungerar på 390 px och med tangentbordet, och markeringen skymmer inte det som ska klickas",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > inbjudan: testaren får en färdig text med länken utan att något skickas till servern, delningslänkarna öppnar tjänsternas delningssidor, och en besökare via länken räknas på kanalen",
-      "status": "grön"
-    },
-    {
-      "namn": "Gränssnitt > Användartest > första passet: inget som skickas under passet innehåller patientens id, namn eller personnummer",
       "status": "grön"
     },
     {

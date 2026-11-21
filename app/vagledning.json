@@ -1,8 +1,8 @@
 {
   "roller": {
     "lakare-sjukhus": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -57,8 +57,8 @@
       ]
     },
     "lakare-primarvard": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -105,8 +105,8 @@
       ]
     },
     "omladdning": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -121,8 +121,8 @@
       ]
     },
     "sjukskoterska": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -181,8 +181,8 @@
       ]
     },
     "underskoterska": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -221,8 +221,8 @@
       ]
     },
     "barnmorska": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -257,8 +257,8 @@
       ]
     },
     "vardadministrator": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -317,8 +317,8 @@
       ]
     },
     "fysioterapeut": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -357,8 +357,8 @@
       ]
     },
     "systemforvaltare": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -397,8 +397,8 @@
       ]
     },
     "patient": {
-      "tid": "2026-11-21T10:31:20.393Z",
-      "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
+      "tid": "2026-11-21T17:05:51.108Z",
+      "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
       "webblasare": "Chromium 147.0.7727.15",
       "bas": "http://127.0.0.1:18390",
       "tester": [
@@ -884,6 +884,6 @@
       "aktuell": true
     }
   ],
-  "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
-  "tid": "2026-11-21T10:31:20.393Z"
+  "gransnittHash": "5f17f2fd0b00c243528cb6dda37331978ce1948816600b1c5505d13daa0be20a",
+  "tid": "2026-11-21T17:05:51.108Z"
 }

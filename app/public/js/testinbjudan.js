@@ -109,6 +109,9 @@ export async function starta(testroll, profil, knapp) {
 const ikonFor = (u, aktuell) => (u.status === 'klar' ? `<span class="tp-status tp-klar" aria-hidden="true">${ikon.bock}</span>` : u.status === 'hoppade_over' ? `<span class="tp-status tp-hoppad" aria-hidden="true">${ikon.pil}</span>` : `<span class="tp-status${aktuell ? ' tp-aktuell' : ''}" aria-hidden="true"></span>`);
 const statusText = (u) => (u.status === 'klar' ? 'klart' : u.status === 'hoppade_over' ? 'överhoppat' : 'kvar');
 
+// Runda 21: läget då testaren stängde panelen med krysset eller knappen, eller null.
+let stangdI = null;
+const lageNyckel = () => `${T.pass?.fas ?? ''}|${T.pass?.resultat ? 1 : 0}|${T.pass?.sus ?? ''}|${T.aktuellt ?? ''}|${T.attBesvara[0] ?? ''}`;
 function rita({ oppna = false } = {}) {
   const knapp = rot.querySelector('[data-tp="vaxla"]');
   const panel = rot.querySelector('#testare-panel');
@@ -120,7 +123,11 @@ function rita({ oppna = false } = {}) {
   // Runda 18, r1: under passet heter knappen Första passet, och panelen är öppen.
   const iPass = T.pass && T.pass.fas !== 'klar';
   knapp.innerHTML = `${ikon.lista}<span>${iPass ? 'Första passet' : `Uppdrag ${Math.min(gjorda + 1, n)} av ${n}`}</span>`;
-  if (iPass && T.pass.fas !== 'pagar') oppna = true;
+  // Runda 21: krysset stänger alltid panelen. Den öppnas av sig själv igen först när läget ändras (passet blir klart,
+  // en fråga väntar eller ett nytt uppdrag börjar), inte vid varje omritning.
+  const lageNu = lageNyckel();
+  if (lageNu !== stangdI) stangdI = null;
+  if (iPass && T.pass.fas !== 'pagar' && !stangdI) oppna = true;
   const oppen = oppna || las(OPPEN, localStorage) === '1';
   panel.hidden = !oppen;
   knapp.setAttribute('aria-expanded', String(oppen));
@@ -358,6 +365,7 @@ async function klick(e) {
       const panel = rot.querySelector('#testare-panel');
       const oppen = a === 'vaxla' ? panel.hidden : false;
       satt(OPPEN, oppen ? '1' : '0', localStorage);
+      stangdI = oppen ? null : lageNyckel();
       rita();
       if (a === 'stang') rot.querySelector('[data-tp="vaxla"]').focus();
       return;
