@@ -1,5 +1,6 @@
 node_modules/
 app/test-resultat.json
+app/test-resultat*.xml
 app/.testtmp-*
 
 # Runda 15: instruktionsfilmerna ligger som bilagor till releasen, inte i git.

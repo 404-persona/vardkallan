@@ -1,6 +1,7 @@
 node_modules
 test-resultat.json
 test-resultat.xml
+test-resultat-*.xml
 *.md
 .testtmp-*
 # Runda 20: TKB och testsvitens filer utan licens (scripts/rivta-scheman.js --tkb).

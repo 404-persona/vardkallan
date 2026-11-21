@@ -9,15 +9,25 @@ import { lasKlientresultat } from '../src/klientresultat.js';
 import { tolkaJunit } from './junit-tolkning.js';
 
 const rot = join(import.meta.dir, '..');
-const xml = join(rot, 'test-resultat.xml');
-// Runda 20: --smol låter Bun samla skräp oftare. Hela sviten (2405 tester) gick annars över 3 GB i en container med
-// --memory=3g, som är taket för containrarna på testdatorn och i bygget.
-const proc = Bun.spawnSync(['bun', '--smol', 'test', '--reporter=junit', `--reporter-outfile=${xml}`], { cwd: rot, stdout: 'inherit', stderr: 'inherit' });
-
-let text = '';
-try { text = readFileSync(xml, 'utf8'); } catch { console.error('Ingen JUnit-rapport skrevs.'); process.exit(1); }
-const tester = tolkaJunit(text);
-try { unlinkSync(xml); } catch { /* ingen fil */ }
+// Runda 20: sviten körs i flera Bun-processer, med --smol, som Bun samlar skräp oftare med. Hela sviten (2405 tester)
+// i en process gick över 3 GB och dödades i en container med --memory=3g, som är taket för containrarna på
+// testdatorn och i bygget, eftersom modulerna och deras cacheminnen lever kvar tills processen slutar. Filerna delas i
+// DELAR lika stora grupper i bokstavsordning, och varje grupp skriver en egen JUnit-rapport som läses ihop.
+const DELAR = Math.max(1, Number(process.env.TESTDELAR) || 4);
+const filer = readdirSync(join(rot, 'test')).filter(f => /\.test\.js$/.test(f)).sort();
+const grupper = Array.from({ length: DELAR }, (_, i) => filer.slice(Math.floor(i * filer.length / DELAR), Math.floor((i + 1) * filer.length / DELAR))).filter(g => g.length);
+const tester = [];
+const proc = { exitCode: 0 };
+for (const [i, grupp] of grupper.entries()) {
+  const xml = join(rot, `test-resultat-${i + 1}.xml`);
+  console.log(`\nDel ${i + 1} av ${grupper.length}: ${grupp.length} filer (${grupp[0]} till ${grupp.at(-1)})`);
+  const p = Bun.spawnSync(['bun', '--smol', 'test', '--reporter=junit', `--reporter-outfile=${xml}`, ...grupp.map(f => `./test/${f}`)], { cwd: rot, stdout: 'inherit', stderr: 'inherit' });
+  if (p.exitCode !== 0) proc.exitCode = p.exitCode ?? 1;
+  let text = '';
+  try { text = readFileSync(xml, 'utf8'); } catch { console.error(`Ingen JUnit-rapport skrevs för del ${i + 1}.`); process.exit(1); }
+  tester.push(...tolkaJunit(text));
+  try { unlinkSync(xml); } catch { /* ingen fil */ }
+}
 
 // Testerna av gränssnittet körs i Playwright före bygget och följer med som klickbudget.json och klienttest-resultat.json.
 // Runda 7, r1: och Sussas användbarhetstester som sussa-testfall.json.
