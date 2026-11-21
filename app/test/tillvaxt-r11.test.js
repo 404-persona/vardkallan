@@ -5,6 +5,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { testserver, klient, sandlada, somPerson } from './hjalp.js';
 import * as T from '../src/tillvaxt.js';
+import { tillganglig as fentonFinns } from '../src/fenton.js';
 import * as R from '../src/tillvaxt-r11.js';
 import { K11, MATKOD } from '../src/kodverk.js';
 import { verhoeffGiltig } from '../src/fackssprak.js';
@@ -45,7 +46,8 @@ describe('Tillväxt, version 1.1', () => {
     expect(d.kurvor.find(x => x.matt === 'langd').linjer[2].punkter.length).toBeGreaterThan(20);
     expect(d.referenser.map(r => r.id)).toEqual(['auto', 'who2006', 'who2007']);
     expect(d.ejTillgangliga.map(r => r.id)).toEqual(['svensk', 'prematur', 'down', 'turner']);
-    expect(d.ejTillgangliga.find(r => r.id === 'prematur').skal).toContain('korrigerad ålder');
+    // Runda 20: med Fentons kurvdata på servern (FENTON_DATA) står bara INTERGROWTH-21st kvar bland prematurkurvorna.
+    expect(d.ejTillgangliga.find(r => r.id === 'prematur').skal).toContain(fentonFinns() ? 'INTERGROWTH-21st' : 'korrigerad ålder');
     const bytt = (await k.get('/api/patient/p09/tillvaxt?referens=who2006')).data;
     expect(bytt.referens).toMatchObject({ id: 'who2006', vald: 'who2006' });
     expect(bytt.barn.inomReferens).toBe(false);

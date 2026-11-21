@@ -10,7 +10,9 @@ import { tolkaJunit } from './junit-tolkning.js';
 
 const rot = join(import.meta.dir, '..');
 const xml = join(rot, 'test-resultat.xml');
-const proc = Bun.spawnSync(['bun', 'test', '--reporter=junit', `--reporter-outfile=${xml}`], { cwd: rot, stdout: 'inherit', stderr: 'inherit' });
+// Runda 20: --smol låter Bun samla skräp oftare. Hela sviten (2405 tester) gick annars över 3 GB i en container med
+// --memory=3g, som är taket för containrarna på testdatorn och i bygget.
+const proc = Bun.spawnSync(['bun', '--smol', 'test', '--reporter=junit', `--reporter-outfile=${xml}`], { cwd: rot, stdout: 'inherit', stderr: 'inherit' });
 
 let text = '';
 try { text = readFileSync(xml, 'utf8'); } catch { console.error('Ingen JUnit-rapport skrevs.'); process.exit(1); }

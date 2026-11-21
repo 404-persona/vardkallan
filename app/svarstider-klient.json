@@ -1,8 +1,8 @@
 {
-  "tid": "2026-11-20T16:34:43.384Z",
-  "bas": "http://127.0.0.1:18293",
+  "tid": "2026-11-21T11:02:24.697Z",
+  "bas": "http://127.0.0.1:18390",
   "webblasare": "Chromium 147.0.7727.15",
-  "gransnittHash": "619a0b848f933e9b4eba7ded732f56c0d1a8caf299dab5058e10bee505c9b0ae",
+  "gransnittHash": "c6630230f601a45645b50b8cddcdf66c00276355f22b697306194e8f2d33e73b",
   "mal": {
     "aterkopplingMs": 100,
     "resultatMs": 500,
@@ -14,41 +14,29 @@
     "vanlig": {
       "antal": 373,
       "p50Aterkoppling": 1,
-      "p95Aterkoppling": 3,
-      "p50Resultat": 43,
-      "p95Resultat": 141,
+      "p95Aterkoppling": 4,
+      "p50Resultat": 45,
+      "p95Resultat": 155,
       "andelAterkoppling": 1,
-      "andelResultat": 0.9919571045576407,
+      "andelResultat": 0.9946380697050938,
       "langsammaste": [
         {
           "flode": "Välja yrkesroll och starta första passet",
           "steg": "Ja, mät passet",
           "aterkoppling": 1,
-          "resultat": 14985
+          "resultat": 14958
         },
         {
           "flode": "Välja yrkesroll och starta första passet",
           "steg": "Läkare på sjukhus",
           "aterkoppling": 1,
-          "resultat": 14906
-        },
-        {
-          "flode": "Sätta upp en standardvårdplan",
-          "steg": "Upprätta vårdplanen",
-          "aterkoppling": 11,
-          "resultat": 545
-        },
-        {
-          "flode": "Skriva ut läkemedelslistan vid utskrivning",
-          "steg": "Skriv ut i dialogen",
-          "aterkoppling": 4,
-          "resultat": 422
+          "resultat": 14898
         },
         {
           "flode": "Sätta ut ett läkemedel",
           "steg": "Sätt ut",
           "aterkoppling": 1,
-          "resultat": 364
+          "resultat": 402
         },
         {
           "flode": "Läsa in loggen från reservservern",
@@ -63,10 +51,22 @@
           "resultat": 245
         },
         {
+          "flode": "Ordinera från en mall med flera ordinationer",
+          "steg": "Ordinera",
+          "aterkoppling": 1,
+          "resultat": 214
+        },
+        {
           "flode": "Boka provtagning före läkarbesök",
           "steg": "Boka tid vid återbesöket",
+          "aterkoppling": 0,
+          "resultat": 207
+        },
+        {
+          "flode": "Sätta in Waran igen efter ett uppehåll",
+          "steg": "Sätt in igen",
           "aterkoppling": 1,
-          "resultat": 192
+          "resultat": 182
         }
       ]
     },
@@ -74,8 +74,8 @@
       "antal": 373,
       "p50Aterkoppling": 2,
       "p95Aterkoppling": 10,
-      "p50Resultat": 67,
-      "p95Resultat": 219,
+      "p50Resultat": 70,
+      "p95Resultat": 246,
       "andelAterkoppling": 1,
       "andelResultat": 0.9946380697050938,
       "langsammaste": [
@@ -83,49 +83,49 @@
           "flode": "Välja yrkesroll och starta första passet",
           "steg": "Läkare på sjukhus",
           "aterkoppling": 2,
-          "resultat": 3621
+          "resultat": 3703
         },
         {
           "flode": "Välja yrkesroll och starta första passet",
           "steg": "Ja, mät passet",
           "aterkoppling": 4,
-          "resultat": 2678
+          "resultat": 1469
         },
         {
           "flode": "Ordinera ett läkemedel utan varning",
           "steg": "Kontrollera och spara",
-          "aterkoppling": 2,
-          "resultat": 705
+          "aterkoppling": 5,
+          "resultat": 655
         },
         {
           "flode": "Sätta ut Waran med plan",
           "steg": "Jag har en plan",
-          "aterkoppling": 2,
-          "resultat": 568
+          "aterkoppling": 3,
+          "resultat": 481
         },
         {
           "flode": "Avvisa en remiss och sätta ut läkemedlet",
           "steg": "Spara bedömningen",
           "aterkoppling": 2,
-          "resultat": 456
+          "resultat": 398
         },
         {
           "flode": "Läsa in loggen från reservservern",
           "steg": "Läs in",
-          "aterkoppling": 4,
-          "resultat": 346
+          "aterkoppling": 2,
+          "resultat": 337
         },
         {
           "flode": "Sätta in Waran igen efter ett uppehåll",
           "steg": "Sätt in igen",
           "aterkoppling": 2,
-          "resultat": 287
+          "resultat": 328
         },
         {
-          "flode": "Öppna patient från arbetslistan",
-          "steg": "patientens namn i arbetslistan",
-          "aterkoppling": 3,
-          "resultat": 271
+          "flode": "Registrera blodtryck via Vad vill du göra?",
+          "steg": "första förslaget",
+          "aterkoppling": 24,
+          "resultat": 292
         }
       ]
     }
