@@ -8,6 +8,8 @@ COPY scripts ./scripts
 COPY test ./test
 # Runda 14, r2: de pinnade schemana för tjänstekontrakten i RIVTA (rivta/<domän>/KALLA.json).
 COPY rivta ./rivta
+# Testspår 2: affärsreglerna i tjänstekontraktsbeskrivningarna och Vårdkällans uppgifter för Ineras testsviter.
+COPY rivta-regler ./rivta-regler
 # Playwright-testerna av gränssnittet (test/avbrott.cjs, test/anvandartest.cjs och test/klickbudget.cjs) körs före bygget. Resultaten följer med här.
 COPY klickbudget.json klienttest-resultat.json ./
 # Runda 7, r1: Sussas användbarhetstester (test/sussa-testfall.cjs).
@@ -17,6 +19,8 @@ COPY lasttest.json ./
 # Runda 12, r2: resultatet av valideringen med HL7:s validator, med en hash av koden som bygger FHIR-resurserna.
 COPY fhir-validering.json ./
 RUN bun scripts/kor-tester.js
+# Testspår 2: TKB och testsvitens filer (rivta/<domän>/docs och test-suite) behövs bara av testerna och följer inte med.
+RUN mkdir -p /ren && cp -r rivta /ren/rivta && rm -rf /ren/rivta/*/docs /ren/rivta/*/test-suite
 
 FROM oven/bun:1.3.14-alpine
 WORKDIR /app
@@ -24,7 +28,7 @@ COPY package.json ./
 COPY src ./src
 COPY public ./public
 # Runda 14, r2: schemana för tjänstekontrakten, som producenterna och konsumenterna validerar mot.
-COPY rivta ./rivta
+COPY --from=test /ren/rivta ./rivta
 # Runda 13, r1: skriptet för läskoder och nya synpunkter körs i containern (docker exec).
 COPY scripts/testinbjudan.js ./scripts/testinbjudan.js
 COPY --from=test /app/test-resultat.json ./test-resultat.json

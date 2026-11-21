@@ -1,0 +1,19 @@
+{
+  "beskrivning": "Fel i Ineras exempel för Update (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": {
+    "1.1 Update": [],
+    "1.2 Delete": [],
+    "1.3 Multiple": [],
+    "3.1 Non-Unique": [],
+    "3.2 Schema Error": [
+      "SOAP Fault Assertion: Svaret är ett SOAP Fault: Begäran följer inte schemat för Update 1.0: /Update/engagementTransaction: elementet engagements är inte tillåtet här efter deleteFlag, eller så saknas ",
+      "Assert ERROR: Svaret är ett SOAP Fault: Begäran följer inte schemat för Update 1.0: /Update/engagementTransaction: elementet engagements är inte tillåtet här efter deleteFlag, eller så saknas ett obli"
+    ],
+    "3.3 Schematron Error": [
+      "Assert ERROR: Inte alla av posterna har /ResultCode = ERROR."
+    ],
+    "mock Update: OK": "tas emot",
+    "mock Update: Error": "tas emot",
+    "mock Update: SoapFault": "fault: Update svarade med ett fel: Valideringsfel"
+  }
+}

@@ -5,7 +5,15 @@
   "commit": "02b15bdee612ae4c9998678edf5c31453a6a3d71",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.activity.actions/get/02b15bdee612ae4c9998678edf5c31453a6a3d71.tar.gz",
   "arkivSha256": "0d504e8abbc1e14717d6a925cc8284a4472ec560206cbea4b81db636d6b60b9f",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 6,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/interactions/GetActivitiesInteraction/Exempel GetActivitiesRequest.xml",
+      "schemas/interactions/GetActivitiesInteraction/Exempel GetActivitiesResponse.xml"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/clinicalprocess_activity_actions_1.3.xsd": "594c7908c080c14d1ecb45d8b3f7f41e8e1195fc5a4b0d81fcdc91e4b6d7b350",

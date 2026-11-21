@@ -1,0 +1,478 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="bdae1dc5-fa29-415e-867f-9c7656d95ac7" activeEnvironment="Default" name="AssertCareEngagement 1.0" resourceRoot="${projectDir}" soapui-version="5.4.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="99b6f022-5144-44b4-a3ab-4606c1a4b8be" wsaVersion="NONE" name="AssertCareEngagementResponderBinding" type="wsdl" bindingName="{urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21}AssertCareEngagementResponderBinding" soapVersion="1_1" anonymous="optional" definition="../../schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/C:/NMT/Repon/TGP/riv.ehr.accesscontrol/schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl"><con:part><con:url>file:/C:/NMT/Repon/TGP/riv.ehr.accesscontrol/schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<wsdl:definitions name="AssertCareEngagementInteraction" targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tjsr="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" xmlns:tjsi="urn:riv:ehr:accesscontrol:AssertCareEngagementInitiator:1" xmlns:tns="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21" xmlns:itr="urn:riv:itintegration:registry:1">
+  <xs:annotation>
+    <xs:documentation>Tjänsteinteraktionens namn: AssertCareEngagementInteraction
+			 Beskrivning: 
+			   The responder determines whether a care professional has a care relationship with a patient such that access to health records of external healthcare fascilities would be justified
+			 Revisioner: 
+			 Tjänstedomän: ehr:accesscontrol
+			 Tjänsteinteraktionstyp: Fråga-Svar
+			 WS-profil: RIVTABP21
+			 Förvaltas av: Inera AB</xs:documentation>
+  </xs:annotation>
+  <wsdl:types>
+    <xs:schema targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21">
+      <xs:import schemaLocation="AssertCareEngagementResponder_1.0.xsd" namespace="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1"/>
+      <xs:import schemaLocation="../../core_components/itintegration_registry_1.0.xsd" namespace="urn:riv:itintegration:registry:1"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="AssertCareEngagementRequest">
+    <wsdl:part name="LogicalAddress" element="itr:LogicalAddress">
+      <wsdl:documentation>>The HSAid of the healthcare_facility on which behalf the employee is acting in her profess</wsdl:documentation>
+    </wsdl:part>
+    <wsdl:part name="parameters" element="tjsr:AssertCareEngagement"/>
+  </wsdl:message>
+  <wsdl:message name="AssertCareEngagementResponse">
+    <wsdl:part name="parameters" element="tjsr:AssertCareEngagementResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="AssertCareEngagementResponderInterface">
+    <wsdl:operation name="AssertCareEngagement">
+      <wsdl:input message="tns:AssertCareEngagementRequest"/>
+      <wsdl:output message="tns:AssertCareEngagementResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="AssertCareEngagementResponderBinding" type="tns:AssertCareEngagementResponderInterface">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="AssertCareEngagement">
+      <soap:operation soapAction="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" style="document"/>
+      <wsdl:input>
+        <soap:header use="literal" message="tns:AssertCareEngagementRequest" part="LogicalAddress"/>
+        <soap:body use="literal" parts="parameters"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="AssertCareEngagementResponderService">
+    <wsdl:port name="AssertCareEngagementResponderPort" binding="tns:AssertCareEngagementResponderBinding">
+      <soap:address location="http://tempuri.org"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\interactions\AssertCareEngagementInteraction\AssertCareEngagementResponder_1.0.xsd</con:url><con:content><![CDATA[<!--Licensed to Inera AB under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" xmlns:core="urn:riv:ehr:accesscontrol:1">
+  <xs:import schemaLocation="../../core_components/ehr_accesscontrol_1.0.xsd" namespace="urn:riv:ehr:accesscontrol:1"/>
+  <xs:element name="AssertCareEngagement" type="tns:AssertCareEngagementType"/>
+  <xs:element name="AssertCareEngagementResponse" type="tns:AssertCareEngagementResponseType"/>
+  <xs:complexType name="AssertCareEngagementType">
+    <xs:annotation>
+      <xs:documentation>Request parameters of the AssertCareEngagement service</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="performer" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of the performer (healthcare professional) requesting access to EHR records of the subject of care.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="subjectOfCareId" type="core:SubjectOfCareIdType">
+        <xs:annotation>
+          <xs:documentation>Id of the subject of care of the EHR for which access is requested by the performer.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="careUnitHsaIdentity" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of care unit where the performer is in duty when requesting access to EHR records of the subject of care.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="careGiverHsaIdentity" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of the organisation operating the healthcare_facility</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AssertCareEngagementResponseType">
+    <xs:sequence>
+      <xs:annotation>
+        <xs:documentation>Response message of the AssertCareEngagement service</xs:documentation>
+      </xs:annotation>
+      <xs:element name="HasCareEngagement" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>true if care engagement is asserted, else false</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\core_components\ehr_accesscontrol_1.0.xsd</con:url><con:content><![CDATA[<!--Licensed to Inera AB under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:ehr:accesscontrol:1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:ehr:accesscontrol:1">
+  <xs:simpleType name="DT">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[1-9]{1}[0-9]{3}(0[1-9]{1}|1[0-2]{1})([0-2]{1}[0-9]{1}|3[0-1]{1})">
+        <xs:annotation>
+          <xs:documentation>ISO 8601 datetime format (ASN.1): YYYYMMDD</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="HsaIdType">
+    <xs:restriction base="xs:token">
+      <xs:maxLength value="64"/>
+      <xs:pattern value="[(\p{L})0-9\-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SubjectOfCareIdType">
+    <xs:restriction base="xs:string">
+      <!--xs:pattern value="^[0-9]{8}[0-9pPtTfF][0-9]{3}$"/-->
+      <xs:pattern value="[0-9]{8}[0-9pPtTfF][0-9]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\core_components\itintegration_registry_1.0.xsd</con:url><con:content><![CDATA[<xs:schema targetNamespace="urn:riv:itintegration:registry:1" elementFormDefault="qualified" version="1.0" xmlns="urn:riv:itintegration:registry:1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:annotation>
+    <xs:documentation>Beskrivning: 	Grundläggande informationsobjekt för domänen itintegration:registry (adressering av tjänster)
+			
+			Revisionshistorik: 2011-06-27 Mats Ekhammar, Callista Enterprise AB
+				Added ServiceContractType
+			
+			Datum:			2011-05-04
+			Beskrivning:	Initial version
+			Författare:		marcus.krantz@callistaenterprise.se</xs:documentation>
+  </xs:annotation>
+  <xs:element name="LogicalAddress" type="LogicalAddressType"/>
+  <xs:simpleType name="LogicalAddressType">
+    <xs:annotation>
+      <xs:documentation>Defines the type for logical address according to national reference architecture.
+				Superseeds wsa:To as type for logical address header in RIVTA 2.1.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+  <xs:complexType name="ServiceContractNamespaceType">
+    <xs:annotation>
+      <xs:documentation>Type which describes a service contract.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="ServiceContractNamespace" type="xs:anyURI"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="HsaIdType">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://tempuri.org</con:endpoint></con:endpoints><con:operation id="b9cffb38-fccf-4d2e-8d6e-3719408afcbe" isOneWay="false" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" name="AssertCareEngagement" bindingOperationName="AssertCareEngagement" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/></con:operation></con:interface><con:testSuite id="70966c1e-9988-4caa-807f-db72cca444d8" name="1 Basic tests"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="5f0fe2df-c006-4379-a902-64d8913e981d" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.1.1 Personnummer" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="ab1679ee-7c6b-461c-9424-4f2b82bea2af"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="17b56424-9585-4ba0-97e9-ab01602033c7" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="True" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="GroovyScriptAssertion" id="31474e38-5def-4a5e-b8c8-500cd998138c" name="EnableLogging"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="c81d4d94-ee4f-45a9-966f-f699000fcd5b" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.1.2 Samordningsnummer" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="8261e0f9-049b-4eae-a2a7-126617d57cab"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="7e9eec72-8c58-495e-81b4-4b245171ea26" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="True" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:AssertCareEngagement>
+         <urn1:performer>${performer}</urn1:performer>
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>
+      </urn1:AssertCareEngagement>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d184cc5d-e616-487f-b450-24ed2986a05c" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="d9027dd9-368e-4ebd-aa38-36306386f827" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="ee8f7af0-4f58-4038-8aca-50c5b272d805" name="SOAP Response"/><con:assertion type="GroovyScriptAssertion" id="3bb64ade-cb53-4916-a55f-cb10c4799c76" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="68e28375-dcc8-48af-b293-9e24b4a3cd44" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.7 SoapFault" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="90afddd2-0243-4259-a4df-887463aafdb1"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="2ea168df-d24c-4c89-9ea3-c78639b8723f" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="SoapFault" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="Not SOAP Fault Assertion" id="69bc2105-a236-4bbd-a9fd-83a82fe99a7d" name="SOAP Fault"/><con:assertion type="GroovyScriptAssertion" id="3c0edb6c-3459-4627-9397-960fec2dd32c" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:testSuite id="7a27c5c7-1ec1-4083-bcf3-12ebb286e9fc" name="2 Content - Common"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="a9409ce7-b764-4c54-82ac-448d46911bbd" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="2.1 Encoding_HeaderProlog" searchProperties="true">
+      <con:settings/>
+      <con:testStep type="groovy" name="Read data" id="d860676d-a5b7-46e7-95c8-b90cec1d93a3">
+        <con:settings/>
+        <con:config>
+          <script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script>
+        </con:config>
+      </con:testStep>
+      
+      <con:testStep type="request" id="3707a2a3-8ec7-4559-b03e-98cf6dfaf6c4" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="fa2e9789-f57f-45dd-8b3a-55dd98320e9d" name="SOAP Response"/><con:assertion type="GroovyScriptAssertion" id="b69361e6-8d4d-4b95-8149-dfa67b9cc7f5" name="Assert Content Type"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange,log)
+ca.assertValidEncoding()</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/>
+    <con:reportParameters/></con:testCase><con:properties/><con:reportParameters/></con:testSuite><con:testSuite id="e3970c96-4928-4301-b312-ec8759205021" name="5 Contract specific"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="54a5f759-3e88-4195-b1ae-4b3dd6b7d534" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="5.1 True" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="5e7873ca-8510-4aee-8ce1-42a9606ee042"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="edd9746a-e53d-4bca-bb06-46df4ae44cf4" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="True" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Simple Contains" id="4a54d413-dd84-49a7-8898-66aa36fcefba" name="Contains"><con:configuration><token>true</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="acc1b581-59c9-44c9-8670-0d548ba7b409" name="Response SLA"><con:configuration><SLA>1000</SLA></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="29226178-7e79-43cd-bcb0-a3580bada4d5" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="63939674-6542-4d95-9e2d-f9a8d204a879" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="5.2.1 Fel Performer" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="044dd5d2-67d4-489c-90d4-43a497005c38"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="0bd91f70-e9a5-419a-8a55-d638f68775de" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="False" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Simple Contains" id="4a54d413-dd84-49a7-8898-66aa36fcefba" name="Contains"><con:configuration><token>false</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="cb740ca1-dee0-49b8-9888-33a5353ae7f2" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="c965afae-9885-4e9b-9681-fe69854199ac" name="Response SLA"><con:configuration><SLA>1000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="ad9a93d2-33b5-4693-881b-d1ec1100e4b7" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="5.2.2 Fel Patient" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="016bf28d-8916-49b0-8932-ec434231a9c3"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="df3dfb9f-a8e9-4f63-8b32-1aa18ff82f5e" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="False" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Simple Contains" id="4a54d413-dd84-49a7-8898-66aa36fcefba" name="Contains"><con:configuration><token>false</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="cb740ca1-dee0-49b8-9888-33a5353ae7f2" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="c965afae-9885-4e9b-9681-fe69854199ac" name="Response SLA"><con:configuration><SLA>1000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="94efaa66-fcb0-4d86-bd05-a6813fa8dcd8" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="5.2.3 Fel CareUnit" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="d0fcfa7d-3898-4b46-92a7-55a1060115a1"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="6c7071cd-4c0d-4b22-b7aa-ddf95b0a10ea" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="False" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Simple Contains" id="4a54d413-dd84-49a7-8898-66aa36fcefba" name="Contains"><con:configuration><token>false</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="cb740ca1-dee0-49b8-9888-33a5353ae7f2" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="c965afae-9885-4e9b-9681-fe69854199ac" name="Response SLA"><con:configuration><SLA>1000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="c9b97840-40ca-483c-9894-81a8535c8f0b" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="5.2.4 Fel CareGiver" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read data" id="1980d50a-0dd8-4ea5-b629-25be3d6291c3"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="a4977c5d-4cd8-458c-a693-b0a4d1b8a066" name="AssertCareEngagement"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="AssertCareEngagement" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="x-mock-response" value="False" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Simple Contains" id="4a54d413-dd84-49a7-8898-66aa36fcefba" name="Contains"><con:configuration><token>false</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="cb740ca1-dee0-49b8-9888-33a5353ae7f2" name="EnableLogging"><con:configuration><scriptText>// Initiating supportlib enables logging (will occur if enabled in data.xml)
+import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+</scriptText></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="c965afae-9885-4e9b-9681-fe69854199ac" name="Response SLA"><con:configuration><SLA>1000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:testSuite id="ff10cf61-a27f-4052-a42c-cb9a95ef73a6" name="6 Non-functional tests"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="914d9481-7913-4432-bb5b-bce5c9335743" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="6.1 Loadtest" searchProperties="true"><con:settings/><con:testStep type="request" id="16a57398-6422-4ce9-9d04-e158da37a7df" name="PatientId1"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="PatientId1" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="True"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Response SLA Assertion" id="bd68e359-2d0e-4f07-a9a3-c336fa490e8b" name="Response SLA"><con:configuration><SLA>5000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" id="fc49a9c9-1f43-4b2b-9ecc-7de45ee488e4" name="PatientId2"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="PatientId2" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="False"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Response SLA Assertion" id="b5eb1afe-684a-47c4-b77e-fa38c89347cb" name="Response SLA"><con:configuration><SLA>5000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:loadTest id="fc581a8a-d49c-4172-8f55-9b158871dc1f" name="6.1.1 Grund"><con:settings/><con:threadCount>10</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>180</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Simple</con:type></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>0</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Total -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:loadTest id="6230088f-dd2d-4fa5-9377-907d8c4a134a" name="6.1.2 Uthållighet"><con:settings/><con:threadCount>5</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>1800</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Variance</con:type><con:config><interval>60000</interval><variance>1.0</variance></con:config></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>0</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Total -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:setupScript>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testCase.getName())</con:setupScript><con:properties/></con:testCase><con:testCase id="2274bb58-e57d-4366-aacc-ef59bb2e33b6" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="6.2 Recovery" searchProperties="true"><con:settings/><con:testStep type="request" id="7b894438-6e1b-4598-9f10-665e3385dd87" name="PatientId1"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="PatientId1" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="True"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Response SLA Assertion" id="bd68e359-2d0e-4f07-a9a3-c336fa490e8b" name="Response SLA"><con:configuration><SLA>5000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" id="ad5a6735-5073-4258-946c-61cc44745837" name="PatientId2"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>AssertCareEngagementResponderBinding</con:interface><con:operation>AssertCareEngagement</con:operation><con:request name="PatientId2" id="ee7bb216-4f76-4c37-b981-2eddd1e25b43"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="False"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:AssertCareEngagement>\r
+         <urn1:performer>${performer}</urn1:performer>\r
+         <urn1:subjectOfCareId>${subjectOfCareId}</urn1:subjectOfCareId>\r
+         <urn1:careUnitHsaIdentity>${careUnitHsaIdentity}</urn1:careUnitHsaIdentity>\r
+         <urn1:careGiverHsaIdentity>${careGiverHsaIdentity}</urn1:careGiverHsaIdentity>\r
+      </urn1:AssertCareEngagement>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Fault Assertion" id="d078bfce-f8ae-48b9-af8c-15e8b5b7bca8" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="9e52f20d-babb-4d6e-906c-9c7d1f7df144" name="Schema Compliance"><con:configuration/></con:assertion><con:assertion type="SOAP Response" id="cb2a38d2-7a9b-4275-9c1e-1e70a982407d" name="SOAP Response"/><con:assertion type="Response SLA Assertion" id="b5eb1afe-684a-47c4-b77e-fa38c89347cb" name="Response SLA"><con:configuration><SLA>5000</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:loadTest id="315bb10a-9a99-459a-8cba-e4b6ef0f0014" name="6.2.1 Återhämtning"><con:settings/><con:threadCount>100</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>100</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Thread</con:type><con:config><startThreadCount>10</startThreadCount><endThreadCount>100</endThreadCount></con:config></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>0</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Total -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:setupScript>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testCase.getName())</con:setupScript><con:properties/></con:testCase><con:properties/></con:testSuite><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

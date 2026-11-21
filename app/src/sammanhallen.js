@@ -103,7 +103,8 @@ export function franRivTid(ts) {
 }
 // Typerna av vårdkontakt i GetCareContacts.
 const KONTAKTTYP = { 1: 'Besök', 2: 'Telefonkontakt', 3: 'Vårdtillfälle', 4: 'Dagsjukvård', 5: 'Vårdkontakt' };
-const isoUtanZ = (iso) => iso.replace(/\.\d+Z$/, '').replace(/Z$/, '');
+// Testspår 2: tiderna till spärrtjänsten är svensk tid utan tidszon (TKB ehr:blocking 2.6, rivta/tid.js).
+const isoUtanZ = (iso) => require('./rivta/tid.js').svenskTid(iso);
 
 let nationellaModul = null;
 const nationella = () => {
@@ -117,6 +118,19 @@ function aktorFor(atk) {
     EmployeeId: atk.personal.hsa_id ?? atk.personal.id, CareProviderId: nationella().vardgivare(db),
     CareUnitId: db.query('SELECT hsa_id FROM enheter WHERE id = ?').get(ve)?.hsa_id ?? ve,
   };
+}
+// Testspår 2: spärrtjänstens svar gäller bara när resultatet är OK eller INFO (INFO är en genomförd åtgärd, TKB
+// ehr:blocking 2.3). Ett svar med ERROR, ACCESSDENIED eller VALIDATIONERROR och en tom lista betyder inte att patienten
+// saknar spärrar, utan att tjänsten inte kunde svara, och behandlas som när tjänsten inte svarar.
+const GENOMFORD = ['OK', 'INFO'];
+function blockAv(svar) {
+  const r = svar.BlockHeaderType.Result;
+  if (!GENOMFORD.includes(r?.ResultCode)) {
+    const e = new Error(`Spärrtjänsten svarade ${r?.ResultCode ?? 'utan resultat'}${r?.ResultText ? `: ${r.ResultText}` : ''}.`);
+    e.kod = 'svar';
+    throw e;
+  }
+  return svar.BlockHeaderType.Blocks ?? [];
 }
 function patientIdFor(db, patientId) {
   const p = db.query('SELECT personnummer, id_typ FROM patienter WHERE id = ?').get(patientId);
@@ -137,19 +151,26 @@ function tjanst(atk) {
       const svar = n.anropa(db, kontrakt, { patientId: pid });
       for (const x of svar[lista] ?? []) {
         const h = x[huvudNamn];
-        const vg = h.sourceSystemHSAId ?? h.sourceSystemHSAid;
-        if (vg === egen) continue;
         const a = h.accountableHealthcareProfessional ?? {};
+        // Testspår 2 (Regel 1 i TKB): vårdgivaren och vårdenheten för spärrkontrollen är de i
+        // accountableHealthcareProfessional, inte källsystemet, och en post utan dem visas inte i sammanhållen
+        // journalföring.
+        const vg = a.healthcareProfessionalCareGiverHSAId ?? null;
+        if (!vg || !a.healthcareProfessionalCareUnitHSAId) continue;
+        if (vg === egen) continue;
         const tid = franRivTid(h.documentTime ?? a.authorTime ?? x.careContactBody?.careContactTimePeriod?.start);
         if (!tid) continue;
-        const enhet = a.healthcareProfessionalOrgUnit ?? x.careContactBody?.careContactOrgUnit ?? null;
+        const enhet = { orgUnitHSAId: a.healthcareProfessionalCareUnitHSAId, orgUnitName: a.healthcareProfessionalOrgUnit?.orgUnitName ?? x.careContactBody?.careContactOrgUnit?.orgUnitName ?? null };
+        const kod = x.diagnosisBody?.diagnosisCode;
+        const rubrik = h.documentTitle ?? (kod ? [kod.displayName ?? kod.originalText, kod.code ? `(${kod.code})` : null].filter(Boolean).join(' ') : null)
+          ?? x.medicationMedicalRecordBody?.medicationPrescription?.drug?.unstructuredDrugInformation?.unstructuredInformation ?? null;
         const text = x.careDocumentationBody?.clinicalDocumentNote?.clinicalDocumentNoteText ?? x.careContactBody?.careContactReason
           ?? x.medicationMedicalRecordBody?.medicationPrescription?.prescriptionNote ?? (x.diagnosisBody ? (x.diagnosisBody.typeOfDiagnosis === 'Huvuddiagnos' ? 'Huvuddiagnos.' : 'Bidiagnos.') : '');
         ut.push({
-          id: h.documentId, typ, typText: TYPTEXT[typ], tid, rubrik: h.documentTitle ?? (x.careContactBody ? `${KONTAKTTYP[x.careContactBody.careContactCode] ?? 'Vårdkontakt'} på ${enhet?.orgUnitName ?? 'okänd vårdenhet'}` : TYPTEXT[typ]), text,
+          id: h.documentId, typ, typText: TYPTEXT[typ], tid, rubrik: rubrik ?? (x.careContactBody ? `${KONTAKTTYP[x.careContactBody.careContactCode] ?? 'Vårdkontakt'} på ${enhet?.orgUnitName ?? 'okänd vårdenhet'}` : TYPTEXT[typ]), text,
           vardgivare: { hsaId: vg, namn: vg === VARDGIVARE.hsaId ? VARDGIVARE.namn : vg },
           vardenhet: { hsaId: enhet?.orgUnitHSAId ?? null, namn: enhet?.orgUnitName ?? 'Okänd vårdenhet' },
-          yrkesroll: a.healthcareProfessionalRoleCode?.displayName ?? 'Okänd yrkesroll', skapadAv: a.healthcareProfessionalName ?? 'Okänd',
+          yrkesroll: a.healthcareProfessionalRoleCode?.displayName ?? a.healthcareProfessionalRoleCode?.originalText ?? 'Okänd yrkesroll', skapadAv: a.healthcareProfessionalName ?? 'Okänd',
           kalla: `extern:${vg}`, kallaEtikett: vg === VARDGIVARE.hsaId ? ETIKETT : `Hämtad från ${vg} genom sammanhållen journalföring`,
         });
       }
@@ -162,7 +183,9 @@ function tjanst(atk) {
         InformationCareProviderId: p.vardgivare.hsaId, RowNumber: i })),
     });
     const res = svar.CheckBlocksResultType;
-    if (res.Result.ResultCode !== 'OK') return { poster: [], fel: EJ_SVAR_TEXT };
+    // Testspår 2: INFO betyder att någon av uppgifterna hade ett valideringsfel; de andra prövades. Bara de som tjänsten
+    // svarar OK för visas.
+    if (!GENOMFORD.includes(res.Result.ResultCode)) return { poster: [], fel: EJ_SVAR_TEXT };
     const ok = new Set((res.CheckResults ?? []).filter(r => r.Status === 'OK').map(r => Number(r.RowNumber)));
     return { poster: ut.filter((_, i) => ok.has(i)), fel: null };
   } catch (e) {
@@ -181,7 +204,7 @@ function harSparrade(atk) {
   try {
     const svar = n.anropa(db, 'GetAllBlocksForPatient', { PatientId: pid.id });
     const egen = n.vardgivare(db);
-    return (svar.BlockHeaderType.Blocks ?? []).some(b => b.BlockType === 'Outer' && b.InformationCareProviderId !== egen);
+    return blockAv(svar).some(b => b.BlockType === 'Outer' && b.InformationCareProviderId !== egen);
   } catch (e) {
     if (e?.kod) return null;
     throw e;
@@ -305,7 +328,7 @@ export function havSparr(atk, sess, body = {}) {
   const pid = patientIdFor(db, atk.patientId);
   const a = aktorFor(atk);
   let block;
-  try { block = (n.anropa(db, 'GetAllBlocksForPatient', { PatientId: pid.id }).BlockHeaderType.Blocks ?? []).filter(b => b.BlockType === 'Outer' && b.InformationCareProviderId !== a.CareProviderId); } catch (e) {
+  try { block = blockAv(n.anropa(db, 'GetAllBlocksForPatient', { PatientId: pid.id })).filter(b => b.BlockType === 'Outer' && b.InformationCareProviderId !== a.CareProviderId); } catch (e) {
     if (e?.kod) throw new Fel(503, 'Spärrtjänsten svarar inte, så spärren kan inte hävas just nu. Försök igen om en stund.', 'ej_tillganglig');
     throw e;
   }
@@ -313,7 +336,7 @@ export function havSparr(atk, sess, body = {}) {
   for (const b of block) {
     const r = n.anropa(db, 'RegisterTemporaryExtendedRevoke', { TemporaryRevokeId: n.nyttId(), BlockId: b.BlockId, EndDate: slut, RevokedForCareUnitId: a.CareUnitId,
       RevokedForEmployeeId: a.EmployeeId, RegisterAction: aktion(atk), RevokeReason: 'PatientsConsent', ReplicationTimeout: 0 });
-    if (r.ResultType.ResultCode !== 'OK') throw new Fel(409, 'Spärrtjänsten registrerade inte hävningen. Inget har ändrats för den spärren.', 'ogiltig');
+    if (!GENOMFORD.includes(r.ResultType.ResultCode)) throw new Fel(409, 'Spärrtjänsten registrerade inte hävningen. Inget har ändrats för den spärren.', 'ogiltig');
   }
   loggaRad(db, { personal_id: atk.personal.id, enhet_id: atk.personal.enhet_id, patient_id: atk.patientId, handling: 'samtycke_sparr', resurs: 'sammanhallen:sparr:havd',
     grund: 'samtycke_sparr', syfte: 'Patienten samtyckte till att spärrade uppgifter hos en annan vårdgivare visas i dag.', resultat: 'tillaten' });
@@ -335,7 +358,7 @@ export function jamforSparrar(atk) {
   const namn = (h) => db.query('SELECT namn FROM enheter WHERE hsa_id = ?').get(h)?.namn ?? h;
   const lokala = new Set(db.query('SELECT enhet_id FROM sparrar WHERE patient_id = ? AND aktiv = 1').all(atk.patientId).map(r => hsa(r.enhet_id)).filter(Boolean));
   let tjansten;
-  try { tjansten = new Set((n.anropa(db, 'GetBlocksForPatient', { PatientId: pid.id, CareProviderId: vg }).BlockHeaderType.Blocks ?? []).filter(b => b.BlockType === 'Inner').map(b => b.InformationCareUnitId)); } catch (e) {
+  try { tjansten = new Set(blockAv(n.anropa(db, 'GetBlocksForPatient', { PatientId: pid.id, CareProviderId: vg })).filter(b => b.BlockType === 'Inner').map(b => b.InformationCareUnitId)); } catch (e) {
     if (e?.kod) return { stammer: null, text: 'Spärrtjänsten svarar inte, så spärrarna kan inte jämföras just nu. Vårdkällans egna spärrar gäller som vanligt.' };
     throw e;
   }

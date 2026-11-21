@@ -154,6 +154,15 @@ export function onskat(db, patientId) {
   return { personid: String(p.personnummer), poster };
 }
 
+// Testspår 2: den personuppgiftsansvariga organisationen. TKB för logistics:logistics anger "SE" följt av
+// organisationsnumret (4.1), och de andra domänerna tillåter också HSA-id. Organisationsnumret är de tio siffrorna efter SE i
+// vårdgivarens HSA-id (SE2321000164-VK0000 ger SE2321000164).
+export const dataController = (doman, vg) => {
+  if (doman !== 'riv:clinicalprocess:logistics:logistics') return vg;
+  const m = /^SE(\d{10})-/.exec(String(vg));
+  return m ? `SE${m[1]}` : vg;
+};
+
 // Skillnaden mot det som redan är anmält, som transaktioner i Update. Ger { transaktioner, andringar }.
 function skillnad(db, patientId, vg, nu) {
   const { personid, poster } = onskat(db, patientId);
@@ -165,7 +174,7 @@ function skillnad(db, patientId, vg, nu) {
   const andringar = [];
   const post = (pid, doman, kategori, senast) => ({
     registeredResidentIdentification: pid, serviceDomain: doman, categorization: kategori, logicalAddress: vg, businessObjectInstanceIdentifier: 'NA',
-    clinicalProcessInterestId: 'NA', ...(senast ? { mostRecentContent: senast } : {}), sourceSystem: vg, dataController: vg,
+    clinicalProcessInterestId: 'NA', ...(senast ? { mostRecentContent: senast } : {}), sourceSystem: vg, dataController: dataController(doman, vg),
   });
   for (const x of poster) {
     const n = nyckel(personid, x.doman, x.kategori);

@@ -5,8 +5,15 @@
   "commit": "feef3879647a74344c55b62bead12ce2748aa841",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.itintegration.engagementindex/get/feef3879647a74344c55b62bead12ce2748aa841.tar.gz",
   "arkivSha256": "4b9e05932874860ec706619c515fa520e120adea346806a58415d527f424a611",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 12,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/interactions/UpdateInteraction/UpdateResponder_1.0.xml"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/itintegration_engagementindex_1.0.xsd": "e77630a86fe97d03dd63b08cd9818661cf72efc95932ef81f0de301992c3e6d9",
     "schemas/core_components/itintegration_registry_1.0.xsd": "5827002c9a3bae74863f6add21f9c5d8efad15167c807de91ec1453656cf771c",
@@ -17,5 +24,41 @@
     "schemas/interactions/UpdateInteraction/UpdateInteraction_1.0_RIVTABP21.wsdl": "82764a42e2eb106f24a21918247f8406313709db570c72eff4dd0b259caead1f",
     "schemas/interactions/UpdateInteraction/UpdateResponder_1.0.xml": "0438baaf7536c43959e4e5ad872539cd51c4f577f8fde795a6b2a1e4c7e50dab",
     "schemas/interactions/UpdateInteraction/UpdateResponder_1.0.xsd": "430f761d42b170aa8d080943b8f348e4a63a12de4f2f1182dba8d7d7dec0e373"
-  }
+  },
+  "dokument": {
+    "docs/TKB_itintegration_engagementindex.docx": "8b82d8bba33601201a7c8c829cc91ad67f8bc00f43d026c06ee4daf519214956",
+    "test-suite/UpdateEI/Update-EI-doc.html": "f12f9f9119efcc5c6054bbace0443da963bcfdc1640d424f57006cc08672d49f",
+    "test-suite/UpdateEI/Update-EI-soapui-project.xml": "b76725a52022fb1d7d7564db66a9a9f780697f65c7ab41dc13741976cbf2011f",
+    "test-suite/UpdateEI/data.xml": "5e64f1da86710f58f8f0eff31594761cf79b255b6968fad37628b7bf7b601982",
+    "test-suite/UpdateMock/UpdateMock-doc.html": "4ae03ad16fcdc2bd2799ff16bddeec694708ee4ce260dc3e92ee1d242feaca88",
+    "test-suite/UpdateMock/UpdateMock-soapui-project.xml": "059f949c211074e7b62c5213c5476bee0f912a6830ad431c74a8c11c1ac818bb",
+    "test-suite/UpdateMock/UpdateMock-testanvisning.html": "174e5a2673ad5a29735d22ed17dd6c6dd89439064b8a9a537f855ca3545b5c4b",
+    "test-suite/UpdateMock/mockdata.xml": "e2bcb97e75ef2112f480e27a6ffc86ad4def4830f64b9b51ce3beee0b32a0774",
+    "test-suite/UpdateMock/schematron/general_update_constraints.xml": "27efa8a1e9c0114b05d3725e5cfaefe0483ba57ede49100336b3e6e945b554aa"
+  },
+  "text": {
+    "docs/TKB_itintegration_engagementindex.txt": {
+      "från": "docs/TKB_itintegration_engagementindex.docx",
+      "sha256": "71061171ad34010910066d37a1d1f9ea80ea3696c7ef335adddf97b0402adfd4",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_itintegration_engagementindex.docx",
+    "test-suite/UpdateEI/Update-EI-doc.html",
+    "test-suite/UpdateMock/UpdateMock-doc.html",
+    "test-suite/UpdateMock/UpdateMock-testanvisning.html"
+  ],
+  "utanförRepo": [
+    "docs/TKB_itintegration_engagementindex.docx",
+    "docs/TKB_itintegration_engagementindex.txt",
+    "test-suite/UpdateEI/Update-EI-doc.html",
+    "test-suite/UpdateMock/UpdateMock-doc.html",
+    "test-suite/UpdateMock/UpdateMock-testanvisning.html"
+  ]
 }

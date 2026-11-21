@@ -5,7 +5,15 @@
   "commit": "55a953227545bf0500cb7976f01152773b0f6bec",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.healthcond.basic/get/55a953227545bf0500cb7976f01152773b0f6bec.tar.gz",
   "arkivSha256": "2c305c57b6ac07e6cf70456c0bae4b455f94063c8bd793d34a1fed9bfdbfa547",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 6,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/interactions/GetObservationsInteraction/Exempel GetObservations - vikt längd.xml",
+      "schemas/interactions/GetObservationsInteraction/Exempel GetObservationsResponse - vikt längd.xml"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/clinicalprocess_healthcond_basic_1.2.xsd": "e98f5d25099f5d6c765f393c76237d390946550ed4bf4a6309bbc338f7d35a87",

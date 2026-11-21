@@ -466,6 +466,8 @@ Licens: varje schemafil har ett huvud där Sveriges Kommuner och Landsting (nu S
 
 Samtyckestjänstens domän (riv.ehr.patientconsent) har bara en tagg som är en kandidatversion (RC1). Den är den senaste som finns publicerad.
 
+Testspår 2 (2026-11-20) och runda 20 (2026-11-21): för de byggda kontrakten är också tjänstekontraktsbeskrivningen (TKB) och domänens testsvit pinnade ur samma arkiv, med sha256 i KALLA.json (`dokument` och `text`). Licensen är kontrollerad fil för fil per domän och står i KALLA.json (`licenskontroll`). Domänerna har ingen licensfil. Testsvitens SoapUI-projekt och de flesta XML-filer har samma huvud med Apache License 2.0, och XML-filerna utan huvud följer domänens licens och ligger i förrådet. TKB och testsvitens HTML-filer anger ingen licens. De ligger inte i förrådet, inte i git-historiken och inte i avbilden, utan hämtas vid behov till `app/rivta-tkb/` (i `.gitignore` och `app/.dockerignore`) med `node app/scripts/rivta-scheman.js --tkb` och prövas mot sha256 i KALLA.json (`utanförRepo`). Testerna som läser TKB:s text hoppas över med ett meddelande när filerna inte är hämtade.
+
 ## Runda 14, r3: intyg, e-remiss och vaccinationer i RIVTA (2026-11-12)
 
 Del r3:s domäner är pinnade med samma skript (`app/scripts/rivta-scheman.js`, eget block i `DOMANER`) och har samma licens: Apache License 2.0 enligt huvudet i schemafilerna. Domänen för vaccinationer (riv.clinicalprocess.activityprescription.actoutcome 2.2.2) är pinnad av del r2.

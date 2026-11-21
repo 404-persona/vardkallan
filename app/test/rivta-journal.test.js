@@ -42,8 +42,8 @@ describe('Tjänstekontrakt i RIVTA, journalen', () => {
   test('journalens producenter lämnar aldrig ut skyddade personuppgifter eller spärrade uppgifter', async () => {
     const db = nyDb();
     for (const def of [J.GET_CARE_DOCUMENTATION, J.GET_ALERT_INFORMATION, J.GET_CARE_CONTACTS, J.GET_DIAGNOSIS]) {
-      const skyddad = JSON.stringify(await anropa(db, def, fraga('198404162383'))).replace(/"logId":"\w+"/, '');
-      const finnsInte = JSON.stringify(await anropa(db, def, fraga('191212121212'))).replace(/"logId":"\w+"/, '');
+      const skyddad = JSON.stringify(await anropa(db, def, fraga('198404162383'))).replace(/"logId":"[\w-]+"/, '');
+      const finnsInte = JSON.stringify(await anropa(db, def, fraga('191212121212'))).replace(/"logId":"[\w-]+"/, '');
       expect([def.namn, skyddad]).toEqual([def.namn, finnsInte]);
       const sparr = JSON.stringify(await anropa(db, def, fraga('197701182383')));
       expect([def.namn, sparr.includes('SE2321000164-VK0160')]).toEqual([def.namn, false]);

@@ -5,8 +5,15 @@
   "commit": "558d8574eefc7e5e2d0d342d882de15424d72690",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.ehr.blocking/get/558d8574eefc7e5e2d0d342d882de15424d72690.tar.gz",
   "arkivSha256": "f1304316630d9408f13d0094372fd188466f716c1184ddba2ccb4a6f05dba0f6",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 34,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/interactions/administration/ehr_administration_2.0.xsd"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/accesscontrol/ehr_blockingaccesscontrol_3.0.xsd": "d5462104af4985312efcb056cc8b79d525fd023b309ee7562af475b9e469fcab",
     "schemas/core_components/ehr_blocking_2.0.xsd": "ec4738f96566c9da595c3fdac428b2795b5524adecaed12ce75ab2200031db84",
@@ -44,5 +51,27 @@
     "schemas/interactions/synchronization/UnregisterBlockInteraction/UnregisterBlockResponder_2.0.xsd": "b982b89805f8e89b5e52eeacc70d47f2d21a5fba440eb56850c88d4691c34da1",
     "schemas/interactions/synchronization/UnregisterTemporaryRevokeInteraction/UnregisterTemporaryRevokeInteraction_2.0_RIVTABP21.wsdl": "d952944ea00d4cdad945c9987dcd5f5c823ac36580f3f5a496e3ccd641d84d02",
     "schemas/interactions/synchronization/UnregisterTemporaryRevokeInteraction/UnregisterTemporaryRevokeResponder_2.0.xsd": "4774cf4ff2553475a88c5d386d7d0ffce92d2952f15471a4967f69632d834887"
-  }
+  },
+  "dokument": {
+    "docs/TKB_ehr_blocking_3.2.2.docx": "646edccfd290079c5d3701ada20fb2c0499a020d77664c0d2f8c6b029870c75f"
+  },
+  "text": {
+    "docs/TKB_ehr_blocking_3.2.2.txt": {
+      "från": "docs/TKB_ehr_blocking_3.2.2.docx",
+      "sha256": "beb8b8066eed23ff541f75ff17dc261a1e4d5d369385daa0cf4a10817607c012",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_ehr_blocking_3.2.2.docx"
+  ],
+  "utanförRepo": [
+    "docs/TKB_ehr_blocking_3.2.2.docx",
+    "docs/TKB_ehr_blocking_3.2.2.txt"
+  ]
 }

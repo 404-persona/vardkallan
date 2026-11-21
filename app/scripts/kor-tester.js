@@ -1,6 +1,6 @@
 // Kör bun test, skriver test-resultat.json som /api/krav läser och stoppar bygget om något test är rött
 // eller om kravregistret eller Sussa-registret pekar på ett test som inte finns.
-import { readFileSync, writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { KRAV } from '../src/krav.js';
 import { sussaTester } from '../src/sussa/index.js';
@@ -41,6 +41,19 @@ if (saknas.length) {
 }
 if (saknasSussa.length) {
   console.error(`Sussa-registret pekar på tester som inte finns:\n  ${saknasSussa.join('\n  ')}`);
+  process.exit(1);
+}
+// Testspår 2: regelförteckningarna för tjänstekontrakten (rivta-regler/<domän>/<Kontrakt>.json) pekar på tester som
+// prövar reglerna. Varje sådant test ska finnas och ha körts.
+const regelRot = join(rot, 'rivta-regler');
+const saknasRegler = [];
+for (const d of readdirSync(regelRot)) {
+  for (const f of readdirSync(join(regelRot, d)).filter(x => x.endsWith('.json') && !x.endsWith('.data.json') && !x.endsWith('.exempelfel.json'))) {
+    for (const r of JSON.parse(readFileSync(join(regelRot, d, f), 'utf8')).regler) if (r.prövas && !namn.has(r.test)) saknasRegler.push(`${f} ${r.id}: ${r.test}`);
+  }
+}
+if (saknasRegler.length) {
+  console.error(`Regelförteckningarna pekar på tester som inte finns:\n  ${[...new Set(saknasRegler)].slice(0, 50).join('\n  ')}`);
   process.exit(1);
 }
 if (proc.exitCode !== 0 || resultat.misslyckade > 0 || resultat.antal === 0) process.exit(1);

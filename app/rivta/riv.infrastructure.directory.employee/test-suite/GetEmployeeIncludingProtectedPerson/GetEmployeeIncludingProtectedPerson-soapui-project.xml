@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="d3f08729-8ce3-4a8a-86ec-925318600627" activeEnvironment="Default" name="GetEmployeeIncludingProtectedPerson" resourceRoot="" soapui-version="5.9.1" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.actions.iface.tools.soapui.TestRunnerAction@values-local"><![CDATA[<xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  <con:entry key="Report Format(s)" value=""/>
+  <con:entry key="Host:Port" value=""/>
+  <con:entry key="Export JUnit Results" value="false"/>
+  <con:entry key="Export All" value="false"/>
+  <con:entry key="Save After" value="false"/>
+  <con:entry key="Add Settings" value="false"/>
+  <con:entry key="WSS Password Type" value=""/>
+  <con:entry key="TestSuite" value="1 Basic tests"/>
+  <con:entry key="Endpoint" value=""/>
+  <con:entry key="Select Report Type" value=""/>
+  <con:entry key="System Properties" value=""/>
+  <con:entry key="Password" value=""/>
+  <con:entry key="Print Report" value="false"/>
+  <con:entry key="Open Report" value="false"/>
+  <con:entry key="Export JUnit Results with test properties" value="false"/>
+  <con:entry key="Global Properties" value=""/>
+  <con:entry key="Project Properties" value=""/>
+  <con:entry key="Project Password" value=""/>
+  <con:entry key="TestCase" value="1.3 IsNull SearchBase"/>
+  <con:entry key="Username" value=""/>
+  <con:entry key="user-settings.xml Password" value=""/>
+  <con:entry key="TestRunner Path" value=""/>
+  <con:entry key="Environment" value="Default"/>
+  <con:entry key="Coverage Report" value="false"/>
+  <con:entry key="Enable UI" value="false"/>
+  <con:entry key="Root Folder" value=""/>
+  <con:entry key="Ignore Errors" value="false"/>
+  <con:entry key="Domain" value=""/>
+  <con:entry key="Tool Args" value=""/>
+  <con:entry key="Save Project" value="false"/>
+</xml-fragment>]]></con:setting></con:settings><con:interface xsi:type="con:WsdlInterface" id="18d56c7b-365b-470a-801f-a8386f3347e8" wsaVersion="NONE" name="GetEmployeeIncludingProtectedPersonResponderBinding" type="wsdl" bindingName="{urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21}GetEmployeeIncludingProtectedPersonResponderBinding" soapVersion="1_1" anonymous="optional" definition="/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl"><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<wsdl:definitions name="GetEmployeeIncludingProtectedPersonInteraction" targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tjsr="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:tns="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21" xmlns:itr="urn:riv:itintegration:registry:1">
+  <wsdl:documentation>Tjänsteinteraktionens namn: GetEmployeeIncludingProtectedPersonInteraction
+        Beskrivning:
+        Details – e.g. name, titles and contact details – for a specified person. Includes protected persons.
+        Revisioner:
+        Tjänstedomän: infrastructure:directory:employee
+        Tjänsteinteraktionstyp: Fråga-Svar
+        RIV Teknisk Anvisning: RIVTABP21
+        Förvaltning: Sveriges Kommuner och Landsting</wsdl:documentation>
+  <wsdl:types>
+    <xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21">
+      <xs:import schemaLocation="GetEmployeeIncludingProtectedPersonResponder_4.0.xsd" namespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4"/>
+      <xs:import schemaLocation="../../core_components/itintegration_registry_1.0.xsd" namespace="urn:riv:itintegration:registry:1"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="GetEmployeeIncludingProtectedPersonRequest">
+    <wsdl:part name="LogicalAddress" element="itr:LogicalAddress">
+      <wsdl:documentation>The HSA-id of the source system</wsdl:documentation>
+    </wsdl:part>
+    <wsdl:part name="parameters" element="tjsr:GetEmployeeIncludingProtectedPerson"/>
+  </wsdl:message>
+  <wsdl:message name="GetEmployeeIncludingProtectedPersonResponse">
+    <wsdl:part name="parameters" element="tjsr:GetEmployeeIncludingProtectedPersonResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="GetEmployeeIncludingProtectedPersonResponderInterface">
+    <wsdl:operation name="GetEmployeeIncludingProtectedPerson">
+      <wsdl:input message="tns:GetEmployeeIncludingProtectedPersonRequest"/>
+      <wsdl:output message="tns:GetEmployeeIncludingProtectedPersonResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="GetEmployeeIncludingProtectedPersonResponderBinding" type="tns:GetEmployeeIncludingProtectedPersonResponderInterface">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetEmployeeIncludingProtectedPerson">
+      <soap:operation soapAction="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" style="document"/>
+      <wsdl:input>
+        <soap:header use="literal" message="tns:GetEmployeeIncludingProtectedPersonRequest" part="LogicalAddress"/>
+        <soap:body use="literal" parts="parameters"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="GetEmployeeIncludingProtectedPersonResponderService">
+    <wsdl:port name="GetEmployeeIncludingProtectedPersonResponderPort" binding="tns:GetEmployeeIncludingProtectedPersonResponderBinding">
+      <soap:address location="http://tempuri.org"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonResponder_4.0.xsd</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:core="urn:riv:infrastructure:directory:employee:4">
+  <xs:import schemaLocation="../../core_components/infrastructure_directory_employee_4.0.xsd" namespace="urn:riv:infrastructure:directory:employee:4"/>
+  <xs:element name="GetEmployeeIncludingProtectedPerson" type="tns:GetEmployeeIncludingProtectedPersonType"/>
+  <xs:element name="GetEmployeeIncludingProtectedPersonResponse" type="tns:GetEmployeeIncludingProtectedPersonResponseType"/>
+  <xs:complexType name="GetEmployeeIncludingProtectedPersonType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="personHsaId" type="xs:string"/>
+        <xs:element name="personalIdentityNumber" type="xs:string"/>
+      </xs:choice>
+      <xs:element name="searchBase" type="core:DNType" minOccurs="0"/>
+      <xs:element name="includeFeignedObject" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="profile" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="GetEmployeeIncludingProtectedPersonResponseType">
+    <xs:sequence>
+      <xs:element name="personInformation" type="core:PersonInformationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/core_components/infrastructure_directory_employee_4.0.xsd</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:4" elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:infrastructure:directory:employee:4">
+  <xs:simpleType name="TS">
+    <xs:annotation>
+      <xs:documentation>Regexp declaration for timestamp in the format: YYYYMMDDHHMMSS</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[1-9]{1}[0-9]{3}(0[1-9]{1}|1[0-2]{1})([0-2]{1}[0-9]{1}|3[0-1]{1})([0-1]{1}[0-9]{1}|2[0-3]{1})[0-5]{1}[0-9]{1}[0-5]{1}[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DNType">
+    <xs:restriction base="xs:token">
+      <xs:maxLength value="350"/>
+      <xs:pattern value="([OUDCNLoudcnl]{1,2}=[0-9\p{L}\p{Zs}\-.]*,?)*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="addressLine" type="xs:string" maxOccurs="unbounded"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="TelephoneNumberType">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="32"/>
+      <xs:pattern value="([+0123456789][0-9]*)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TimeSpanType">
+    <xs:sequence>
+      <xs:element name="fromDay" type="xs:string"/>
+      <xs:element name="fromTime" type="xs:time"/>
+      <xs:element name="toDay" type="xs:string"/>
+      <xs:element name="toTime" type="xs:time"/>
+      <xs:element name="comment" type="xs:string" minOccurs="0"/>
+      <xs:element name="fromDate" type="xs:string" minOccurs="0"/>
+      <xs:element name="toDate" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PersonInformationType">
+    <xs:sequence>
+      <xs:element name="personHsaId" type="xs:string"/>
+      <xs:element name="givenName" type="xs:string" minOccurs="0"/>
+      <xs:element name="middleAndSurName" type="xs:string"/>
+      <xs:element name="nickName" type="xs:string" minOccurs="0"/>
+      <xs:element name="mail" type="xs:string" minOccurs="0"/>
+      <xs:element name="telephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="switchboardNumber" type="tns:TelephoneNumberType" minOccurs="0"/>
+      <xs:element name="nonPublicTelephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mobileNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="facsimileTelephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="telephoneHour" type="tns:TimeSpanType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="postalAddress" type="tns:AddressType" minOccurs="0"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="title" type="xs:string" minOccurs="0"/>
+      <xs:element name="healthCareProfessionalLicence" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="paTitle" type="tns:PaTitleType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="specialityName" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="specialityCode" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dn" type="tns:DNType"/>
+      <xs:element name="protectedPerson" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="personStartDate" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="personEndDate" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="feignedPerson" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="healthCareProfessionalLicenceSpeciality" type="tns:HealthCareProfessionalLicenceSpecialityType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="age" type="xs:string" minOccurs="0"/>
+      <xs:element name="gender" type="xs:string" minOccurs="0"/>
+      <xs:element name="structuredPostalAddress" type="tns:StructuredPostalAddressType" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="HealthCareProfessionalLicenceSpecialityType">
+    <xs:sequence>
+      <xs:element name="healthCareProfessionalLicence" type="xs:string"/>
+      <xs:element name="specialityCode" type="xs:string"/>
+      <xs:element name="specialityName" type="xs:string"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PaTitleType">
+    <xs:sequence>
+      <xs:element name="paTitleName" type="xs:string" minOccurs="0"/>
+      <xs:element name="paTitleCode" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="StructuredPostalAddressType">
+    <xs:sequence>
+      <xs:element name="addressee" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="street" type="xs:string" minOccurs="0"/>
+      <xs:element name="premisesNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="premisesLetter" type="xs:string" minOccurs="0"/>
+      <xs:element name="postCode" type="xs:string"/>
+      <xs:element name="town" type="xs:string"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/core_components/itintegration_registry_1.0.xsd</con:url><con:content><![CDATA[<xs:schema targetNamespace="urn:riv:itintegration:registry:1" elementFormDefault="qualified" version="1.0" xmlns="urn:riv:itintegration:registry:1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:annotation>
+    <xs:documentation>Beskrivning: 	Grundläggande informationsobjekt för domänen itintegration:registry (adressering av tjänster)
+			
+			Revisionshistorik: 2011-06-27 Mats Ekhammar, Callista Enterprise AB
+				Added ServiceContractType
+			
+			Datum:			2011-05-04
+			Beskrivning:	Initial version
+			F��rfattare:		marcus.krantz@callistaenterprise.se</xs:documentation>
+  </xs:annotation>
+  <xs:element name="LogicalAddress" type="LogicalAddressType"/>
+  <xs:element name="ServiceContract" type="ServiceContractType"/>
+  <xs:simpleType name="LogicalAddressType">
+    <xs:annotation>
+      <xs:documentation>Defines the type for logical address according to national reference architecture.
+				Superseeds wsa:To as type for logical address header in RIVTA 2.1.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+  <xs:complexType name="ServiceContractType">
+    <xs:annotation>
+      <xs:documentation>Type which describes a service contract. Used in interaction GetSupportedServiceContracts.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="ServiceContractNamespace" type="xs:anyURI"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://localhost:8088/mockGetEmployeeIncludingProtectedPersonResponderBinding</con:endpoint><con:endpoint>http://tempuri.org</con:endpoint></con:endpoints><con:operation id="ce444519-2ecd-42f6-861e-3cde56260b5d" isOneWay="false" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" name="GetEmployeeIncludingProtectedPerson" bindingOperationName="GetEmployeeIncludingProtectedPerson" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="4952efd8-591f-4058-9e40-371c596971ce" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://tempuri.org</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>?</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>?</urn1:personHsaId>\r
+         <urn1:personalIdentityNumber>?</urn1:personalIdentityNumber>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>?</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>?</urn1:includeFeignedObject>\r
+         <!--You may enter ANY elements at this point-->\r
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/><con:wsrmConfig version="1.2"/></con:call><con:call id="de130761-942e-4d06-8d7a-202bc9906911" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8088/mockGetEmployeeIncludingProtectedPersonResponderBinding</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>?</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>?</urn1:personHsaId>\r
+         <urn1:personalIdentityNumber>?</urn1:personalIdentityNumber>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>?</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>?</urn1:includeFeignedObject>\r
+         <!--Optional:-->\r
+         <urn1:profile>?</urn1:profile>\r
+         <!--You may enter ANY elements at this point-->\r
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:testSuite id="c86d92c7-e9fc-42ef-b94c-6a15850f7130" name="1 Basic tests"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="e3205db7-1f92-40df-9e78-229451897e38" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.1 Personalnumber" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="b2ddfadb-54a2-48dc-abe4-3b7eb83be747"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="35c3842a-dad9-4447-9fed-f0045a19f153" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personalIdentityNumber>${personalIdentityNumber}</urn1:personalIdentityNumber>
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="d87b8d0b-9110-45e2-be5e-f765b041e2f0" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="290d7f4e-8635-4bed-95a1-e8eb9debb2d2" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.2 HsaId" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="86502f23-d9d7-413f-b598-9ab0f52a13c8"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="526ebe3f-f80f-4c6b-a037-b36a8a851733" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="493e85a9-9ba4-42b3-955e-209e7f5a1c4b" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.3 IsNull SearchBase" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="8360a35b-127e-4543-a9a0-c4b1b009b9d0"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="d4073528-fcb0-49d6-947b-f75613f19929" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase></urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="409026ee-ea02-4a40-bd20-835d594128a5" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.4 NonExisting SearchBase" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="da981ce0-cb1d-4628-af58-cbb07af92983"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="cc44159d-2ee9-4150-81ae-dff14e2b167c" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Empty Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=WrongSearchBase</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="b50c1d53-2274-449e-956b-2a096cee06f7" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert Empty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertExactNumberOfRecords(0)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="0a71733b-d428-4cb3-8167-fba5318d921d" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.5 DoubleIdentity" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="f6a240c3-485d-49b8-94ee-23af0f37232c"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="03e32953-5176-4547-b36d-01067f8e1b2a" name="GetEmployee"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployee" id="17615625-722f-4c86-8d83-7c0423ae41d1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="SoapFault"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:GetEmployeeIncludingProtectedPerson>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>
+         <urn1:personalIdentityNumber>${personalIdentityNumber}</urn1:personalIdentityNumber>
+         <!--Optional:-->
+         <urn1:searchBase>c=se</urn1:searchBase>
+         <!--Optional:-->
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="09c2256c-cb04-4744-aa1e-31c3f6925e98" name="SOAP Response"/><con:assertion type="Not SOAP Fault Assertion" id="9bcda60f-36c6-4b82-85ba-9f2e92e7e74b" name="SOAP Fault"/><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeResponder:4:GetEmployee" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="c8ead78a-0a8d-44a6-86ef-091fba14c2d7" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.6.1 Profile Basic" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="1c61acc6-94cf-4107-b08f-b9af062e6c67"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="62c51543-a032-48b5-b543-ec7ea4ad25d0" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>BASIC</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="0c50717d-5ac5-4ca9-a80a-7ccc05c28222" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.6.2 Profile Title" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="e8886cea-3de4-4082-ba69-ee837d218410"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="dee07288-7851-45d6-81da-4a5e01f7ef4a" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>TITLE</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="4d620d0e-0899-43ef-89aa-d6d1cf6d678f" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.6.3 Profile Contact" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="d18aa88f-32f4-411d-844e-de25296391f1"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="88f40c8a-acba-46c4-9bad-04593da60e13" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>CONTACT</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:testCase id="da77920a-b0c6-40a6-8ade-4de09d5793cf" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="1.6.4 Profile Full" searchProperties="true"><con:settings/><con:testStep type="groovy" name="Read Data" id="f215e40c-29d5-4408-9b20-f233c97d953a"><con:settings/><con:config><script>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testRunner.testCase.getName())</script></con:config></con:testStep><con:testStep type="request" id="75b3d7c3-76f3-4832-9a5e-66137f0e7c03" name="GetEmployeeIncludingProtectedPerson"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="GetEmployeeIncludingProtectedPerson" id="730fda9d-4a99-4641-9c0a-59d10a7502da"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>${personHsaId}</urn1:personHsaId>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>c=se</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>\r
+         <urn1:profile>FULL</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="c076206a-b288-4081-afac-f5259012a953" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="3ca51c28-884d-48bf-8474-f23842598720" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="f7336a91-0811-4e0c-a5e4-af1b856a4314" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="f3064f34-c8f0-45e2-90b9-d233a0b2ee40" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="1a95004a-4bfb-48ac-9343-48e16cdbf903" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="006fe0bb-3bc0-48f6-92e3-e07e60018a2d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:testSuite id="a6c25a60-8b15-4534-a358-4db7ed1427b7" name="6. Non-functional tests"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="685c9acd-b029-4065-b105-c773ff9f22e9" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="6.1 Loadtest" searchProperties="true"><con:settings/><con:testStep type="request" id="f4532c91-3542-4007-a8d7-d210f64b6fbf" name="Person #1"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="Person #1" id="8cbb7c09-f4b8-4e61-98af-6ec0f515a4f2"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:GetEmployeeIncludingProtectedPerson>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <urn1:personHsaId>${personHsaId1}</urn1:personHsaId>
+         <!--Optional:-->
+         <urn1:searchBase>c=se</urn1:searchBase>
+         <!--Optional:-->
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="a0759096-27a9-462f-95cf-e593dd59e83f" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="86563148-a8ae-46f8-8c54-34544fcdf67c" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="d33266f8-c7e1-4ef2-8b35-4b35652acbfe" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="a1ba6543-3a09-487d-b26a-b52869f243b9" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="efc2b165-02fc-4f80-a1d9-1d9cc1a2d971" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="0953e399-68ab-4851-b760-3aec96c1f90f" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId1)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetCommissionMembersIncludingProtectedPersonResponder:4:GetCommissionMembersIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" id="ee8cf860-84af-41ad-b63b-8fd14e603e54" name="Person #2"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="Person #2" id="8cbb7c09-f4b8-4e61-98af-6ec0f515a4f2"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:GetEmployeeIncludingProtectedPerson>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <urn1:personHsaId>${personHsaId2}</urn1:personHsaId>
+         <!--Optional:-->
+         <urn1:searchBase>c=se</urn1:searchBase>
+         <!--Optional:-->
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="a0759096-27a9-462f-95cf-e593dd59e83f" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="86563148-a8ae-46f8-8c54-34544fcdf67c" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="d33266f8-c7e1-4ef2-8b35-4b35652acbfe" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="a1ba6543-3a09-487d-b26a-b52869f243b9" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="4691a8f0-9e37-420f-a6ac-ec9238a11a43" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="464c3ef8-8d61-4080-870c-7179f22c8321" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId2)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetCommissionMembersIncludingProtectedPersonResponder:4:GetCommissionMembersIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:loadTest id="125687e8-0b51-4761-affd-5ac966ed1912" name="6.1.1 Grund"><con:settings><con:setting id="HttpSettings@close-connections">false</con:setting></con:settings><con:threadCount>30</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>180</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Simple</con:type></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>0</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Any -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:loadTest id="6e065858-a594-4955-aaef-655c3fb22a75" name="6.1.2 Uthållighet"><con:settings><con:setting id="HttpSettings@close-connections">false</con:setting></con:settings><con:threadCount>5</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>1800</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Variance</con:type><con:config><interval>60000</interval><variance>1.0</variance></con:config></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>0</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Any -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:setupScript>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testCase.getName())</con:setupScript><con:properties/></con:testCase><con:testCase id="d9871cc8-0ab7-4959-8b2f-4433212ecbdb" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="6.2 Recovery" searchProperties="true"><con:settings/><con:testStep type="request" id="effb560f-9580-4470-8d2a-16599b6a79a6" name="Person #1"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="Person #1" id="8cbb7c09-f4b8-4e61-98af-6ec0f515a4f2"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:GetEmployeeIncludingProtectedPerson>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <urn1:personHsaId>${personHsaId1}</urn1:personHsaId>
+         <!--Optional:-->
+         <urn1:searchBase>c=se</urn1:searchBase>
+         <!--Optional:-->
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="a0759096-27a9-462f-95cf-e593dd59e83f" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="86563148-a8ae-46f8-8c54-34544fcdf67c" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="d33266f8-c7e1-4ef2-8b35-4b35652acbfe" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="a1ba6543-3a09-487d-b26a-b52869f243b9" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="55cb70f4-3027-4c7d-92e6-582c019959c7" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="741eba50-0c26-4cf6-a5ba-baf57c48b9ad" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId1)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetCommissionMembersIncludingProtectedPersonResponder:4:GetCommissionMembersIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:testStep type="request" id="78a9412a-5554-47d3-9036-bf973cae0f31" name="Person #2"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>GetEmployeeIncludingProtectedPersonResponderBinding</con:interface><con:operation>GetEmployeeIncludingProtectedPerson</con:operation><con:request name="Person #2" id="8cbb7c09-f4b8-4e61-98af-6ec0f515a4f2"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+  &lt;con:entry key="x-rivta-original-serviceconsumer-hsaid" value="${httpHeaderHsaId}"/>
+  &lt;con:entry key="x-mock-response" value="Basic Response"/>
+&lt;/xml-fragment></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>${webServiceUrl}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">
+   <soapenv:Header>
+      <urn:LogicalAddress>${logicalAddress}</urn:LogicalAddress>
+   </soapenv:Header>
+   <soapenv:Body>
+      <urn1:GetEmployeeIncludingProtectedPerson>
+         <!--You have a CHOICE of the next 2 items at this level-->
+         <urn1:personHsaId>${personHsaId2}</urn1:personHsaId>
+         <!--Optional:-->
+         <urn1:searchBase>c=se</urn1:searchBase>
+         <!--Optional:-->
+         <urn1:includeFeignedObject>false</urn1:includeFeignedObject>
+         <urn1:profile>extended1</urn1:profile>
+      </urn1:GetEmployeeIncludingProtectedPerson>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="SOAP Response" id="a0759096-27a9-462f-95cf-e593dd59e83f" name="SOAP Response"/><con:assertion type="SOAP Fault Assertion" id="86563148-a8ae-46f8-8c54-34544fcdf67c" name="Not SOAP Fault"/><con:assertion type="Schema Compliance" id="d33266f8-c7e1-4ef2-8b35-4b35652acbfe" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="a1ba6543-3a09-487d-b26a-b52869f243b9" name="Assert Schematron"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertSchematronConstraints()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="fe9aad0d-c5f3-4a4c-982c-291e6304c197" name="Assert NonEmpty Response"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()</scriptText></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" id="9dffaf6c-9e51-463e-8681-767b2497cb4d" name="Assert HsaId"><con:configuration><scriptText>import se.skl.rivta.tksupport.soapui.ContentAssertions
+def ca = new ContentAssertions(context, messageExchange, log)
+ca.assertNonEmptyResponse()
+ca.assertSpecificValueInAllRecords('/urn:personInformation/urn1:personHsaId', context.personHsaId2)</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="urn:riv:infrastructure:directory:employee:GetCommissionMembersIncludingProtectedPersonResponder:4:GetCommissionMembersIncludingProtectedPerson" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:loadTest id="c0a89790-32a5-4930-b0ac-ea5ecfef0ff6" name="6.2.1 Återhämtning"><con:settings><con:setting id="HttpSettings@close-connections">false</con:setting></con:settings><con:threadCount>10</con:threadCount><con:startDelay>0</con:startDelay><con:sampleInterval>250</con:sampleInterval><con:calculateTPSOnTimePassed>true</con:calculateTPSOnTimePassed><con:resetStatisticsOnThreadCountChange>true</con:resetStatisticsOnThreadCountChange><con:historyLimit>-1</con:historyLimit><con:testLimit>300</con:testLimit><con:limitType>TIME</con:limitType><con:loadStrategy><con:type>Thread</con:type><con:config><startThreadCount>10</startThreadCount><endThreadCount>100</endThreadCount></con:config></con:loadStrategy><con:assertion type="Step Status" name="Step Status"/><con:assertion type="Max Errors" name="Max Errors"><con:configuration><name>Max Errors</name><max-absolute-errors>10</max-absolute-errors><max-relative-errors>0.2</max-relative-errors><test-step>- Any -</test-step></con:configuration></con:assertion><con:maxAssertionErrors>100</con:maxAssertionErrors><con:cancelExcessiveThreads>true</con:cancelExcessiveThreads><con:strategyInterval>500</con:strategyInterval></con:loadTest><con:setupScript>import se.skl.rivta.testsupport.soapui.datasource.XmlDataReader
+import com.eviware.soapui.support.GroovyUtils
+
+def utils = new GroovyUtils(context)
+def dataFile = new File(utils.projectPath + "/data.xml")
+def source = new XmlDataReader(context, dataFile)
+
+source.load(testCase.getName())</con:setupScript><con:properties/></con:testCase><con:properties/></con:testSuite><con:properties><con:property><con:name>xmlns:urn</con:name><con:value>urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4</con:value></con:property><con:property><con:name>xmlns:urn1</con:name><con:value>urn:riv:infrastructure:directory:employee:4</con:value></con:property><con:property><con:name>RecordElementPath</con:name><con:value>//urn:personInformation</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

@@ -5,7 +5,26 @@
   "commit": "277a809399ecc9d7bee85ef1792c00c0c7e41076",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.healthcond.certificate/get/277a809399ecc9d7bee85ef1792c00c0c7e41076.tar.gz",
   "arkivSha256": "42ad2479986234cce34521de466b5c3f953879da7ea5a88b12ca9402809d4034",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 26,
+    "utanHuvud": [
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.0.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.1.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.2.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.2_ext.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.3.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.3_ext.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_3.4_ext.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_types_3.0.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_types_3.1.xsd",
+      "schemas/core_components/clinicalprocess_healthcond_certificate_types_3.2.xsd",
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/core_components/xmldsig-core-schema_0.1.xsd",
+      "schemas/core_components/xmldsig-filter2_0.1.xsd",
+      "schemas/interactions/CertificateStatusUpdateForCareInteraction/CertificateStatusUpdateForCareResponder_3.2_ext.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/clinicalprocess_healthcond_certificate_3.0.xsd": "185ebff59ccd5730eb54b4dd219c5ca758df49f7e4dd16e456a8f67ed843a3dc",

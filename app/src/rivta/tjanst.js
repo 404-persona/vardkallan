@@ -10,7 +10,7 @@
 //      blir ett soap:Server-fel.
 // Varje anrop sparas i rivta_anrop med kontraktet, den anropande organisationen och resultatet, utan patientuppgifter.
 // Åtkomsten till patientuppgifter loggas dessutom på patienten i åtkomstloggen, som i FHIR-API:t.
-import { randomBytes } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { skriv } from './xml.js';
 import { lasKuvert, kuvert, fault, SoapFel, soapAction as rensaAction, CONTENT_TYPE } from './soap.js';
 import { SchemaFel } from './xsd.js';
@@ -52,7 +52,8 @@ function hanteraAnrop(ctx, anrop, { producenter: PRODUCENTER, adresser, prova, n
   const fel = (e) => {
     if (!(e instanceof SoapFel)) {
       console.error('RIVTA-producenten:', e);
-      e = new SoapFel('Server', `Ett fel uppstod hos producenten. Felets id är ${randomBytes(6).toString('hex')}.`);
+      // Testspår 2: felets id är en UUID, som TKB rekommenderar för log-id vid tekniska fel.
+      e = new SoapFel('Server', `Ett fel uppstod hos producenten. Felets id är ${randomUUID()}.`);
     }
     logg.resultat ??= 'fel';
     logg.text ??= e.message;

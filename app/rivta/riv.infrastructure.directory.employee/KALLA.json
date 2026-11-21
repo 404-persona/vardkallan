@@ -5,8 +5,16 @@
   "commit": "0f9fd6418f2b0d7cde44e4cc6a61db856c8a861e",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.infrastructure.directory.employee/get/0f9fd6418f2b0d7cde44e4cc6a61db856c8a861e.tar.gz",
   "arkivSha256": "df0d6c41e5ad385473b3e6709339e19ab9d0b94a9ea4fe5aa221982dc9f4edf0",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 11,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "test-suite/GetEmployeeIncludingProtectedPerson/constraints.xml",
+      "test-suite/GetEmployeeIncludingProtectedPerson/data.xml"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/infrastructure_directory_employee_4.0.xsd": "1744ac7a24bfb3085919936efd9eb51720200d6954aedaf20958881b1814f42d",
     "schemas/core_components/itintegration_registry_1.0.xsd": "5fed8e58b64ffc689d97e2e3b66c66fb39f1e668262cfea7f0fe6c337da1f811",
@@ -18,5 +26,36 @@
     "schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonResponder_4.0.xsd": "ca777a90fbb27b8fdeb5cd112c49255ccd9a4be1a6b32deddcf9e564253f54e8",
     "schemas/interactions/GetEmployeeInteraction/GetEmployeeInteraction_4.0_RIVTABP21.wsdl": "9bccf0d5e762d3b955a676001ff573be0aa9ecadd750ea7d57452e740ed46d7e",
     "schemas/interactions/GetEmployeeInteraction/GetEmployeeResponder_4.0.xsd": "c7ccb15f98896af6a5cd6a2c36b47a8b8cde7621c9ce21a5fdd896f78c25aab2"
-  }
+  },
+  "dokument": {
+    "docs/TKB_infrastructure_directory_employee.docx": "d85070b099e5d718bac482e85209a5c6deb1faea8da31fd6b288a272742492aa",
+    "test-suite/GetEmployeeIncludingProtectedPerson/GetEmployeeIncludingProtectedPerson-doc.html": "601af21630fd2730ebc053df53c8b506f06ec562dc02f5ed88f9f6020c36cba0",
+    "test-suite/GetEmployeeIncludingProtectedPerson/GetEmployeeIncludingProtectedPerson-soapui-project.xml": "b32800f4552a05b28da53f40d903222be37d26bad42947a38050f1fbee26a4f3",
+    "test-suite/GetEmployeeIncludingProtectedPerson/constraints.xml": "149949cdff5540758d84e6fe4ae69babf4635ba50d66803d3c79941a761367f3",
+    "test-suite/GetEmployeeIncludingProtectedPerson/data.xml": "269826e7ac1f78204483c5f2e71ce95e1b5a4cdad720aa4a77cd48c1a9406077",
+    "test-suite/GetEmployeeIncludingProtectedPersonMock/GetEmployeeIncludingProtectedPersonMock-soapui-project.xml": "3ddbef471466d30d7dfe888ad269c5874e962432bc92953e3cb77fe3ac610208"
+  },
+  "text": {
+    "docs/TKB_infrastructure_directory_employee.txt": {
+      "från": "docs/TKB_infrastructure_directory_employee.docx",
+      "sha256": "9d585d6e2fb2c928291ef4ab83d0b0aaedcf5396b765c8c36cde8b19208c5566",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_infrastructure_directory_employee.docx",
+    "test-suite/GetEmployeeIncludingProtectedPerson/GetEmployeeIncludingProtectedPerson-doc.html",
+    "test-suite/GetEmployeeIncludingProtectedPerson/constraints.xml",
+    "test-suite/GetEmployeeIncludingProtectedPerson/data.xml"
+  ],
+  "utanförRepo": [
+    "docs/TKB_infrastructure_directory_employee.docx",
+    "docs/TKB_infrastructure_directory_employee.txt",
+    "test-suite/GetEmployeeIncludingProtectedPerson/GetEmployeeIncludingProtectedPerson-doc.html"
+  ]
 }

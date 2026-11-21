@@ -5,8 +5,15 @@
   "commit": "4167090fb46b9c24f13b83ecfdf4e95efcc0e86f",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.ehr.accesscontrol/get/4167090fb46b9c24f13b83ecfdf4e95efcc0e86f.tar.gz",
   "arkivSha256": "4c1c036454ceb857d72e1ce193eba28369bfe533db2bffed6e462e45114bff7c",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 7,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/core_components/ws-addressing-1.0.xsd"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/ehr_accesscontrol_1.0.xsd": "2e01b442dba4b519982f1a0a87ab7bf00c8640112ba9820944944fbce4f34de5",
     "schemas/core_components/itintegration_registry_1.0.xsd": "90fd91f30bef1160a74e601dbcea8a133da7e8a081c1d5f26b3d1f62efc03b4a",
@@ -14,5 +21,33 @@
     "schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP20.wsdl": "aa20dac5675bf981003eb4f64416c096baed6b32778742b49ddd96f767309c3e",
     "schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl": "658bb4c9b38e33c5a6164131d32cee841603ce817ff9b01e084e5402c7646da7",
     "schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementResponder_1.0.xsd": "121ecd9f361726f34f6c4bf8cef4b200ae14c0c66fe9b84b36d2f1c3492c620c"
-  }
+  },
+  "dokument": {
+    "docs/TKB_ehr_accesscontrol.docx": "b8f3575025b5511c39da21f34bd4fa2481d056837c617c6490c0e5df0fe36cad",
+    "test-suite/AssertCareEngagement/AssertCareEngagement-doc.html": "a43099c20bad58d3bc2638334fdfb405d93542d99e12ea8d0c1dd93e84e08e89",
+    "test-suite/AssertCareEngagement/AssertCareEngagement-soapui-project.xml": "9208c93b61d2a467192cc860230f3184cd620c246d93ffad405ce029e1db3e6b",
+    "test-suite/AssertCareEngagement/data.xml": "1bf46c0edc70faffe454d1adfd1c763805276614efc62b1dbcaf6c27b9e9b59d",
+    "test-suite/AssertCareEngagementMock/AssertCareEngagementMock-soapui-project.xml": "eaf9344113837db2d0fe0f0b94d08c8f76284ecab408da6417874c800fc77203"
+  },
+  "text": {
+    "docs/TKB_ehr_accesscontrol.txt": {
+      "från": "docs/TKB_ehr_accesscontrol.docx",
+      "sha256": "a127c5d13a8d35aee05f873a5d5deb13159e7e34bd0751f197e711b5e13da173",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_ehr_accesscontrol.docx",
+    "test-suite/AssertCareEngagement/AssertCareEngagement-doc.html"
+  ],
+  "utanförRepo": [
+    "docs/TKB_ehr_accesscontrol.docx",
+    "docs/TKB_ehr_accesscontrol.txt",
+    "test-suite/AssertCareEngagement/AssertCareEngagement-doc.html"
+  ]
 }

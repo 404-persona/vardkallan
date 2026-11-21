@@ -1,0 +1,237 @@
+{
+  "beskrivning": "Fel i Ineras exempel för GetAlertInformation (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": [
+    {
+      "exempel": "1.2.1 TimePeriod giltighetsdatum: Call GetAlertInformation timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetAlertInformation/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetAlertInformation/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "1.2.2 TimePeriod intervall: Call GetAlertInformation timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetAlertInformation/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetAlertInformation/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "1.2.3 TimePeriod tomt svar: Call GetAlertInformation timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetAlertInformation/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetAlertInformation/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetAlertInformation/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: BasicResponse",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: start_before",
+      "fel": [
+        "TKB 7.3.3-28: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB Regel 1: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: CareUnitResponse",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitId1",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: CareContactResponse",
+      "fel": [
+        "platshållare utan värde i testsviten: careContactId",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: EmptyResponse",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Approved-true",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Approved-false",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Hypersensitivity",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: SeriousDisease",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Treatment",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: CommunicableDisease",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: RestrictionOfCare",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: UnstructuredAlertInformation",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Hypersensitivity_AtcSubstance",
+      "fel": [
+        "TKB 7.3.3-61: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationBody/hypersensitivity/pharmaceuticalHypersensitivity/atcSubstance",
+        "TKB 7.3.3-64: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationBody/hypersensitivity/pharmaceuticalHypersensitivity/atcSubstance",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: LegalAuthenticator_0",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: obsoleteTime",
+      "fel": [
+        "TKB 7.3.3-28: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB Regel 1: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: source_system",
+      "fel": [
+        "TKB 7.3.3-28: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB Regel 1: /Envelope/Body/GetAlertInformationResponse/alertInformation/alertInformationHeader/accountableHealthcareProfessional",
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: locked",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Http-header filter",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Http-header Prefilter",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: severity_livshotande",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: severity_skadande",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: severity_besvarande",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: certainty_misstankt",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: certainty_trolig",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: certainty_konstaterad",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: BasicResponse 8.3",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: BasicResponse 8.1",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: BasicResponse 8.2",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Default response",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: certainty_originalText",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetAlertInformation: Http-header Prefilter2",
+      "fel": [
+        "TKB 7.3.3-109: /Envelope/Body/GetAlertInformationResponse/result"
+      ]
+    }
+  ]
+}

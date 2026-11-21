@@ -5,7 +5,14 @@
   "commit": "ff5de62545f2bee995c5361272027758b504de91",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.druglogistics.dosedispensing/get/ff5de62545f2bee995c5361272027758b504de91.tar.gz",
   "arkivSha256": "c9aeedfed22d77115be6fc646f929f3b1e8fddd833f17bd9c4bad16cc0da3689",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 25,
+    "utanHuvud": [
+      "schemas/core_components/druglogistics_dosedispensing_1.0.xsd",
+      "schemas/core_components/ws-addressing-1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/druglogistics_dosedispensing_1.0.xsd": "7283e0058e3f2525ce26cbb969db5d143146bbbbe2e54b670d211f4d0024ae55",

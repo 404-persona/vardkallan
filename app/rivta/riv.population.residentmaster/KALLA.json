@@ -5,8 +5,16 @@
   "commit": "9c8dd64e666fc9d474f622db2c8b041a20a414ef",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.population.residentmaster/get/9c8dd64e666fc9d474f622db2c8b041a20a414ef.tar.gz",
   "arkivSha256": "c3763660eac7e8febe4ae7740ee14612cd13f6775f74e0bb823514e8ab13f143",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 5,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd",
+      "schemas/interactions/LookupResidentForFullProfileInteraction/LookupResidentForFullProfileResponder_1.2.xml",
+      "schemas/interactions/LookupResidentForFullProfileInteraction/LookupResidentForFullProfileResponder_Response_1.2.xml"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/itintegration_registry_1.0.xsd": "3642d467194f166cb8d87d603800a591b31b11bd2c09e338c22073e33df622a4",
     "schemas/core_components/population_residentmaster_1.1_ext.xsd": "9df93b7b6cbc98a62e8e2efa19609fdcda8956a6ff728c2776a2162e23ce3240",
@@ -16,5 +24,28 @@
     "schemas/interactions/LookupResidentForFullProfileInteraction/LookupResidentForFullProfileResponder_1.2.xml": "c097d5a6601341c1501655c5d04200a9537b55610abb520d9d8bdaa61baed62a",
     "schemas/interactions/LookupResidentForFullProfileInteraction/LookupResidentForFullProfileResponder_1.2.xsd": "e15fde2f2f3d0943ff5dbf284198a6a3ccc46d9c2d82dbc157420e958df416ce",
     "schemas/interactions/LookupResidentForFullProfileInteraction/LookupResidentForFullProfileResponder_Response_1.2.xml": "09bdae79a9dc8a66414109d1f2f62cf8a141008d2b6236316b679b04cee45a77"
-  }
+  },
+  "dokument": {
+    "docs/TKB_population_residentmaster.doc": "8edd3139638240375e0b697e3e0a78638424492d6e4ed9e4acd31a1df91d369f"
+  },
+  "text": {
+    "docs/TKB_population_residentmaster.txt": {
+      "från": "docs/TKB_population_residentmaster.doc",
+      "sha256": "93be60d69d6280506d889509ffc151508defd7a00c20454e193a8c77afb00097",
+      "verktyg": [
+        "gotenberg/gotenberg@sha256:ac61457a1e889ef1ca256a9afc117cff8caf517f19e66ea23cede3feb22f69a5",
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_population_residentmaster.doc"
+  ],
+  "utanförRepo": [
+    "docs/TKB_population_residentmaster.doc",
+    "docs/TKB_population_residentmaster.txt"
+  ]
 }

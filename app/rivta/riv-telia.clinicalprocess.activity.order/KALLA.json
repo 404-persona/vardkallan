@@ -5,7 +5,13 @@
   "commit": "d20bc9f205eab02aa04822d4c584d6f8eee90826",
   "arkiv": "https://bitbucket.org/rivta-domains/riv-telia.clinicalprocess.activity.order/get/d20bc9f205eab02aa04822d4c584d6f8eee90826.tar.gz",
   "arkivSha256": "5ee68de0df81bdd8a1fcac9ebfb89e97d78b965ed43ef4949a4f04a727c73abc",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 4,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-17",
   "filer": {
     "schemas/core_components/clinicalprocess_activity_order_1.0.xsd": "31f6a583a3ec8a861795a1b6ebb8773b4ef18b1bce83df0150bb312129695faf",

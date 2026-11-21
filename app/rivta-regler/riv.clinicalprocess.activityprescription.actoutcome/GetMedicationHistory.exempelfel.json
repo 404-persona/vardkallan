@@ -1,0 +1,32 @@
+{
+  "beskrivning": "Fel i Ineras exempel för GetMedicationHistory (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": {
+    "mock GetMedicationHistory: SoapFault": "fault: GetMedicationHistory svarade med ett fel: That's an error!",
+    "mock GetMedicationHistory: Empty Response": "tas emot",
+    "mock GetMedicationHistory: Empty Response: Ineras Schematron": [],
+    "mock GetMedicationHistory: BasicResponse": "tas emot",
+    "mock GetMedicationHistory: BasicResponse: Ineras Schematron": [],
+    "mock GetMedicationHistory: TimeFilterOne": "tas emot",
+    "mock GetMedicationHistory: TimeFilterOne: Ineras Schematron": [],
+    "mock GetMedicationHistory: TimeFilterTwo": "tas emot",
+    "mock GetMedicationHistory: TimeFilterTwo: Ineras Schematron": [],
+    "mock GetMedicationHistory: BasicResponse-Utsättning": "tas emot",
+    "mock GetMedicationHistory: BasicResponse-Utsättning: Ineras Schematron": [],
+    "mock GetMedicationHistory: Merchandise": "tas emot",
+    "mock GetMedicationHistory: Merchandise: Ineras Schematron": [],
+    "mock GetMedicationHistory: Generics": "tas emot",
+    "mock GetMedicationHistory: Generics: Ineras Schematron": [],
+    "mock GetMedicationHistory: BasicResponse_Inactive": "tas emot",
+    "mock GetMedicationHistory: BasicResponse_Inactive: Ineras Schematron": [],
+    "mock GetMedicationHistory: Http-header Prefilter": "tas emot",
+    "mock GetMedicationHistory: Http-header Prefilter: Ineras Schematron": [],
+    "mock GetMedicationHistory: Http-header filter": "tas emot",
+    "mock GetMedicationHistory: Http-header filter: Ineras Schematron": [],
+    "mock GetMedicationHistory: BasicResponseAuthBdyAfter": "tas emot",
+    "mock GetMedicationHistory: BasicResponseAuthBdyAfter: Ineras Schematron": [],
+    "mock GetMedicationHistory: SpecialCharacters": "tas emot",
+    "mock GetMedicationHistory: SpecialCharacters: Ineras Schematron": [],
+    "mock GetMedicationHistory: Http-header filter2": "tas emot",
+    "mock GetMedicationHistory: Http-header filter2: Ineras Schematron": []
+  }
+}

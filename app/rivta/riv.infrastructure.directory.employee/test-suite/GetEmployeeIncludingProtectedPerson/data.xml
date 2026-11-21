@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="./../TK-doc.xsl"?>
+<testsuite>
+    <id>GetEmployeeIncludingProtectedPerson</id>
+    <description>Beskrivning av testsviten.</description>
+    <globaldata>
+        <webServiceUrl>http://localhost:8088/mockGetEmployeeIncludingProtectedPersonResponderBinding</webServiceUrl>
+        <!--<webServiceUrl>https://qa.esb.ntjp.se/vp</webServiceUrl>-->
+        <!--<webServiceUrl>https://hsa-mtls-integration.katalog.sjunet.org/ws</webServiceUrl>-->
+          <!-- <webServiceUrl>https://hsa-mtls-interntest.katalog.inera.se/ws</webServiceUrl>-->
+        <logicalAddress>SE165565594230-1000</logicalAddress>
+		<personHsaId>testperson-tk-88-prot</personHsaId>
+		<personalIdentityNumber>170101614626</personalIdentityNumber>
+		<!-- Loggparametrar-->
+		<logTestData>false</logTestData>
+		<logTestDataPath>C:/temp/SOAP-UI/</logTestDataPath>
+		<logTestDataFilesAllowed>500</logTestDataFilesAllowed>
+    </globaldata>
+    <testcase id="1.1 Personalnumber">
+        <description>Söker ut en persons kontaktinformation samt legitimerad yrkesgrupp och specialitet för angivet personId</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.2 HsaId">
+        <description>Söker ut en persons kontaktinformation samt legitimerad yrkesgrupp och specialitet för angivet HsaId</description>
+        <data>
+            <!-- hsa-interntest -->
+            <!--<personHsaId>SE7020028861-100W</personHsaId>-->
+            <!-- hsa-integration -->
+            <personHsaId>TST5565594230-7784-prot</personHsaId>
+        </data>
+    </testcase>
+    <testcase id="1.3 IsNull SearchBase">
+        <description>Anrop utan SearchBase</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.4 NonExisting SearchBase">
+        <description>Anrop med felaktig SearchBase</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.5 DoubleIdentity">
+        <description>Anrop med både personnummer och HsaId. Ska svara med SoapFault</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.6.1 Profile Basic">
+        <description>Anrop med profil Basic.</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.6.2 Profile Title">
+        <description>Anrop med profil Title.</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.6.3 Profile Contact">
+        <description>Anrop med profil Contact.</description>
+        <data>
+        </data>
+    </testcase>
+    <testcase id="1.6.4 Profile Full">
+        <description>Anrop med profil Full.</description>
+        <data>
+        </data>
+    </testcase>
+	<testcase id="6.1 Loadtest">
+        <description>Anrop med HsaId</description>
+        <data>
+			<personHsaId1>testperson-tk-5</personHsaId1>
+			<personHsaId2>testperson-tk-6</personHsaId2>
+        </data>
+    </testcase>
+    <testcase id="6.2 Recovery">
+        <description>Anrop med HsaId</description>
+        <data>
+			<personHsaId1>testperson-tk-5</personHsaId1>
+			<personHsaId2>testperson-tk-6</personHsaId2>
+        </data>
+    </testcase>
+</testsuite>

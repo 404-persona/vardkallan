@@ -5,7 +5,13 @@
   "commit": "d487f21af1b21e446210a36324aadaca7263f652",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.crm.requeststatus/get/d487f21af1b21e446210a36324aadaca7263f652.tar.gz",
   "arkivSha256": "c9cb2d2c16c8221ead3edbaac4dcb887c7f122647792e9758996c927ee9d9416",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 5,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/crm_requeststatus_2.0.xsd": "e8fb5a8f84ca720b459d312a6a997e59098b60c4b4d6644547e15faef5450a83",

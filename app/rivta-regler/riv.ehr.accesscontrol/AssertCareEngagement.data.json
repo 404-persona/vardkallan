@@ -1,0 +1,41 @@
+{
+  "beskrivning": "Vårdkällans uppgifter för Ineras testsvit, som data.xml i testsviten (Ineras anvisning: uppdatera data.xml så att den matchar testdata i systemet). Uppgifterna är demons påhittade. Testfallen under ejTillampligt körs inte, med skälet. Testfall med uppgifter som räknas fram av Groovy-skript i SoapUI (tidsintervallen) får fasta värden här.",
+  "konsumenter": [],
+  "global": {
+    "logicalAddress": "SE2321000164-VK0000#SE2321000164-VK0120",
+    "httpHeaderHsaId": "SE0000000000-SIMSJF",
+    "performer": "SE2321000164-VKP001",
+    "subjectOfCareId": "194502024732",
+    "careUnitHsaIdentity": "SE2321000164-VK0120",
+    "careGiverHsaIdentity": "SE2321000164-VK0000"
+  },
+  "testfall": {
+    "1.1.2 Samordningsnummer": {
+      "subjectOfCareId": "199302862397"
+    },
+    "1.7 SoapFault": {
+      "internt fel": true
+    },
+    "5.1 True": {
+      "subjectOfCareId": "194502024732",
+      "careUnitHsaIdentity": "SE2321000164-VK0120"
+    },
+    "5.2.1 Fel Performer": {
+      "performer": "SE2321000164-VKP004"
+    },
+    "5.2.2 Fel Patient": {
+      "subjectOfCareId": "191212121212"
+    },
+    "5.2.3 Fel CareUnit": {
+      "careUnitHsaIdentity": "SE2321000164-VK0320",
+      "logicalAddress": "SE2321000164-VK0000#SE2321000164-VK0320"
+    },
+    "5.2.4 Fel CareGiver": {
+      "careGiverHsaIdentity": "SE0000000000-ANNAN",
+      "logicalAddress": "SE2321000164-VK0000"
+    },
+    "6.1 Loadtest": {},
+    "6.2 Recovery": {}
+  },
+  "ejTillampligt": {}
+}

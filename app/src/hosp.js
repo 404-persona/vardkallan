@@ -16,8 +16,8 @@
 //
 // Regeln för hämtningen (REGEL): uppgifterna hämtas när någon får en roll som kräver legitimation, vid inloggning, före
 // en förskrivning och när systemförvaltaren öppnar listan, om de är äldre än ett dygn, och när systemförvaltaren hämtar
-// om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna, och systemet försöker igen tidigast efter fem
-// minuter. Har uppgifterna aldrig kunnat hämtas stoppas förskrivningen (en kontroll som inte kan avgöras släpper aldrig igenom), men inloggningen prövas som
+// om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna, och systemet försöker igen med allt längre mellan
+// försöken och högst fem gånger (testspår 2). Har uppgifterna aldrig kunnat hämtas stoppas förskrivningen (en kontroll som inte kan avgöras släpper aldrig igenom), men inloggningen prövas som
 // förut mot legitimationen i HSA-katalogen, så att ett avbrott i en nationell tjänst inte stänger ute all personal.
 //
 // Bara det som behövs sparas (hosp_uppgifter): legitimationerna med förskrivningsrätt, specialistbevis och begränsningar,
@@ -36,6 +36,11 @@ export const HOSP = kontrakt('riv.masterdata.organisationalresources.licensetopr
 const PNR_OID = '1.2.752.129.2.1.3.1';
 export const DYGN_MS = 24 * 3600_000;
 const NYTT_FORSOK_MS = 5 * 60_000;
+// Testspår 2 (TKB licensetopractice 4.3.2): omsändning bara vid tekniska fel, med ett ökande intervall (5, 10, 20, 40 och
+// 80 minuter) och ett begränsat antal försök. Efter det sista försöket, och efter ett svar som inte gick att använda,
+// försöker systemet inte igen av sig självt förrän nästa dygn. Systemförvaltaren kan alltid hämta om.
+export const MAX_FORSOK = 5;
+export const vantetidHosp = (antal) => (antal >= MAX_FORSOK ? DYGN_MS : NYTT_FORSOK_MS * 2 ** Math.max(0, antal - 1));
 export const REGEL = 'Uppgifterna ur Socialstyrelsens register (HOSP) hämtas när någon får en roll som kräver legitimation, vid inloggning, före en förskrivning och när systemförvaltaren öppnar listan, om de är äldre än ett dygn, och när systemförvaltaren hämtar om dem. Svarar tjänsten inte gäller de senast hämtade uppgifterna.';
 export const SIMULERAT = 'HOSP-tjänsten är simulerad i demon och svarar med påhittade uppgifter. Inget lämnar demon.';
 const REGISTRET = 'Socialstyrelsens register (HOSP)';
@@ -76,6 +81,7 @@ const aktiv = (b, dag) => (!b.from || b.from <= dag) && (!b.tom || b.tom >= dag)
 function sakra(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS hosp_uppgifter (personal_id TEXT PRIMARY KEY, yrke TEXT, hamtad TEXT, forsok TEXT, fel TEXT,
     uppgifter TEXT, sparr_fran TEXT, sparr_text TEXT)`);
+  if (!db.query('PRAGMA table_info(hosp_uppgifter)').all().some(k => k.name === 'fel_antal')) db.exec('ALTER TABLE hosp_uppgifter ADD COLUMN fel_antal INTEGER');
   markeraHospTabell(db);
 }
 const lasRad = (db, id) => { sakra(db); return db.query('SELECT * FROM hosp_uppgifter WHERE personal_id = ?').get(id); };
@@ -114,7 +120,8 @@ function simuleradPost(p, pnr, nr) {
     legitimation: leg.map(l => {
       const begr = [...(av.aterkallad ? [{ typ: '001', fromDatum: av.aterkallad }] : []), ...(MED_LEGITIMATIONEN.has(l.kod) || fr(l) ? av.begransningar ?? [] : [])];
       return {
-        legitimeratYrke: kod(l.kod, '1.2.752.116.3.1.3', YRKESNAMN[l.kod]), giltigLegitimation: !av.aterkallad, legitimationsDatum: ar,
+        // Testspår 2: datumen anges ÅÅÅÅMMDD (TKB 6.1.2), inte bara ett årtal.
+        legitimeratYrke: kod(l.kod, '1.2.752.116.3.1.3', YRKESNAMN[l.kod]), giltigLegitimation: !av.aterkallad, legitimationsDatum: `${ar}${pnr.slice(4, 8)}`,
         ...(fr(l) == null ? {} : { forskrivningsratt: fr(l) }),
         ...(begr.length ? { behorighetsbegransning: begr.map(b => ({ typAvBehorighetsbegransning: kod(b.typ, '1.2.752.116.3.1.5', BEGRANSNING[b.typ]), fromDatum: b.fromDatum, ...(b.text ? { begransadForskrivningsrattText: b.text } : {}) })) } : {}),
       };
@@ -144,6 +151,9 @@ tjanst.registrera(HOSP, ({ db }, { begaran }) => {
 function tolkaSvar(svar, pnr) {
   const h = (svar.hospPerson ?? []).find(x => x.personId?.extension === pnr);
   if (!h) return { finns: false, legitimationer: [] };
+  // Testspår 2 (TKB 6.1.3): för en person med skyddad identitet har registret bara personnummer, födelsedatum, avliden och
+  // en upplysning om att kontakta Socialstyrelsen, så tjänsten kan inte användas för att kontrollera legitimationen.
+  if (h.skyddadIdentitet === true) return { finns: true, skyddad: true, legitimationer: [] };
   return {
     finns: true,
     legitimationer: (h.legitimation ?? []).map(l => ({
@@ -172,6 +182,7 @@ export function bedom(db, p, nu = new Date()) {
     return { ...bas, status: 'okand', text: rad?.fel ? `Uppgifterna ur ${REGISTRET} har inte kunnat hämtas. ${rad.fel}` : `Uppgifterna ur ${REGISTRET} är inte hämtade än.` };
   }
   const u = JSON.parse(rad.uppgifter);
+  if (u.skyddad) return { ...bas, status: 'skyddad', legitimationer: [], text: `Personen har skyddad identitet, och ${REGISTRET} lämnar då inga uppgifter om legitimationen. Legitimationen prövas mot HSA-katalogen, och förskrivningsrätten kan inte kontrolleras här. Systemförvaltaren kontaktar Socialstyrelsen.` };
   const dag = dagRiv(nu);
   const per = koder.map(k => ({ kod: k, leg: u.legitimationer.find(l => l.kod === k) ?? null }));
   const arAterkallad = (l) => { const f = aterkalladFran(l); return f !== null && f <= dag; };
@@ -219,9 +230,12 @@ export function hamta(db, p, nu = new Date()) {
   sakra(db);
   const krav = kravFor(p.yrke);
   if (!krav || !krav.koder.some(k => Object.hasOwn(YRKESNAMN, k))) return bedom(db, p, nu);
-  const sparaFel = (felText) => {
-    db.query(`INSERT INTO hosp_uppgifter (personal_id, forsok, fel) VALUES (?, ?, ?)
-      ON CONFLICT (personal_id) DO UPDATE SET forsok = excluded.forsok, fel = excluded.fel`).run(p.id, nu.toISOString(), felText);
+  // tekniskt: ett tekniskt fel (tjänsten svarar inte eller svarar med ett fel), som räknas som ett försök till. Ett svar
+  // som inte gick att använda, eller ett personnummer som saknas, ger inga nya försök förrän nästa dygn.
+  const sparaFel = (felText, tekniskt = false) => {
+    const antal = tekniskt ? (lasRad(db, p.id)?.fel_antal ?? 0) + 1 : MAX_FORSOK;
+    db.query(`INSERT INTO hosp_uppgifter (personal_id, forsok, fel, fel_antal) VALUES (?, ?, ?, ?)
+      ON CONFLICT (personal_id) DO UPDATE SET forsok = excluded.forsok, fel = excluded.fel, fel_antal = excluded.fel_antal`).run(p.id, nu.toISOString(), felText, antal);
     return bedom(db, p, nu);
   };
   // I verkligheten kommer personnumret från HSA-katalogen. I demon står det i den simulerade katalogen (seed/hosp.js).
@@ -232,11 +246,12 @@ export function hamta(db, p, nu = new Date()) {
     svar = anropaSynk(HOSP, { logiskAdress: NATIONELL, begaran: { personId: { extension: pnr, root: PNR_OID } }, transport: transport(db), db });
   } catch (e) {
     if (!(e instanceof RivtaFel)) throw e;
-    return sparaFel(e.kod === 'transport' ? 'Tjänsten svarar inte just nu.' : 'Svaret från tjänsten kunde inte användas.');
+    const tekniskt = e.kod === 'transport' || e.kod === 'fault';
+    return sparaFel(tekniskt ? 'Tjänsten svarar inte just nu.' : 'Svaret från tjänsten kunde inte användas.', tekniskt);
   }
   const u = tolkaSvar(svar, pnr);
   db.query(`INSERT INTO hosp_uppgifter (personal_id, yrke, hamtad, forsok, fel, uppgifter) VALUES (?, ?, ?, ?, NULL, ?)
-    ON CONFLICT (personal_id) DO UPDATE SET yrke = excluded.yrke, hamtad = excluded.hamtad, forsok = excluded.forsok, fel = NULL, uppgifter = excluded.uppgifter`)
+    ON CONFLICT (personal_id) DO UPDATE SET yrke = excluded.yrke, hamtad = excluded.hamtad, forsok = excluded.forsok, fel = NULL, fel_antal = NULL, uppgifter = excluded.uppgifter`)
     .run(p.id, p.yrke, nu.toISOString(), nu.toISOString(), JSON.stringify(u));
   const b = bedom(db, p, nu);
   const fran = sparrFran(db, p, b, nu);
@@ -244,14 +259,14 @@ export function hamta(db, p, nu = new Date()) {
   return b;
 }
 
-// Uppgifterna enligt regeln: hämtas om när de saknas, gäller ett annat yrke eller är äldre än ett dygn, men inte oftare än
-// var femte minut när tjänsten inte svarar.
+// Uppgifterna enligt regeln: hämtas om när de saknas, gäller ett annat yrke eller är äldre än ett dygn. Efter ett fel
+// väntar systemet allt längre mellan försöken (vantetidHosp).
 export function aktuell(db, p, nu = new Date()) {
   const krav = kravFor(p?.yrke);
   if (!krav || !krav.koder.some(k => Object.hasOwn(YRKESNAMN, k))) return bedom(db, p, nu);
   const rad = lasRad(db, p.id);
   const behover = !rad?.uppgifter || rad.yrke !== p.yrke || nu.getTime() - new Date(rad.hamtad).getTime() > DYGN_MS;
-  const nyssFel = rad?.fel && rad.forsok && nu.getTime() - new Date(rad.forsok).getTime() < NYTT_FORSOK_MS;
+  const nyssFel = rad?.fel && rad.forsok && nu.getTime() - new Date(rad.forsok).getTime() < vantetidHosp(rad.fel_antal ?? 1);
   return behover && !nyssFel ? hamta(db, p, nu) : bedom(db, p, nu);
 }
 

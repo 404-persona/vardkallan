@@ -1,0 +1,95 @@
+{
+  "beskrivning": "Vårdkällans uppgifter för Ineras testsvit, som data.xml i testsviten (Ineras anvisning: uppdatera data.xml så att den matchar testdata i systemet). Uppgifterna är demons påhittade. Testfallen under ejTillampligt körs inte, med skälet. Testfall med uppgifter som räknas fram av Groovy-skript i SoapUI (tidsintervallen) får fasta värden här.",
+  "konsumenter": [
+    {
+      "hsaId": "SE0000000000-SIMFILTER1",
+      "namn": "Konsument med en vårdenhet, i testet",
+      "vardenheter": [
+        "uso-kard"
+      ]
+    },
+    {
+      "hsaId": "SE0000000000-SIMFILTER2",
+      "namn": "Konsument med en vårdenhet utan uppgifter om patienten, i testet",
+      "vardenheter": [
+        "kkoga-ane"
+      ]
+    }
+  ],
+  "global": {
+    "logicalAddress": "SE2321000164-VK0000",
+    "httpHeaderHsaId": "SE0000000000-SIMNPO",
+    "patientId": "194502024732",
+    "patientIdType": "1.2.752.129.2.1.3.1",
+    "sourceSystemHSAId": "SE2321000164-VK0000"
+  },
+  "testfall": {
+    "1.2.1 TimePeriod giltighetsdatum": {
+      "timePeriodStart": "20140101",
+      "timePeriodEnd": "20141231"
+    },
+    "1.2.2 TimePeriod intervall": {
+      "timePeriodStart": "20140101",
+      "timePeriodEnd": "20991231"
+    },
+    "1.2.3 TimePeriod tomt svar": {
+      "timePeriodStart": "20000101",
+      "timePeriodEnd": "20000201"
+    },
+    "1.2.4 TimePeriod manuell": {
+      "timePeriodStart": "20120101",
+      "timePeriodEnd": "20171231"
+    },
+    "1.3 CareUnit": {
+      "careUnitId1": "SE2321000164-VK0130"
+    },
+    "1.7 SoapFault": {
+      "internt fel": true
+    },
+    "1.8 NonExisting PatientId": {
+      "patientId": "191212121212"
+    },
+    "1.9 NonExisting CareContactId": {
+      "sourceSystemHSAId": "SE2321000164-VK0000",
+      "careContactId": "999999"
+    },
+    "6.1 Loadtest": {
+      "patientId1": "194502024732",
+      "patientId2": "201712112398"
+    },
+    "6.2 Recovery": {
+      "patientId1": "194502024732",
+      "patientId2": "201712112398"
+    },
+    "7.1 CareUnit_Blacklisted": {
+      "httpHeaderHsaId2": "SE0000000000-SIMFILTER1",
+      "filterString": "SE2321000164-VK0130"
+    },
+    "7.2 Consumer_Blacklisted": {
+      "httpHeaderHsaId2": "SE0000000000-SIMFILTER2"
+    },
+    "7.3 Consumer_Independent": {
+      "httpHeaderHsaId2": "SE0000000000-SIMJOURNALEN"
+    },
+    "5.14 HypersensitivityAgent": {
+      "patientId": "201712112398"
+    },
+    "5.21 OtherHyperSensitivity": {
+      "patientId": "201712112398"
+    },
+    "5.19 UnstructuredAlertInformation": {
+      "patientId": "199011172476"
+    }
+  },
+  "ejTillampligt": {
+    "1.1.3 Lokalt reservnummer": "Vårdkällan lämnar inte ut uppgifter på reservnummer i tjänstekontrakten: reservnumren är lokala och har inte tolv tecken, och patientens identitet ska vara ett personnummer eller samordningsnummer (säkerhetsgranskningen av runda 14).",
+    "4.1 ApprovedForPatient_true": "Vårdkällan har ingen regel för vilka uppgifter som får visas för patienten i nationella e-tjänster och sätter därför alltid approvedForPatient till false (TKB 4.2.2: flaggan sätts efter vårdgivarens verksamhetsregler). Frågan står i rapporten.",
+    "1.1.2 Samordningsnummer": "Demons patient med samordningsnummer har ingen uppmärksamhetsinformation.",
+    "1.5 CareContact": "Vårdkällans uppmärksamhetsinformation är inte kopplad till en vårdkontakt, så careContactId anges inte.",
+    "5.13 NonATCSubstance": "Demons överkänslighet för läkemedel har alltid en ATC-kod.",
+    "5.15 SeriousDisease": "Vårdkällan skickar uppmärksamhetsinformation som inte är överkänslighet som ostrukturerad (unstructuredAlertInformation), eftersom flaggorna i journalen inte har de kodade fält som seriousDisease kräver.",
+    "5.16 Treatment": "Vårdkällan skickar uppmärksamhetsinformation som inte är överkänslighet som ostrukturerad (unstructuredAlertInformation), eftersom flaggorna i journalen inte har de kodade fält som treatment kräver.",
+    "5.17 CommunicableDisease": "Vårdkällan skickar uppmärksamhetsinformation som inte är överkänslighet som ostrukturerad (unstructuredAlertInformation), eftersom flaggorna i journalen inte har de kodade fält som communicableDisease kräver.",
+    "5.18 RestrictionOfCare": "Vårdkällan skickar uppmärksamhetsinformation som inte är överkänslighet som ostrukturerad (unstructuredAlertInformation), eftersom flaggorna i journalen inte har de kodade fält som restrictionOfCare kräver."
+  }
+}

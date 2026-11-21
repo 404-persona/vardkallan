@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="cb86a7b7-ef26-4c29-ac90-a5c89289afb9" activeEnvironment="Default" name="AssertCareEngagementMock 1.0" resourceRoot="${projectDir}" soapui-version="5.4.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="6a863363-25ce-4c83-b22d-f21386453254" wsaVersion="NONE" name="AssertCareEngagementResponderBinding" type="wsdl" bindingName="{urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21}AssertCareEngagementResponderBinding" soapVersion="1_1" anonymous="optional" definition="../../schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/C:/NMT/Repon/TGP/riv.ehr.accesscontrol/schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl"><con:part><con:url>file:/C:/NMT/Repon/TGP/riv.ehr.accesscontrol/schemas/interactions/AssertCareEngagementInteraction/AssertCareEngagementInteraction_1.0_RIVTABP21.wsdl</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<wsdl:definitions name="AssertCareEngagementInteraction" targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tjsr="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" xmlns:tjsi="urn:riv:ehr:accesscontrol:AssertCareEngagementInitiator:1" xmlns:tns="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21" xmlns:itr="urn:riv:itintegration:registry:1">
+  <xs:annotation>
+    <xs:documentation>Tjänsteinteraktionens namn: AssertCareEngagementInteraction
+			 Beskrivning: 
+			   The responder determines whether a care professional has a care relationship with a patient such that access to health records of external healthcare fascilities would be justified
+			 Revisioner: 
+			 Tjänstedomän: ehr:accesscontrol
+			 Tjänsteinteraktionstyp: Fråga-Svar
+			 WS-profil: RIVTABP21
+			 Förvaltas av: Inera AB</xs:documentation>
+  </xs:annotation>
+  <wsdl:types>
+    <xs:schema targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagement:1:rivtabp21">
+      <xs:import schemaLocation="AssertCareEngagementResponder_1.0.xsd" namespace="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1"/>
+      <xs:import schemaLocation="../../core_components/itintegration_registry_1.0.xsd" namespace="urn:riv:itintegration:registry:1"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="AssertCareEngagementRequest">
+    <wsdl:part name="LogicalAddress" element="itr:LogicalAddress">
+      <wsdl:documentation>>The HSAid of the healthcare_facility on which behalf the employee is acting in her profess</wsdl:documentation>
+    </wsdl:part>
+    <wsdl:part name="parameters" element="tjsr:AssertCareEngagement"/>
+  </wsdl:message>
+  <wsdl:message name="AssertCareEngagementResponse">
+    <wsdl:part name="parameters" element="tjsr:AssertCareEngagementResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="AssertCareEngagementResponderInterface">
+    <wsdl:operation name="AssertCareEngagement">
+      <wsdl:input message="tns:AssertCareEngagementRequest"/>
+      <wsdl:output message="tns:AssertCareEngagementResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="AssertCareEngagementResponderBinding" type="tns:AssertCareEngagementResponderInterface">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="AssertCareEngagement">
+      <soap:operation soapAction="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" style="document"/>
+      <wsdl:input>
+        <soap:header use="literal" message="tns:AssertCareEngagementRequest" part="LogicalAddress"/>
+        <soap:body use="literal" parts="parameters"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="AssertCareEngagementResponderService">
+    <wsdl:port name="AssertCareEngagementResponderPort" binding="tns:AssertCareEngagementResponderBinding">
+      <soap:address location="http://tempuri.org"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\interactions\AssertCareEngagementInteraction\AssertCareEngagementResponder_1.0.xsd</con:url><con:content><![CDATA[<!--Licensed to Inera AB under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1" xmlns:core="urn:riv:ehr:accesscontrol:1">
+  <xs:import schemaLocation="../../core_components/ehr_accesscontrol_1.0.xsd" namespace="urn:riv:ehr:accesscontrol:1"/>
+  <xs:element name="AssertCareEngagement" type="tns:AssertCareEngagementType"/>
+  <xs:element name="AssertCareEngagementResponse" type="tns:AssertCareEngagementResponseType"/>
+  <xs:complexType name="AssertCareEngagementType">
+    <xs:annotation>
+      <xs:documentation>Request parameters of the AssertCareEngagement service</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="performer" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of the performer (healthcare professional) requesting access to EHR records of the subject of care.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="subjectOfCareId" type="core:SubjectOfCareIdType">
+        <xs:annotation>
+          <xs:documentation>Id of the subject of care of the EHR for which access is requested by the performer.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="careUnitHsaIdentity" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of care unit where the performer is in duty when requesting access to EHR records of the subject of care.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="careGiverHsaIdentity" type="core:HsaIdType">
+        <xs:annotation>
+          <xs:documentation>HSAId of the organisation operating the healthcare_facility</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AssertCareEngagementResponseType">
+    <xs:sequence>
+      <xs:annotation>
+        <xs:documentation>Response message of the AssertCareEngagement service</xs:documentation>
+      </xs:annotation>
+      <xs:element name="HasCareEngagement" type="xs:boolean">
+        <xs:annotation>
+          <xs:documentation>true if care engagement is asserted, else false</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\core_components\ehr_accesscontrol_1.0.xsd</con:url><con:content><![CDATA[<!--Licensed to Inera AB under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. inera AB licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:ehr:accesscontrol:1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:ehr:accesscontrol:1">
+  <xs:simpleType name="DT">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[1-9]{1}[0-9]{3}(0[1-9]{1}|1[0-2]{1})([0-2]{1}[0-9]{1}|3[0-1]{1})">
+        <xs:annotation>
+          <xs:documentation>ISO 8601 datetime format (ASN.1): YYYYMMDD</xs:documentation>
+        </xs:annotation>
+      </xs:pattern>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="HsaIdType">
+    <xs:restriction base="xs:token">
+      <xs:maxLength value="64"/>
+      <xs:pattern value="[(\p{L})0-9\-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SubjectOfCareIdType">
+    <xs:restriction base="xs:string">
+      <!--xs:pattern value="^[0-9]{8}[0-9pPtTfF][0-9]{3}$"/-->
+      <xs:pattern value="[0-9]{8}[0-9pPtTfF][0-9]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:\C:\NMT\Repon\TGP\riv.ehr.accesscontrol\schemas\core_components\itintegration_registry_1.0.xsd</con:url><con:content><![CDATA[<xs:schema targetNamespace="urn:riv:itintegration:registry:1" elementFormDefault="qualified" version="1.0" xmlns="urn:riv:itintegration:registry:1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:annotation>
+    <xs:documentation>Beskrivning: 	Grundläggande informationsobjekt för domänen itintegration:registry (adressering av tjänster)
+			
+			Revisionshistorik: 2011-06-27 Mats Ekhammar, Callista Enterprise AB
+				Added ServiceContractType
+			
+			Datum:			2011-05-04
+			Beskrivning:	Initial version
+			Författare:		marcus.krantz@callistaenterprise.se</xs:documentation>
+  </xs:annotation>
+  <xs:element name="LogicalAddress" type="LogicalAddressType"/>
+  <xs:simpleType name="LogicalAddressType">
+    <xs:annotation>
+      <xs:documentation>Defines the type for logical address according to national reference architecture.
+				Superseeds wsa:To as type for logical address header in RIVTA 2.1.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+  <xs:complexType name="ServiceContractNamespaceType">
+    <xs:annotation>
+      <xs:documentation>Type which describes a service contract.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="ServiceContractNamespace" type="xs:anyURI"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="HsaIdType">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://L-SE-0535:8088/mockAssertCareEngagementResponderBinding</con:endpoint><con:endpoint>http://tempuri.org</con:endpoint></con:endpoints><con:operation id="eae4713e-cb87-4b21-84da-fa9479d863c2" isOneWay="false" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement" name="AssertCareEngagement" bindingOperationName="AssertCareEngagement" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/></con:operation></con:interface><con:mockService id="d454ecc9-9dbc-402b-aeec-67560696c3f8" port="8088" path="/mockAssertCareEngagementResponderBinding" host="localhost" name="AssertCareEngagementResponderBinding MockService" bindToHostOnly="false" docroot=""><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting></con:settings><con:properties/><con:mockOperation name="AssertCareEngagement" id="d310dfa9-7c73-4df5-bad1-5c27a7bcfb3c" interface="AssertCareEngagementResponderBinding" operation="AssertCareEngagement"><con:settings/><con:defaultResponse>Response 1</con:defaultResponse><con:dispatchStyle>SCRIPT</con:dispatchStyle><con:dispatchPath>//Kontrollera schema och schematron för request
+mh = new se.skl.rivta.tksupport.soapui.MockHelper(mockRequest, mockOperation, log)
+def validationErrors = mh.getSchemaErrorsInRequest()
+if (validationErrors != null){
+	context.validationMessages = validationErrors.toString()
+	return "SoapFault"
+}else{
+	context.validationMessages = "SoapFault"
+}
+
+if (mockRequest.requestHeaders['x-mock-response'] != null){
+	// Om anropet kommer från testsviten så returneras angiven respons
+	return mockRequest.requestHeaders['x-mock-response'][0]
+}
+
+return "True"</con:dispatchPath><con:response name="True" id="165cfb1c-bb5b-4203-933b-b694a59b0790" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:AssertCareEngagementResponse>
+         <urn:HasCareEngagement>true</urn:HasCareEngagement>
+      </urn:AssertCareEngagementResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement"/></con:response><con:response name="False" id="165cfb1c-bb5b-4203-933b-b694a59b0790" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:AssertCareEngagementResponse>
+         <urn:HasCareEngagement>false</urn:HasCareEngagement>
+      </urn:AssertCareEngagementResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement"/></con:response><con:response name="SoapFault" id="759a742a-f73e-4d13-9f5c-6e2ed2a36049" httpResponseStatus="500" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <soapenv:Fault>
+      <faultcode>server</faultcode>
+      <faultstring xml:lang="SE">Valideringsfel</faultstring>
+      <detail>
+      	<text>${validationMessages}</text>
+      </detail>
+    </soapenv:Fault>
+  </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement"/></con:response><con:response name="SoapFault2" id="96e10594-e90a-4293-aa5f-f256bede7184" httpResponseStatus="500" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
+<env:Header/>
+	<env:Body>
+	<env:Fault>
+		<env:Code><env:Value>env:Sender</env:Value></env:Code>
+		<env:Reason>
+			<env:Text xml:lang="en-US">Message does not have necessary info</env:Text></env:Reason>
+		<env:Role>http://gizmos.com/order</env:Role>
+		<env:Detail>
+			<PO:order xmlns:PO="http://gizmos.com/orders/">Quantity element does not have a value</PO:order>
+			<PO:confirmation xmlns:PO="http://gizmos.com/confirm">Incomplete address: no zip code</PO:confirmation>
+		</env:Detail>
+	</env:Fault>
+	</env:Body>
+</env:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:ehr:accesscontrol:AssertCareEngagementResponder:1:AssertCareEngagement"/></con:response><con:dispatchConfig/></con:mockOperation></con:mockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>

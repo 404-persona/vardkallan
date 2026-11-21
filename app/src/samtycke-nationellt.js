@@ -116,7 +116,8 @@ export function stamAvGiltighet(db, nu = new Date()) {
 
 const OID_PNR = '1.2.752.129.2.1.3.1';
 const OID_SAMORDNING = '1.2.752.129.2.1.3.3';
-const tjanstTid = (d) => d.toISOString().replace(/\.\d+Z$/, '').replace(/Z$/, '');
+// Testspår 2: tiderna till samtyckestjänsten är svensk tid utan tidszon (TKB ehr:patientconsent 2.6, rivta/tid.js).
+const tjanstTid = (d) => require('./rivta/tid.js').svenskTid(d);
 const nat = () => require('./rivta/nationella.js');
 const vardgivare = (db) => require('./rivta/konsumenter.js').vardgivare(db);
 const enhetHsa = (db, ve) => db.query('SELECT hsa_id FROM enheter WHERE id = ?').get(ve)?.hsa_id ?? ve;
@@ -170,7 +171,8 @@ export function koaRegistrering(atk, { samtyckeId = null, typ = 'Consent', nu = 
   const pid = nationellIdentitet(db, atk.patientId);
   if (!pid) return false;
   const ve = vardenhetFor(db, atk.personal.enhet_id);
-  const intygId = `vk-${samtyckeId ?? 'nod'}-${randomUUID().slice(0, 18)}`;
+  // Testspår 2: intygets id är en UUID (TKB ehr:patientconsent 10.1.13). Kopplingen till samtycket står i utkorgen.
+  const intygId = randomUUID();
   const begaran = { AssertionId: intygId, AssertionType: typ, Scope: 'NationalLevel', PatientId: pid.id, CareProviderId: vardgivare(db), CareUnitId: enhetHsa(db, ve),
     ...(personligt ? { EmployeeId: anstallningsId(atk.personal) } : {}), ...(slut ? { EndDate: slut } : {}), RegistrationAction: aktion(atk.personal, nu) };
   koa(db, { patientId: atk.patientId, samtyckeId, handling: 'registrera', typ, intygId, personalHsa: anstallningsId(atk.personal), begaran }, nu);
@@ -227,7 +229,7 @@ export function registreraOm(db, patientId, samtyckeIds, nu = new Date()) {
     const s = db.query('SELECT * FROM sammanhallen_samtycken WHERE id = ? AND patient_id = ? AND aterkallat IS NULL').get(id, patientId);
     if (!s || upphort(db, s, nu)) continue;
     const personal = db.query('SELECT * FROM personal WHERE id = ?').get(s.registrerat_av) ?? { id: 'vardkallan-system', hsa_id: 'vardkallan-system' };
-    const intygId = `vk-${s.id}-${randomUUID().slice(0, 18)}`;
+    const intygId = randomUUID();
     const slut = s.giltighet === 'tid' && s.giltig_till ? `${s.giltig_till}T23:59:59` : null;
     const begaran = { AssertionId: intygId, AssertionType: 'Consent', Scope: 'NationalLevel', PatientId: pid.id, CareProviderId: vardgivare(db), CareUnitId: enhetHsa(db, vardenhetFor(db, s.enhet_id)),
       ...(slut ? { EndDate: slut } : {}), RegistrationAction: aktion(personal, nu) };
@@ -270,14 +272,14 @@ function utfor(db, r, nu) {
   const b = JSON.parse(r.begaran);
   if (r.handling === 'registrera') {
     const svar = n.anropa(db, 'RegisterExtendedConsent', b);
-    if (!['OK', 'ALREADYEXISTS'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten registrerade inte samtycket (${svar.ResultType.ResultCode}).`);
+    if (!['OK', 'INFO', 'ALREADYEXISTS'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten registrerade inte samtycket (${svar.ResultType.ResultCode}).`);
     return;
   }
   // Runda 15, r2: ett samtycke vars vårdrelation har upphört återkallas med sina egna intyg.
   if (Array.isArray(b.AssertionIds)) {
     for (const id of b.AssertionIds) {
       const svar = n.anropa(db, 'CancelExtendedConsent', { AssertionId: id, CancellationAction: aktion({ hsa_id: b.av }, nu) });
-      if (!['OK', 'NOTFOUND'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten återkallade inte samtycket (${svar.ResultType.ResultCode}).`);
+      if (!['OK', 'INFO', 'NOTFOUND'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten återkallade inte samtycket (${svar.ResultType.ResultCode}).`);
     }
     return;
   }
@@ -286,13 +288,14 @@ function utfor(db, r, nu) {
     const a = x.PDLAssertion;
     if (a.AssertionType !== 'Consent' || a.CareUnitId !== b.CareUnitId || x.CancellationInfo || x.DeletionInfo || String(x.RegistrationInfo?.RegistrationDate ?? '') > b.fore) continue;
     const svar = n.anropa(db, 'CancelExtendedConsent', { AssertionId: a.AssertionId, CancellationAction: aktion({ hsa_id: b.av }, nu) });
-    if (!['OK', 'NOTFOUND'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten återkallade inte samtycket (${svar.ResultType.ResultCode}).`);
+    if (!['OK', 'INFO', 'NOTFOUND'].includes(svar.ResultType.ResultCode)) throw new ResultatFel(`Samtyckestjänsten återkallade inte samtycket (${svar.ResultType.ResultCode}).`);
   }
 }
 function hamtaLista(db, vg, personId, aterkallade) {
   const svar = nat().anropa(db, 'GetExtendedConsentsForPatient', { CareProviderId: vg, PatientId: personId, GetCancelledFlag: aterkallade });
   const res = svar.GetExtendedConsentsResultType;
-  if (res.Result.ResultCode !== 'OK') throw new ResultatFel('Samtyckestjänsten kunde inte lämna patientens samtycken.');
+  // Testspår 2 (TKB ehr:patientconsent 2.3): OK och INFO betyder att frågan genomfördes, alla andra koder att den inte gjorde det.
+  if (!['OK', 'INFO'].includes(res.Result.ResultCode)) throw new ResultatFel('Samtyckestjänsten kunde inte lämna patientens samtycken.');
   return res.PdlAssertions ?? [];
 }
 

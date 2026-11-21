@@ -29,15 +29,19 @@ Koden ligger i `app/src/rivta/` och används av alla kontrakt.
 | AssertCareEngagement | 1.0 | riv.ehr.accesscontrol | producent | i processen och genom den lokala tjänsteplattformen |
 | CheckBlocks | 3.0 | riv.ehr.blocking | konsument | i processen |
 | GetAllBlocksForPatient, GetBlocksForPatient | 2.0 | riv.ehr.blocking | konsument | i processen och genom den lokala tjänsteplattformen |
-| RegisterTemporaryExtendedRevoke, CancelTemporaryExtendedRevoke | 2.0 | riv.ehr.blocking | konsument | i processen |
-| CheckConsent, RegisterExtendedConsent, CancelExtendedConsent | 1.0 | riv.ehr.patientconsent | konsument | i processen och genom den lokala tjänsteplattformen |
+| RegisterTemporaryExtendedRevoke | 2.0 | riv.ehr.blocking | konsument | i processen |
+| CancelTemporaryExtendedRevoke | 2.0 | riv.ehr.blocking | pinnat, konsument inte byggd | bara den simulerade producenten, i processen |
+| RegisterExtendedConsent, CancelExtendedConsent | 1.0 | riv.ehr.patientconsent | konsument | i processen och genom den lokala tjänsteplattformen |
+| CheckConsent | 1.0 | riv.ehr.patientconsent | pinnat, konsument inte byggd | bara den simulerade producenten, i processen |
 | GetExtendedConsentsForPatient | 1.0 | riv.ehr.patientconsent | konsument | i processen |
 | GetEmployeeIncludingProtectedPerson | 4.0 | riv.infrastructure.directory.employee | konsument | i processen och genom den lokala tjänsteplattformen |
 | LookupResidentForFullProfile | 1.2 | riv.population.residentmaster | konsument | i processen och genom den lokala tjänsteplattformen |
 | Update | 1.0 | riv.itintegration.engagementindex | konsument | i processen |
 | GetHospPersonForPublicHealthCare | 1.1 | riv.masterdata.organisationalresources.licensetopractice | konsument | i processen och genom den lokala tjänsteplattformen |
 
-Status för alla: byggt och validerat mot tjänstekontraktet, testat lokalt, inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). Där Vårdkällan är konsument är den andra parten simulerad (`app/src/rivta/nationella.js` och `register.js`), med påhittade HSA-id och demons påhittade uppgifter. De simulerade tjänsterna har en egen kopia av spärrar, samtycken, personalkatalogen och folkbokföringen i sandlådan, tagen första gången de används, så att skillnader mellan Vårdkällan och tjänsten syns.
+CancelTemporaryExtendedRevoke och CheckConsent är pinnade, och den simulerade spärr- och samtyckestjänsten svarar på dem, men Vårdkällan anropar dem inte. En tillfällig hävning (RegisterTemporaryExtendedRevoke) gäller till dagens slut och tas inte tillbaka i förtid genom spärrtjänsten, och samtycket prövas i Vårdkällan och med GetExtendedConsentsForPatient, inte med CheckConsent.
+
+Status för de andra: byggt och validerat mot tjänstekontraktet, testat lokalt, inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat). Där Vårdkällan är konsument är den andra parten simulerad (`app/src/rivta/nationella.js` och `register.js`), med påhittade HSA-id och demons påhittade uppgifter. De simulerade tjänsterna har en egen kopia av spärrar, samtycken, personalkatalogen och folkbokföringen i sandlådan, tagen första gången de används, så att skillnader mellan Vårdkällan och tjänsten syns.
 
 Två domäner som saknades på bitbucket.org/rivta-domains finns där under andra namn, enligt ett svar från Inera 2026-11-17: HOSP-kontrakten i riv.masterdata.organisationalresources.licensetopractice (namnrymden urn:riv:infrastructure:directory:licensetopractice) och ProcessActivityOrder i riv-telia.clinicalprocess.activity.order. Båda är pinnade under `app/rivta/` med KALLA.json. Grunden läser domäner med en leverantörs namn efter riv- som de andra.
 
@@ -220,3 +224,21 @@ Den simulerade HOSP-tjänsten (`hosp.js` och `seed/hosp.js`) har en post för va
 
 ProcessActivityOrder 1.0 i riv-telia.clinicalprocess.activity.order (taggen clinicalprocess_activity_order_1.0) är kontraktet för att beställa en aktivitet, till exempel egenmätning av blodtryck eller vikt, av en plattform där patienten gör mätningen. Kontraktet är pinnat, och grunden läser det och validerar mot dess schema, men ingen konsument är byggd. Vårdkällans egen patientportal (Min journal) tar redan emot hemmätningar, som vårdenheten ber om och följer upp i journalen, så en extern plattform för egenmätning tillför inget i demon.
 
+
+## Affärsreglerna i tjänstekontraktsbeskrivningarna som tester (testspår 2)
+
+För de byggda kontrakten i tabellen ovan är tjänstekontraktsbeskrivningen (TKB) och domänens testsvit pinnade bredvid schemana, ur samma arkiv och vid samma commit, med sha256 i KALLA.json under `dokument` och `text`. TKB görs om till text i en container utan nätverk (pandoc 3.5 med filtret `app/scripts/rivta-tkb-text.lua`, och LibreOffice först för residentmaster, som är i det gamla formatet .doc). Verktygens avbilder står med digest i KALLA.json.
+
+Licensen är kontrollerad fil för fil i varje domän, och resultatet står i KALLA.json (`licens`, `licenskontroll` och `utanLicensuppgift`). Domänerna har ingen licensfil. Schemana och testsvitens SoapUI-projekt har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud kommer ur samma arkiv och följer domänens licens. De ligger i förrådet under `app/rivta/<domän>/test-suite/<Kontrakt>/`. TKB och testsvitens HTML-filer anger ingen licens. De ligger därför inte i förrådet och inte i git-historiken. De räknas upp under `utanförRepo` i KALLA.json och hämtas till `app/rivta-tkb/<domän>/`, som git och Docker inte tar med:
+
+```
+node app/scripts/rivta-scheman.js --tkb
+```
+
+Hämtningen kräver docker för att göra om TKB till text, och varje fil och texten ska ha samma sha256 som i KALLA.json. `node app/scripts/rivta-scheman.js --prova` kontrollerar filerna i förrådet och de hämtade filerna, och säger till när de inte är hämtade. Utan dem hoppas jämförelsen av regelförteckningarna med TKB:s text över med ett meddelande, och alla andra tester körs. Körsteget i Docker får bara schemana.
+
+- **Regelförteckningarna** (`app/rivta-regler/<domän>/<Kontrakt>.json`): varje normativt krav i domänens gemensamma avsnitt och i kontraktets avsnitt, med TKB:s formulering ordagrant, avsnittet, vem kravet gäller, och antingen testet som prövar det eller skälet till att det inte prövas (`status`: prövas, inte automatiskt, inte prövad än, avvikelse eller inte tillämplig). Testet `Regelförteckningarna för tjänstekontrakten` kontrollerar att varje formulering finns i den pinnade texten och att varje test som en regel pekar på säger att det prövar regeln, och `scripts/kor-tester.js` stoppar bygget om ett sådant test inte finns.
+- **Fältreglerna som Schematron** (`<Kontrakt>.sch`): reglerna som gäller enskilda fält, med regelns id på varje regel. De körs av `app/src/rivta/schematron.js`, som också kör Ineras egna Schematron-regler i testsviterna som de står (den del av XPath 2 som filerna använder; ett uttryck som inte ingår ger ett fel när regeln läses).
+- **Ineras testsviter som facit** (`test/rivta-facit.js`, `test/rivta-facit-producent.test.js`): varje testfall i SoapUI-projekten för GetDiagnosis, GetCareDocumentation, GetAlertInformation, GetCareContacts och AssertCareEngagement skickas till Vårdkällans producent med testfallets egna kontroller. Vårdkällans uppgifter i stället för testsvitens data.xml står i `<Kontrakt>.data.json`, med skälet för varje testfall som inte är tillämpligt. Groovy-skript körs aldrig; Ineras ContentAssertions har samma innebörd i JavaScript.
+- **Exemplen åt båda hållen**: Ineras mocksvar ska tas emot av Vårdkällans konsument, och testsvitens begäran ska tas emot av producenten. Vårdkällans egna begäran och svar, och de simulerade tjänsternas svar, prövas mot samma regler. Felen i Ineras exempel rättas inte, utan står i `<Kontrakt>.exempelfel.json`, så att en ny version av exemplen syns.
+- Testerna: `test/rivta-regler-journal.test.js`, `rivta-regler-register.test.js`, `rivta-regler-sparr.test.js` och `rivta-regler.test.js`. Allt körs lokalt mot den lokala plattformen och de simulerade tjänsterna, aldrig mot något utanför datorn. Verktygen som skrev förteckningarnas länkar och Schematron-filerna ligger i `research/testspar2/`.

@@ -21,6 +21,7 @@ import { vardgivare } from './konsumenter.js';
 import { datumRiv } from '../tjanstekontrakt.js';
 import { patientFranPersonId } from './journal.js';
 import { vardenhetFor } from '../atkomst.js';
+import { svenskTid, franSvenskTid, slutPaDagen as dagensSlut } from './tid.js';
 
 export const NATIONELL = 'SE0000000000-SIMNATIONELL';
 export const NAMN = 'Simulerad nationell tjänst i demon';
@@ -101,9 +102,11 @@ function sakra(db) {
 // Samma uppslag av patienten som i Vårdkällans producenter: exakt tolv siffror, som personnummer eller samordningsnummer.
 const patientAv = (db, pnr) => patientFranPersonId(db, pnr);
 const pnrAv = (db, pid) => db.query('SELECT personnummer FROM patienter WHERE id = ?').get(pid)?.personnummer ?? null;
-const resultat = (kod = 'OK', text = 'Simulerad tjänst i demon.') => ({ ResultCode: kod, ResultText: text });
+// Testspår 2: ResultText är tom när resultatet är OK (TKB ehr:blocking 19.1.15 och ehr:patientconsent 10.1.18).
+const resultat = (kod = 'OK', text = null) => ({ ResultCode: kod, ResultText: kod === 'OK' ? '' : (text ?? 'Simulerad tjänst i demon.') });
 const slutet = '9999-12-31T23:59:59';
-const tid = (iso) => (iso ? iso.replace(/\.\d+Z$/, '').replace(/Z$/, '') : null);
+// Testspår 2: tiderna i spärr- och samtyckestjänsten är svensk tid utan tidszon (tid.js).
+const tid = (iso) => svenskTid(iso);
 
 // ---------------------------------------------------------------------------------------------------------------
 // Aggregerande tjänst: uppgifterna hos den simulerade andra vårdgivaren, i varje kontrakts form.
@@ -113,15 +116,18 @@ function poster(db, begaran) {
   return { sj, lista: pid ? (sj.POSTER[pid] ?? []) : [], patientId: { id: String(begaran.patientId?.id ?? ''), type: begaran.patientId?.type ?? PNR_OID } };
 }
 const ROLL = { lakare: 'Läkare', sjukskoterska: 'Sjuksköterska', fysioterapeut: 'Fysioterapeut' };
-function huvudFor(sj, p, patientId, kalla = 'sourceSystemHSAId') {
+// Testspår 2: befattningen står som text (originalText), eftersom en kod bara får skickas med kodsystem och klartext.
+// documentTitle och documentTime skickas bara där TKB har dem (dokument: true för GetCareDocumentation), och nullified
+// aldrig i clinicalprocess:healthcond:description och activityprescription:actoutcome (0..0 i TKB).
+function huvudFor(sj, p, patientId, kalla = 'sourceSystemHSAId', { dokument = false } = {}) {
   const e = sj.ENHETER[p.enhet];
   return {
-    documentId: p.id, [kalla]: sj.VARDGIVARE.hsaId, documentTitle: p.rubrik, documentTime: datumRiv(p.tid), patientId,
+    documentId: p.id, [kalla]: sj.VARDGIVARE.hsaId, ...(dokument ? { documentTitle: p.rubrik, documentTime: datumRiv(p.tid) } : {}), patientId,
     accountableHealthcareProfessional: {
-      authorTime: datumRiv(p.tid), healthcareProfessionalName: p.av, healthcareProfessionalRoleCode: { displayName: ROLL[p.roll] },
+      authorTime: datumRiv(p.tid), healthcareProfessionalName: p.av, healthcareProfessionalRoleCode: { originalText: ROLL[p.roll] },
       healthcareProfessionalOrgUnit: { orgUnitHSAId: e.hsaId, orgUnitName: e.namn }, healthcareProfessionalCareUnitHSAId: e.hsaId, healthcareProfessionalCareGiverHSAId: sj.VARDGIVARE.hsaId,
     },
-    approvedForPatient: false, nullified: false,
+    approvedForPatient: false,
   };
 }
 const okResultat = () => ({ resultCode: 'OK', logId: randomUUID() });
@@ -130,8 +136,8 @@ tjanst.registrera(K.GetCareDocumentation, ({ db }, { begaran }) => {
   const { sj, lista, patientId } = poster(db, begaran);
   return {
     careDocumentation: lista.filter(p => p.typ === 'anteckning').map(p => ({
-      careDocumentationHeader: huvudFor(sj, p, patientId, 'sourceSystemHSAid'),
-      careDocumentationBody: { clinicalDocumentNote: { clinicalDocumentNoteTitle: p.rubrik, clinicalDocumentNoteText: p.text } },
+      careDocumentationHeader: huvudFor(sj, p, patientId, 'sourceSystemHSAid', { dokument: true }),
+      careDocumentationBody: { clinicalDocumentNote: { clinicalDocumentNoteCode: require('./journal.js').anteckningsKod(p.rubrik), clinicalDocumentNoteTitle: p.rubrik, clinicalDocumentNoteText: p.text } },
     })),
     result: okResultat(),
   };
@@ -158,11 +164,12 @@ tjanst.registrera(K.GetCareContacts, ({ db }, { begaran }) => {
       return {
         careContactHeader: { documentId: p.id, sourceSystemHSAId: sj.VARDGIVARE.hsaId, patientId,
           accountableHealthcareProfessional: { authorTime: datumRiv(p.tid), healthcareProfessionalHSAId: `${e.hsaId}-P`, healthcareProfessionalName: p.av,
-            healthcareProfessionalRoleCode: { displayName: ROLL[p.roll] }, healthcareProfessionalOrgUnit: { orgUnitHSAId: e.hsaId, orgUnitName: e.namn },
+            healthcareProfessionalRoleCode: { originalText: ROLL[p.roll] }, healthcareProfessionalOrgUnit: { orgUnitHSAId: e.hsaId, orgUnitName: e.namn },
             healthcareProfessionalCareUnitHSAId: e.hsaId, healthcareProfessionalCareGiverHSAId: sj.VARDGIVARE.hsaId },
           approvedForPatient: false },
+        // Testspår 2: för ett besök är sluttiden samma som starttiden (TKB logistics 6.1.2).
         careContactBody: { careContactCode: /telefon/i.test(p.rubrik) ? 2 : 1, careContactReason: p.text, careContactOrgUnit: { orgUnitHSAId: e.hsaId, orgUnitName: e.namn },
-          careContactTimePeriod: { start: datumRiv(p.tid) }, careContactStatus: 5 },
+          careContactTimePeriod: { start: datumRiv(p.tid), end: /telefon/i.test(p.rubrik) ? null : datumRiv(p.tid) }, careContactStatus: 5 },
       };
     }),
   };
@@ -176,7 +183,8 @@ tjanst.registrera(K.GetMedicationHistory, ({ db }, { begaran }) => {
         medicationMedicalRecordHeader: h,
         medicationMedicalRecordBody: { medicationPrescription: {
           prescriptionId: { root: sj.VARDGIVARE.hsaId, extension: p.id }, typeOfPrescription: 'I', prescriptionStatus: 'Active', prescriptionNote: p.text,
-          prescriber: h.accountableHealthcareProfessional, startOfTreatment: datumRiv(p.tid), selfMedication: false,
+          // Testspår 2: ordinatören har inte vårdenhetens eller vårdgivarens HSA-id (TKB actoutcome, regel 1.9).
+          prescriber: (({ healthcareProfessionalCareUnitHSAId, healthcareProfessionalCareGiverHSAId, ...x }) => (void healthcareProfessionalCareUnitHSAId, void healthcareProfessionalCareGiverHSAId, x))(h.accountableHealthcareProfessional), startOfTreatment: datumRiv(p.tid), selfMedication: false,
           drug: { unstructuredDrugInformation: { unstructuredInformation: p.rubrik } },
         } },
       };
@@ -190,7 +198,8 @@ tjanst.registrera(K.GetMedicationHistory, ({ db }, { begaran }) => {
 const blockUt = (db, b) => ({
   BlockId: b.block_id, BlockType: b.typ, PatientId: pnrAv(db, b.patient_id), InformationStartDate: tid(b.start), InformationEndDate: tid(b.slut),
   InformationCareUnitId: b.vardenhet_hsa, InformationCareProviderId: b.vardgivare_hsa,
-  TemporaryRevokes: db.query('SELECT * FROM rivta_sim_havningar WHERE block_id = ? AND avslutad IS NULL').all(b.block_id)
+  // Testspår 2: en hävning vars slut har passerat gäller inte längre och lämnas inte ut.
+  TemporaryRevokes: db.query('SELECT * FROM rivta_sim_havningar WHERE block_id = ? AND avslutad IS NULL AND slut > ?').all(b.block_id, new Date().toISOString())
     .map(h => ({ TemporaryRevokeId: h.havning_id, EndDate: tid(h.slut), RevokedForCareUnitId: h.vardenhet_hsa, RevokedForEmployeeId: h.personal_hsa })),
 });
 const blockHuvud = (db, rader) => ({ Result: resultat(), Blocks: rader.map(b => blockUt(db, b)), NextCreatedOnOrAfter: tid(new Date().toISOString()), LatestCancellation: tid(new Date().toISOString()) });
@@ -229,8 +238,10 @@ tjanst.registrera(K.RegisterTemporaryExtendedRevoke, ({ db }, { begaran }) => {
   sakra(db);
   const b = db.query('SELECT * FROM rivta_sim_sparrar WHERE block_id = ?').get(begaran.BlockId);
   if (!b) return { ResultType: resultat('NOTFOUND', 'Spärren finns inte.') };
+  // Testspår 2 (TKB 2.3): en omsändning av samma hävning är genomförd, inte ett fel.
+  if (db.query('SELECT 1 FROM rivta_sim_havningar WHERE havning_id = ?').get(begaran.TemporaryRevokeId)) return { ResultType: resultat() };
   db.query('INSERT INTO rivta_sim_havningar (havning_id, block_id, patient_id, vardenhet_hsa, personal_hsa, slut) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(begaran.TemporaryRevokeId, b.block_id, b.patient_id, begaran.RevokedForCareUnitId, begaran.RevokedForEmployeeId ?? null, `${begaran.EndDate}${begaran.EndDate.endsWith('Z') ? '' : 'Z'}`);
+    .run(begaran.TemporaryRevokeId, b.block_id, b.patient_id, begaran.RevokedForCareUnitId, begaran.RevokedForEmployeeId ?? null, franSvenskTid(begaran.EndDate)?.toISOString() ?? begaran.EndDate);
   return { ResultType: resultat() };
 });
 tjanst.registrera(K.CancelTemporaryExtendedRevoke, ({ db }, { begaran }) => {
@@ -284,6 +295,6 @@ tjanst.registrera(K.GetExtendedConsentsForPatient, ({ db }, { begaran }) => {
 // ---------------------------------------------------------------------------------------------------------------
 // Hjälpare för konsumenterna i Vårdkällan.
 export const sakraSimulering = sakra;
-export const slutPaDagen = (nu = new Date()) => `${nu.toISOString().slice(0, 10)}T23:59:59`;
+export const slutPaDagen = (nu = new Date()) => dagensSlut(nu);
 export const nyttId = () => randomUUID();
 export { slutet };

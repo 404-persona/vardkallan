@@ -1,0 +1,158 @@
+{
+  "beskrivning": "Fel i Ineras exempel för GetDiagnosis (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": [
+    {
+      "exempel": "1.2.1 timePeriod: Call GetDiagnosis timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetDiagnosis/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetDiagnosis/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetDiagnosis/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetDiagnosis/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "1.2.2 timePeriod intervall: Call GetDiagnosis timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetDiagnosis/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetDiagnosis/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetDiagnosis/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetDiagnosis/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "5.1 signed: Call GetDiagnosis",
+      "fel": [
+        "exemplet har tecknen \\r som text mellan elementen i kuvertet"
+      ]
+    },
+    {
+      "exempel": "5.2 unsigned: Call GetDiagnosis",
+      "fel": [
+        "exemplet har tecknen \\r som text mellan elementen i kuvertet"
+      ]
+    },
+    {
+      "exempel": "5.3 locked: Call GetDiagnosis",
+      "fel": [
+        "exemplet har tecknen \\r som text mellan elementen i kuvertet"
+      ]
+    },
+    {
+      "exempel": "5.4 DiagnosisCode: Call GetDiagnosis",
+      "fel": [
+        "exemplet har tecknen \\r som text mellan elementen i kuvertet"
+      ]
+    },
+    {
+      "exempel": "5.7 RelatedDiagnosis: Call GetDiagnosis",
+      "fel": [
+        "exemplet har tecknen \\r som text mellan elementen i kuvertet"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: Http-header Prefilter",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: EmptyResponse",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: DiagnosisType",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: ApprovedForPatient",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: RelatedDiagnosis",
+      "fel": [
+        "TKB 7.2.3-40: /Envelope/Body/GetDiagnosisResponse/diagnosis/diagnosisBody/relatedDiagnosis/documentId",
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: LegalAuthenticator_0",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_Legalauthenticator_locked",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: timeBlaster_response",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_SignatureTime_within",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_Diagnosistime_within",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_All_within",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_CareContactId_SourceSystem",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: BasicResponse_CareUnitHSAId",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: Http-header filter",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: Default response",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetDiagnosis: Http-header Prefilter2",
+      "fel": [
+        "TKB 7.2.3-43: /Envelope/Body/GetDiagnosisResponse/result"
+      ]
+    }
+  ]
+}

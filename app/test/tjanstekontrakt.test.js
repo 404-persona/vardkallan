@@ -110,8 +110,10 @@ describe('Tjänstekontrakt', () => {
   // genom tjänsteplattformen och inte anslutet, och varje sådant kontrakt finns i koden i sin roll.
   test('tabellen visar för kontrakten i RIVTA att de är byggda mot schemat, testade lokalt och inte anslutna', async () => {
     const rivta = await import('../src/rivta/index.js');
-    const byggda = KONTRAKT.filter(k => k.rivta);
-    expect(byggda.length).toBe(17);
+    const byggda = KONTRAKT.filter(k => k.rivta?.byggt);
+    expect(byggda.length).toBe(15);
+    // Runda 20: två kontrakt är pinnade med en simulerad producent, men Vårdkällan anropar dem inte.
+    expect(KONTRAKT.filter(k => k.rivta && !k.rivta.byggt).map(k => [k.kontrakt, k.rivta.roll])).toEqual([['CancelTemporaryExtendedRevoke', 'pinnat, konsument inte byggd'], ['CheckConsent', 'pinnat, konsument inte byggd']]);
     const konsumentKontrakt = new Set([...Object.keys(rivta.nationella.K), 'GetEmployeeIncludingProtectedPerson', 'LookupResidentForFullProfile', 'Update']);
     for (const k of byggda) {
       expect(k.rivta).toMatchObject({ byggt: true, schema: true, tjansteplattform: 'lokal', anslutet: false });

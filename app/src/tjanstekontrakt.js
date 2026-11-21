@@ -111,8 +111,10 @@ export const RIVTA = {
   GetAllBlocksForPatient: { version: '2.0', roll: 'konsument' },
   GetBlocksForPatient: { version: '2.0', roll: 'konsument' },
   RegisterTemporaryExtendedRevoke: { version: '2.0', roll: 'konsument' },
-  CancelTemporaryExtendedRevoke: { version: '2.0', roll: 'konsument' },
-  CheckConsent: { version: '1.0', roll: 'konsument' },
+  // Runda 20: CancelTemporaryExtendedRevoke och CheckConsent är pinnade och har en simulerad producent, men Vårdkällan
+  // anropar dem inte (testspår 2). Spärren hävs i sessionen och samtycket prövas i Vårdkällan.
+  CancelTemporaryExtendedRevoke: { version: '2.0', roll: 'pinnat, konsument inte byggd', byggt: false },
+  CheckConsent: { version: '1.0', roll: 'pinnat, konsument inte byggd', byggt: false },
   RegisterExtendedConsent: { version: '1.0', roll: 'konsument' },
   CancelExtendedConsent: { version: '1.0', roll: 'konsument' },
   // K10 anger LookupResidentsForProfile i masterdata:citizen:citizen. Vårdkällan har byggt PU-tjänstens
@@ -120,9 +122,10 @@ export const RIVTA = {
   LookupResidentsForProfile: { version: '1.2', roll: 'konsument', kontrakt: 'LookupResidentForFullProfile' },
 };
 export const RIVTA_STATUS = 'Byggt och validerat mot tjänstekontraktet, testat lokalt genom en lokal tjänsteplattform; inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat)';
+export const RIVTA_STATUS_PINNAT = 'Pinnat med schemat och en simulerad producent i demon. Vårdkällan anropar inte kontraktet; inte anslutet till den nationella tjänsteplattformen (kräver avtal med Inera och SITHS-funktionscertifikat)';
 for (const k of KONTRAKT) {
   const r = RIVTA[k.kontrakt];
-  k.rivta = r ? { byggt: true, version: r.version, roll: r.roll, kontrakt: r.kontrakt ?? k.kontrakt, schema: true, tjansteplattform: 'lokal', anslutet: false, text: RIVTA_STATUS } : null;
+  k.rivta = r ? { byggt: r.byggt !== false, version: r.version, roll: r.roll, kontrakt: r.kontrakt ?? k.kontrakt, schema: true, tjansteplattform: 'lokal', anslutet: false, text: r.byggt === false ? RIVTA_STATUS_PINNAT : RIVTA_STATUS } : null;
 }
 
 // K10 har GetAllCareTypes på två rader. Den räknas en gång här.
@@ -142,7 +145,14 @@ const ROLL_HANDLING = {
 const NEKAD = 'Du har inte behörighet till uppgifterna, eller så finns ingen sådan patient. Försöket är loggat.';
 const TABELL = { Composition: 'anteckningar', Condition: 'diagnoser', Flag: 'uppmarksamhet', AllergyIntolerance: 'overkanslighet', Encounter: 'vardkontakter', Observation: 'matvarden', Procedure: 'atgarder' };
 
-export const datumRiv = (iso) => (iso ? new Date(iso).toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm' }).replace(/[- :]/g, '').slice(0, 14) : null);
+// Testspår 2: ett datum utan tid (till exempel recordedDate 2014-03-18) är ett datum i Sverige och blir midnatt den dagen.
+// Annars blev det UTC-midnatt omräknad till svensk tid, 01.00 eller 02.00, en tidpunkt som aldrig fanns i journalen
+// (TKB clinicalprocess:healthcond:description 4.3.2.4: tidpunkter anges i den tidszon som gällde i Sverige).
+export const datumRiv = (iso) => {
+  if (!iso) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return `${iso.replace(/-/g, '')}000000`;
+  return new Date(iso).toLocaleString('sv-SE', { timeZone: 'Europe/Stockholm' }).replace(/[- :]/g, '').slice(0, 14);
+};
 
 // Begäran: { patientId: { id, type }, careUnitHSAId: [], datePeriod: { start, end }, logicalAddress }.
 // Svaret: kontraktets lista och result { resultCode, logId, message }.
@@ -211,7 +221,11 @@ export function enhetAv(db, resurs) {
   const a = /^a-(\d+)$/.exec(resurs.id);
   const rad = m ? db.query('SELECT enhet_id FROM vardtillfallen WHERE id = ?').get(Number(m[1])) : a ? db.query('SELECT enhet_id FROM atgarder WHERE id = ?').get(Number(a[1]))
     : /^\d+$/.test(String(resurs.id)) ? db.query(`SELECT enhet_id FROM ${tabell} WHERE id = ?`).get(Number(resurs.id)) : null;
-  const ve = rad ? vardenhetFor(db, rad.enhet_id) : null;
+  // Testspår 2: en resurs som inte har någon rad med enhet (till exempel en migrerad anteckning, id ma-n) har ändå sin
+  // organisation i resursen (custodian, serviceProvider eller managingOrganization). Utan den saknades vårdenheten i svaret,
+  // fast TKB kräver den för spärrar och loggning i sammanhållen journalföring (Regel 1).
+  const org = rad ? null : [resurs.custodian, resurs.serviceProvider, resurs.managingOrganization].find(o => o?.reference?.startsWith('Organization/'))?.reference.slice(13);
+  const ve = rad ? vardenhetFor(db, rad.enhet_id) : org && db.query('SELECT 1 FROM enheter WHERE id = ?').get(org) ? vardenhetFor(db, org) : null;
   return ve ? db.query('SELECT id, hsa_id, namn FROM enheter WHERE id = ?').get(ve) : null;
 }
 

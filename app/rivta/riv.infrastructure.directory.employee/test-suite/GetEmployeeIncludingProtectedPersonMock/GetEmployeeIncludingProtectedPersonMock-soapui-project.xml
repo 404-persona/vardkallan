@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="bae05d0c-eb03-445a-b3bb-827675d8f026" activeEnvironment="Default" name="GetEmployeeIncludingProtectedPersonMock" resourceRoot="" soapui-version="5.9.1" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="a4c99f05-c18e-4b4b-bb57-355d0131959d" wsaVersion="NONE" name="GetEmployeeIncludingProtectedPersonResponderBinding" type="wsdl" bindingName="{urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21}GetEmployeeIncludingProtectedPersonResponderBinding" soapVersion="1_1" anonymous="optional" definition="/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl"><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonInteraction_4.0_RIVTABP21.wsdl</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<wsdl:definitions name="GetEmployeeIncludingProtectedPersonInteraction" targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tjsr="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:tns="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21" xmlns:itr="urn:riv:itintegration:registry:1">
+  <wsdl:documentation>Tjänsteinteraktionens namn: GetEmployeeIncludingProtectedPersonInteraction
+        Beskrivning:
+        Details – e.g. name, titles and contact details – for a specified person. Includes protected persons.
+        Revisioner:
+        Tjänstedomän: infrastructure:directory:employee
+        Tjänsteinteraktionstyp: Fråga-Svar
+        RIV Teknisk Anvisning: RIVTABP21
+        Förvaltning: Sveriges Kommuner och Landsting</wsdl:documentation>
+  <wsdl:types>
+    <xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPerson:4:rivtabp21">
+      <xs:import schemaLocation="GetEmployeeIncludingProtectedPersonResponder_4.0.xsd" namespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4"/>
+      <xs:import schemaLocation="../../core_components/itintegration_registry_1.0.xsd" namespace="urn:riv:itintegration:registry:1"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="GetEmployeeIncludingProtectedPersonRequest">
+    <wsdl:part name="LogicalAddress" element="itr:LogicalAddress">
+      <wsdl:documentation>The HSA-id of the source system</wsdl:documentation>
+    </wsdl:part>
+    <wsdl:part name="parameters" element="tjsr:GetEmployeeIncludingProtectedPerson"/>
+  </wsdl:message>
+  <wsdl:message name="GetEmployeeIncludingProtectedPersonResponse">
+    <wsdl:part name="parameters" element="tjsr:GetEmployeeIncludingProtectedPersonResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="GetEmployeeIncludingProtectedPersonResponderInterface">
+    <wsdl:operation name="GetEmployeeIncludingProtectedPerson">
+      <wsdl:input message="tns:GetEmployeeIncludingProtectedPersonRequest"/>
+      <wsdl:output message="tns:GetEmployeeIncludingProtectedPersonResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="GetEmployeeIncludingProtectedPersonResponderBinding" type="tns:GetEmployeeIncludingProtectedPersonResponderInterface">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetEmployeeIncludingProtectedPerson">
+      <soap:operation soapAction="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" style="document"/>
+      <wsdl:input>
+        <soap:header use="literal" message="tns:GetEmployeeIncludingProtectedPersonRequest" part="LogicalAddress"/>
+        <soap:body use="literal" parts="parameters"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="GetEmployeeIncludingProtectedPersonResponderService">
+    <wsdl:port name="GetEmployeeIncludingProtectedPersonResponderPort" binding="tns:GetEmployeeIncludingProtectedPersonResponderBinding">
+      <soap:address location="http://tempuri.org"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/interactions/GetEmployeeIncludingProtectedPersonInteraction/GetEmployeeIncludingProtectedPersonResponder_4.0.xsd</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:core="urn:riv:infrastructure:directory:employee:4">
+  <xs:import schemaLocation="../../core_components/infrastructure_directory_employee_4.0.xsd" namespace="urn:riv:infrastructure:directory:employee:4"/>
+  <xs:element name="GetEmployeeIncludingProtectedPerson" type="tns:GetEmployeeIncludingProtectedPersonType"/>
+  <xs:element name="GetEmployeeIncludingProtectedPersonResponse" type="tns:GetEmployeeIncludingProtectedPersonResponseType"/>
+  <xs:complexType name="GetEmployeeIncludingProtectedPersonType">
+    <xs:sequence>
+      <xs:choice>
+        <xs:element name="personHsaId" type="xs:string"/>
+        <xs:element name="personalIdentityNumber" type="xs:string"/>
+      </xs:choice>
+      <xs:element name="searchBase" type="core:DNType" minOccurs="0"/>
+      <xs:element name="includeFeignedObject" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="profile" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="GetEmployeeIncludingProtectedPersonResponseType">
+    <xs:sequence>
+      <xs:element name="personInformation" type="core:PersonInformationType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/core_components/infrastructure_directory_employee_4.0.xsd</con:url><con:content><![CDATA[<!--Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements. See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership. Sveriges Kommuner och Landsting licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License. You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied. See the License for the
+ specific language governing permissions and limitations
+ under the License.-->
+<xs:schema targetNamespace="urn:riv:infrastructure:directory:employee:4" elementFormDefault="qualified" attributeFormDefault="unqualified" version="4.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:riv:infrastructure:directory:employee:4">
+  <xs:simpleType name="TS">
+    <xs:annotation>
+      <xs:documentation>Regexp declaration for timestamp in the format: YYYYMMDDHHMMSS</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[1-9]{1}[0-9]{3}(0[1-9]{1}|1[0-2]{1})([0-2]{1}[0-9]{1}|3[0-1]{1})([0-1]{1}[0-9]{1}|2[0-3]{1})[0-5]{1}[0-9]{1}[0-5]{1}[0-9]{1}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DNType">
+    <xs:restriction base="xs:token">
+      <xs:maxLength value="350"/>
+      <xs:pattern value="([OUDCNLoudcnl]{1,2}=[0-9\p{L}\p{Zs}\-.]*,?)*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="addressLine" type="xs:string" maxOccurs="unbounded"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="TelephoneNumberType">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="32"/>
+      <xs:pattern value="([+0123456789][0-9]*)"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TimeSpanType">
+    <xs:sequence>
+      <xs:element name="fromDay" type="xs:string"/>
+      <xs:element name="fromTime" type="xs:time"/>
+      <xs:element name="toDay" type="xs:string"/>
+      <xs:element name="toTime" type="xs:time"/>
+      <xs:element name="comment" type="xs:string" minOccurs="0"/>
+      <xs:element name="fromDate" type="xs:string" minOccurs="0"/>
+      <xs:element name="toDate" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PersonInformationType">
+    <xs:sequence>
+      <xs:element name="personHsaId" type="xs:string"/>
+      <xs:element name="givenName" type="xs:string" minOccurs="0"/>
+      <xs:element name="middleAndSurName" type="xs:string"/>
+      <xs:element name="nickName" type="xs:string" minOccurs="0"/>
+      <xs:element name="mail" type="xs:string" minOccurs="0"/>
+      <xs:element name="telephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="switchboardNumber" type="tns:TelephoneNumberType" minOccurs="0"/>
+      <xs:element name="nonPublicTelephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="mobileNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="facsimileTelephoneNumber" type="tns:TelephoneNumberType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="telephoneHour" type="tns:TimeSpanType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="postalAddress" type="tns:AddressType" minOccurs="0"/>
+      <xs:element name="description" type="xs:string" minOccurs="0"/>
+      <xs:element name="title" type="xs:string" minOccurs="0"/>
+      <xs:element name="healthCareProfessionalLicence" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="paTitle" type="tns:PaTitleType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="specialityName" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="specialityCode" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dn" type="tns:DNType"/>
+      <xs:element name="protectedPerson" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="personStartDate" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="personEndDate" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="feignedPerson" type="xs:boolean" minOccurs="0"/>
+      <xs:element name="healthCareProfessionalLicenceSpeciality" type="tns:HealthCareProfessionalLicenceSpecialityType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="age" type="xs:string" minOccurs="0"/>
+      <xs:element name="gender" type="xs:string" minOccurs="0"/>
+      <xs:element name="structuredPostalAddress" type="tns:StructuredPostalAddressType" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="HealthCareProfessionalLicenceSpecialityType">
+    <xs:sequence>
+      <xs:element name="healthCareProfessionalLicence" type="xs:string"/>
+      <xs:element name="specialityCode" type="xs:string"/>
+      <xs:element name="specialityName" type="xs:string"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="PaTitleType">
+    <xs:sequence>
+      <xs:element name="paTitleName" type="xs:string" minOccurs="0"/>
+      <xs:element name="paTitleCode" type="xs:string" minOccurs="0"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="StructuredPostalAddressType">
+    <xs:sequence>
+      <xs:element name="addressee" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="street" type="xs:string" minOccurs="0"/>
+      <xs:element name="premisesNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="premisesLetter" type="xs:string" minOccurs="0"/>
+      <xs:element name="postCode" type="xs:string"/>
+      <xs:element name="town" type="xs:string"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part><con:part><con:url>file:/Users/jonas-work/inera/dev/git/riv.infrastructure.directory.employee/schemas/core_components/itintegration_registry_1.0.xsd</con:url><con:content><![CDATA[<xs:schema targetNamespace="urn:riv:itintegration:registry:1" elementFormDefault="qualified" version="1.0" xmlns="urn:riv:itintegration:registry:1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:annotation>
+    <xs:documentation>Beskrivning: 	Grundläggande informationsobjekt för domänen itintegration:registry (adressering av tjänster)
+			
+			Revisionshistorik: 2011-06-27 Mats Ekhammar, Callista Enterprise AB
+				Added ServiceContractType
+			
+			Datum:			2011-05-04
+			Beskrivning:	Initial version
+			F��rfattare:		marcus.krantz@callistaenterprise.se</xs:documentation>
+  </xs:annotation>
+  <xs:element name="LogicalAddress" type="LogicalAddressType"/>
+  <xs:element name="ServiceContract" type="ServiceContractType"/>
+  <xs:simpleType name="LogicalAddressType">
+    <xs:annotation>
+      <xs:documentation>Defines the type for logical address according to national reference architecture.
+				Superseeds wsa:To as type for logical address header in RIVTA 2.1.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+  <xs:complexType name="ServiceContractType">
+    <xs:annotation>
+      <xs:documentation>Type which describes a service contract. Used in interaction GetSupportedServiceContracts.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="ServiceContractNamespace" type="xs:anyURI"/>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://STO-CND4349D98:8088/mockGetEmployeeIncludingProtectedPersonResponderBinding</con:endpoint><con:endpoint>http://tempuri.org</con:endpoint></con:endpoints><con:operation id="483e253a-b32d-469f-b0f9-79edc3897fa4" isOneWay="false" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson" name="GetEmployeeIncludingProtectedPerson" bindingOperationName="GetEmployeeIncludingProtectedPerson" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="414bb831-2be5-4825-adef-94087f53a4ae" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://tempuri.org</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>?</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>?</urn1:personHsaId>\r
+         <urn1:personalIdentityNumber>?</urn1:personalIdentityNumber>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>?</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>?</urn1:includeFeignedObject>\r
+         <!--You may enter ANY elements at this point-->\r
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/><con:wsrmConfig version="1.2"/></con:call><con:call id="592cd95e-41a7-46b2-828e-83c66256ce2c" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://STO-CND4349D98:8088/mockGetEmployeeIncludingProtectedPersonResponderBinding</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:itintegration:registry:1" xmlns:urn1="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4">\r
+   <soapenv:Header>\r
+      <urn:LogicalAddress>?</urn:LogicalAddress>\r
+   </soapenv:Header>\r
+   <soapenv:Body>\r
+      <urn1:GetEmployeeIncludingProtectedPerson>\r
+         <!--You have a CHOICE of the next 2 items at this level-->\r
+         <urn1:personHsaId>?</urn1:personHsaId>\r
+         <urn1:personalIdentityNumber>?</urn1:personalIdentityNumber>\r
+         <!--Optional:-->\r
+         <urn1:searchBase>?</urn1:searchBase>\r
+         <!--Optional:-->\r
+         <urn1:includeFeignedObject>?</urn1:includeFeignedObject>\r
+         <!--Optional:-->\r
+         <urn1:profile>?</urn1:profile>\r
+         <!--You may enter ANY elements at this point-->\r
+      </urn1:GetEmployeeIncludingProtectedPerson>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:mockService id="81109517-2044-4514-bc48-e2a427b35dbf" port="8088" path="/mockGetEmployeeIncludingProtectedPersonResponderBinding" host="STO-CND4349D98" name="GetEmployeeIncludingProtectedPersonResponderBinding MockService"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting></con:settings><con:properties/><con:onRequestScript>import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlContext
+import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlValidator
+import com.eviware.soapui.impl.wsdl.panels.mockoperation.WsdlMockRequestMessageExchange
+
+def wsdlcontext = context.mockService.getMockedInterfaces()[0].getDefinitionContext() 
+def validator = new com.eviware.soapui.impl.wsdl.support.wsdl.WsdlValidator(wsdlcontext);
+
+def operation = mockRequest.soapAction.substring(mockRequest.soapAction.lastIndexOf('/') +1)
+log.info  context.mockService.toString() + "::" + operation
+def wsdlMockOperation = context.mockService.getMockOperationByName(operation)</con:onRequestScript><con:mockOperation name="GetEmployeeIncludingProtectedPerson" id="f780be35-b088-4d6f-8f84-67325c9c925a" interface="GetEmployeeIncludingProtectedPersonResponderBinding" operation="GetEmployeeIncludingProtectedPerson"><con:settings/><con:defaultResponse>All_Attributes_Response_old</con:defaultResponse><con:dispatchStyle>SCRIPT</con:dispatchStyle><con:dispatchPath>import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlContext
+import com.eviware.soapui.impl.wsdl.support.wsdl.WsdlValidator
+import com.eviware.soapui.impl.wsdl.panels.mockoperation.WsdlMockRequestMessageExchange
+import com.eviware.soapui.support.XmlHolder
+
+def mockService = mockOperation.mockService
+
+def wsdlcontext = context.mockService.getMockedInterfaces()[0].getDefinitionContext();
+def validator = new WsdlValidator(wsdlcontext);
+def msgExchange = new WsdlMockRequestMessageExchange(mockRequest, mockOperation); 
+def errors = validator.assertRequest(msgExchange, false);
+
+def msg = ""
+if (errors.length > 0) {
+    errors.each {
+        log.error("Incoming request contains error ${it.toString()}")
+        msg += "${it.toString()}\n"
+    }
+    context.validationMessages = msg
+    return "SoapFault"
+}
+
+def holder = new XmlHolder( mockRequest.requestContent )
+def domain = 'infrastructure:directory:employee'
+def interaction = 'GetEmployeeIncludingProtectedPerson'
+def version = '4'
+holder.namespaces['soapenv'] = 'http://schemas.xmlsoap.org/soap/envelope/'
+holder.namespaces['urn'] = 'urn:riv:itintegration:registry:1'
+holder.namespaces['urn1'] = 'urn:riv:' + domain + ':' + interaction + 'Responder:' + version
+holder.namespaces['urn2'] = 'urn:riv:' + domain + ':' + version
+
+def personHsaId = holder.getNodeValue('/soapenv:Envelope/soapenv:Body/urn1:' + interaction + '/urn1:personHsaId')
+
+context.personHsaId = personHsaId ?: "MOCK-111222333444555"
+log.info("personHsaId: " + personHsaId)
+
+def responseName = mockRequest.requestHeaders['x-mock-response'][0]
+log.info("responseName: ${responseName}")
+
+return responseName
+</con:dispatchPath><con:response name="Basic Response" id="f2c0bc87-8011-42d1-8727-97225a56183a" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:urn1="urn:riv:infrastructure:directory:employee:4">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:GetEmployeeIncludingProtectedPersonResponse>
+         <!--Zero or more repetitions:-->
+         <urn:personInformation>
+            <urn1:personHsaId>${personHsaId}</urn1:personHsaId>
+            <!--Optional:-->
+            <urn1:givenName>Arne</urn1:givenName>
+            <urn1:middleAndSurName>Nilsson</urn1:middleAndSurName>
+            <!--Optional:-->
+            <urn1:nickName>Nisse</urn1:nickName>
+            <!--Optional:-->
+            <urn1:mail>Arne.Nilsson@enheten.se</urn1:mail>
+            <!--Zero or more repetitions:-->
+            <urn1:telephoneNumber>+46836523456</urn1:telephoneNumber>
+            <!--Optional:-->
+            <urn1:switchboardNumber>+4683980000</urn1:switchboardNumber>
+            <!--Zero or more repetitions:-->
+            <urn1:nonPublicTelephoneNumber>+468827342</urn1:nonPublicTelephoneNumber>
+            <!--Zero or more repetitions:-->
+            <urn1:mobileNumber>+46708473924</urn1:mobileNumber>
+            <!--Zero or more repetitions:-->
+            <urn1:facsimileTelephoneNumber>+4683983300</urn1:facsimileTelephoneNumber>
+            <!--Zero or more repetitions:-->
+            <urn1:telephoneHour>
+               <urn1:fromDay>3</urn1:fromDay>
+               <urn1:fromTime>13:00:00.000+01:00</urn1:fromTime>
+               <urn1:toDay>5</urn1:toDay>
+               <urn1:toTime>14:30:00.000+01:00</urn1:toTime>
+               <!--Optional:-->
+               <urn1:comment>Kommentar</urn1:comment>
+               <!--You may enter ANY elements at this point-->
+            </urn1:telephoneHour>
+            <!--Optional:-->
+            <urn1:postalAddress>
+               <!--1 or more repetitions:-->
+               <urn1:addressLine>Kungsvägen 126</urn1:addressLine>
+               <urn1:addressLine>44400 STORSTAD</urn1:addressLine>
+               <!--You may enter ANY elements at this point-->
+            </urn1:postalAddress>
+            <!--Optional:-->
+            <urn1:description>Beskrivning</urn1:description>
+            <!--Optional:-->
+            <urn1:title>Arbetsterapeut</urn1:title>
+            <!--Zero or more repetitions:-->
+            <urn1:healthCareProfessionalLicence>AT</urn1:healthCareProfessionalLicence>
+            <!--Zero or more repetitions:-->
+            <urn1:paTitle>
+               <!--Optional:-->
+               <urn1:paTitleName>Arbetsterapeut</urn1:paTitleName>
+               <!--Optional:-->
+               <urn1:paTitleCode>301010</urn1:paTitleCode>
+               <!--You may enter ANY elements at this point-->
+            </urn1:paTitle>
+            <!--Zero or more repetitions:-->
+            <urn1:specialityName>Specialitetsutbildning</urn1:specialityName>
+            <!--Zero or more repetitions:-->
+            <urn1:specialityCode>2465</urn1:specialityCode>
+            <urn1:dn>cn=Arne Nilsson,ou=enheten,o=organisationen,l=länet,c=se</urn1:dn>
+            <!--Optional:-->
+            <urn1:feignedPerson>false</urn1:feignedPerson>
+            <!--You may enter ANY elements at this point-->
+            <urn1:gender>?</urn1:gender>
+         </urn:personInformation>
+         <!--You may enter ANY elements at this point-->
+      </urn:GetEmployeeIncludingProtectedPersonResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/></con:response><con:response name="Empty Response" id="5d70a979-a2d2-4cfa-8bb0-b2f7a6777624" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:urn="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4" xmlns:urn1="urn:riv:infrastructure:directory:employee:4">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <urn:GetEmployeeIncludingProtectedPersonResponse>
+      </urn:GetEmployeeIncludingProtectedPersonResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/></con:response><con:response name="SoapFault" id="839d8d06-c0d5-4204-bba4-8e19bcc40546" httpResponseStatus="500" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <soapenv:Fault>
+      <faultcode>server</faultcode>
+      <faultstring xml:lang="SE">Technical error occurred</faultstring>
+      <faultactor>1</faultactor>
+      <detail>
+      	<text>Detta är ett SoapFault</text>
+      </detail>
+    </soapenv:Fault>
+  </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:riv:infrastructure:directory:employee:GetEmployeeIncludingProtectedPersonResponder:4:GetEmployeeIncludingProtectedPerson"/></con:response><con:dispatchConfig/></con:mockOperation></con:mockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

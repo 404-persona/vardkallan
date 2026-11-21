@@ -5,7 +5,13 @@
   "commit": "3dbee167710a60606e6560bbf6d3e6d320dbf128",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.infrastructure.eservicesupply.forminteraction/get/3dbee167710a60606e6560bbf6d3e6d320dbf128.tar.gz",
   "arkivSha256": "d068d6c1df3bc51b622179c7660e8008411fb017b0ba34d9eeefb6cafc2cbb3f",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 26,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/infrastructure_eservicesupply_forminteraction_2.1.xsd": "925288de1385cfd3edee1cd6e74c9e0e8c558fab79aeff305f89cbb88e3f4dee",

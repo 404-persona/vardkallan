@@ -1,0 +1,92 @@
+{
+  "beskrivning": "Vårdkällans uppgifter för Ineras testsvit, som data.xml i testsviten (Ineras anvisning: uppdatera data.xml så att den matchar testdata i systemet). Uppgifterna är demons påhittade. Testfallen under ejTillampligt körs inte, med skälet. Testfall med uppgifter som räknas fram av Groovy-skript i SoapUI (tidsintervallen) får fasta värden här.",
+  "konsumenter": [
+    {
+      "hsaId": "SE0000000000-SIMFILTER1",
+      "namn": "Konsument med en vårdenhet, i testet",
+      "vardenheter": [
+        "uso-kard"
+      ]
+    },
+    {
+      "hsaId": "SE0000000000-SIMFILTER2",
+      "namn": "Konsument med en vårdenhet utan uppgifter om patienten, i testet",
+      "vardenheter": [
+        "kkoga-ane"
+      ]
+    }
+  ],
+  "global": {
+    "logicalAddress": "SE2321000164-VK0000",
+    "httpHeaderHsaId": "SE0000000000-SIMNPO",
+    "patientId": "194502024732",
+    "patientIdType": "1.2.752.129.2.1.3.1",
+    "careUnitHSAid": "SE2321000164-VK0120",
+    "sourceSystemHSAId": "SE2321000164-VK0000"
+  },
+  "testfall": {
+    "1.1.2 Samordningsnummer": {
+      "patientId": "199302862397",
+      "patientIdType": "1.2.752.129.2.1.3.3"
+    },
+    "1.2.1 timePeriod": {
+      "timePeriodStart": "20230101",
+      "timePeriodEnd": "20231231"
+    },
+    "1.2.2 timePeriod intervall": {
+      "timePeriodStart": "20140101",
+      "timePeriodEnd": "20141231"
+    },
+    "1.2.4 timePeriod manuell": {
+      "timePeriodStart": "20261117",
+      "timePeriodEnd": "20261117"
+    },
+    "1.3 CareUnit": {
+      "careUnitHSAid": "SE2321000164-VK0120"
+    },
+    "1.5 CareContact": {
+      "careContactId": "4"
+    },
+    "1.7 SoapFault": {
+      "internt fel": true
+    },
+    "1.8 NonExisting Patient": {
+      "patientId": "191212121212"
+    },
+    "1.9 NonExisting CareContact": {
+      "careContactId": "999999"
+    },
+    "6.1 Loadtest": {
+      "patientId1": "194502024732",
+      "patientId2": "197701182383"
+    },
+    "6.2 Recovery": {
+      "patientId1": "194502024732",
+      "patientId2": "197701182383"
+    },
+    "7.1 CareUnit_Blacklisted": {
+      "httpHeaderHsaId2": "SE0000000000-SIMFILTER1",
+      "filterString": "SE2321000164-VK0130"
+    },
+    "7.2 Consumer_Blacklisted": {
+      "httpHeaderHsaId2": "SE0000000000-SIMFILTER2"
+    },
+    "7.3 Consumer_Independent": {
+      "httpHeaderHsaId2": "SE0000000000-SIMJOURNALEN"
+    }
+  },
+  "ejTillampligt": {
+    "1.1.3 Lokalt reservnummer": "Vårdkällan lämnar inte ut uppgifter på reservnummer i tjänstekontrakten: reservnumren är lokala och har inte tolv tecken, och patientens identitet ska vara ett personnummer eller samordningsnummer (säkerhetsgranskningen av runda 14).",
+    "4.1 ApprovedForPatient_true": "Vårdkällan har ingen regel för vilka uppgifter som får visas för patienten i nationella e-tjänster och sätter därför alltid approvedForPatient till false (TKB 4.2.2: flaggan sätts efter vårdgivarens verksamhetsregler). Frågan står i rapporten.",
+    "5.4 DissentingOpinion": "Vårdkällan registrerar inga avvikande meningar till en anteckning, och dissentingOpinion är frivilligt i kontraktet.",
+    "5.5 ClinicalDocumentNoteCode_Utredning": "Demons journal har ingen anteckning av typen utredning.",
+    "5.6 ClinicalDocumentNoteCode_Behandling": "Demons journal har ingen anteckning av typen åtgärd eller behandling.",
+    "5.7 ClinicalDocumentNoteCode_Sammanfattning": "Demons journal har ingen anteckning av typen sammanfattning.",
+    "5.8 ClinicalDocumentNoteCode_Samordning": "Demons journal har ingen anteckning av typen samordning.",
+    "5.11 ClinicalDocumentNoteCode_AnteckningUtanFysisktMöte": "Demons journal har ingen telefonanteckning för patienterna i testet.",
+    "5.14 ClinicalDocumentNoteText-DocBook": "Vårdkällan skickar anteckningarna som ostrukturerad text, inte som DocBook.",
+    "5.15 DocBook-extended": "Vårdkällan skickar anteckningarna som ostrukturerad text, inte som DocBook.",
+    "5.16 MultimediaEntryValue": "Vårdkällan skickar inga multimediabilagor i GetCareDocumentation.",
+    "5.17 MultimediaEntryReference": "Vårdkällan skickar inga multimediabilagor i GetCareDocumentation."
+  }
+}

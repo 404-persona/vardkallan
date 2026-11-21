@@ -5,8 +5,14 @@
   "commit": "9ad620ea8cddde2e02c5a1da69e9102b1b959914",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.healthcond.description/get/9ad620ea8cddde2e02c5a1da69e9102b1b959914.tar.gz",
   "arkivSha256": "89c49cbf1fe14692509867f0b1b9991d358a5b6a3101ebf6e66a224752bb5eaf",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 27,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/clinicalprocess_healthcond_description_2.1.xsd": "3aaf4c9f36de35f90e451b0b4f0962eaa95ef1132eff29e8a4431dfb0d30bfcc",
     "schemas/core_components/clinicalprocess_healthcond_description_2.1_ext.xsd": "24d506a5f3f47a09658ee0e66f8743987f0fee1cbe69c5fd525ca7adc975a3c2",
@@ -21,5 +27,69 @@
     "schemas/interactions/GetDiagnosisInteraction/GetDiagnosisResponder_2.0.xsd": "7b8fce5011505d37b0a4889d15998ecb69d7f70d8488902c18e13b4c7dfcede8",
     "schemas/interactions/GetFunctionalStatusInteraction/GetFunctionalStatusInteraction_2.0_RIVTABP21.wsdl": "bb3ca86ab07c08a0e13bbddd3b3d42b49281f3d59839dfc421fd41f7b015e42b",
     "schemas/interactions/GetFunctionalStatusInteraction/GetFunctionalStatusResponder_2.0.xsd": "acbcc9fd86ba26d6bbefbc19cc582581cd356dbde6954891853368e0a297e1fd"
-  }
+  },
+  "dokument": {
+    "docs/TKB_clinicalprocess_healthcond_description.docx": "16fdc47b6ae4d3fb57ba2fa088ea3f3d680a0b57a91639701b5439263cb61cb4",
+    "test-suite/GetAlertInformation/GetAlertInformation-doc.html": "875620beba891efb1bc0f7bb74ef3e7713279f7c22381649de1de04103f1d1c3",
+    "test-suite/GetAlertInformation/GetAlertInformation-soapui-project.xml": "9e1a4ee040f1e5e5f1c9ee72b1de117c1ee0f706a4c88845f9053b85cc16bf94",
+    "test-suite/GetAlertInformation/constraints.xml": "64fb7a747a81cff0d1564438bd4e9f0ad00efc6167e3fab4536beddacf8ff9e2",
+    "test-suite/GetAlertInformation/data.xml": "06965d6ad6a8c33e935fc34b5c43147c4dd05e1e030b95c7600fc9012ce7d1b2",
+    "test-suite/GetAlertInformationMock/GetAlertInformation-testanvisning_for_tjanstekonsument.html": "ae62902ff2ecd6d8f6bf60392e90025fa83bb01d8a56ebfbb9a9e35d595dcee3",
+    "test-suite/GetAlertInformationMock/GetAlertInformationMock-doc.html": "1857faa8aaad753eae326c301fdf98de1de03a427389787eb338a28a9a819922",
+    "test-suite/GetAlertInformationMock/GetAlertInformationMock-soapui-project.xml": "d83ea2905b794ae99a1d68c9aadf1b3a04b427b2d326f478546744391676896c",
+    "test-suite/GetAlertInformationMock/constraints.xml": "8d4c30fda58680b5d895817f08a7cbcc408e2e4c14b7d3df65ab8747034b2566",
+    "test-suite/GetCareDocumentation/GetCareDocumentation-doc.html": "5517d280b5a1bb98f32e6ad44154233184c85f984347f918fa2750b6005cb374",
+    "test-suite/GetCareDocumentation/GetCareDocumentation-soapui-project.xml": "173212ef1bd34cf780e34d7a09fbf0c1ce82c698966507bd3ef0c3d1c36c1a4b",
+    "test-suite/GetCareDocumentation/constraints.xml": "6df03e91bef7b76857c03160128dc39abac1f5e0921647d1ed6ed223cbbd55e7",
+    "test-suite/GetCareDocumentation/data.xml": "1504343d4d124af32d59f7582e7ff59f126df325229dd76d6e0d0589fcfb03d4",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentation-testanvisning_for_tjanstekonsument.html": "8100348f0f8e49ff4ad529739ba4a78e5776c35b6a39022cec144fd5145f2718",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentationMock-doc.html": "a965534a84d6895d59060f3369dcb30ea3ddc986f495e931116cb9901952bcbb",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentationMock-soapui-project.xml": "0c8bd566fc653f6369065c14b1bb8813cf9699c54b3af8c6af688a4b9ed72e73",
+    "test-suite/GetCareDocumentationMock/constraints.xml": "fb44c285d7d896782be7d71b396d38b6af37d88384502f55786153c2c64ff78c",
+    "test-suite/GetDiagnosis/GetDiagnosis-doc.html": "1f2d64fbd67a33daa8b90d9535c23486de6b4256c78eeb6008c15010a1581d84",
+    "test-suite/GetDiagnosis/GetDiagnosis-soapui-project.xml": "2c86eb287e17cae1f4b2aa9513117790d9080b13c73f40f7a9f513683035c662",
+    "test-suite/GetDiagnosis/constraints.xml": "ac7cb6d0ad69d6dea46b2568a1dd4d854ae35a0d8b78aea449b45d51de32ced7",
+    "test-suite/GetDiagnosis/data.xml": "79c9059b6dc6cee51bc08ae48389c18a75d92e172afbb337ba822a66edc803b7",
+    "test-suite/GetDiagnosisMock/GetDiagnosis-testanvisning_for _tjanstekonsument.html": "dff87426d0d3443f037e9932f52c7b6e02a17b0efb33bc89a4dfcaa74cc13301",
+    "test-suite/GetDiagnosisMock/GetDiagnosisMock-doc.html": "7525ff103fc66ec71b8080fc6f05d12de64de1c078bb344aac25b5cb29a52619",
+    "test-suite/GetDiagnosisMock/GetDiagnosisMock-soapui-project.xml": "6fd11caeb97caf424fc6d8a54f55e0de3aa10459e84cf4f0e04583d9c1c435d7",
+    "test-suite/GetDiagnosisMock/constraints.xml": "786675793dc1d4d29cff66c12ece5bbb4ca2aa3b1f64395551b9631fd09223cc"
+  },
+  "text": {
+    "docs/TKB_clinicalprocess_healthcond_description.txt": {
+      "från": "docs/TKB_clinicalprocess_healthcond_description.docx",
+      "sha256": "661d3205df25d09459f5878eabc3cefc98b77d496798a368a9389e10da142610",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_clinicalprocess_healthcond_description.docx",
+    "test-suite/GetAlertInformation/GetAlertInformation-doc.html",
+    "test-suite/GetAlertInformationMock/GetAlertInformation-testanvisning_for_tjanstekonsument.html",
+    "test-suite/GetAlertInformationMock/GetAlertInformationMock-doc.html",
+    "test-suite/GetCareDocumentation/GetCareDocumentation-doc.html",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentation-testanvisning_for_tjanstekonsument.html",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentationMock-doc.html",
+    "test-suite/GetDiagnosis/GetDiagnosis-doc.html",
+    "test-suite/GetDiagnosisMock/GetDiagnosis-testanvisning_for _tjanstekonsument.html",
+    "test-suite/GetDiagnosisMock/GetDiagnosisMock-doc.html"
+  ],
+  "utanförRepo": [
+    "docs/TKB_clinicalprocess_healthcond_description.docx",
+    "docs/TKB_clinicalprocess_healthcond_description.txt",
+    "test-suite/GetAlertInformation/GetAlertInformation-doc.html",
+    "test-suite/GetAlertInformationMock/GetAlertInformation-testanvisning_for_tjanstekonsument.html",
+    "test-suite/GetAlertInformationMock/GetAlertInformationMock-doc.html",
+    "test-suite/GetCareDocumentation/GetCareDocumentation-doc.html",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentation-testanvisning_for_tjanstekonsument.html",
+    "test-suite/GetCareDocumentationMock/GetCareDocumentationMock-doc.html",
+    "test-suite/GetDiagnosis/GetDiagnosis-doc.html",
+    "test-suite/GetDiagnosisMock/GetDiagnosis-testanvisning_for _tjanstekonsument.html",
+    "test-suite/GetDiagnosisMock/GetDiagnosisMock-doc.html"
+  ]
 }

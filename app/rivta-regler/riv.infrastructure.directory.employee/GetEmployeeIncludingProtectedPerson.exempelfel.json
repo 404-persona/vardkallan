@@ -1,0 +1,8 @@
+{
+  "beskrivning": "Fel i Ineras exempel för GetEmployeeIncludingProtectedPerson (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": {
+    "mock GetEmployeeIncludingProtectedPerson: Basic Response": "tas emot",
+    "mock GetEmployeeIncludingProtectedPerson: Empty Response": "tas emot",
+    "mock GetEmployeeIncludingProtectedPerson: SoapFault": "fault: GetEmployeeIncludingProtectedPerson svarade med ett fel: Technical error occurred"
+  }
+}

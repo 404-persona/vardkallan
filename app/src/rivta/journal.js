@@ -6,8 +6,9 @@
 // nationella tjänster. Varje läsning loggas på patienten med kontraktet och organisationen i loggens resurs.
 //
 // En patient som inte finns och en patient som organisationen inte får se ger samma svar: inga poster och resultatet OK.
-import { randomBytes } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { kontrakt } from './kontrakt.js';
+import { SoapFel } from './soap.js';
 import { vardkallan } from './tjanst.js';
 import { vardgivare } from './konsumenter.js';
 import { fhirResurser, enhetAv, datumRiv } from '../tjanstekontrakt.js';
@@ -18,7 +19,8 @@ import { harVardrelation, vardenhetFor, prova, aktivaSparrar } from '../atkomst.
 
 export const OID = { personnummer: '1.2.752.129.2.1.3.1', samordningsnummer: '1.2.752.129.2.1.3.3', icd10se: '1.2.752.116.1.1.1', kva: '1.2.752.116.1.3.2.1.4', atc: '1.2.752.129.2.2.3.1.1' };
 
-const logId = () => randomBytes(8).toString('hex');
+// Testspår 2: logId ska vara en UUID (TKB clinicalprocess:healthcond:description, fältet result.logId).
+const logId = () => randomUUID();
 const datum = (ts) => (ts ? ts.slice(0, 8) : null);
 
 // Patienten i begäran. Ger { pid, patientId } eller { fel } med ett resultat enligt kontraktet.
@@ -58,106 +60,150 @@ function resurser(db, k, konsument, pid, typer) {
 }
 
 // Huvudet för en post (PatientSummaryHeaderType och CPatientSummaryHeaderType har samma fält utom källsystemets namn).
-function huvud(db, r, patientId, { kallsystemNamn = 'sourceSystemHSAId', titel = null } = {}) {
+// Testspår 2: fälten som TKB anger som N/A (kardinalitet 0..0) skickas aldrig: documentTitle och documentTime i
+// GetDiagnosis och GetAlertInformation, och nullified och nullifiedReason i alla tre kontrakten i
+// clinicalprocess:healthcond:description (dokument: true ger documentTitle och documentTime, för GetCareDocumentation).
+function huvud(db, r, patientId, { kallsystemNamn = 'sourceSystemHSAId', titel = null, dokument = false } = {}) {
   const e = enhetAv(db, r);
   const tid = datumRiv(r.date ?? r.recordedDate ?? r.period?.start ?? r.effectiveDateTime ?? r.performedDateTime ?? r.authoredOn ?? null);
   const forfattare = r.author?.find?.(a => a.reference?.startsWith('Practitioner/')) ?? (r.recorder?.reference?.startsWith('Practitioner/') ? r.recorder : null);
   const hsa = forfattare ? db.query('SELECT hsa_id FROM personal WHERE id = ?').get(forfattare.reference.slice(13))?.hsa_id ?? null : null;
   const vg = vardgivare(db);
   return {
-    documentId: `${r.resourceType}/${r.id}`, [kallsystemNamn]: vg, documentTitle: titel, documentTime: tid, patientId,
+    documentId: `${r.resourceType}/${r.id}`, [kallsystemNamn]: vg, ...(dokument ? { documentTitle: titel, documentTime: tid } : {}), patientId,
     accountableHealthcareProfessional: {
       authorTime: tid, healthcareProfessionalHSAId: hsa, healthcareProfessionalName: forfattare?.display ?? null,
       healthcareProfessionalOrgUnit: e ? { orgUnitHSAId: e.hsa_id, orgUnitName: e.namn } : null,
       healthcareProfessionalCareUnitHSAId: e?.hsa_id ?? null, healthcareProfessionalCareGiverHSAId: vg,
     },
-    approvedForPatient: false, careContactId: r.encounter?.reference?.split('/')[1] ?? null, nullified: false,
+    approvedForPatient: false, careContactId: r.encounter?.reference?.split('/')[1] ?? null,
   };
 }
 
-// Filtren i begäran: vårdenheter, period, källsystem och vårdkontakter.
-function filtrera(poster, begaran, huvudNamn, db) {
+// Filtren i begäran: vårdenheter, period, källsystem och vårdkontakter. tider(post) ger postens tidpunkter för
+// perioden enligt kontraktets TKB: posten kommer med när någon av dem ligger i perioden (GetCareDocumentation och
+// GetDiagnosis). intervall(post) ger i stället { start, slut } för ett intervall som ska överlappa perioden
+// (GetAlertInformation och GetCareContacts).
+function filtrera(poster, begaran, huvudNamn, { tider = null, intervall = null } = {}) {
   const enheter = new Set(begaran.careUnitHSAId ?? begaran.careUnitHSAid ?? []);
   const kontakter = new Set(begaran.careContactId ?? []);
-  const kalla = begaran.sourceSystemHSAId ?? begaran.sourceSystemHSAid ?? null;
   const start = begaran.timePeriod?.start ?? null;
   const slut = begaran.timePeriod?.end ?? null;
-  if (kalla && kalla !== vardgivare(db)) return [];
   return poster.filter(p => {
     const h = p[huvudNamn];
-    if (!h.documentTime) return false;
-    if (enheter.size && !enheter.has(h.accountableHealthcareProfessional.healthcareProfessionalCareUnitHSAId)) return false;
+    if (enheter.size && !enheter.has(h.accountableHealthcareProfessional?.healthcareProfessionalCareUnitHSAId)) return false;
     if (kontakter.size && !kontakter.has(h.careContactId)) return false;
-    if (start && datum(h.documentTime) < start) return false;
-    if (slut && datum(h.documentTime) > slut) return false;
-    return true;
+    if (!start && !slut) return true;
+    if (intervall) {
+      const i = intervall(p);
+      if (!i.start) return false;
+      return (!slut || datum(i.start) <= slut) && (!start || !i.slut || datum(i.slut) >= start);
+    }
+    return tider(p).filter(Boolean).some(t => (!start || datum(t) >= start) && (!slut || datum(t) <= slut));
   });
+}
+
+// Testspår 2: källsystemet i begäran ska vara samma som den logiska adressen, och ska anges när vårdkontakter anges
+// (TKB clinicalprocess:healthcond:description, fältet sourceSystemHSAId). Annars är svaret bara ett resultat med
+// INVALID_REQUEST. Ger felets text eller null.
+function kallsystemFel(begaran, logiskAdress) {
+  const kalla = begaran.sourceSystemHSAId ?? begaran.sourceSystemHSAid ?? null;
+  if (kalla && kalla !== logiskAdress) return `Källsystemet ${kalla} i begäran är inte samma som den logiska adressen ${logiskAdress}.`;
+  if ((begaran.careContactId ?? []).length && !kalla) return 'Källsystemet ska anges när vårdkontakter anges i begäran.';
+  return null;
 }
 
 const ogiltig = (text) => ({ resultCode: 'ERROR', errorCode: 'INVALID_REQUEST', logId: logId(), message: text });
 const ok = () => ({ resultCode: 'OK', logId: logId() });
 
 // ---------------------------------------------------------------------------------------------------------------
-// GetDiagnosis 2.0 (riv.clinicalprocess.healthcond.description): diagnoser ur FHIR Condition med ICD-10-SE.
+// GetDiagnosis 2.0 (riv.clinicalprocess.healthcond.description): diagnoser ur FHIR Condition med ICD-10-SE. Perioden
+// gäller authorTime, signatureTime och diagnosisTime (TKB, fältet timePeriod).
 export const GET_DIAGNOSIS = kontrakt('riv.clinicalprocess.healthcond.description', 'GetDiagnosis', '2.0');
-vardkallan.registrera(GET_DIAGNOSIS, (ctx, { begaran, konsument, def }) => {
+vardkallan.registrera(GET_DIAGNOSIS, (ctx, { begaran, konsument, def, logiskAdress }) => {
   const { db } = ctx;
   const p = patientI(db, begaran);
   if (p.fel) return { result: ogiltig(p.fel) };
+  const k = kallsystemFel(begaran, logiskAdress);
+  if (k) return { result: ogiltig(k) };
   const poster = resurser(db, def, konsument, p.pid, ['Condition']).map(r => {
     const c = r.code?.coding?.[0];
+    // Testspår 2: en kod skickas bara med kodsystem och klartext; annars står diagnosen som text (CVType).
+    const kod = c?.code ? { code: c.code, codeSystem: OID.icd10se, displayName: c.display ?? r.code?.text ?? c.code } : { originalText: r.code?.text ?? c?.display ?? 'Diagnos utan kod' };
     return {
       diagnosisHeader: huvud(db, r, p.patientId),
       diagnosisBody: {
         typeOfDiagnosis: r.category?.[0]?.text === 'Huvuddiagnos' ? 'Huvuddiagnos' : 'Bidiagnos',
         diagnosisTime: datumRiv(r.recordedDate),
-        diagnosisCode: { code: c?.code ?? null, codeSystem: OID.icd10se, displayName: c?.display ?? r.code?.text ?? null },
+        diagnosisCode: kod,
       },
     };
   });
-  return { diagnosis: filtrera(poster, begaran, 'diagnosisHeader', db), result: ok() };
+  return { diagnosis: filtrera(poster, begaran, 'diagnosisHeader', { tider: (x) => [x.diagnosisHeader.accountableHealthcareProfessional.authorTime, x.diagnosisHeader.legalAuthenticator?.signatureTime, x.diagnosisBody.diagnosisTime] }), result: ok() };
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// GetCareDocumentation 2.1: journalanteckningar ur FHIR Composition som ostrukturerad text. Typen av anteckning sätts
-// bara när den går att se säkert ur rubriken (inskrivning, slutanteckning eller telefon); annars utelämnas den,
-// eftersom den är frivillig i kontraktet.
+// GetCareDocumentation 2.1: journalanteckningar ur FHIR Composition som ostrukturerad text. Testspår 2: typen av
+// anteckning (clinicalDocumentNoteCode, KV Anteckningstyp) är obligatorisk när clinicalDocumentTypeCode saknas, och
+// clinicalDocumentTypeCode används inte (kardinalitet 0..0), så varje anteckning får en typ. Den läses ur rubriken, och en
+// rubrik som inte säger något om typen blir en besöksanteckning (bes), eller en slutenvårdsanteckning (sva) när
+// anteckningen hör till ett vårdtillfälle. Perioden gäller documentTime, authorTime och signatureTime.
 export const GET_CARE_DOCUMENTATION = kontrakt('riv.clinicalprocess.healthcond.description', 'GetCareDocumentation', '2.1');
 const avHtml = (div) => String(div ?? '').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
-function anteckningsKod(titel) {
+export function anteckningsKod(titel, { vardtillfalle = false } = {}) {
   const t = String(titel ?? '').toLowerCase();
-  if (/inskrivning/.test(t)) return 'ins';
-  if (/epikris|slutanteckning/.test(t)) return 'slu';
-  if (/telefon/.test(t)) return 'auf';
-  return null;
+  if (/inskrivning|intagning/.test(t)) return 'ins';
+  if (/epikris|slutanteckning|utskrivning/.test(t)) return 'slu';
+  if (/telefon|video|distans/.test(t)) return 'auf';
+  if (/utredning/.test(t)) return 'utr';
+  if (/behandling|åtgärd|operation/.test(t)) return 'atb';
+  if (/sammanfattning/.test(t)) return 'sam';
+  if (/samordning|vårdplan/.test(t)) return 'sao';
+  if (/daganteckning|slutenvård|avdelning/.test(t)) return 'sva';
+  return vardtillfalle ? 'sva' : 'bes';
 }
-vardkallan.registrera(GET_CARE_DOCUMENTATION, (ctx, { begaran, konsument, def }) => {
+const iVardtillfalle = (db, r) => {
+  const id = r.encounter?.reference?.split('/')[1];
+  if (!id) return false;
+  if (/^vt-/.test(id)) return true;
+  return /^\d+$/.test(id) && Boolean(db.query('SELECT vardtillfalle_id FROM vardkontakter WHERE id = ?').get(Number(id))?.vardtillfalle_id);
+};
+vardkallan.registrera(GET_CARE_DOCUMENTATION, (ctx, { begaran, konsument, def, logiskAdress }) => {
   const { db } = ctx;
   const p = patientI(db, begaran);
   if (p.fel) return { result: ogiltig(p.fel) };
+  const k = kallsystemFel(begaran, logiskAdress);
+  if (k) return { result: ogiltig(k) };
   const poster = resurser(db, def, konsument, p.pid, ['Composition']).map(r => {
-    const h = huvud(db, r, p.patientId, { kallsystemNamn: 'sourceSystemHSAid', titel: r.title ?? null });
+    const h = huvud(db, r, p.patientId, { kallsystemNamn: 'sourceSystemHSAid', titel: r.title ?? null, dokument: true });
     return {
       careDocumentationHeader: h,
       careDocumentationBody: {
         clinicalDocumentNote: {
-          clinicalDocumentNoteCode: anteckningsKod(r.title), clinicalDocumentNoteTitle: r.title ?? null,
+          clinicalDocumentNoteCode: anteckningsKod(r.title, { vardtillfalle: iVardtillfalle(db, r) }), clinicalDocumentNoteTitle: r.title ?? null,
           clinicalDocumentNoteText: (r.section ?? []).map(s => `${s.title}: ${avHtml(s.text?.div)}`).join('\n'),
         },
       },
     };
   });
-  return { careDocumentation: filtrera(poster, begaran, 'careDocumentationHeader', db), result: ok() };
+  return { careDocumentation: filtrera(poster, begaran, 'careDocumentationHeader', { tider: (x) => [x.careDocumentationHeader.documentTime, x.careDocumentationHeader.accountableHealthcareProfessional.authorTime, x.careDocumentationHeader.legalAuthenticator?.signatureTime] }), result: ok() };
 });
 
 // ---------------------------------------------------------------------------------------------------------------
 // GetAlertInformation 2.0: överkänslighet ur FHIR AllergyIntolerance och övrig uppmärksamhetsinformation ur Flag.
-// Kodsystemet för typen av uppmärksamhetsinformation sätts inte, eftersom Vårdkällan inte har kontrollerat OID:n.
+// Testspår 2: typen av uppmärksamhetsinformation, typen av överkänslighet och allvarlighetsgraden står som text
+// (originalText i CVType), eftersom Vårdkällans egna koder inte har någon OID och en kod bara får skickas med sitt
+// kodsystem. Uppmärksamhetsinformation som inte är överkänslighet skickas som ostrukturerad
+// (unstructuredAlertInformation), eftersom exakt en av de sex typerna ska anges. Perioden är giltighetstiden, som ska
+// överlappa den efterfrågade.
 export const GET_ALERT_INFORMATION = kontrakt('riv.clinicalprocess.healthcond.description', 'GetAlertInformation', '2.0');
-vardkallan.registrera(GET_ALERT_INFORMATION, (ctx, { begaran, konsument, def }) => {
+vardkallan.registrera(GET_ALERT_INFORMATION, (ctx, { begaran, konsument, def, logiskAdress }) => {
   const { db } = ctx;
   const p = patientI(db, begaran);
   if (p.fel) return { result: ogiltig(p.fel) };
+  const k = kallsystemFel(begaran, logiskAdress);
+  if (k) return { result: ogiltig(k) };
+  const text = (t) => ({ originalText: t });
   const poster = resurser(db, def, konsument, p.pid, ['Flag', 'AllergyIntolerance']).map(r => {
     const h = huvud(db, r, p.patientId);
     if (r.resourceType === 'AllergyIntolerance') {
@@ -166,66 +212,86 @@ vardkallan.registrera(GET_ALERT_INFORMATION, (ctx, { begaran, konsument, def }) 
       return {
         alertInformationHeader: h,
         alertInformationBody: {
-          typeOfAlertInformation: { code: 'overkanslighet', displayName: 'Överkänslighet' },
+          typeOfAlertInformation: text('Överkänslighet'),
           validityTimePeriod: { start: datumRiv(r.recordedDate), end: r.clinicalStatus?.coding?.[0]?.code === 'inactive' ? datumRiv(r.note?.[0]?.time) : null },
           alertInformationComment: r.code?.text ?? null,
           hypersensitivity: {
-            typeOfHypersensitivity: { displayName: lakemedel ? 'Läkemedel' : 'Annat' },
-            degreeOfSeverity: { displayName: r.criticality === 'high' ? 'Allvarlig' : 'Mindre allvarlig' },
-            pharmaceuticalHypersensitivity: lakemedel ? (atc ? { atcSubstance: { code: atc.code, codeSystem: OID.atc, displayName: atc.display ?? null } } : { nonATCSubstance: r.code?.text ?? null }) : null,
+            typeOfHypersensitivity: text(lakemedel ? 'Läkemedel' : 'Annat'),
+            degreeOfSeverity: text(r.criticality === 'high' ? 'Allvarlig' : 'Mindre allvarlig'),
+            pharmaceuticalHypersensitivity: lakemedel ? (atc ? { atcSubstance: { code: atc.code, codeSystem: OID.atc, displayName: atc.display ?? atc.code } } : { nonATCSubstance: r.code?.text ?? 'Okänt läkemedel', nonATCSubstanceComment: 'Substansen saknar ATC-kod i Vårdkällan.' }) : null,
             otherHypersensitivity: lakemedel ? null : { hypersensitivityAgent: r.code?.text ?? null },
           },
         },
       };
     }
+    const typ = r.category?.[0]?.text ?? 'Uppmärksamhetsinformation';
     return {
       alertInformationHeader: h,
       alertInformationBody: {
-        typeOfAlertInformation: { code: r.category?.[0]?.coding?.[0]?.code ?? null, displayName: r.category?.[0]?.text ?? null },
+        typeOfAlertInformation: text(typ),
         validityTimePeriod: { start: datumRiv(r.period?.start), end: datumRiv(r.period?.end) },
         alertInformationComment: r.code?.text ?? null,
+        unstructuredAlertInformation: { unstructuredAlertInformationHeading: typ, unstructuredAlertInformationContent: r.code?.text ?? typ },
       },
     };
   });
-  return { alertInformation: filtrera(poster, begaran, 'alertInformationHeader', db), result: ok() };
+  return { alertInformation: filtrera(poster, begaran, 'alertInformationHeader', { intervall: (x) => ({ start: x.alertInformationBody.validityTimePeriod.start, slut: x.alertInformationBody.obsoleteTime ?? x.alertInformationBody.validityTimePeriod.end }) }), result: ok() };
 });
 
 // ---------------------------------------------------------------------------------------------------------------
-// GetCareContacts 2.0 (riv.clinicalprocess.logistics.logistics): vårdkontakter ur FHIR Encounter. Kontraktets huvud har
-// varken dokumenttid eller vårdkontaktens id, och svaret har inget resultat. Kodverken i kontraktet: typ 1 besök,
-// 2 telefon, 3 vårdtillfälle, 4 dagsjukvård och 5 annan; status 1 ej påbörjad, 2 inställd, 3 pågående, 4 avbruten och
-// 5 avslutad.
+// GetCareContacts 2.0 (riv.clinicalprocess.logistics.logistics): vårdkontakter ur FHIR Encounter. Svaret har inget
+// resultat. Kodverken i kontraktet: typ 1 besök, 2 telefon, 3 vårdtillfälle, 4 dagsjukvård och 5 annan; status 1 ej
+// påbörjad, 2 inställd, 3 pågående, 4 avbruten och 5 avslutad.
+// Testspår 2, efter TKB och Ineras testsvit:
+// - documentId är vårdkontaktens id, samma id som careContactId i journalens andra kontrakt och i begäran;
+// - den ansvariga hälso- och sjukvårdspersonen anges när den finns (Regel 1 och 4: vårdenheten, vårdgivaren och
+//   organisationen behövs för spärrar och loggning i sammanhållen journalföring), annars bara tiden och enheten;
+// - ett källsystem som inte är den logiska adressen, och vårdkontakter utan källsystem, är fel i begäran (SOAP Fault,
+//   eftersom svaret inte har något resultat; testfallen 1.10 och 1.11);
+// - perioden är vårdkontaktens tid, som ska överlappa den efterfrågade.
 export const GET_CARE_CONTACTS = kontrakt('riv.clinicalprocess.logistics.logistics', 'GetCareContacts', '2.0');
 const KONTAKTTYP = { IMP: 3, VR: 2, AMB: 1 };
 const KONTAKTSTATUS = { planned: 1, cancelled: 2, 'in-progress': 3, arrived: 3, finished: 5 };
-vardkallan.registrera(GET_CARE_CONTACTS, (ctx, { begaran, konsument, def }) => {
+vardkallan.registrera(GET_CARE_CONTACTS, (ctx, { begaran, konsument, def, logiskAdress }) => {
   const { db } = ctx;
+  const k = kallsystemFel(begaran, logiskAdress);
+  if (k) throw new SoapFel('Client', k);
   const p = patientI(db, begaran);
   if (p.fel) return {};
   const vg = vardgivare(db);
-  const kalla = begaran.sourceSystemHSAId ?? null;
-  if (kalla && kalla !== vg) return {};
-  const enheter = new Set(begaran.careUnitHSAId ?? []);
-  const kontakter = new Set(begaran.careContactId ?? []);
-  const start = begaran.timePeriod?.start ?? null;
-  const slut = begaran.timePeriod?.end ?? null;
   const poster = [];
   for (const r of resurser(db, def, konsument, p.pid, ['Encounter'])) {
     const e = enhetAv(db, r);
     const tid = datumRiv(r.period?.start);
     if (!e || !tid) continue;
-    if ((enheter.size && !enheter.has(e.hsa_id)) || (kontakter.size && !kontakter.has(r.id)) || (start && datum(tid) < start) || (slut && datum(tid) > slut)) continue;
+    // Testspår 2 (TKB 6.1.2): typen utelämnas när den är okänd. En planerad kontakt och ett pågående vårdtillfälle har
+    // ingen sluttid, och för ett besök är sluttiden samma som starttiden.
+    const kod = r.class?.code ? (KONTAKTTYP[r.class.code] ?? 5) : null;
+    const status = KONTAKTSTATUS[r.status] ?? null;
+    const slutet = status === 1 || (kod === 3 && status === 3) ? null : kod === 1 ? tid : datumRiv(r.period?.end);
+    const ansvarig = r.participant?.find(x => x.individual?.reference?.startsWith('Practitioner/'))?.individual ?? null;
+    const hsa = ansvarig ? db.query('SELECT hsa_id FROM personal WHERE id = ?').get(ansvarig.reference.slice(13))?.hsa_id ?? null : null;
     poster.push({
-      careContactHeader: { documentId: `Encounter/${r.id}`, sourceSystemHSAId: vg, patientId: p.patientId, approvedForPatient: false, nullified: false },
+      careContactHeader: {
+        documentId: String(r.id), sourceSystemHSAId: vg, patientId: p.patientId,
+        accountableHealthcareProfessional: {
+          authorTime: tid, healthcareProfessionalHSAId: hsa ?? e.hsa_id, healthcareProfessionalName: ansvarig?.display ?? e.namn,
+          healthcareProfessionalOrgUnit: { orgUnitHSAId: e.hsa_id, orgUnitName: e.namn },
+          healthcareProfessionalCareUnitHSAId: e.hsa_id, healthcareProfessionalCareGiverHSAId: vg,
+        },
+        approvedForPatient: false, nullified: false,
+      },
       careContactBody: {
-        careContactCode: KONTAKTTYP[r.class?.code] ?? 5, careContactReason: r.reasonCode?.[0]?.text ?? null,
+        careContactCode: kod, careContactReason: r.reasonCode?.[0]?.text ?? null,
         careContactOrgUnit: { orgUnitHSAId: e.hsa_id, orgUnitName: e.namn },
-        careContactTimePeriod: { start: tid, end: datumRiv(r.period?.end) },
-        careContactStatus: KONTAKTSTATUS[r.status] ?? null,
+        careContactTimePeriod: { start: tid, end: slutet },
+        careContactStatus: status,
       },
     });
   }
-  return { careContact: poster };
+  const filtrerade = filtrera(poster.map(x => ({ ...x, careContactHeader: { ...x.careContactHeader, careContactId: x.careContactHeader.documentId } })), begaran, 'careContactHeader',
+    { intervall: (x) => ({ start: x.careContactBody.careContactTimePeriod.start, slut: x.careContactBody.careContactTimePeriod.end ?? x.careContactBody.careContactTimePeriod.start }) });
+  return { careContact: filtrerade.map(x => { const { careContactId, ...h } = x.careContactHeader; void careContactId; return { ...x, careContactHeader: h }; }) };
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -238,8 +304,18 @@ vardkallan.registrera(GET_CARE_CONTACTS, (ctx, { begaran, konsument, def }) => {
 // vårdrelationen med samma regel som för all åtkomst i Vårdkällan (harVardrelation). Frågan loggas på patienten med det
 // verkliga utfallet, tillåten eller nekad.
 export const ASSERT_CARE_ENGAGEMENT = kontrakt('riv.ehr.accesscontrol', 'AssertCareEngagement', '1.0');
-vardkallan.registrera(ASSERT_CARE_ENGAGEMENT, (ctx, { begaran, konsument }) => {
+// Testspår 2 (TKB 3.2): adresseringen är verksamhetsbaserad, och konsumenten anropar med den sammansatta adressen
+// VårdgivarensHSA-id#VårdenhetensHSA-id för medarbetarens uppdrag. Vårdgivarens HSA-id ensamt tas också emot, som i Ineras
+// testsvit. En sammansatt adress som inte stämmer med vårdgivaren och vårdenheten i begäran är ett fel i begäran.
+const adresserTgp = (db) => {
+  const vg = vardgivare(db);
+  return [...require('./konsumenter.js').egnaAdresser(db), ...db.query("SELECT hsa_id FROM enheter WHERE typ = 'vardenhet' AND hsa_id IS NOT NULL").all().map(r => `${vg}#${r.hsa_id}`)];
+};
+vardkallan.registrera(ASSERT_CARE_ENGAGEMENT, (ctx, { begaran, konsument, logiskAdress }) => {
   const { db } = ctx;
+  if (logiskAdress?.includes('#') && logiskAdress !== `${begaran.careGiverHsaIdentity}#${begaran.careUnitHsaIdentity}`) {
+    throw new SoapFel('Client', `Den logiska adressen ${logiskAdress} stämmer inte med vårdgivaren och vårdenheten i begäran.`);
+  }
   const pid = patientFranPersonId(db, begaran.subjectOfCareId);
   if (!pid) return { HasCareEngagement: false };
   const enhet = db.query("SELECT id FROM enheter WHERE hsa_id = ? AND typ = 'vardenhet'").get(begaran.careUnitHsaIdentity);
@@ -252,4 +328,4 @@ vardkallan.registrera(ASSERT_CARE_ENGAGEMENT, (ctx, { begaran, konsument }) => {
   loggaRad(db, { personal_id: konsument.personal.id, enhet_id: konsument.personal.enhet_id, patient_id: pid, handling: 'las_admin',
     resurs: `rivta/AssertCareEngagement/1.0?_konsument=${konsument.hsaId}`, grund: tillaten ? 'systemkonto' : 'nekad', resultat: tillaten ? 'tillaten' : 'nekad' });
   return { HasCareEngagement: svar };
-});
+}, { adresser: adresserTgp });

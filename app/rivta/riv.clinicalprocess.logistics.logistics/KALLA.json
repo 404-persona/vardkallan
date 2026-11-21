@@ -5,13 +5,55 @@
   "commit": "42851358d799b89756fc55fbf64c7ee01c067a3d",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.logistics.logistics/get/42851358d799b89756fc55fbf64c7ee01c067a3d.tar.gz",
   "arkivSha256": "5ab1162452d59d301e26f1dfc9790d5192b34fb315cce0b5551efa1174e8c22b",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 9,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/clinicalprocess_logistics_logistics_2.0.xsd": "e2eb8fde0dbb3a8336d319548e2d2f8fc9dc9ecb99bede03bafb4a9fd5476e9b",
     "schemas/core_components/clinicalprocess_logistics_logistics_enum_2.0.xsd": "275cd58ba225a38eb82fb8e256bb98de11ad54773b5bf89959079f73fbb912c2",
     "schemas/core_components/itintegration_registry_1.0.xsd": "3642d467194f166cb8d87d603800a591b31b11bd2c09e338c22073e33df622a4",
     "schemas/interactions/GetCareContactsInteraction/GetCareContactsInteraction_2.0_RIVTABP21.wsdl": "9f4f9a05ca23e05368b1f72452b35dab50d7d7f532c5fd94c02196b7316f11f7",
     "schemas/interactions/GetCareContactsInteraction/GetCareContactsResponder_2.0.xsd": "98a6df0643e75b6417fc1147c580506f7b4b17f00710a7149c2807a469c5ed0d"
-  }
+  },
+  "dokument": {
+    "docs/TKB_clinicalprocess_logistics_logistics.docx": "87512aaee7c584da74193fb7c7d957db6920bf61c545f08cce72b491c453c312",
+    "test-suite/GetCareContacts/GetCareContacts-doc.html": "e1fba6a491492e161ae03518000f414ae16815624e1de8d7da7b1f845ff35c1f",
+    "test-suite/GetCareContacts/GetCareContacts-soapui-project.xml": "9f664b7b6de6763e12879fe5d636c8b4683f74a76f6db2e3b2473dd22b50d7af",
+    "test-suite/GetCareContacts/constraints.xml": "01f95b951dafe803485efa98e703b026f54cbe0f92d6f6e99979c4feae455483",
+    "test-suite/GetCareContacts/data.xml": "79cad6ca26163b9536b23362a21ecdc452216dd8c1f68cd63346ffe01030d4dd",
+    "test-suite/GetCareContactsMock/GetCareContacts-testanvisning_for _tjanstekonsument.html": "fe6e9f6303677cc9506cbaa35c9ca8ad579db35c67aa5d770dc032e6a6ff7d2b",
+    "test-suite/GetCareContactsMock/GetCareContactsMock-doc.html": "fdfbb0e65da9ea97e10af2c2d47cc2cadb6f1245717c15f2df76e843c20a7e3d",
+    "test-suite/GetCareContactsMock/GetCareContactsMock-soapui-project.xml": "928cb67354ca73c411753bd1fac22dcc1c69a4eb5b987fa7bc021b8b59b72fea",
+    "test-suite/GetCareContactsMock/constraints.xml": "b82838b44a4abb8ea9581eb559c033197a8933b51bd1fb75e718799cdaaf08d4"
+  },
+  "text": {
+    "docs/TKB_clinicalprocess_logistics_logistics.txt": {
+      "från": "docs/TKB_clinicalprocess_logistics_logistics.docx",
+      "sha256": "0ce2e24fa49628240f92718f12d791c79e2c8536792a856a1252ad8e962522b6",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_clinicalprocess_logistics_logistics.docx",
+    "test-suite/GetCareContacts/GetCareContacts-doc.html",
+    "test-suite/GetCareContactsMock/GetCareContacts-testanvisning_for _tjanstekonsument.html",
+    "test-suite/GetCareContactsMock/GetCareContactsMock-doc.html"
+  ],
+  "utanförRepo": [
+    "docs/TKB_clinicalprocess_logistics_logistics.docx",
+    "docs/TKB_clinicalprocess_logistics_logistics.txt",
+    "test-suite/GetCareContacts/GetCareContacts-doc.html",
+    "test-suite/GetCareContactsMock/GetCareContacts-testanvisning_for _tjanstekonsument.html",
+    "test-suite/GetCareContactsMock/GetCareContactsMock-doc.html"
+  ]
 }

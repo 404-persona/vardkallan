@@ -122,7 +122,9 @@ export function puPatient(atk) {
   const sekretess = r.Sekretessmarkering === 'J';
   const skyddad = Boolean(p.skyddad) || sekretess;
   const visad = !skyddad || (Boolean(p.skyddad) && Boolean(atk.val?.visa_identitet) && kanRoll(atk.personal, 'visa_identitet'));
-  const falt = [['förnamn', p.fornamn, pp.Namn?.Fornamn ?? null], ['efternamn', p.efternamn, pp.Namn?.Efternamn ?? null]];
+  // Testspår 2 (TKB population:residentmaster 2.3): en post med sekretessmarkering har normalt bara personnumret och
+  // markeringen. Då jämförs bara de fält som PU-tjänsten faktiskt lämnar, så att ett namn som saknas inte blir en skillnad.
+  const falt = [['förnamn', p.fornamn, pp.Namn?.Fornamn ?? null], ['efternamn', p.efternamn, pp.Namn?.Efternamn ?? null]].filter(([, , pu]) => !sekretess || pu != null);
   if (!skyddad) falt.push(['adress', p.adress ?? null, adress?.Utdelningsadress1 ?? null], ['postnummer', p.postnr ? String(p.postnr).replace(/\s/g, '') : null, adress?.PostNr ?? null], ['ort', p.ort ?? null, adress?.Postort ?? null]);
   const skillnader = falt.filter(([, a, b]) => a !== b).map(([f, vardkallan, pu]) => (visad ? { falt: f, vardkallan, pu } : { falt: f }));
   atk.logga('las_admin', atk.grund(), 'rivta:LookupResidentForFullProfile', 'tillaten', skyddad && visad ? 'Jämförelse med folkbokföringen efter aktivt val att visa skyddad identitet.' : null);

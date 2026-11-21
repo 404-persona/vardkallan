@@ -5,7 +5,13 @@
   "commit": "edc9ed9be6295303470de067aa8bd7518993137f",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.followup.qualityregistry.nkrr/get/edc9ed9be6295303470de067aa8bd7518993137f.tar.gz",
   "arkivSha256": "5a582fd758f1a3b65c9909b8eec915a11a09efa15167c61202c914b74347a6bd",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 7,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/followup_qualityregistry_nkrr_1.0.xsd": "0926d749cd919fdbc0d78b2e319fc0987026693756793d2fff6241c02ee89f91",

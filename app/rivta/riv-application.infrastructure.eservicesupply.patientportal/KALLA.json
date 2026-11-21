@@ -5,7 +5,13 @@
   "commit": "444af395016bd6c97d1b6ca26014c5890359f0e7",
   "arkiv": "https://bitbucket.org/rivta-domains/riv-application.infrastructure.eservicesupply.patientportal/get/444af395016bd6c97d1b6ca26014c5890359f0e7.tar.gz",
   "arkivSha256": "6a1623512018d2d7880073d7d4aedda65057bedce6795f25524a5a0f3fb2e86c",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 7,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/infrastructure_eservicesupply_patientportal_2.0.xsd": "cc6016ea4ba1dabf7cefe9e4655a4d9570ed17d2e55a33c30222061675729ab5",

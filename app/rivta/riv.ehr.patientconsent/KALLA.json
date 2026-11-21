@@ -5,8 +5,14 @@
   "commit": "70440f0fcd082825826b9bc9acd4f6144df07ba7",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.ehr.patientconsent/get/70440f0fcd082825826b9bc9acd4f6144df07ba7.tar.gz",
   "arkivSha256": "2756ad9c72cf0d46671d64a0a2e7e586b36eef6cbcb24cedb974a80c6d56a3b8",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
-  "hämtat": "2026-11-12",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 15,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
+  "hämtat": "2026-11-20",
   "filer": {
     "schemas/core_components/ehr_patientconsent_1.0.xsd": "f3c409407ca1265fc53e4f18950f722232d3d76bed28d75d426dc2e2073fd324",
     "schemas/core_components/itintegration_registry_1.0.xsd": "90fd91f30bef1160a74e601dbcea8a133da7e8a081c1d5f26b3d1f62efc03b4a",
@@ -24,5 +30,27 @@
     "schemas/interactions/querying/GetConsentsForCareProviderInteraction/GetConsentsForCareProviderResponder_1.0.xsd": "b0e2dd8ce21856e68798d12df448674c0bcdb3e4aa7c270c6e0427a6f4ee9455",
     "schemas/interactions/querying/GetConsentsForPatientInteraction/GetConsentsForPatientInteraction_1.0_RIVTABP21.wsdl": "696db21dcdc19e1934304637bd3a2da110e5301a5884ac3fb7d389dae879d064",
     "schemas/interactions/querying/GetConsentsForPatientInteraction/GetConsentsForPatientResponder_1.0.xsd": "6ef737e9a0c95bc41f06630a5db6f8d58d63a9fb42bcbd90167bc0467696ae1a"
-  }
+  },
+  "dokument": {
+    "docs/TKB_ehr_patientconsent_1.0.1_RC1.docx": "e4d40816073ee4ed4d89797880688d8590276b1389805ae6352203e3700ab24f"
+  },
+  "text": {
+    "docs/TKB_ehr_patientconsent_1.0.1_RC1.txt": {
+      "från": "docs/TKB_ehr_patientconsent_1.0.1_RC1.docx",
+      "sha256": "7d6666cf4231c2262c8f2e01a9467acc2d7ee4c9a5df734c4e5d94de80cb6072",
+      "verktyg": [
+        "pandoc/minimal:3.5@sha256:5453a022e3200c8f777792b2636b65d8a1622c072d35b2e95ea975e156712444"
+      ],
+      "filter": "scripts/rivta-tkb-text.lua",
+      "filterSha256": "c5d1bababe4509cab4c8fb4d1a5294d6e5c407c946ace98dfd857a8a67d28d5e"
+    }
+  },
+  "dokumentlicens": "Testsvitens SoapUI-projekt och de flesta XML-filer har huvudet med Apache License 2.0, och testsvitens XML-filer utan huvud följer domänens licens. TKB och testsvitens HTML-filer anger ingen licens: de står under utanförRepo, ligger inte i förrådet och hämtas till app/rivta-tkb/<domän>/ med node scripts/rivta-scheman.js --tkb.",
+  "utanLicensuppgift": [
+    "docs/TKB_ehr_patientconsent_1.0.1_RC1.docx"
+  ],
+  "utanförRepo": [
+    "docs/TKB_ehr_patientconsent_1.0.1_RC1.docx",
+    "docs/TKB_ehr_patientconsent_1.0.1_RC1.txt"
+  ]
 }

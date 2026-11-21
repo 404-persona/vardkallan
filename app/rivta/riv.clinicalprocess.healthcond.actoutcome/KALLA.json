@@ -5,7 +5,13 @@
   "commit": "7c07a857587fbf8e4484f586d045d2c366a9ace6",
   "arkiv": "https://bitbucket.org/rivta-domains/riv.clinicalprocess.healthcond.actoutcome/get/7c07a857587fbf8e4484f586d045d2c366a9ace6.tar.gz",
   "arkivSha256": "352561af9c4390d8ef08094fbe30369014a76b35b39dec512091210f106c037b",
-  "licens": "Apache License 2.0 (huvudet i varje schemafil)",
+  "licens": "Apache License 2.0 (huvudet i schemafilerna)",
+  "licenskontroll": {
+    "medHuvud": 14,
+    "utanHuvud": [
+      "schemas/core_components/itintegration_registry_1.0.xsd"
+    ]
+  },
   "hämtat": "2026-11-12",
   "filer": {
     "schemas/core_components/clinicalprocess_healthcond_actoutcome_2.0.xsd": "256d430f14c8592dec9bd9fa6eff8251305c702821031d3d3b908c2674df058c",

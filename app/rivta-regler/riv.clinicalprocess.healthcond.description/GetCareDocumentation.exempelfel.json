@@ -1,0 +1,228 @@
+{
+  "beskrivning": "Fel i Ineras exempel för GetCareDocumentation (testsvitens begäran och mockens svar) mot schemat, TKB:s regler och testsvitens egna Schematron-regler. Felen redovisas och rättas inte. Platshållarna i exemplen (${...} och ?) är ifyllda med testsvitens egna uppgifter där de finns.",
+  "fel": [
+    {
+      "exempel": "1.2.1 timePeriod: Call GetCareDocumentation timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetCareDocumentation/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetCareDocumentation/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetCareDocumentation/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetCareDocumentation/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "1.2.2 timePeriod intervall: Call GetCareDocumentation timePeriod",
+      "fel": [
+        "platshållare utan värde i testsviten: timePeriodStart, timePeriodEnd",
+        "schemat: /GetCareDocumentation/timePeriod/start: värdet \"${timePeriodStart}\" följer inte typens mönster.",
+        "schemat: /GetCareDocumentation/timePeriod/end: värdet \"${timePeriodEnd}\" följer inte typens mönster.",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetCareDocumentation/timePeriod/start",
+        "TKB 4.3.2.3-1: /Envelope/Body/GetCareDocumentation/timePeriod/end"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: documentTime_within",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Response CareUnitHsaId",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Empty Response",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: CareContactId Filter",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Http-header Filter",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Approved-true",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Approved-false",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: BasicResponse",
+      "fel": [
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Compliant Content Response",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Multimedia Response",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: authorTime_within",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: signatureTime_within",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: all_within",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: source_system",
+      "fel": [
+        "platshållare utan värde i testsviten: sourceSystemHSAid, careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Only PatientId",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: legal_included",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: legal_excluded",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: legal_locked",
+      "fel": [
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Http-header Prefilter",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: BasicResponseDissentingOpinion",
+      "fel": [
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Response 22",
+      "fel": [
+        "schemat: /GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/documentTime: värdet \"?\" följer inte typens mönster.",
+        "schemat: /GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/authorTime: värdet \"?\" följer inte typens mönster.",
+        "schemat: /GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/legalAuthenticator/signatureTime: värdet \"?\" följer inte typens mönster.",
+        "schemat: /GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/approvedForPatient: värdet \"?\" ska vara ett sanningsvärde.",
+        "schemat: /GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/nullified: värdet \"?\" ska vara ett sanningsvärde.",
+        "TKB 7.1.4-20: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/patientId",
+        "TKB 7.1.4-24: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/codeSystem",
+        "TKB 7.1.4-26: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/codeSystem",
+        "TKB 7.1.4-28: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/originalText",
+        "TKB 7.1.4-32: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader",
+        "TKB 7.1.4-33: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader",
+        "TKB 7.1.4-35: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote",
+        "TKB 7.1.4-36: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote",
+        "TKB 7.1.4-37: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote",
+        "TKB 7.1.4-39: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote/multimediaEntry",
+        "TKB 7.1.4-45: /Envelope/Body/GetCareDocumentationResponse/result",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result",
+        "TKB 4.3.2.3-2: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/authorTime",
+        "TKB 4.3.2.3-2: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote/dissentintOpinion/authorTime",
+        "TKB 4.3.2.3-2: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/legalAuthenticator/signatureTime",
+        "TKB 4.3.2.3-2: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/documentTime",
+        "Ineras constraints.xml healthcareProfessionalRoleCode: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode",
+        "Ineras constraints.xml healthcareProfessionalRoleCode: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/code",
+        "Ineras constraints.xml healthcareProfessionalRoleCode: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/codeSystem",
+        "Ineras constraints.xml healthcareProfessionalRoleCode: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/displayName",
+        "Ineras constraints.xml healthcareProfessionalRoleCode: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional/healthcareProfessionalRoleCode/originalText",
+        "Ineras constraints.xml clinicalDocumentNote: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote",
+        "Ineras constraints.xml careDocumentationBody: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody",
+        "Ineras constraints.xml multimediaEntry: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationBody/clinicalDocumentNote/multimediaEntry",
+        "Ineras constraints.xml careDocumentationHeader: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: timeBlaster-response",
+      "fel": [
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Default response",
+      "fel": [
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    },
+    {
+      "exempel": "mock GetCareDocumentation: Http-header Prefilter2",
+      "fel": [
+        "platshållare utan värde i testsviten: careUnitHSAid",
+        "TKB 7.1.4-23: /Envelope/Body/GetCareDocumentationResponse/careDocumentation/careDocumentationHeader/accountableHealthcareProfessional",
+        "TKB 7.1.4-46: /Envelope/Body/GetCareDocumentationResponse/result"
+      ]
+    }
+  ]
+}

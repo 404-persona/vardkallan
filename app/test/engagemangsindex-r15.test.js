@@ -30,10 +30,11 @@ describe(T, () => {
     expect(rader.map(r => r.kategori)).toEqual(['dia', 'upp', 'vko', 'voo']);
     for (const r of rader) {
       // Systemadressering: källsystemet är den logiska adressen. businessObjectInstanceIdentifier och
-      // clinicalProcessInterestId är NA, och personuppgiftsansvarig är vårdgivaren.
+      // clinicalProcessInterestId är NA, och personuppgiftsansvarig är vårdgivaren. Testspår 2: för vårdkontakterna
+      // (logistics:logistics) anges vårdgivaren som SE och organisationsnumret, som TKB för domänen kräver.
       expect(r.vardenhet_hsa).toBe(VG);
       expect(r.kallsystem).toBe(VG);
-      expect(r.nyckel.split('|')).toEqual(['194502024732', expect.any(String), r.kategori, VG, 'NA', 'NA', VG, VG]);
+      expect(r.nyckel.split('|')).toEqual(['194502024732', expect.any(String), r.kategori, VG, 'NA', 'NA', VG, r.kategori === 'vko' ? 'SE2321000164' : VG]);
       expect(r.agare).toBe(rivta.nationella.NATIONELL);
       expect(r.senast).toMatch(/^\d{14}$/);
     }
