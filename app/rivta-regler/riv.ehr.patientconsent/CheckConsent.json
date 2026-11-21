@@ -18,7 +18,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Bygg en begäran för CheckConsent med klient.js och kontrollera kuvertet enligt Basic Profile 2.1: SOAP 1.1, LogicalAddress i huvudet, kontraktets SOAPAction och exakt ett element i kroppen. Skicka ett kuvert som bryter mot profilen till den simulerade producenten och kontrollera att det ger SOAP Fault. Kontrollera att transporten https i klient.js kräver klientcertifikat och rejectUnauthorized. Funktionscertifikaten mot en riktig motpart prövas inte."
     },
     {
@@ -96,7 +96,7 @@
       "prövbar": false,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": ""
     },
     {
@@ -109,7 +109,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Gör Vårdkällans API-anrop som leder till CheckConsent (sammanhallen.js lage, hamta och aterkalla) utan inloggning och utan behörigheten las_journal, och kontrollera att de nekas och att inget utgående anrop för CheckConsent finns i rivta_anrop."
     },
     {
@@ -122,7 +122,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att registrering och återkallelse av samtycke i Vårdkällan (sammanhallen.js hamta och aterkalla) kräver inloggning och behörighet och att samtycket bara gäller den vårdenhet som den inloggade har sitt uppdrag på."
     },
     {
@@ -161,7 +161,7 @@
       "prövbar": false,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": ""
     },
     {
@@ -187,7 +187,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt producenten svara med SOAP Fault för CheckConsent och kontrollera att rivta_anrop får en rad med riktning ut och resultatet fault, och att kön (samtycke_utkorg) sparar felet för registreringar och återkallelser."
     },
     {
@@ -200,7 +200,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt producenten svara med SOAP Fault och kontrollera att Vårdkällans API inte visar felets text för användaren, utan en egen text (samtycke-nationellt.js prova, texten när tjänsten inte svarar)."
     },
     {
@@ -226,7 +226,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt den simulerade producenten svara på CheckConsent med varje felkod (ERROR, VALIDATION_ERROR, ACCESSDENIED, NOTFOUND, ALREADYEXISTS, INVALIDSTATE) och kontrollera att Vårdkällans konsument inte behandlar svaret som lyckat (utom där kontraktet själv säger att resultatet är detsamma, som ALREADYEXISTS vid en dubbel registrering) och att kön försöker igen."
     },
     {
@@ -239,7 +239,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att den simulerade producenten inte ändrar något tillstånd när den svarar med en annan kod än OK eller INFO, och att Vårdkällans konsument behandlar INFO som genomförd och övriga koder som ej genomförda för CheckConsent."
     },
     {
@@ -265,7 +265,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att varje fält av typen xs:date för CheckConsent har formatet ÅÅÅÅ-MM-DD utan tidszon. Kontraktet har inga sådana fält i dag, så testet kontrollerar att inga datum förekommer i annan form."
     },
     {
@@ -278,7 +278,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera med ett reguljärt uttryck att varje tidpunkt i begäran från Vårdkällan och i svaret från den simulerade producenten för CheckConsent har formatet ÅÅÅÅ-MM-DDTtt:mm:ss utan decimaler och utan tidszon."
     },
     {
@@ -291,7 +291,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att inga tidpunkter i begäran eller svaret för CheckConsent slutar med Z eller med en förskjutning."
     },
     {
@@ -304,7 +304,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Frys klockan vintertid och sommartid (2026-01-15T10:00:00Z och 2026-07-15T10:00:00Z) och kontrollera att tidpunkterna som Vårdkällan skickar och som den simulerade producenten svarar med för CheckConsent är svensk tid (11:00:00 respektive 12:00:00)."
     },
     {
@@ -317,7 +317,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Registrera ett intyg med EndDate 23:30:00 svensk tid och kontrollera vid 23:15 och 23:45 svensk tid att den simulerade producenten och Vårdkällans prövning tolkar slutet som svensk tid för CheckConsent."
     },
     {
@@ -330,7 +330,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att begäran för CheckConsent har LogicalAddress i huvudet i namnrymden urn:riv:itintegration:registry:1 och att den simulerade producenten avvisar en begäran utan den eller med en adress som den inte svarar för."
     },
     {
@@ -343,7 +343,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att Vårdkällans begäran för CheckConsent har en logisk adress också när anropet går direkt i processen (iProcessenSynk)."
     },
     {
@@ -369,7 +369,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Ingen av samtyckestjänstens tjänster är generell enligt tabellen. Kontrollera att Vårdkällan inte använder den nationella adressen (SE165565594230-1000, eller den simulerade SE0000000000-SIMNATIONELL i demon) för CheckConsent."
     },
     {
@@ -499,7 +499,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Fält: hasConsent. Kontrollera att ett personligt intyg (EmployeeId) bara ger true för den medarbetaren och ett intyg utan EmployeeId för all personal på vårdenheten. Kontrollera att Vårdkällan, om den använder CheckConsent, inte räknar ett intyg om nödsituation från ett annat system som samtycke (docs/rivta.md, avsnittet om samtycket)."
     },
     {
@@ -512,7 +512,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att EmployeeId, CareProviderId och CareUnitId i AccessingActor för CheckConsent är HSA-id enligt HSA-schemat (landsprefix SE, organisationsnummer och ett suffix efter bindestreck), aldrig ett internt id i Vårdkällan (personal.id) eller en påhittad text som vardkallan-system eller okand."
     },
     {
@@ -525,7 +525,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att PatientId för CheckConsent är tolv siffror (ÅÅÅÅMMDDNNNN) med giltig kontrollsiffra, och att Vårdkällan inte anropar tjänsten med reservnummer eller för patienter med skyddade personuppgifter (samtycke-nationellt.js nationellIdentitet)."
     },
     {
@@ -551,7 +551,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Värde: INFO. Låt den simulerade producenten svara på CheckConsent med INFO och en ResultText och kontrollera att Vårdkällan behandlar åtgärden som genomförd och gör texten synlig för användaren eller, när anropet görs av kön utan användare, för systemförvaltaren."
     },
     {
@@ -564,7 +564,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Värde: ERROR. Låt den simulerade producenten svara på CheckConsent med ERROR och en ResultText och kontrollera att Vårdkällan behandlar åtgärden som ej genomförd och gör texten synlig (för användaren, eller för systemförvaltaren i köns läge)."
     }
   ]

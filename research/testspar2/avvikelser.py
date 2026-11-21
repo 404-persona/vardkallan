@@ -19,7 +19,7 @@ AVVIKELSER = {
 MRC = 'Vårdkällan följer inte regeln fullt ut: mostRecentContent räknas fram ur uppgifternas kliniska tid och minskar aldrig, men när en av flera uppgifter tas bort uppdateras posten inte med tiden för borttaget. Vårdkällan sparar inte tiden för borttag av en enskild uppgift. Avvikelsen redovisas i rapporten.'
 ADR_SPARR = 'Vårdkällan följer inte regeln: alla anrop till spärrtjänsten går till den simulerade nationella adressen, också GetBlocksForPatient och hävningarna, som enligt tabellen i 2.7 ska adresseras till vårdgivaren. Att ändra adresseringen kräver ett beslut om hur hävningen av en annan vårdgivares spärr ska gå till (se rapporten).'
 ADR_SAMTYCKE = 'Vårdkällan följer inte regeln: alla anrop till samtyckestjänsten går till den simulerade nationella adressen, inte till vårdgivarens HSA-id som tabellen i 2.7 anger. Avvikelsen redovisas i rapporten.'
-EJ_ANROPAT = 'Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.'
+EJ_ANROPAT = 'Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.'
 for k, i in [('Update', '4.1-11'), ('Update', '4.1-30'), ('GetDiagnosis', '4.1-10'), ('GetCareDocumentation', '4.1-10'), ('GetAlertInformation', '4.1-10'), ('GetCareContacts', '4.1-10')]: AVVIKELSER[(k, i)] = MRC
 for k in ['CheckBlocks', 'GetAllBlocksForPatient', 'GetBlocksForPatient', 'RegisterTemporaryExtendedRevoke', 'CancelTemporaryExtendedRevoke']:
     for i in ['2.7-3', '2.7-5']: AVVIKELSER[(k, i)] = ADR_SPARR

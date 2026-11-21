@@ -18,7 +18,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Bygg en begäran för CancelTemporaryExtendedRevoke med klient.js och kontrollera kuvertet enligt Basic Profile 2.1: SOAP 1.1, LogicalAddress i huvudet, kontraktets SOAPAction och exakt ett element i kroppen. Skicka ett kuvert som bryter mot profilen (SOAP 1.2, fel SOAPAction, saknad LogicalAddress) till den simulerade producenten och kontrollera att det ger SOAP Fault. Kontrollera att transporten https i klient.js kräver klientcertifikat och rejectUnauthorized. Själva funktionscertifikaten mot en riktig motpart prövas inte."
     },
     {
@@ -57,7 +57,7 @@
       "prövbar": false,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": ""
     },
     {
@@ -70,7 +70,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Gör Vårdkällans API-anrop som leder till CancelTemporaryExtendedRevoke utan inloggning och med en användare som saknar behörigheten (las_journal, samtycke_sparr eller registrera_sparr i atkomst.js) och kontrollera att anropet nekas och att inget utgående anrop för CancelTemporaryExtendedRevoke finns i rivta_anrop."
     },
     {
@@ -83,7 +83,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Gör hävningen av spärr (sammanhallen.js havSparr) och jämförelsen av spärrar (jamforSparrar) som användare utan samtycke_sparr respektive registrera_sparr och kontrollera att de nekas innan något anrop görs till spärrtjänsten."
     },
     {
@@ -109,7 +109,7 @@
       "prövbar": false,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": ""
     },
     {
@@ -174,7 +174,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt producenten svara med SOAP Fault för CancelTemporaryExtendedRevoke och kontrollera att rivta_anrop får en rad med riktning ut, kontraktet och resultatet fault med felets text."
     },
     {
@@ -187,7 +187,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt producenten svara med SOAP Fault och kontrollera att Vårdkällans API inte visar felets text för användaren, utan en egen text (till exempel EJ_SVAR_TEXT i sammanhallen.js)."
     },
     {
@@ -213,7 +213,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Låt den simulerade producenten svara på CancelTemporaryExtendedRevoke med varje felkod (ERROR, VALIDATIONERROR, ACCESSDENIED, NOTFOUND, ALREADYEXISTS, INVALIDSTATE) och kontrollera att Vårdkällans konsument inte behandlar svaret som lyckat och inte använder innehållet i svaret."
     },
     {
@@ -226,7 +226,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att den simulerade producenten inte ändrar något tillstånd när den svarar med en annan kod än OK eller INFO, och att Vårdkällans konsument behandlar INFO som genomförd och övriga koder som ej genomförda för CancelTemporaryExtendedRevoke."
     },
     {
@@ -252,7 +252,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att varje fält av typen xs:date i begäran och svaret för CancelTemporaryExtendedRevoke har formatet ÅÅÅÅ-MM-DD utan tidszon. Kontraktet har inga sådana fält i dag, så testet kontrollerar att inga datum förekommer i annan form."
     },
     {
@@ -265,7 +265,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera med ett reguljärt uttryck (^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$) att varje tidpunkt i begäran från Vårdkällan och i svaret från den simulerade producenten för CancelTemporaryExtendedRevoke saknar decimaler och tidszon. Schemats xs:dateTime tillåter båda, så kravet är strängare än schemat."
     },
     {
@@ -278,7 +278,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att inga tidpunkter i begäran eller svaret för CancelTemporaryExtendedRevoke slutar med Z eller med en förskjutning som +01:00."
     },
     {
@@ -291,7 +291,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Frys klockan till en känd tidpunkt både vintertid och sommartid (till exempel 2026-01-15T10:00:00Z och 2026-07-15T10:00:00Z) och kontrollera att tidpunkterna som Vårdkällan skickar och som den simulerade producenten svarar med för CancelTemporaryExtendedRevoke är svensk tid (11:00:00 respektive 12:00:00), inte UTC."
     },
     {
@@ -304,7 +304,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Skicka en tidpunkt nära en gräns (till exempel ett slutdatum 23:30:00 svensk tid) till den simulerade producenten för CancelTemporaryExtendedRevoke och kontrollera att den tolkas som svensk tid i jämförelsen med aktuell tid, och att Vårdkällan tolkar tidpunkter i svaret som svensk tid."
     },
     {
@@ -317,7 +317,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att begäran för CancelTemporaryExtendedRevoke har LogicalAddress i huvudet i namnrymden urn:riv:itintegration:registry:1 och att den simulerade producenten avvisar en begäran utan den eller med en adress som den inte svarar för."
     },
     {
@@ -330,7 +330,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att Vårdkällans begäran för CancelTemporaryExtendedRevoke har en logisk adress också i demon, där anropet går direkt i processen (iProcessenSynk) utan tjänsteplattform."
     },
     {
@@ -356,7 +356,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att Vårdkällan använder den nationella adressen (i demon den simulerade motsvarigheten SE0000000000-SIMNATIONELL, i drift SE165565594230-1000) bara för kontrakt som tabellen anger med nationell adress, och för CancelTemporaryExtendedRevoke enligt tabellens rad."
     },
     {
@@ -499,7 +499,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Fält: replicationTimeout. Anropa CancelTemporaryExtendedRevoke med ReplicationTimeout 0 och kontrollera att svaret kommer direkt och att ändringen syns i GetAllBlocksForPatient. Kontrollera också att Vårdkällan skickar 0 och inte förutsätter att den nationella registreringen är klar."
     },
     {
@@ -551,7 +551,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att EmployeeId i CancellationInfo i begäran från Vårdkällan och i svaret från den simulerade producenten för CancelTemporaryExtendedRevoke är HSA-id enligt HSA-schemat (landsprefix SE, organisationsnummer och ett suffix efter bindestreck), aldrig Vårdkällans interna id som personal.id."
     },
     {
@@ -564,7 +564,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Kontrollera att TemporaryRevokeId i begäran för CancelTemporaryExtendedRevoke matchar formatet för UUID (8-4-4-4-12 hexadecimala tecken). Schemat har bara maxlängd 36."
     },
     {
@@ -590,7 +590,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Värde: INFO. Låt den simulerade producenten svara på CancelTemporaryExtendedRevoke med INFO och en ResultText och kontrollera att Vårdkällan behandlar åtgärden som genomförd och visar texten för användaren."
     },
     {
@@ -603,7 +603,7 @@
       "prövbar": true,
       "prövas": false,
       "status": "avvikelse",
-      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, fast tabellen i docs/rivta.md säger att Vårdkällan är konsument. Avvikelsen redovisas i rapporten och är en fråga till Jonas.",
+      "skäl": "Vårdkällan anropar inte kontraktet: det finns bara en simulerad producent, och tabellen i docs/rivta.md anger kontraktet som pinnat, konsument inte byggd. Regeln gäller konsumenten och följs därför inte.",
       "hur": "Värde: ERROR. Låt den simulerade producenten svara på CancelTemporaryExtendedRevoke med ERROR och en ResultText och kontrollera att Vårdkällan behandlar åtgärden som ej genomförd och visar texten för användaren."
     }
   ]
