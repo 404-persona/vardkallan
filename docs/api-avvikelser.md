@@ -1054,6 +1054,11 @@ Bara systemförvaltaren (behörigheten `servicenivaer`). Inget rör en enskild p
 - En inloggning svarar 403 när legitimationen för rollen saknas eller är återkallad i registret, och alla handlingar utom övningarna nekas för en sådan person.
 - Rapporten från inläsningen av personalkatalogen har `legitimation` (`[{ id, namn, status, text }]`) när någon som fick en roll som kräver legitimation saknar giltig legitimation eller inte gick att slå upp.
 
+## Version 1.9.0: Fenton 2025 och tjänstekontraktens regler (runda 20)
+
+- Fenton 2025 i tillväxtvyn: `fenton` i `GET /api/patient/:id/tillvaxt`, uppgiften `graviditetsdagar` och mellanhanden `POST /api/patient/:id/tillvaxt/fenton`, beskrivna under tillväxten ovan.
+- Tjänstekontrakten i RIVTA följer TKB:s fältregler och Ineras testsviter (docs/rivta.md). `GET /api/tjanstekontrakt` har `byggt: false` och rollen `pinnat, konsument inte byggd` för CheckConsent och CancelTemporaryExtendedRevoke, som Vårdkällan inte anropar.
+
 ## Version 1.8.1: vägledningen i alla uppdrag och omladdningen (runda 19, r1)
 
 - `POST /api/testare/uppdrag/:id/jamforelse` tar emot `vagledning` (sant eller falskt), om vägledningen var på när testaren svarade. Annan typ ger 400, och utan värde sparas inget. Testledarens lista har `vagledning` för varje svar (`true`, `false` eller `null` för äldre svar) och `medVagledning` och `utanVagledning` per uppdrag i `perUppdrag`. Exporten `csv-uppdrag` har kolumnen `vagledning`, och Markdown och `scripts/testinbjudan.js nya` har antalen med och utan vägledning.

@@ -11,6 +11,18 @@ export const VERSION = (() => { try { return JSON.parse(readFileSync(join(import
 // resurser är resurstyperna som kom i versionen, skrivning är resurstyp och interaktion (Condition:create) och
 // annat är ändringar som inte är en resurstyp, till exempel SMART on FHIR.
 export const ANDRINGAR = [
+  // Runda 20: version 1.9.0.
+  {
+    version: '1.9.0', datum: '2026-11-21',
+    text: 'Fenton 2025 i tillväxtvyn och TKB:s regler som tester för tjänstekontrakten.',
+    resurser: [], skrivning: [], annat: [
+      // Fenton 2025 (docs/api-avvikelser.md).
+      'Tillväxten i det interna API:t har Fentons prematurkurva för ett barn som är fött före vecka 37, med z-värde, percentil och storlek för gestationsåldern, och tar emot graviditetens dagar utöver hela veckor. En ny rutt för mellanhanden mot fentongrowth.ca, som bara är på i demon (docs/api-avvikelser.md)',
+      // Testspår 2: tjänstekontrakten i RIVTA (docs/rivta.md).
+      'Producenterna i RIVTA följer fältreglerna i tjänstekontraktsbeskrivningarna: fält som är 0..0 skickas inte, källsystemet prövas, perioden jämförs med kontraktets tidpunkter, logId är ett unikt id i den form som beskrivningen anger och vårdkontakterna har den ansvariga personen och samma id som i de andra kontrakten. AssertCareEngagement tar emot den sammansatta logiska adressen (docs/rivta.md)',
+      'Listan över tjänstekontrakt anger CheckConsent och CancelTemporaryExtendedRevoke som pinnade och inte byggda, eftersom Vårdkällan inte anropar dem (docs/api-avvikelser.md)',
+    ],
+  },
   // Runda 19: version 1.8.1.
   {
     version: '1.8.1', datum: '2026-11-20',

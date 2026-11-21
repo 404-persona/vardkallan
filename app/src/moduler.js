@@ -540,6 +540,15 @@ export const FORBJUDNA = /inte byggt|inte byggd|finns inte|(?<![\wåäö])planer
 // Runda 16: rehabkoordinatorn är en funktion med en egen roll (rehabkoordinator.js).
 MODULER.find(x => x.id === 'behorighet').beskrivning += ' Rehabkoordinatorn är en funktion med en egen roll: ser vårdenhetens pågående sjukfall och sätter REKO-status, men läser inte journalen.';
 
+// Runda 20 (1.9): Fenton 2025 i tillväxtvyn och TKB:s regler som tester för tjänstekontrakten (textgranskningen).
+{
+  const mod = (id) => MODULER.find(x => x.id === id);
+  mod('bhv').beskrivning += ' Barn som är födda före vecka 37 visas på Fentons prematurkurva från 2025 efter exakt gestationsålder, med z-värde, percentil och storlek för gestationsåldern vid födelsen, när kurvdatan finns på servern.';
+  mod('bhv').kod.push('src/fenton.js');
+  mod('bhv').simulerat += ' Knappen Rita på fentongrowth.ca skickar bara demons påhittade barn till Fentons tjänst, utan namn och personnummer, och är avstängd i en skarp installation.';
+  mod('nationella').beskrivning += ' Affärsreglerna i tjänstekontraktsbeskrivningarna för de byggda kontrakten prövas av testerna, och Ineras egna testsviter körs mot producenterna.';
+}
+
 // Runda 18, r4: det som kom i version 1.5 till 1.7 och som modultexterna inte nämnde (textgranskningen).
 {
   const mod = (id) => MODULER.find(x => x.id === id);
