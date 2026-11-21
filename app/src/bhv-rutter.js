@@ -12,6 +12,8 @@ export function registreraRutter({ rutt, kravInloggad, medPatient, medMinJournal
   const q = (c, k) => c.url.searchParams.get(k);
   rutt('GET', '/api/patient/:id/tillvaxt', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_matvarden', (atk, p) => bhv.vy(atk, p, { fran: q(c, 'fran'), till: q(c, 'till'), referens: q(c, 'referens') ?? 'auto' })); });
   rutt('POST', '/api/patient/:id/tillvaxt', (c, id) => { kravInloggad(c); return medPatient(c, id, 'registrera_matvarde', (atk, p) => bhv.registrera(atk, p, c.body, vardkontakt.knyt)); });
+  // Fenton 2025: mellanhanden mot fentongrowth.ca (fenton.js).
+  rutt('POST', '/api/patient/:id/tillvaxt/fenton', (c, id) => { kravInloggad(c); return medPatient(c, id, 'las_matvarden', (atk, p) => bhv.fentonRita(atk, p)); });
   rutt('POST', '/api/patient/:id/tillvaxt/uppgift', (c, id) => { kravInloggad(c); return medPatient(c, id, 'registrera_matvarde', (atk, p) => bhv.registreraUppgift(atk, p, c.body)); });
   rutt('POST', '/api/patient/:id/tillvaxt/handelse', (c, id) => { kravInloggad(c); return medPatient(c, id, 'registrera_matvarde', (atk, p) => bhv.registreraHandelse(atk, p, c.body)); });
   rutt('POST', '/api/patient/:id/vaccination', (c, id) => { kravInloggad(c); return medPatient(c, id, 'vaccinera', (atk, p) => bhv.vaccinera(atk, p, c.body, vardkontakt.knyt)); });

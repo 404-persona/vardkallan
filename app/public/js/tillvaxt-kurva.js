@@ -81,3 +81,39 @@ export const tabell = (k) => (k.punkter.length ? `<details class="tv-tabell"><su
   <thead><tr><th scope="col">Datum</th><th scope="col">Ålder</th><th scope="col">${esc(k.namn)}</th><th scope="col">SD</th><th scope="col">Percentil</th><th scope="col">Källa</th></tr></thead>
   <tbody>${[...k.punkter].reverse().map(p => `<tr${p.vantar ? ' class="tv-rad-vantar"' : ''}><td>${esc(datum(p.tid))}</td><td>${esc(ALDER(p.alder))}</td><td>${esc(tal(p.varde, k.matt === 'vikt' ? 3 : 1))} ${esc(k.enhet)}</td><td>${esc(zText(p.z))}</td><td>${p.percentil ?? ''}</td><td>${esc(kallaText(p))}</td></tr>`).join('')}</tbody>
 </table></div></details>` : '');
+
+// Fenton 2025: percentilen i text. Under 1 och över 99 med en decimal, som servern räknar.
+export const percentilText = (p) => (p == null ? '' : `percentil ${tal(p, Number.isInteger(p) ? 0 : 1)}`);
+// Percentilerna som linjer i z-värdeskurvan. Värdena kommer ur normalfördelningen och inte ur någon referens.
+const PERCENTIL_Z = [[3, -1.881], [10, -1.2816], [50, 0], [90, 1.2816], [97, 1.881]];
+const Z_GRANS = 4;
+// Barnets z-värden efter gestationsålder i veckor. k: { matt, namn, enhet, punkter: [{ dag, vecka, varde, z }] }.
+export function zKurvaSvg(k, { fran = 22, till = 50 } = {}) {
+  const B = 360, H = 200, V = 34, HO = 30, T = 10, U = 26;
+  const vecka = (dag) => 22 + dag / 7;
+  const x = (w) => V + ((w - fran) / Math.max(1, till - fran)) * (B - V - HO);
+  const y = (z) => T + (1 - (Math.max(-Z_GRANS, Math.min(Z_GRANS, z)) + Z_GRANS) / (2 * Z_GRANS)) * (H - T - U);
+  const pkt = k.punkter.filter(p => p.z != null && vecka(p.dag) >= fran && vecka(p.dag) <= till);
+  const steg = till - fran > 16 ? 4 : 2;
+  const xRut = [];
+  for (let w = Math.ceil(fran / steg) * steg; w <= till; w += steg) xRut.push(`<line class="tv-rut" x1="${x(w).toFixed(1)}" x2="${x(w).toFixed(1)}" y1="${T}" y2="${H - U}"/><text class="kurva-text" x="${x(w).toFixed(1)}" y="${H - U + 13}" text-anchor="middle">${w}</text>`);
+  const linjer = PERCENTIL_Z.map(([p, z]) => `<line class="tv-ref tv-sd${z < 0 ? 'm' : 'p'}${p === 50 ? 0 : p === 10 || p === 90 ? 1 : 2}" x1="${V}" x2="${B - HO}" y1="${y(z).toFixed(1)}" y2="${y(z).toFixed(1)}"/><text class="kurva-text" x="${B - HO + 3}" y="${(y(z) + 3).toFixed(1)}">P${p}</text>`).join('');
+  const lin = pkt.length > 1 ? `<polyline class="tv-barn" points="${pkt.map(p => `${x(vecka(p.dag)).toFixed(1)},${y(p.z).toFixed(1)}`).join(' ')}"/>` : '';
+  const punkter = pkt.map(p => (p.kalla === 'fodsel'
+    ? `<path class="tv-punkt tv-fodsel" d="M${x(vecka(p.dag)).toFixed(1)} ${(y(p.z) - 5).toFixed(1)}l5 5-5 5-5-5z"/>`
+    : `<circle class="tv-punkt" cx="${x(vecka(p.dag)).toFixed(1)}" cy="${y(p.z).toFixed(1)}" r="3.5"/>`)).join('');
+  const sist = pkt.at(-1);
+  const besk = `${k.namn} som z-värde efter gestationsålder på Fentons prematurkurva 2025. ${pkt.length} värden${sist ? `, senast ${tal(sist.varde, k.matt === 'vikt' ? 2 : 1)} ${k.enhet} i vecka ${sist.vecka}, ${zText(sist.z)}` : ''}.`;
+  return `<svg class="kurva tv-kurva tv-zkurva" viewBox="0 0 ${B} ${H}" role="img" aria-label="${esc(besk)}" preserveAspectRatio="xMidYMid meet">
+    ${xRut.join('')}${linjer}
+    <line class="kurva-axel" x1="${V}" x2="${V}" y1="${T}" y2="${H - U}"/><line class="kurva-axel" x1="${V}" x2="${B - HO}" y1="${H - U}" y2="${H - U}"/>
+    ${[-3, -2, -1, 0, 1, 2, 3].map(z => `<text class="kurva-text" x="${V - 4}" y="${(y(z) + 3).toFixed(1)}" text-anchor="end">${z > 0 ? '+' : ''}${z}</text>`).join('')}
+    <text class="kurva-text" x="${V}" y="${H - 2}">Gestationsålder, veckor</text><text class="kurva-text" x="${V - 4}" y="${T - 1}" text-anchor="end">SD</text>
+    ${lin}${punkter}
+  </svg>`;
+}
+// Tabellen med barnets värden på Fentons kurva, nyast först.
+export const fentonTabell = (k) => (k.punkter.length ? `<details class="tv-tabell"><summary>Alla värden för ${esc(k.namn.toLowerCase())} på prematurkurvan</summary><div class="tabellrulle"><table class="tabell">
+  <thead><tr><th scope="col">Datum</th><th scope="col">Gestationsålder</th><th scope="col">${esc(k.namn)}</th><th scope="col">SD</th><th scope="col">Percentil</th></tr></thead>
+  <tbody>${[...k.punkter].reverse().map(p => `<tr><td>${esc(datum(p.tid))}</td><td>${esc(p.vecka)}</td><td>${esc(tal(p.varde, k.matt === 'vikt' ? 3 : 1))} ${esc(k.enhet)}</td><td>${p.utanfor ? 'Utanför kurvan' : esc(zText(p.z))}</td><td>${p.percentil == null ? '' : esc(tal(p.percentil, Number.isInteger(p.percentil) ? 0 : 1))}</td></tr>`).join('')}</tbody>
+</table></div></details>` : '');

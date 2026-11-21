@@ -5,7 +5,7 @@ import { esc, api, datum, tidpunkt, notis, medKnapp, tal, ikon, dialog } from '.
 import { doldaRad } from './patient.js';
 // Runda 13, r4: kontrollen före vaccinationen och dosens uppgifter, samma som i fliken Vaccinationer.
 import { dosFaltHtml, provaDosFalt, dosData } from '../vaccination-ui.js';
-import { kurvaSvg, teckenforklaring, tabell, zText, alderText } from '../tillvaxt-kurva.js';
+import { kurvaSvg, teckenforklaring, tabell, zText, alderText, zKurvaSvg, fentonTabell, percentilText } from '../tillvaxt-kurva.js';
 
 const ALLVAR = { hog: 'ruta-larm', varning: 'ruta-larm', info: 'ruta-info' };
 const SPANN = [['barn', 'Barnets ålder'], ['12', 'Första året'], ['24', 'Två år'], ['60', 'Fem år']];
@@ -38,6 +38,7 @@ export async function visa(el, ctx) {
     ${d.kan.registrera ? registrering(bhv, b) : ''}
     ${d.hemmatningar.length ? `<section aria-labelledby="tv-hemma"><h3 id="tv-hemma">Mätningar hemma som väntar</h3><ul class="enkel-lista">${d.hemmatningar.map(h => `<li class="tv-hemma-rad"><span><strong>${esc(h.namn)} ${esc(tal(h.varde, h.typ === 'vikt' ? 2 : 1))} ${esc(h.enhet)}</strong><span class="under-text">Mätt ${esc(tidpunkt(h.tid))} av ${esc(h.av)}.</span></span>
       ${d.kan.registrera ? `<span class="knapprad"><button type="button" class="knapp liten" data-bekrafta="${h.id}">Bekräfta</button><button type="button" class="knapp liten sekundar" data-avvisa="${h.id}">Använd inte</button></span>` : ''}</li>`).join('')}</ul></section>` : ''}
+    ${fentonHtml(d)}
     <section aria-labelledby="tv-kurvor"><div class="sektion-huvud"><h3 id="tv-kurvor">Kurvor</h3>
       <fieldset class="segment tv-spann"><legend class="sr">Visa ålder</legend>${[...SPANN, ...(b.alderManader > 60 ? SPANN_STORA : [])].map(([v, t]) => `<input type="radio" id="tv-spann-${v}" name="tv-spann" value="${v}"${v === valtSpann ? ' checked' : ''}><label for="tv-spann-${v}">${esc(t)}</label>`).join('')}</fieldset></div>
       ${valHtml(d)}
@@ -73,6 +74,40 @@ export async function visa(el, ctx) {
   koppla(el, ctx, d);
   // Formuläret vid besöket: vikten har fokus, så att mätningen kan skrivas direkt.
   if (d.kan.registrera && b.inomReferens) el.querySelector('#tv-vikt')?.focus({ preventScroll: true });
+}
+
+// Fenton 2025: barnets punkter på Fentons prematurkurva som z-värden mot percentilerna i normalfördelningen. Kurvdatan
+// finns bara på servern, så vyn får bara z-värden och percentiler och ritar inga percentillinjer ur referensen.
+const FENTON_MATT = { vikt: ['Vikt', 'kg'], langd: ['Längd', 'cm'], huvudomfang: ['Huvudomfång', 'cm'] };
+function fentonHtml(d) {
+  const f = d.fenton;
+  if (!f) return '';
+  const lank = `<a href="${esc(f.webb)}" target="_blank" rel="noopener noreferrer">fentongrowth.ca</a>`;
+  if (!f.tillganglig) return `<section aria-labelledby="tv-fenton" class="tv-fenton"><h3 id="tv-fenton">Prematurkurva</h3>
+    <p class="ruta ruta-info">${esc(f.text)}</p><p class="under-text">Fentons egna kurvor finns på ${lank}.</p></section>`;
+  const st = f.storlek;
+  return `<section aria-labelledby="tv-fenton" class="tv-fenton"><div class="sektion-huvud"><h3 id="tv-fenton">${esc(f.namn)}</h3></div>
+    <p>Barnet föddes i vecka ${esc(f.gestationsalder)}. Kurvan gäller till ${esc(f.slutVeckor)} veckors gestationsålder, och därefter visas barnet med korrigerad ålder på WHO:s kurvor.${f.dagarSaknas ? ' Dagarna utöver hela veckor är inte registrerade, så systemet räknar med +0. Registrera dem under Födelse och föräldrar.' : ''}</p>
+    ${st ? `<p class="tv-storlek" data-tv-storlek="${esc(st.klass)}"><strong>${esc(st.text)}.</strong> Födelsevikten är ${esc(zText(st.z))}, ${esc(percentilText(st.percentil))}.</p>` : ''}
+    <p class="hjalp">Punkterna visar barnets z-värde vid varje mätning. Linjerna är percentilerna 3, 10, 50, 90 och 97.</p>
+    <div class="kurvor tv-kurvor">${f.kurvor.map(k => `<article class="kurvkort" aria-labelledby="tv-f-${esc(k.matt)}">
+      <header><h4 id="tv-f-${esc(k.matt)}">${esc(FENTON_MATT[k.matt][0])}</h4></header>
+      ${zKurvaSvg({ ...k, namn: FENTON_MATT[k.matt][0], enhet: FENTON_MATT[k.matt][1] }, { fran: Math.min(22 + Math.floor((k.punkter[0]?.dag ?? 0) / 7), 30), till: f.slutVeckor })}
+      ${fentonTabell({ ...k, namn: FENTON_MATT[k.matt][0], enhet: FENTON_MATT[k.matt][1] })}
+    </article>`).join('')}</div>
+    <p class="under-text tv-kalla"><strong>${esc(f.namn)}.</strong> ${esc(f.kalla)}. Licens: ${esc(f.licens)}</p>
+    <div class="knapprad">${f.mellanhand?.aktiv ? '<button type="button" class="knapp sekundar" data-tv-fenton>Rita på fentongrowth.ca</button>' : ''}<span class="under-text">Fentons egna kurvor finns på ${lank}.</span></div>
+    ${f.mellanhand && !f.mellanhand.aktiv ? `<p class="under-text">${esc(f.mellanhand.text)}</p>` : ''}
+    <div id="tv-fenton-resultat" aria-live="polite"></div>
+  </section>`;
+}
+// Svaret från fentongrowth.ca: kurvan som bild och tjänstens z-värden.
+function fentonResultat(r) {
+  if (!r.ok) return `<p class="ruta ruta-info">${esc(r.text)}</p>`;
+  const rader = (r.z ?? []).filter(x => x.dag != null);
+  return `<figure class="tv-fenton-bild"><img src="${esc(r.bild)}" alt="Barnets mätningar på Fentons prematurkurva, ritad av fentongrowth.ca" loading="lazy"><figcaption class="under-text">Ritad av fentongrowth.ca. Bara kön, gestationsålder, födelsedatum och mätvärden skickades. ${esc(r.raderat)}</figcaption></figure>
+    ${rader.length ? `<details class="tv-tabell"><summary>z-värden från fentongrowth.ca</summary><div class="tabellrulle"><table class="tabell"><thead><tr><th scope="col">Gestationsålder</th><th scope="col">Vikt</th><th scope="col">Längd</th><th scope="col">Huvudomfång</th></tr></thead>
+      <tbody>${rader.map(x => `<tr><td>${esc(`${22 + Math.floor(x.dag / 7)}+${x.dag % 7}`)}</td><td>${esc(zText(x.vikt))}</td><td>${esc(zText(x.langd))}</td><td>${esc(zText(x.huvudomfang))}</td></tr>`).join('')}</tbody></table></div></details>` : ''}`;
 }
 
 // Runda 11, r7: referensen och måtten som visas. Referenserna som inte får användas fritt står med skälet.
@@ -145,7 +180,7 @@ function fodselHtml(d) {
   const rad = (t, v) => `<li><span>${esc(t)}</span><strong>${v ?? '<span class="dampad">Saknas</span>'}</strong></li>`;
   return `<section aria-labelledby="tv-fodsel"><h3 id="tv-fodsel">Födelse och föräldrar</h3>
     <ul class="tv-fakta">
-      ${rad('Graviditetslängd', f.graviditetslangd ? `vecka ${esc(f.graviditetslangd)}` : null)}
+      ${rad('Graviditetslängd', f.graviditetslangd ? `vecka ${esc(f.graviditetslangd)}${f.graviditetsdagar != null ? `+${esc(f.graviditetsdagar)}` : ''}` : null)}
       ${rad('Födelsevikt', f.vikt ? `${esc(tal(f.vikt, 3))} kg` : null)}
       ${rad('Födelselängd', f.langd ? `${esc(tal(f.langd, 1))} cm` : null)}
       ${rad('Huvudomfång vid födelsen', f.huvudomfang ? `${esc(tal(f.huvudomfang, 1))} cm` : null)}
@@ -279,6 +314,14 @@ function koppla(el, ctx, d) {
         notis(r.text); ctx.ladda();
       }
     } catch { /* felet visas som notis */ }
+  });
+  // Fenton 2025: kurvan från fentongrowth.ca hämtas för sig, så att vyn inte väntar på tjänsten.
+  el.querySelector('[data-tv-fenton]')?.addEventListener('click', async (e) => {
+    const knapp = e.currentTarget;
+    const ut = el.querySelector('#tv-fenton-resultat');
+    ut.innerHTML = '<p class="under-text">Väntar på fentongrowth.ca.</p>';
+    try { const r = await medKnapp(knapp, () => api(`/api/patient/${id}/tillvaxt/fenton`, { metod: 'POST', data: {} })); ut.innerHTML = fentonResultat(r); }
+    catch (x) { ut.innerHTML = fentonResultat({ ok: false, text: x?.message ?? 'fentongrowth.ca kunde inte rita kurvan just nu.' }); }
   });
   el.querySelector('#tv-bhvq')?.addEventListener('change', async (e) => {
     try { const r = await api(`/api/patient/${id}/bhv/bhvq`, { metod: 'POST', data: { motsatt: e.target.checked } }); notis(r.text); } catch { e.target.checked = !e.target.checked; }

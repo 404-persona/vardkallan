@@ -1,7 +1,9 @@
 // Tillväxt för barn (Sussa 4.1, runda 7, r6): z-värden, referenslinjer, korrigerad ålder, målängd, förändring under en
 // period och larm vid avvikande tillväxt. Rena funktioner utan databas. Reglerna är demoregler (D10) och inte kliniskt
 // beslutsstöd. Referensen är WHO:s tillväxtstandard 0 till 5 år (seed/who-tillvaxt.js), eftersom de svenska referenserna
-// inte finns utgivna under en fri licens (docs/kodkontroll.md).
+// inte finns utgivna under en fri licens (docs/kodkontroll.md). Sussa 4.1.1.2: för barn som är födda före vecka 37 räknar
+// fenton.js med Fentons prematurkurva 2025 till 50 veckors gestationsålder, när kurvdatan finns på servern, och därefter
+// gäller WHO med korrigerad ålder.
 import { WHO_LMS, WHO_KALLA, WHO_LICENS } from './seed/who-tillvaxt.js';
 // Runda 11, r7: WHO:s tillväxtreferens 5 till 19 år (WHO 2007) och byte av referens (Sussa 4.1.1.2, 4.1.1.3 och 4.1.1.6).
 import { WHO2007_LMS, WHO2007_INTERVALL, WHO2007_KALLA, WHO2007_LICENS } from './seed/who2007-tillvaxt.js';
@@ -25,10 +27,13 @@ export const REFERENSER = {
 export const MAX_REFERENS = 228;
 export const EJ_TILLGANGLIGA = [
   { id: 'svensk', namn: 'Svenska referenser (Göteborg 1974, Sverige 1981 och referenserna från 2020 och 2021)', skal: 'Referensvärdena finns inte utgivna under en fri licens.' },
-  { id: 'prematur', namn: 'Prematurkurvor (Fenton 2013 och INTERGROWTH-21st)', skal: 'Fentons värden lämnas bara ut mot avtal, och INTERGROWTH-21st får inte användas fritt (CC BY-NC-ND och upphovsrätt hos University of Oxford). För ett barn som är fött före vecka 37 räknar systemet i stället med korrigerad ålder till två år.' },
+  { id: 'prematur', namn: 'Prematurkurvor (Fenton 2025 och INTERGROWTH-21st)', skal: 'Fentons värden för 2025 får användas i den här demon med tillstånd av Tanis Fenton (CC BY-NC-ND 4.0), men datafilen finns inte på den här servern. INTERGROWTH-21st får inte användas fritt (CC BY-NC-ND och upphovsrätt hos University of Oxford). För ett barn som är fött före vecka 37 räknar systemet i stället med korrigerad ålder till två år.' },
   { id: 'down', namn: 'Kurvor för Downs syndrom (CDC 2015)', skal: 'Värdena finns bara i tidskriftens tilläggstabeller under förlagets upphovsrätt, och CDC ger bara ut kurvbladen som bilder.' },
   { id: 'turner', namn: 'Kurvor för Turners syndrom', skal: 'Ingen referens med fri licens och maskinläsbara värden har hittats.' },
 ];
+// Fenton 2025: när kurvdatan finns på servern (fenton.js) står bara INTERGROWTH-21st kvar bland prematurkurvorna.
+export const PREMATUR_MED_FENTON = { id: 'prematur', namn: 'Prematurkurvor från INTERGROWTH-21st', skal: 'INTERGROWTH-21st får inte användas fritt (CC BY-NC-ND och upphovsrätt hos University of Oxford). Fentons prematurkurva 2025 används för barn som är födda före vecka 37, till 50 veckors gestationsålder.' };
+export const ejTillgangliga = (fenton) => (fenton ? EJ_TILLGANGLIGA.map(r => (r.id === 'prematur' ? PREMATUR_MED_FENTON : r)) : EJ_TILLGANGLIGA);
 export const referensFor = (id) => (typeof id === 'string' && Object.hasOwn(REFERENSER, id) ? REFERENSER[id] : REFERENSER.auto);
 
 export const DEMOREGEL = 'Demoregler, inte kliniskt beslutsstöd: larmen, gränserna och förslagen på nästa steg är påhittade för demon och inte en regions riktlinjer.';

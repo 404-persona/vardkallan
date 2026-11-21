@@ -92,6 +92,8 @@ import { registreraRutter as utbildningRutter } from './utbildning-rutter.js';
 import { redogorelse as tillganglighet } from './tillganglighet.js';
 // Runda 7, r1: demoläget för Sussas användbarhetstester (sussa-demo.js).
 import * as sussaDemo from './sussa-demo.js';
+// Fenton 2025: kurvdatan läses vid start (fenton.js).
+import * as fenton from './fenton.js';
 import * as anvandartestSvar from './anvandartest-svar.js';
 // Runda 8, r5: tobaksvanor, epikrisens förslag, flera mätvärden och villkoren för version 1.0.
 import * as tobak from './tobak.js';
@@ -2993,6 +2995,9 @@ export function starta({ port = Number(process.env.PORT || 8080), hostname = '0.
 }
 
 if (import.meta.main) {
+  // Fenton 2025: kurvdatan läses vid start från FENTON_DATA. Loggen säger bara om den finns och om mellanhanden är på.
+  const fentonData = fenton.ladda();
+  console.log(`Fentons prematurkurva: ${fentonData ? 'kurvdatan är inläst' : 'ingen kurvdata'}, mellanhanden ${fenton.sparr() ? 'avstängd' : 'på (demo)'}`);
   const app = starta();
   const avsluta = () => {
     try { const n = app.spara(); if (n) console.log(`Sparade ${n} sandlådor`); } catch (e) { console.error('Kunde inte spara sandlådorna:', e.message); }

@@ -937,6 +937,16 @@ MENY.verksamhetschef.splice(MENY.verksamhetschef.indexOf('Forskningsuttag'), 0, 
       await page.locator('[data-bekrafta]').first().click();
       await forvanta(page, '.notis', 'räknas nu på kurvan');
     });
+    // Fenton 2025: prematurkurvan för Elias, som föddes i vecka 26+2. Utan kurvdata på servern står förklaringen där.
+    await s('Per Holm ser Elias prematurkurva med z-värden, källan och länken till fentongrowth.ca', async () => {
+      await gaTill(page, '#/patient/p62/tillvaxt');
+      await forvanta(page, '.tv-fenton', 'fentongrowth.ca');
+      await forvanta(page, '#tv-fodsel ~ .tv-fakta', 'vecka 26+2');
+      if (await page.locator('.tv-fenton svg.tv-zkurva').count()) {
+        await forvanta(page, '.tv-fenton .tv-kalla', 'CC BY-NC-ND 4.0');
+        if (await page.locator('.tv-fenton svg polyline.tv-ref').count()) throw new Error('Prematurkurvan ska inte ha referenslinjer ur kurvdatan');
+      } else await forvanta(page, '.tv-fenton', 'finns inte på den här servern');
+    });
     await s('Per Holm skickar barnhälsovårdens rapport till registret, som är en simulerad mottagare', async () => {
       await gaTill(page, '#/bhv');
       await forvanta(page, '#bhv-q', 'Svenska barnhälsovårdsregistret');

@@ -7,3 +7,7 @@ docs/filmer/*.webm
 
 # Runda 20: TKB och testsvitens filer utan licens hämtas med node app/scripts/rivta-scheman.js --tkb och ligger inte i git.
 app/rivta-tkb/
+# Fenton 2025: kurvdatan, kalkylbladet och nyckeln är licensierade och får aldrig läggas i git (app/src/fenton.js).
+fenton*.json
+*[Ff]enton*.xlsx
+fenton.env

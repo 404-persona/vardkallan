@@ -3,4 +3,9 @@ test-resultat.json
 test-resultat.xml
 *.md
 .testtmp-*
+# Runda 20: TKB och testsvitens filer utan licens (scripts/rivta-scheman.js --tkb).
 rivta-tkb
+# Fenton 2025: kurvdatan, kalkylbladet och nyckeln får aldrig hamna i avbilden.
+fenton*.json
+*.xlsx
+*.env
